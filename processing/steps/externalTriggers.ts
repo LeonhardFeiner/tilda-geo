@@ -78,6 +78,12 @@ export async function triggerPrivateApi(endpoint: string, retryCount = 0) {
  * This requires that the docker socket is mounted in this container.
  */
 export async function restartTileServer() {
+  if (isDev) {
+    console.log(
+      'Finishing up: ⏩ Skipping tiles container restart in development (no local `tiles` service).',
+    )
+    return
+  }
   try {
     await $`docker restart tiles > /dev/null`
     console.log('Finishing up: Succesfully restarted the tiles container.')

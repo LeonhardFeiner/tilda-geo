@@ -32,6 +32,9 @@ pids
 *.sqlite-journal
 src/prisma/generated
 
+# Local stats CSV exports (`bun run stats:export-csv`)
+scripts/stats-export/*.csv
+
 # Testing
 .coverage
 *.lcov

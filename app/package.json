@@ -14,6 +14,8 @@
     "predev:1docker": "bun scripts/predev/checkDocker.ts",
     "predev:2migration": "bun scripts/predev/checkMigration.ts --non-interactive",
     "predev:3package-updates": "bun scripts/predev/checkPackageUpdates.ts",
+    "stats:local": "bun --bun --env-file=../.env ./scripts/run-stats-local.ts",
+    "stats:export-csv": "bun --bun --env-file=../.env ./scripts/export-stats-csv.ts",
     "db-pull": "bun --env-file=../.env scripts/db-pull/run.ts",
     "db-pull:pull": "bun --env-file=../.env scripts/db-pull/pull.ts",
     "db-pull:restore": "bun --env-file=../.env scripts/db-pull/restore-local.ts",

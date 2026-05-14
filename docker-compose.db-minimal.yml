@@ -1,0 +1,52 @@
+# PostGIS without bind-mounting repo `configs/*.conf` (avoids Docker "permission denied"
+# on some hosts). Same image and env as `docker-compose.yml` `db`, default Postgres config.
+#
+# Use when: `docker compose up -d db` fails on stat …/configs/postgres*.conf
+# Run: docker compose --env-file .env -f docker-compose.db-minimal.yml up -d
+# Stop anything else bound to host port 5432 first (e.g. another local Postgres container).
+
+services:
+  db:
+    image: ghcr.io/baosystems/postgis:17-3.5
+    container_name: db
+    shm_size: 2g
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER}
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+      TZ: Europe/Berlin
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_postgres_nomount:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  processing:
+    env_file:
+      - .env
+    container_name: processing
+    build:
+      context: .
+      dockerfile: ./processing.Dockerfile
+    environment:
+      PGHOST: db
+      PGDATABASE: ${DATABASE_NAME}
+      PGUSER: ${DATABASE_USER}
+      PGPASSWORD: ${DATABASE_PASSWORD}
+      DATABASE_HOST: db
+    volumes:
+      - osmfiles:/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db_postgres_nomount:
+  osmfiles:
