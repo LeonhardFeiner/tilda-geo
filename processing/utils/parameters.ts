@@ -1,6 +1,6 @@
-import type { TopicConfigBbox } from '../constants/topics.const'
 import { styleText } from 'node:util'
 import { z } from 'zod'
+import type { TopicConfigBbox } from '../constants/topics.const'
 
 export type DiffingMode = 'off' | 'previous' | 'fixed' | 'reference'
 
@@ -25,7 +25,7 @@ const oauthCredentialSchema = z
   .or(z.literal('').transform(() => undefined))
   .or(z.undefined())
 
-const urlSchema = z.string().url('Must be a valid URL')
+const urlSchema = z.url('Must be a valid URL')
 
 function parseParameters() {
   return {
@@ -52,3 +52,9 @@ function parseParameters() {
 }
 
 export const params = parseParameters()
+
+export const paramsFilteredForLogs = {
+  ...params,
+  apiKey: params.apiKey ? '***' : '',
+  osmPassword: params.osmPassword ? '***' : params.osmPassword,
+}
