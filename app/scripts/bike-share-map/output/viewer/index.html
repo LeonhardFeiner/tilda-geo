@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Radinfra-Karte – Viewer</title>
+    <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        font-family: system-ui, sans-serif;
+      }
+      #map {
+        position: absolute;
+        inset: 0;
+      }
+      .panel {
+        position: absolute;
+        z-index: 2;
+        top: 12px;
+        left: 12px;
+        max-width: min(400px, calc(100vw - 24px));
+        padding: 12px 14px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.95);
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .panel h1 {
+        margin: 0 0 10px;
+        font-size: 16px;
+      }
+      .panel label {
+        display: block;
+        font-size: 13px;
+        margin: 8px 0 4px;
+        font-weight: 600;
+      }
+      .panel select {
+        width: 100%;
+        font-size: 13px;
+        padding: 4px 6px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+      }
+      .panel .row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px 16px;
+        margin-top: 8px;
+      }
+      .panel .row label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: normal;
+        margin: 0;
+        cursor: pointer;
+      }
+      .hint {
+        font-size: 11px;
+        color: #666;
+        margin-top: 4px;
+      }
+      .legend {
+        margin-top: 10px;
+        padding-top: 8px;
+        border-top: 1px solid #ddd;
+      }
+      .legend-bar {
+        height: 10px;
+        border-radius: 3px;
+        background: linear-gradient(to right, #e8f5e9, #1b5e20);
+        margin: 6px 0 4px;
+      }
+      .legend-labels {
+        display: flex;
+        justify-content: space-between;
+        font-size: 12px;
+        color: #555;
+      }
+      .swatch {
+        display: inline-block;
+        width: 24px;
+        height: 0;
+        border-top: 3px solid;
+        vertical-align: middle;
+        margin-right: 6px;
+      }
+      .ranking {
+        margin-top: 10px;
+        border-top: 1px solid #e8e8e8;
+        padding-top: 8px;
+      }
+      .ranking summary {
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        color: #333;
+        user-select: none;
+      }
+      .ranking summary::-webkit-details-marker {
+        color: #666;
+      }
+      .ranking[open] summary {
+        margin-bottom: 6px;
+      }
+      .ranking-hint {
+        font-weight: normal;
+        font-size: 11px;
+        color: #888;
+      }
+      .ranking-list {
+        margin: 0;
+        padding: 0;
+        /* 20 rows + li margins (~2px each) + 1.5 extra lines */
+        max-height: calc(11px * 1.45 * 21.5 + 2px * 20);
+        overflow-y: auto;
+        font-size: 11px;
+        line-height: 1.45;
+        color: #444;
+        list-style: none;
+      }
+      .ranking-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        margin: 2px 0;
+        padding: 0;
+      }
+      .ranking-rank {
+        flex: 0 0 2em;
+        color: #666;
+        font-variant-numeric: tabular-nums;
+      }
+      .ranking-name {
+        flex: 1 1 auto;
+        min-width: 0;
+      }
+      .ranking-pct {
+        flex: 0 0 auto;
+        color: #2e7d32;
+        font-variant-numeric: tabular-nums;
+      }
+      .ranking-list .ranking-more {
+        display: block;
+        color: #888;
+        font-style: italic;
+      }
+      .view-meta {
+        font-size: 11px;
+        color: #666;
+        margin-top: 8px;
+      }
+      .footer {
+        font-size: 11px;
+        color: #888;
+        margin-top: 6px;
+        padding-top: 6px;
+        border-top: 1px solid #eee;
+        line-height: 1.5;
+      }
+      #tooltip {
+        position: absolute;
+        z-index: 3;
+        pointer-events: none;
+        display: none;
+        padding: 6px 8px;
+        border-radius: 4px;
+        background: rgba(0, 0, 0, 0.85);
+        color: #fff;
+        font-size: 12px;
+        max-width: 320px;
+      }
+      #load-error {
+        color: #b71c1c;
+        font-size: 13px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div class="panel">
+      <h1>Radinfra-Karte</h1>
+      <p id="load-error"></p>
+      <label for="view-select">Gebiet</label>
+      <select id="view-select"></select>
+      <label for="basemap-select">Hintergrundkarte</label>
+      <select id="basemap-select"></select>
+      <p class="hint" id="basemap-hint"></p>
+      <div class="row">
+        <label><input type="checkbox" id="toggle-bikelanes" checked /> Radwege</label>
+        <label><input type="checkbox" id="toggle-roads" /> Straßen</label>
+      </div>
+      <div class="legend">
+        <strong>Flächenfarbe</strong>
+        <div class="legend-bar"></div>
+        <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
+        <p><span class="swatch" style="border-color: #b71c1c"></span>Radwege</p>
+        <p><span class="swatch" style="border-color: #78909c"></span>Straßen (optional)</p>
+        <details class="ranking" id="ranking-details">
+          <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
+          <ol class="ranking-list" id="ranking-list"></ol>
+        </details>
+      </div>
+      <p class="view-meta" id="view-meta"></p>
+      <p class="footer">
+        Erzeugt 2026-05-15T12:44:27.174Z · Daten © OpenStreetMap / tilda-geo.de ·
+        Projektverantwortlich: Leonhard Feiner
+      </p>
+    </div>
+    <div id="tooltip"></div>
+    <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
+    <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+    <script>
+      const CONFIG = {
+        generatedAt: '2026-05-15T12:44:27.174Z',
+        basemap: 'light',
+        basemapStyles: {
+          blank: {
+            version: 8,
+            sources: {},
+            layers: [
+              { id: 'background', type: 'background', paint: { 'background-color': '#f2f2ec' } },
+            ],
+          },
+          light: {
+            version: 8,
+            sources: {
+              basemap: {
+                type: 'raster',
+                tiles: ['https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                attribution: '© CARTO © OpenStreetMap contributors',
+              },
+            },
+            layers: [
+              {
+                id: 'basemap-raster',
+                type: 'raster',
+                source: 'basemap',
+                paint: { 'raster-opacity': 0.92 },
+              },
+            ],
+          },
+          muted: {
+            version: 8,
+            sources: {
+              basemap: {
+                type: 'raster',
+                tiles: ['https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                attribution: '© CARTO © OpenStreetMap contributors',
+              },
+            },
+            layers: [
+              {
+                id: 'basemap-raster',
+                type: 'raster',
+                source: 'basemap',
+                paint: { 'raster-opacity': 0.92 },
+              },
+            ],
+          },
+          osm: {
+            version: 8,
+            sources: {
+              basemap: {
+                type: 'raster',
+                tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
+                tileSize: 256,
+                attribution: '© OpenStreetMap',
+              },
+            },
+            layers: [{ id: 'basemap-raster', type: 'raster', source: 'basemap', paint: {} }],
+          },
+        },
+        basemapOptions: [
+          {
+            id: 'blank',
+            label: 'Leer',
+            description: 'Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben',
+          },
+          {
+            id: 'light',
+            label: 'Hell',
+            description: 'Carto Positron – wenig Straßenkontrast, Orientierung möglich',
+          },
+          {
+            id: 'muted',
+            label: 'Gedeckt',
+            description: 'Carto Voyager – etwas mehr Kontext als „hell“',
+          },
+          {
+            id: 'osm',
+            label: 'OSM Standard',
+            description: 'Klassische OSM-Karte – viel Detail, weniger Kontrast zu Daten',
+          },
+        ],
+        bikelanesTiles: 'https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}',
+        roadsTiles: 'https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}',
+        statsUrl: './stats.geojson',
+        manifestUrl: './manifest.json',
+        bayernId: 'relation/2145268',
+        defaultView: 'bayern-landkreise',
+      }
+
+      let allFeatures = []
+      let manifest = { views: [] }
+      let rawLoaded = false
+
+      const viewSelect = document.getElementById('view-select')
+      const basemapSelect = document.getElementById('basemap-select')
+      const basemapHint = document.getElementById('basemap-hint')
+      const toggleBikelanes = document.getElementById('toggle-bikelanes')
+      const toggleRoads = document.getElementById('toggle-roads')
+      const loadError = document.getElementById('load-error')
+      const rankingDetails = document.getElementById('ranking-details')
+
+      for (const opt of CONFIG.basemapOptions) {
+        const el = document.createElement('option')
+        el.value = opt.id
+        el.textContent = opt.label
+        if (opt.id === CONFIG.basemap) el.selected = true
+        basemapSelect.appendChild(el)
+      }
+
+      function sumLengthRecord(obj) {
+        if (!obj || typeof obj !== 'object') return 0
+        return Object.values(obj).reduce((a, v) => a + (Number(v) || 0), 0)
+      }
+
+      function enrichFeature(f) {
+        const p = f.properties || {}
+        const road = sumLengthRecord(p.road_length)
+        const bike = sumLengthRecord(p.bikelane_length)
+        const pct = road > 0 ? (bike / road) * 100 : null
+        return {
+          ...f,
+          properties: {
+            ...p,
+            roadSumKm: road,
+            bikelaneSumKm: bike,
+            bikeSharePct: pct,
+            label: (p.name || p.id) + ': ' + (pct != null ? pct.toFixed(1) : '–') + ' % Radinfra',
+          },
+        }
+      }
+
+      function findBayern() {
+        return allFeatures.find(
+          (f) => f.properties?.level === '4' && f.properties?.id === CONFIG.bayernId,
+        )
+      }
+
+      function regionLevel(f) {
+        return String(f.properties?.level ?? '')
+      }
+
+      function kreisfreiIds() {
+        return new Set(manifest.kreisfreieStaedteIds || [])
+      }
+
+      function inBayern(f) {
+        if (f.properties?.bundesland_id === CONFIG.bayernId) return true
+        const bayern = findBayern()
+        if (!bayern) return true
+        return turf.booleanPointInPolygon(turf.centroid(f), bayern)
+      }
+
+      function filterForView(viewId) {
+        const kreisfrei = kreisfreiIds()
+        if (viewId === 'bayern-landkreise-kreisfreie') {
+          return allFeatures.filter((f) => regionLevel(f) === '6' && f.geometry && inBayern(f))
+        }
+        if (viewId === 'bayern-landkreise') {
+          return allFeatures.filter((f) => {
+            if (regionLevel(f) !== '6' || !f.geometry) return false
+            if (kreisfrei.has(f.properties?.id)) return false
+            return inBayern(f)
+          })
+        }
+        if (viewId === 'bayern-kreisfreie-staedte') {
+          return allFeatures.filter((f) => {
+            if (regionLevel(f) !== '6' || !f.geometry) return false
+            return kreisfrei.has(f.properties?.id)
+          })
+        }
+        if (viewId === 'bayern-gemeinden-kreisfreie') {
+          const gemeinden = allFeatures.filter(
+            (f) => regionLevel(f) === '8' && f.geometry && inBayern(f),
+          )
+          const cities = allFeatures.filter(
+            (f) => regionLevel(f) === '6' && f.geometry && kreisfrei.has(f.properties?.id),
+          )
+          return [...gemeinden, ...cities]
+        }
+        if (viewId === 'bayern-gemeinden') {
+          return allFeatures.filter((f) => regionLevel(f) === '8' && f.geometry && inBayern(f))
+        }
+        if (viewId.startsWith('landkreis:')) {
+          const lkId = viewId.slice('landkreis:'.length)
+          const lk = allFeatures.find((f) => f.properties?.id === lkId && regionLevel(f) === '6')
+          const gemeinden = allFeatures.filter((f) => {
+            if (regionLevel(f) !== '8' || !f.geometry) return false
+            if (f.properties?.landkreis_id === lkId) return true
+            if (!lk) return false
+            return turf.booleanPointInPolygon(turf.centroid(f), lk)
+          })
+          // Kreisfreie Städte have no level-8 children – show the city polygon
+          return gemeinden
+        }
+        if (viewId.startsWith('kreisfrei:')) {
+          const cityId = viewId.slice('kreisfrei:'.length)
+          const city = allFeatures.find(
+            (f) => f.properties?.id === cityId && regionLevel(f) === '6',
+          )
+          return city ? [city] : []
+        }
+        return []
+      }
+
+      function pctRange(features) {
+        const vals = features
+          .map((f) => f.properties.bikeSharePct)
+          .filter((v) => typeof v === 'number')
+        if (!vals.length) return { min: 0, max: 20 }
+        return { min: Math.min(...vals), max: Math.max(...vals) }
+      }
+
+      function compareByBikeShare(a, b) {
+        const ap = a.properties?.bikeSharePct
+        const bp = b.properties?.bikeSharePct
+        if (typeof ap !== 'number' && typeof bp !== 'number') {
+          return String(a.properties?.name ?? '').localeCompare(
+            String(b.properties?.name ?? ''),
+            'de',
+          )
+        }
+        if (typeof ap !== 'number') return 1
+        if (typeof bp !== 'number') return -1
+        return bp - ap
+      }
+
+      function updateRanking(features) {
+        const list = document.getElementById('ranking-list')
+        const summary = document.getElementById('ranking-summary')
+        const sorted = [...features].sort(compareByBikeShare)
+        const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number')
+
+        summary.textContent = '(' + sorted.length + ' Gebiete, absteigend nach Radinfra-Anteil)'
+
+        list.replaceChildren()
+        for (let i = 0; i < withPct.length; i++) {
+          const f = withPct[i]
+          const li = document.createElement('li')
+          const rank = document.createElement('span')
+          rank.className = 'ranking-rank'
+          rank.textContent = i + 1 + '.'
+          const name = document.createElement('span')
+          name.className = 'ranking-name'
+          name.textContent = f.properties?.name || f.properties?.id || '–'
+          const pct = document.createElement('span')
+          pct.className = 'ranking-pct'
+          pct.textContent = f.properties.bikeSharePct.toFixed(1) + ' %'
+          li.append(rank, name, pct)
+          list.appendChild(li)
+        }
+        const withoutPct = sorted.length - withPct.length
+        if (withoutPct > 0) {
+          const note = document.createElement('li')
+          note.className = 'ranking-more'
+          note.textContent = withoutPct + ' ohne Straßendaten'
+          list.appendChild(note)
+        }
+      }
+
+      const map = new maplibregl.Map({
+        container: 'map',
+        style: CONFIG.basemapStyles[CONFIG.basemap],
+        center: [11.5, 48.9],
+        zoom: 7,
+      })
+      map.addControl(new maplibregl.NavigationControl(), 'top-right')
+
+      function urlParams() {
+        return new URLSearchParams(location.search)
+      }
+
+      function parseBoolParam(value, defaultValue) {
+        if (value == null || value === '') return defaultValue
+        const v = value.toLowerCase()
+        if (v === '0' || v === 'false' || v === 'no' || v === 'off') return false
+        return true
+      }
+
+      function allViewOptionValues() {
+        return [...viewSelect.options].map((o) => o.value).filter(Boolean)
+      }
+
+      function resolveViewIdFromUrl() {
+        const params = urlParams()
+        const requested = params.get('view') || params.get('gebiet')
+        if (!requested) return CONFIG.defaultView
+        const decoded = decodeURIComponent(requested)
+        const known = new Set(allViewOptionValues())
+        if (known.has(decoded)) return decoded
+        return CONFIG.defaultView
+      }
+
+      function applyUrlOptions() {
+        const params = urlParams()
+        const viewId = resolveViewIdFromUrl()
+        viewSelect.value = viewId
+        currentView = viewId
+
+        const basemap = params.get('basemap')
+        if (basemap && CONFIG.basemapStyles[basemap]) {
+          basemapSelect.value = basemap
+          overlaysBound = false
+          map.setStyle(CONFIG.basemapStyles[basemap])
+        }
+
+        const radwege = params.get('radwege') ?? params.get('bikelanes')
+        if (radwege != null && radwege !== '') {
+          toggleBikelanes.checked = parseBoolParam(radwege, true)
+        }
+        const strassen = params.get('strassen') ?? params.get('roads')
+        if (strassen != null && strassen !== '') {
+          toggleRoads.checked = parseBoolParam(strassen, false)
+        }
+
+        const ranking = params.get('ranking')
+        if (ranking != null && ranking !== '') {
+          const open = parseBoolParam(ranking, false)
+          rankingDetails.open = open || ranking === 'open'
+        }
+
+        updateBasemapHint()
+      }
+
+      let currentView = CONFIG.defaultView
+      let overlaysBound = false
+
+      function setLayerVisibility(id, visible) {
+        if (!map.getLayer(id)) return
+        map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none')
+      }
+
+      function updateOverlayVisibility() {
+        setLayerVisibility('bikelanes-casing', toggleBikelanes.checked)
+        setLayerVisibility('bikelanes-lines', toggleBikelanes.checked)
+        setLayerVisibility('roads-lines', toggleRoads.checked)
+      }
+
+      function addTileOverlays() {
+        if (map.getSource('bikelanes')) return
+        map.addSource('bikelanes', {
+          type: 'vector',
+          tiles: [CONFIG.bikelanesTiles],
+          minzoom: 4,
+          maxzoom: 14,
+        })
+        map.addSource('roads', {
+          type: 'vector',
+          tiles: [CONFIG.roadsTiles],
+          minzoom: 4,
+          maxzoom: 14,
+        })
+        map.addLayer({
+          id: 'roads-lines',
+          type: 'line',
+          source: 'roads',
+          'source-layer': 'roads',
+          minzoom: 9,
+          layout: { visibility: toggleRoads.checked ? 'visible' : 'none' },
+          paint: {
+            'line-color': '#78909c',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 14, 1.2],
+            'line-opacity': 0.65,
+          },
+        })
+        map.addLayer({
+          id: 'bikelanes-casing',
+          type: 'line',
+          source: 'bikelanes',
+          'source-layer': 'bikelanes',
+          minzoom: 9,
+          layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 14, 4],
+          },
+        })
+        map.addLayer({
+          id: 'bikelanes-lines',
+          type: 'line',
+          source: 'bikelanes',
+          'source-layer': 'bikelanes',
+          minzoom: 9,
+          layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
+          paint: {
+            'line-color': '#b71c1c',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.2],
+          },
+        })
+      }
+
+      function addRegionLayers(geojson, minPct, maxPct, labelMinZoom) {
+        if (map.getSource('regions')) {
+          map.getSource('regions').setData(geojson)
+        } else {
+          map.addSource('regions', { type: 'geojson', data: geojson })
+          map.addLayer({
+            id: 'regions-fill',
+            type: 'fill',
+            source: 'regions',
+            paint: {
+              'fill-color': [
+                'interpolate',
+                ['linear'],
+                ['coalesce', ['get', 'bikeSharePct'], 0],
+                minPct,
+                '#e8f5e9',
+                (minPct + maxPct) / 2,
+                '#43a047',
+                maxPct,
+                '#1b5e20',
+              ],
+              'fill-opacity': 0.78,
+            },
+          })
+          addTileOverlays()
+          map.addLayer({
+            id: 'regions-outline',
+            type: 'line',
+            source: 'regions',
+            paint: {
+              'line-color': '#263238',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 1.2],
+            },
+          })
+          map.addLayer({
+            id: 'regions-labels',
+            type: 'symbol',
+            source: 'regions',
+            minzoom: labelMinZoom,
+            layout: { 'text-field': ['get', 'name'], 'text-size': 10 },
+            paint: { 'text-color': '#111', 'text-halo-color': '#fff', 'text-halo-width': 1.5 },
+          })
+          overlaysBound = true
+          const tooltip = document.getElementById('tooltip')
+          map.on('mousemove', 'regions-fill', (e) => {
+            const f = e.features?.[0]
+            if (!f) return
+            map.getCanvas().style.cursor = 'pointer'
+            tooltip.style.display = 'block'
+            tooltip.textContent = f.properties.label
+            tooltip.style.left = e.point.x + 12 + 'px'
+            tooltip.style.top = e.point.y + 12 + 'px'
+          })
+          map.on('mouseleave', 'regions-fill', () => {
+            map.getCanvas().style.cursor = ''
+            tooltip.style.display = 'none'
+          })
+        }
+        updateOverlayVisibility()
+      }
+
+      function applyView(viewId) {
+        currentView = viewId
+        const filtered = filterForView(viewId).map(enrichFeature)
+        const { min, max } = pctRange(filtered)
+        document.getElementById('legend-min').textContent = min.toFixed(1) + ' %'
+        document.getElementById('legend-max').textContent = max.toFixed(1) + ' %'
+        updateRanking(filtered)
+        const geojson = { type: 'FeatureCollection', features: filtered }
+        const labelMinZoom =
+          viewId === 'bayern-landkreise-kreisfreie' ||
+          viewId === 'bayern-landkreise' ||
+          viewId === 'bayern-kreisfreie-staedte'
+            ? 8
+            : viewId === 'bayern-gemeinden-kreisfreie' || viewId === 'bayern-gemeinden'
+              ? 10
+              : viewId.startsWith('kreisfrei:')
+                ? 10
+                : 11
+        const viewMeta = manifest.views.find((v) => v.id === viewId)
+        document.getElementById('view-meta').textContent =
+          (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete'
+
+        const run = () => {
+          addRegionLayers(geojson, min, max, labelMinZoom)
+          const bbox = turf.bbox(geojson)
+          if (bbox.every(Number.isFinite)) {
+            map.fitBounds(
+              [
+                [bbox[0], bbox[1]],
+                [bbox[2], bbox[3]],
+              ],
+              { padding: 48, duration: 0 },
+            )
+          }
+        }
+        if (map.isStyleLoaded()) run()
+        else map.once('load', run)
+      }
+
+      function setBasemap(id) {
+        const center = map.getCenter()
+        const zoom = map.getZoom()
+        map.setStyle(CONFIG.basemapStyles[id])
+        map.once('idle', () => {
+          map.jumpTo({ center, zoom })
+          overlaysBound = false
+          applyView(currentView)
+        })
+        const meta = CONFIG.basemapOptions.find((b) => b.id === id)
+        basemapHint.textContent = meta?.description || ''
+      }
+
+      basemapSelect.addEventListener('change', () => setBasemap(basemapSelect.value))
+      viewSelect.addEventListener('change', () => applyView(viewSelect.value))
+      toggleBikelanes.addEventListener('change', updateOverlayVisibility)
+      toggleRoads.addEventListener('change', updateOverlayVisibility)
+
+      function updateBasemapHint() {
+        const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value)
+        basemapHint.textContent = meta?.description || ''
+      }
+      updateBasemapHint()
+
+      async function init() {
+        try {
+          const [statsRes, manifestRes] = await Promise.all([
+            fetch(CONFIG.statsUrl),
+            fetch(CONFIG.manifestUrl),
+          ])
+          if (!statsRes.ok)
+            throw new Error('stats.geojson fehlt – zuerst export-stats-geojson ausführen')
+          if (!manifestRes.ok) throw new Error('manifest.json fehlt – buildViewer ausführen')
+          const stats = await statsRes.json()
+          manifest = await manifestRes.json()
+          allFeatures = stats.features || []
+          rawLoaded = true
+          viewSelect.innerHTML = ''
+          const overview = manifest.views.filter((v) => v.group === 'overview')
+          const landkreise = manifest.views.filter((v) => v.group === 'landkreis')
+          const kreisfreie = manifest.views.filter((v) => v.group === 'kreisfrei')
+          for (const v of overview) {
+            const el = document.createElement('option')
+            el.value = v.id
+            el.textContent = v.label
+            viewSelect.appendChild(el)
+          }
+          if (landkreise.length) {
+            const group = document.createElement('optgroup')
+            group.label = 'Landkreise (Gemeinden)'
+            for (const v of landkreise) {
+              const el = document.createElement('option')
+              el.value = v.id
+              el.textContent = v.label
+              group.appendChild(el)
+            }
+            viewSelect.appendChild(group)
+          }
+          if (kreisfreie.length) {
+            const group = document.createElement('optgroup')
+            group.label = 'Kreisfreie Städte'
+            for (const v of kreisfreie) {
+              const el = document.createElement('option')
+              el.value = v.id
+              el.textContent = v.label
+              group.appendChild(el)
+            }
+            viewSelect.appendChild(group)
+          }
+          applyUrlOptions()
+          applyView(currentView)
+        } catch (e) {
+          loadError.style.display = 'block'
+          loadError.textContent = String(e.message || e)
+        }
+      }
+
+      init()
+    </script>
+  </body>
+</html>

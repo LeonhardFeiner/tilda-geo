@@ -21,6 +21,7 @@
     "bike-share-map:bayern-landkreise": "bun ./scripts/bike-share-map/build.ts --scope bayern-landkreise --stats-api",
     "bike-share-map:bayern-gemeinden": "bun ./scripts/bike-share-map/build.ts --scope bayern-gemeinden --stats-api",
     "bike-share-map:export-stats-geojson": "bun --bun --env-file=../.env ./scripts/bike-share-map/export-stats-geojson.ts",
+    "bike-share-map:viewer": "bun ./scripts/bike-share-map/buildViewer.ts",
     "db-pull": "bun --env-file=../.env scripts/db-pull/run.ts",
     "db-pull:pull": "bun --env-file=../.env scripts/db-pull/pull.ts",
     "db-pull:restore": "bun --env-file=../.env scripts/db-pull/restore-local.ts",

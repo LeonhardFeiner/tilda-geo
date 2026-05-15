@@ -1,0 +1,102 @@
+[
+  {
+    "id": "relation/62772",
+    "name": "Amberg"
+  },
+  {
+    "id": "relation/62654",
+    "name": "Ansbach"
+  },
+  {
+    "id": "relation/62532",
+    "name": "Aschaffenburg"
+  },
+  {
+    "id": "relation/62407",
+    "name": "Augsburg"
+  },
+  {
+    "id": "relation/62525",
+    "name": "Bamberg"
+  },
+  {
+    "id": "relation/62640",
+    "name": "Bayreuth"
+  },
+  {
+    "id": "relation/62717",
+    "name": "Coburg"
+  },
+  {
+    "id": "relation/62403",
+    "name": "Erlangen"
+  },
+  {
+    "id": "relation/62374",
+    "name": "Fürth"
+  },
+  {
+    "id": "relation/62589",
+    "name": "Hof"
+  },
+  {
+    "id": "relation/62381",
+    "name": "Ingolstadt"
+  },
+  {
+    "id": "relation/62349",
+    "name": "Kaufbeuren"
+  },
+  {
+    "id": "relation/62701",
+    "name": "Kempten (Allgäu)"
+  },
+  {
+    "id": "relation/62484",
+    "name": "Landshut"
+  },
+  {
+    "id": "relation/62590",
+    "name": "Memmingen"
+  },
+  {
+    "id": "relation/62428",
+    "name": "München"
+  },
+  {
+    "id": "relation/62780",
+    "name": "Nürnberg"
+  },
+  {
+    "id": "relation/62629",
+    "name": "Passau"
+  },
+  {
+    "id": "relation/62411",
+    "name": "Regensburg"
+  },
+  {
+    "id": "relation/2168233",
+    "name": "Rosenheim"
+  },
+  {
+    "id": "relation/62720",
+    "name": "Schwabach"
+  },
+  {
+    "id": "relation/62534",
+    "name": "Schweinfurt"
+  },
+  {
+    "id": "relation/62636",
+    "name": "Straubing"
+  },
+  {
+    "id": "relation/62554",
+    "name": "Weiden in der Oberpfalz"
+  },
+  {
+    "id": "relation/62464",
+    "name": "Würzburg"
+  }
+]

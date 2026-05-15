@@ -1,11 +1,13 @@
 import type { FeatureCollection } from 'geojson'
-import { TILDA_BIKELANES_TILES } from './constants'
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, type BasemapId } from './basemaps'
+import { PROJECT_LEAD, TILDA_BIKELANES_TILES, TILDA_ROADS_TILES } from './constants'
 import type { MapScopeConfig } from './types'
 
 export function generateMapHtml(
   regions: FeatureCollection,
   scope: MapScopeConfig,
   generatedAt: string,
+  basemapId: BasemapId,
 ) {
   const stats = regions.features
     .map((f) => f.properties?.bikeSharePct)
@@ -15,6 +17,10 @@ export function generateMapHtml(
   const labelMinZoom = scope.labelMinZoom ?? 11
   const bikelanesMinZoom = scope.bikelanesMinZoom ?? 10
 
+  const basemapStyles = Object.fromEntries(
+    BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
+  )
+
   const config = {
     regions,
     center: [scope.center.lng, scope.center.lat],
@@ -22,10 +28,14 @@ export function generateMapHtml(
     minPct,
     maxPct,
     bikelanesTiles: TILDA_BIKELANES_TILES,
+    roadsTiles: TILDA_ROADS_TILES,
     title: scope.title,
     labelMinZoom,
     bikelanesMinZoom,
     generatedAt,
+    basemap: basemapId,
+    basemapStyles,
+    basemapOptions: BASEMAP_OPTIONS,
   }
 
   return `<!DOCTYPE html>
@@ -54,6 +64,15 @@ export function generateMapHtml(
     }
     .panel h1 { margin: 0 0 6px; font-size: 16px; }
     .panel p { margin: 0 0 8px; color: #333; }
+    .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
+    .panel select {
+      width: 100%;
+      font-size: 13px;
+      padding: 4px 6px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    .basemap-hint { font-size: 11px; color: #666; margin-top: 4px; }
     .legend {
       margin-top: 8px;
       padding-top: 8px;
@@ -75,11 +94,15 @@ export function generateMapHtml(
       display: inline-block;
       width: 28px;
       height: 0;
-      border-top: 3px solid #c41a1a;
+      border-top: 3px solid #b71c1c;
       vertical-align: middle;
       margin-right: 6px;
     }
-    .meta { font-size: 11px; color: #666; }
+    .view-meta { font-size: 11px; color: #666; margin-top: 8px; }
+    .footer {
+      font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
+      border-top: 1px solid #eee; line-height: 1.5;
+    }
     #tooltip {
       position: absolute;
       z-index: 3;
@@ -99,53 +122,85 @@ export function generateMapHtml(
   <div class="panel">
     <h1>${scope.title}</h1>
     <p>Flächenfarbe: Anteil Radinfrastruktur an Straßenlänge (<code>bikelane_sum / road_sum</code>, km). ${regions.features.length} Gebiete.</p>
+    <label for="basemap-select">Hintergrundkarte</label>
+    <select id="basemap-select"></select>
+    <p class="basemap-hint" id="basemap-hint"></p>
+    <div style="display:flex;gap:16px;margin:8px 0">
+      <label style="display:flex;align-items:center;gap:6px;font-weight:normal"><input type="checkbox" id="toggle-bikelanes" checked /> Radwege</label>
+      <label style="display:flex;align-items:center;gap:6px;font-weight:normal"><input type="checkbox" id="toggle-roads" /> Straßen</label>
+    </div>
     <div class="legend">
-      <strong>Hintergrund</strong>
+      <strong>Flächenfarbe (Gemeinden)</strong>
       <div class="legend-bar"></div>
       <div class="legend-labels">
         <span id="legend-min"></span>
         <span id="legend-max"></span>
       </div>
-      <p><span class="swatch-line"></span>Radinfrastruktur (TILDA bikelanes, ab Zoom ${bikelanesMinZoom})</p>
+      <p><span class="swatch-line"></span>Radwege (ab Zoom ${bikelanesMinZoom})</p>
     </div>
-    <p class="meta" id="meta"></p>
+    <p class="footer">
+      Erzeugt ${generatedAt} · Daten © OpenStreetMap / tilda-geo.de · Projektverantwortlich: ${PROJECT_LEAD}
+    </p>
   </div>
   <div id="tooltip"></div>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
 
+    const basemapSelect = document.getElementById('basemap-select');
+    const basemapHint = document.getElementById('basemap-hint');
+    const toggleBikelanes = document.getElementById('toggle-bikelanes');
+    const toggleRoads = document.getElementById('toggle-roads');
+
+    function setLayerVisibility(id, visible) {
+      if (!map.getLayer(id)) return;
+      map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
+    }
+    function updateOverlayVisibility() {
+      setLayerVisibility('bikelanes-casing', toggleBikelanes.checked);
+      setLayerVisibility('bikelanes-lines', toggleBikelanes.checked);
+      setLayerVisibility('roads-lines', toggleRoads.checked);
+    }
+    for (const opt of CONFIG.basemapOptions) {
+      const el = document.createElement('option');
+      el.value = opt.id;
+      el.textContent = opt.label;
+      if (opt.id === CONFIG.basemap) el.selected = true;
+      basemapSelect.appendChild(el);
+    }
+    function updateBasemapHint() {
+      const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
+      basemapHint.textContent = meta ? meta.description : '';
+    }
+    updateBasemapHint();
+
     document.getElementById('legend-min').textContent = CONFIG.minPct.toFixed(1) + ' %';
     document.getElementById('legend-max').textContent = CONFIG.maxPct.toFixed(1) + ' %';
-    document.getElementById('meta').textContent =
-      'Erzeugt ' + CONFIG.generatedAt + ' · Basemap OSM · Daten © OpenStreetMap / tilda-geo.de';
 
     const map = new maplibregl.Map({
       container: 'map',
-      style: {
-        version: 8,
-        sources: {
-          osm: {
-            type: 'raster',
-            tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-            tileSize: 256,
-            attribution: '© OpenStreetMap',
-          },
-        },
-        layers: [{ id: 'osm', type: 'raster', source: 'osm' }],
-      },
+      style: CONFIG.basemapStyles[CONFIG.basemap],
       center: CONFIG.center,
       zoom: CONFIG.zoom,
     });
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    map.on('load', () => {
-      map.addSource('regions', { type: 'geojson', data: CONFIG.regions });
+    let overlaysReady = false;
 
+    function addOverlays() {
+      if (map.getSource('regions')) return;
+
+      map.addSource('regions', { type: 'geojson', data: CONFIG.regions });
       map.addSource('bikelanes', {
         type: 'vector',
         tiles: [CONFIG.bikelanesTiles],
+        minzoom: 4,
+        maxzoom: 14,
+      });
+      map.addSource('roads', {
+        type: 'vector',
+        tiles: [CONFIG.roadsTiles],
         minzoom: 4,
         maxzoom: 14,
       });
@@ -159,24 +214,51 @@ export function generateMapHtml(
             'interpolate',
             ['linear'],
             ['coalesce', ['get', 'bikeSharePct'], 0],
-            CONFIG.minPct, '#f7fcf5',
-            (CONFIG.minPct + CONFIG.maxPct) / 2, '#74c476',
-            CONFIG.maxPct, '#006d2c',
+            CONFIG.minPct, '#e8f5e9',
+            (CONFIG.minPct + CONFIG.maxPct) / 2, '#43a047',
+            CONFIG.maxPct, '#1b5e20',
           ],
-          'fill-opacity': 0.72,
+          'fill-opacity': 0.78,
         },
       });
 
+      map.addLayer({
+        id: 'roads-lines',
+        type: 'line',
+        source: 'roads',
+        'source-layer': 'roads',
+        minzoom: CONFIG.bikelanesMinZoom,
+        layout: { visibility: toggleRoads.checked ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#78909c',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 14, 1.2],
+          'line-opacity': 0.65,
+        },
+      });
+      map.addLayer({
+        id: 'bikelanes-casing',
+        type: 'line',
+        source: 'bikelanes',
+        'source-layer': 'bikelanes',
+        minzoom: CONFIG.bikelanesMinZoom,
+        layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 14, 4, 16, 5.5],
+          'line-opacity': 0.95,
+        },
+      });
       map.addLayer({
         id: 'bikelanes-lines',
         type: 'line',
         source: 'bikelanes',
         'source-layer': 'bikelanes',
         minzoom: CONFIG.bikelanesMinZoom,
+        layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
         paint: {
-          'line-color': '#c41a1a',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1, 14, 2, 16, 3.5],
-          'line-opacity': 0.9,
+          'line-color': '#b71c1c',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.2, 16, 3.5],
+          'line-opacity': 1,
         },
       });
 
@@ -185,8 +267,8 @@ export function generateMapHtml(
         type: 'line',
         source: 'regions',
         paint: {
-          'line-color': '#1a1a1a',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.4, 10, 0.8, 12, 1.2],
+          'line-color': '#263238',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.5, 10, 1, 12, 1.4],
         },
       });
 
@@ -207,21 +289,12 @@ export function generateMapHtml(
         },
       });
 
-      const tooltip = document.getElementById('tooltip');
-      map.on('mousemove', 'regions-fill', (e) => {
-        const f = e.features?.[0];
-        if (!f) return;
-        map.getCanvas().style.cursor = 'pointer';
-        tooltip.style.display = 'block';
-        tooltip.textContent = f.properties.label;
-        tooltip.style.left = e.point.x + 12 + 'px';
-        tooltip.style.top = e.point.y + 12 + 'px';
-      });
-      map.on('mouseleave', 'regions-fill', () => {
-        map.getCanvas().style.cursor = '';
-        tooltip.style.display = 'none';
-      });
+      overlaysReady = true;
+      toggleBikelanes.addEventListener('change', updateOverlayVisibility);
+      toggleRoads.addEventListener('change', updateOverlayVisibility);
+    }
 
+    function fitToRegions() {
       const bounds = new maplibregl.LngLatBounds();
       for (const feature of CONFIG.regions.features) {
         if (feature.geometry.type === 'Polygon') {
@@ -239,7 +312,44 @@ export function generateMapHtml(
       if (!bounds.isEmpty()) {
         map.fitBounds(bounds, { padding: 56, maxZoom: CONFIG.zoom + 2 });
       }
+    }
+
+    function setBasemap(id) {
+      overlaysReady = false;
+      map.setStyle(CONFIG.basemapStyles[id]);
+      map.once('idle', () => {
+        addOverlays();
+        if (!map._fittedOnce) {
+          fitToRegions();
+          map._fittedOnce = true;
+        }
+      });
+      updateBasemapHint();
+    }
+
+    basemapSelect.addEventListener('change', () => setBasemap(basemapSelect.value));
+
+    map.on('load', () => {
+      addOverlays();
+      fitToRegions();
+      map._fittedOnce = true;
+
+      const tooltip = document.getElementById('tooltip');
+      map.on('mousemove', 'regions-fill', (e) => {
+        const f = e.features?.[0];
+        if (!f) return;
+        map.getCanvas().style.cursor = 'pointer';
+        tooltip.style.display = 'block';
+        tooltip.textContent = f.properties.label;
+        tooltip.style.left = e.point.x + 12 + 'px';
+        tooltip.style.top = e.point.y + 12 + 'px';
+      });
+      map.on('mouseleave', 'regions-fill', () => {
+        map.getCanvas().style.cursor = '';
+        tooltip.style.display = 'none';
+      });
     });
+
   </script>
 </body>
 </html>

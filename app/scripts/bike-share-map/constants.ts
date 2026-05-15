@@ -10,7 +10,11 @@ export const DEFAULT_STATS_CSV = new URL(
 export const TILDA_BIKELANES_TILES =
   'https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}'
 
+export const TILDA_ROADS_TILES = 'https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}'
+
 export const DEFAULT_STATS_API_URL = 'https://tilda-geo.de/api/stats'
+
+export const PROJECT_LEAD = 'Leonhard Feiner'
 
 export const BAYERN_SCOPES = {
   'bayern-landkreise': {

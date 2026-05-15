@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { featureCollection } from '@turf/helpers'
 import { bbox, center } from '@turf/turf'
 import type { FeatureCollection } from 'geojson'
+import { type BasemapId, DEFAULT_BASEMAP, parseBasemapId } from './basemaps'
 import { loadGemeindeBoundaries, mergeStatsWithBoundaries } from './boundaries'
 import { BAYERN_SCOPES, DEFAULT_STATS_API_URL, DEFAULT_STATS_CSV } from './constants'
 import { generateMapHtml } from './generateHtml'
@@ -44,6 +45,7 @@ Options:
   --stats-api [url]             Fetch GeoJSON (default: ${DEFAULT_STATS_API_URL})
   --boundaries <geojson>        Optional local polygons (CSV path only, rare)
   --fetch-missing-boundaries    Overpass for missing polygons (--boundaries mode)
+  --basemap <id>                blank | light (default) | muted | osm
   -h, --help
 
 Examples:
@@ -104,6 +106,7 @@ function parseArgs(argv: string[]) {
   let landkreisName: string | undefined
   let fetchMissing = false
   let listLandkreise = false
+  let basemap: BasemapId = DEFAULT_BASEMAP
 
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i]
@@ -129,6 +132,8 @@ function parseArgs(argv: string[]) {
       boundariesGeojson = resolve(argv[++i]!)
     } else if (arg === '--fetch-missing-boundaries') {
       fetchMissing = true
+    } else if (arg === '--basemap' && argv[i + 1]) {
+      basemap = parseBasemapId(argv[++i])
     }
   }
 
@@ -149,6 +154,7 @@ function parseArgs(argv: string[]) {
     landkreisId,
     landkreisName,
     fetchMissing,
+    basemap,
   }
 }
 
@@ -215,7 +221,12 @@ async function main() {
   const generatedAt = new Date().toISOString()
 
   writeFileSync(geojsonPath, `${JSON.stringify(featureCollection)}\n`, 'utf8')
-  writeFileSync(htmlPath, generateMapHtml(featureCollection, scope, generatedAt), 'utf8')
+  writeFileSync(
+    htmlPath,
+    generateMapHtml(featureCollection, scope, generatedAt, args.basemap),
+    'utf8',
+  )
+  process.stdout.write(`Basemap: ${args.basemap}\n`)
 
   process.stdout.write(`\nWrote:\n  ${geojsonPath}\n  ${htmlPath}\n`)
   process.stdout.write(`\nOpen: cd ${outputDir} && python3 -m http.server 8765\n`)

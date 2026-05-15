@@ -1,0 +1,286 @@
+[
+  {
+    "id": "relation/62377",
+    "name": "Landkreis Aichach-Friedberg"
+  },
+  {
+    "id": "relation/62663",
+    "name": "Landkreis Altötting"
+  },
+  {
+    "id": "relation/62765",
+    "name": "Landkreis Amberg-Sulzbach"
+  },
+  {
+    "id": "relation/62609",
+    "name": "Landkreis Ansbach"
+  },
+  {
+    "id": "relation/62497",
+    "name": "Landkreis Aschaffenburg"
+  },
+  {
+    "id": "relation/62622",
+    "name": "Landkreis Augsburg"
+  },
+  {
+    "id": "relation/62406",
+    "name": "Landkreis Bad Kissingen"
+  },
+  {
+    "id": "relation/62472",
+    "name": "Landkreis Bad Tölz-Wolfratshausen"
+  },
+  {
+    "id": "relation/62627",
+    "name": "Landkreis Bamberg"
+  },
+  {
+    "id": "relation/62378",
+    "name": "Landkreis Bayreuth"
+  },
+  {
+    "id": "relation/62712",
+    "name": "Landkreis Berchtesgadener Land"
+  },
+  {
+    "id": "relation/62548",
+    "name": "Landkreis Cham"
+  },
+  {
+    "id": "relation/62561",
+    "name": "Landkreis Coburg"
+  },
+  {
+    "id": "relation/62556",
+    "name": "Landkreis Dachau"
+  },
+  {
+    "id": "relation/62711",
+    "name": "Landkreis Deggendorf"
+  },
+  {
+    "id": "relation/62521",
+    "name": "Landkreis Dillingen an der Donau"
+  },
+  {
+    "id": "relation/62707",
+    "name": "Landkreis Dingolfing-Landau"
+  },
+  {
+    "id": "relation/62389",
+    "name": "Landkreis Donau-Ries"
+  },
+  {
+    "id": "relation/2168230",
+    "name": "Landkreis Ebersberg"
+  },
+  {
+    "id": "relation/62684",
+    "name": "Landkreis Eichstätt"
+  },
+  {
+    "id": "relation/62356",
+    "name": "Landkreis Erding"
+  },
+  {
+    "id": "relation/62448",
+    "name": "Landkreis Erlangen-Höchstadt"
+  },
+  {
+    "id": "relation/62687",
+    "name": "Landkreis Forchheim"
+  },
+  {
+    "id": "relation/62633",
+    "name": "Landkreis Freising"
+  },
+  {
+    "id": "relation/2083466",
+    "name": "Landkreis Freyung-Grafenau"
+  },
+  {
+    "id": "relation/62595",
+    "name": "Landkreis Fürstenfeldbruck"
+  },
+  {
+    "id": "relation/62778",
+    "name": "Landkreis Fürth"
+  },
+  {
+    "id": "relation/62726",
+    "name": "Landkreis Garmisch-Partenkirchen"
+  },
+  {
+    "id": "relation/62664",
+    "name": "Landkreis Günzburg"
+  },
+  {
+    "id": "relation/62520",
+    "name": "Landkreis Haßberge"
+  },
+  {
+    "id": "relation/2145179",
+    "name": "Landkreis Hof"
+  },
+  {
+    "id": "relation/62614",
+    "name": "Landkreis Kelheim"
+  },
+  {
+    "id": "relation/62457",
+    "name": "Landkreis Kitzingen"
+  },
+  {
+    "id": "relation/62383",
+    "name": "Landkreis Kronach"
+  },
+  {
+    "id": "relation/2145178",
+    "name": "Landkreis Kulmbach"
+  },
+  {
+    "id": "relation/62498",
+    "name": "Landkreis Landsberg am Lech"
+  },
+  {
+    "id": "relation/62657",
+    "name": "Landkreis Landshut"
+  },
+  {
+    "id": "relation/62515",
+    "name": "Landkreis Lichtenfels"
+  },
+  {
+    "id": "relation/62672",
+    "name": "Landkreis Lindau"
+  },
+  {
+    "id": "relation/62641",
+    "name": "Landkreis Main-Spessart"
+  },
+  {
+    "id": "relation/2168231",
+    "name": "Landkreis Miesbach"
+  },
+  {
+    "id": "relation/62404",
+    "name": "Landkreis Miltenberg"
+  },
+  {
+    "id": "relation/2168232",
+    "name": "Landkreis Mühldorf am Inn"
+  },
+  {
+    "id": "relation/62580",
+    "name": "Landkreis München"
+  },
+  {
+    "id": "relation/62469",
+    "name": "Landkreis Neu-Ulm"
+  },
+  {
+    "id": "relation/62655",
+    "name": "Landkreis Neuburg-Schrobenhausen"
+  },
+  {
+    "id": "relation/62620",
+    "name": "Landkreis Neumarkt in der Oberpfalz"
+  },
+  {
+    "id": "relation/62514",
+    "name": "Landkreis Neustadt an der Aisch-Bad Windsheim"
+  },
+  {
+    "id": "relation/975339",
+    "name": "Landkreis Neustadt an der Waldnaab"
+  },
+  {
+    "id": "relation/62744",
+    "name": "Landkreis Nürnberger Land"
+  },
+  {
+    "id": "relation/62415",
+    "name": "Landkreis Oberallgäu"
+  },
+  {
+    "id": "relation/62533",
+    "name": "Landkreis Ostallgäu"
+  },
+  {
+    "id": "relation/62541",
+    "name": "Landkreis Passau"
+  },
+  {
+    "id": "relation/62371",
+    "name": "Landkreis Pfaffenhofen an der Ilm"
+  },
+  {
+    "id": "relation/62709",
+    "name": "Landkreis Regen"
+  },
+  {
+    "id": "relation/62565",
+    "name": "Landkreis Regensburg"
+  },
+  {
+    "id": "relation/62739",
+    "name": "Landkreis Rhön-Grabfeld"
+  },
+  {
+    "id": "relation/2156362",
+    "name": "Landkreis Rosenheim"
+  },
+  {
+    "id": "relation/62431",
+    "name": "Landkreis Roth"
+  },
+  {
+    "id": "relation/62592",
+    "name": "Landkreis Rottal-Inn"
+  },
+  {
+    "id": "relation/62686",
+    "name": "Landkreis Schwandorf"
+  },
+  {
+    "id": "relation/62530",
+    "name": "Landkreis Schweinfurt"
+  },
+  {
+    "id": "relation/62458",
+    "name": "Landkreis Starnberg"
+  },
+  {
+    "id": "relation/62727",
+    "name": "Landkreis Straubing-Bogen"
+  },
+  {
+    "id": "relation/62575",
+    "name": "Landkreis Tirschenreuth"
+  },
+  {
+    "id": "relation/2156363",
+    "name": "Landkreis Traunstein"
+  },
+  {
+    "id": "relation/62398",
+    "name": "Landkreis Unterallgäu"
+  },
+  {
+    "id": "relation/62600",
+    "name": "Landkreis Weilheim-Schongau"
+  },
+  {
+    "id": "relation/62390",
+    "name": "Landkreis Weißenburg-Gunzenhausen"
+  },
+  {
+    "id": "relation/62491",
+    "name": "Landkreis Wunsiedel im Fichtelgebirge"
+  },
+  {
+    "id": "relation/62465",
+    "name": "Landkreis Würzburg"
+  }
+]

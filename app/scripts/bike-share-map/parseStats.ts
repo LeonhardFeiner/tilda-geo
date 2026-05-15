@@ -189,6 +189,16 @@ export function buildLandkreisGemeindenFromStatsGeojson(
 
   features.sort((a, b) => a.properties.name.localeCompare(b.properties.name, 'de'))
 
+  // Kreisfreie Städte (level 6 only, no Gemeinden in stats) → show the city district itself
+  if (features.length === 0) {
+    const p = landkreisFeature.properties ?? {}
+    features.push({
+      type: 'Feature',
+      geometry: landkreisFeature.geometry,
+      properties: statFromFeatureProperties(p),
+    })
+  }
+
   return {
     type: 'FeatureCollection',
     features,
