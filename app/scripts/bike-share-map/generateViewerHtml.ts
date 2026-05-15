@@ -75,7 +75,30 @@ export function generateViewerHtml(generatedAt: string) {
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
       font-size: 14px; line-height: 1.45;
     }
-    .panel h1 { margin: 0 0 10px; font-size: 16px; }
+    .panel > summary {
+      display: flex; align-items: center; justify-content: space-between; gap: 10px;
+      cursor: pointer; list-style: none; user-select: none;
+      font-size: 15px; font-weight: 600; color: #222; margin: 0 0 10px;
+    }
+    .panel > summary::-webkit-details-marker { display: none; }
+    .panel > summary::after {
+      content: '▼'; flex-shrink: 0; font-size: 10px; color: #666;
+      transition: transform 0.15s ease;
+    }
+    .panel:not([open]) > summary { margin-bottom: 0; }
+    .panel:not([open]) > summary::after { transform: rotate(-90deg); }
+    .panel-summary-preview {
+      flex: 1; min-width: 0; font-size: 11px; font-weight: normal; color: #666;
+      text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .panel-body { margin: 0; }
+    @media (max-width: 768px) {
+      .panel {
+        top: 8px; left: 8px; right: 8px; max-width: none;
+        max-height: min(88vh, calc(100vh - 16px));
+      }
+      .panel:not([open]) { max-height: none; overflow: visible; }
+    }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
@@ -199,8 +222,12 @@ export function generateViewerHtml(generatedAt: string) {
 </head>
 <body>
   <div id="map"></div>
-  <div class="panel">
-    <h1>Radinfra-Karte</h1>
+  <details class="panel" id="panel-main" open>
+    <summary>
+      <span>Steuerung & Legende</span>
+      <span class="panel-summary-preview" id="panel-summary-preview"></span>
+    </summary>
+    <div class="panel-body">
     <p id="load-error"></p>
     <label for="view-select">Gebiet</label>
     <select id="view-select"></select>
@@ -273,7 +300,8 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="footer">
       Erzeugt ${generatedAt} · Daten © OpenStreetMap / tilda-geo.de · Projektverantwortlich: ${PROJECT_LEAD}
     </p>
-  </div>
+    </div>
+  </details>
   <div id="tooltip"></div>
   <script src="./statsClassSums.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
@@ -306,6 +334,9 @@ export function generateViewerHtml(generatedAt: string) {
     const downloadViewDataBtn = document.getElementById('download-view-data');
     const copyViewLinkBtn = document.getElementById('copy-view-link');
     const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
+    const panelMain = document.getElementById('panel-main');
+    const panelSummaryPreview = document.getElementById('panel-summary-preview');
+    const panelMobileMq = window.matchMedia('(max-width: 768px)');
     scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
     scaleCapEnabledCb.checked = false;
     let lastScaleCapViewAllowed = false;
@@ -848,6 +879,39 @@ export function generateViewerHtml(generatedAt: string) {
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
+    function updatePanelSummaryPreview(viewId) {
+      if (!panelSummaryPreview) return;
+      const v = viewId ?? currentView;
+      const viewMeta = manifest.views.find((item) => item.id === v);
+      panelSummaryPreview.textContent = viewMeta?.label || v;
+    }
+
+    function notifyMapResize() {
+      requestAnimationFrame(() => map.resize());
+    }
+
+    function syncPanelDrawerForViewport() {
+      if (!panelMain) return;
+      if (panelMobileMq.matches && !panelMain.dataset.userToggled) {
+        panelMain.open = false;
+      } else if (!panelMobileMq.matches) {
+        panelMain.open = true;
+      }
+    }
+
+    if (panelMain) {
+      panelMain.addEventListener('toggle', () => {
+        panelMain.dataset.userToggled = '1';
+        notifyMapResize();
+      });
+      panelMobileMq.addEventListener('change', () => {
+        delete panelMain.dataset.userToggled;
+        syncPanelDrawerForViewport();
+        notifyMapResize();
+      });
+      syncPanelDrawerForViewport();
+    }
+
     function urlParams() {
       return new URLSearchParams(location.search);
     }
@@ -1305,6 +1369,7 @@ export function generateViewerHtml(generatedAt: string) {
           ' % = volle Farbe)';
       }
       document.getElementById('view-meta').textContent = metaText;
+      updatePanelSummaryPreview(viewId);
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
