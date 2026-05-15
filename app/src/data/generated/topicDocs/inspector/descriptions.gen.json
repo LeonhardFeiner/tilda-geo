@@ -1,12 +1,12 @@
 {
-  "tilda_parkings_no": {
+  "tilda_parkings": {
     "keys": {
       "parking": "Lage oder Art des Parkraums im Straßenland.",
-      "reason": "Angabe eines Grundes bei Nicht-Parken.",
       "capacity": "Geschätzte oder explizit erfasste Anzahl von Stellplätzen.",
       "capacity_source": "Herkunft der Stellplatzanzahl inklusive Schätz- oder Umverteilungslogik.",
       "orientation": "Ausrichtung der Fahrzeuge im Straßenland zur Verkehrsrichtung.",
       "staggered": "Besondere Merkmale zur Parkweise, insbesondere bei alternierendem/versetztem Parken auf Fahrbahnen, die zu schmal sind um auf beiden Seiten gleichzeitig zu parken, keine Markierungen und Beschilderungen aufweisen, die das Parken regeln und auf denen gewöhnlich wechselseitig abschnittsweise auf der einen oder anderen Straßenseite geparkt wird oder geparkt werden kann.",
+      "length": "Berechnete Länge des Parkraumabschnitts in Metern. Für die Berechnung wird eine für Deutschland geeignete metrische Projektion verwendet.",
       "source": "Datenquelle der Parkraumgeometrie aus OpenStreetMap.",
       "geom_sources": "Interne Hilftswerte. Semikolonseparierte Liste der OSM-IDs die für eine Geometrie verwendeten wurden.",
       "tag_sources": "Interne Hilftswerte. Semikolonseparierte Liste der OSM-IDs aus denen die OSM-Tags abgeleitet wurden.",
@@ -20,6 +20,7 @@
       "direction": "Vorgesehene oder ausgeschilderte Fahrzeugrichtung beim Einparken.",
       "location": "Besondere Lagemerkmale des Parkraums im Straßenland.",
       "zone": "Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.",
+      "reason": "Angabe eines Grundes bei Nicht-Parken.",
       "mapillary": "Mapillary-Foto-ID für dieses Feature.",
       "traffic_sign": "Verkehrszeichennummer, mit der dieses Feature ausgeschildert ist.",
       "_staggered_maneuvering_loss": "Interner Wert aus der Kapazitätsberechnung bei alternierendem Parken",
@@ -57,14 +58,14 @@
     },
     "values": {}
   },
-  "tilda_parkings": {
+  "tilda_parkings_no": {
     "keys": {
       "parking": "Lage oder Art des Parkraums im Straßenland.",
+      "reason": "Angabe eines Grundes bei Nicht-Parken.",
       "capacity": "Geschätzte oder explizit erfasste Anzahl von Stellplätzen.",
       "capacity_source": "Herkunft der Stellplatzanzahl inklusive Schätz- oder Umverteilungslogik.",
       "orientation": "Ausrichtung der Fahrzeuge im Straßenland zur Verkehrsrichtung.",
       "staggered": "Besondere Merkmale zur Parkweise, insbesondere bei alternierendem/versetztem Parken auf Fahrbahnen, die zu schmal sind um auf beiden Seiten gleichzeitig zu parken, keine Markierungen und Beschilderungen aufweisen, die das Parken regeln und auf denen gewöhnlich wechselseitig abschnittsweise auf der einen oder anderen Straßenseite geparkt wird oder geparkt werden kann.",
-      "length": "Berechnete Länge des Parkraumabschnitts in Metern. Für die Berechnung wird eine für Deutschland geeignete metrische Projektion verwendet.",
       "source": "Datenquelle der Parkraumgeometrie aus OpenStreetMap.",
       "geom_sources": "Interne Hilftswerte. Semikolonseparierte Liste der OSM-IDs die für eine Geometrie verwendeten wurden.",
       "tag_sources": "Interne Hilftswerte. Semikolonseparierte Liste der OSM-IDs aus denen die OSM-Tags abgeleitet wurden.",
@@ -78,7 +79,6 @@
       "direction": "Vorgesehene oder ausgeschilderte Fahrzeugrichtung beim Einparken.",
       "location": "Besondere Lagemerkmale des Parkraums im Straßenland.",
       "zone": "Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.",
-      "reason": "Angabe eines Grundes bei Nicht-Parken.",
       "mapillary": "Mapillary-Foto-ID für dieses Feature.",
       "traffic_sign": "Verkehrszeichennummer, mit der dieses Feature ausgeschildert ist.",
       "_staggered_maneuvering_loss": "Interner Wert aus der Kapazitätsberechnung bei alternierendem Parken",

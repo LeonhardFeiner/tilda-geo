@@ -1,10 +1,10 @@
 {
-  "parkings_no": {
+  "parkings": {
     "topic": "parking",
-    "tableName": "parkings_no",
-    "sourceIds": ["tilda_parkings_no"],
-    "title": "Kein Parken",
-    "summary": "Abschnitte ohne reguläres Parken, inklusive Verboten und Bereichen mit fehlenden Parkraumdaten.",
+    "tableName": "parkings",
+    "sourceIds": ["tilda_parkings"],
+    "title": "Straßenparken",
+    "summary": "Die Haupttabelle für straßenseitiges Parken in Form von Liniengeometrien. Die Geometrien sind von Straßenabschnitten sowie separat erfassten Straßenparken-Geometrien aus OpenStreetMap abgeleitet.",
     "groups": [
       {
         "id": "parking",
@@ -69,154 +69,6 @@
           {
             "value": "not_expected",
             "label": "Kein Parken zu erwarten"
-          }
-        ]
-      },
-      {
-        "key": "reason",
-        "type": "string",
-        "label": "Grund",
-        "description": "Angabe eines Grundes bei Nicht-Parken.",
-        "values": [
-          {
-            "value": "missing_data",
-            "label": "Keine Parkraum-Daten in OpenStreetMap erfasst"
-          },
-          {
-            "value": "parking_tag",
-            "label": "Explizite Angabe in den Daten"
-          },
-          {
-            "value": "restriction_no_parking",
-            "label": "Explizites Parkverbot aus OSM"
-          },
-          {
-            "value": "restriction_no_stopping",
-            "label": "Explizites Halteverbot aus OSM"
-          },
-          {
-            "value": "restriction_no_standing",
-            "label": "Eingeschränktes Halteverbot aus OSM"
-          },
-          {
-            "value": "bus_stop",
-            "label": "Haltestelle"
-          },
-          {
-            "value": "cycleway",
-            "label": "Radverkehrsanlage"
-          },
-          {
-            "value": "dual_carriage",
-            "label": "Getrennte Richtungsfahrbahnen"
-          },
-          {
-            "value": "junction",
-            "label": "Knotenpunkt / Einmündung"
-          },
-          {
-            "value": "narrow",
-            "label": "Zu schmale Fahrbahn"
-          },
-          {
-            "value": "capacity_below_zero",
-            "label": "Abschnitt zu klein für ein Fahrzeug"
-          }
-        ]
-      },
-      {
-        "key": "condition_category",
-        "type": "string",
-        "label": "Parkbeschränkung",
-        "chapterRefs": ["condition-category"],
-        "values": [
-          {
-            "value": "access_restriction",
-            "label": "Zugangsbeschränkung"
-          },
-          {
-            "value": "assumed_free",
-            "label": "Wahrscheinlich keine Parkbeschränkungen"
-          },
-          {
-            "value": "assumed_private",
-            "label": "Sehr wahrscheinlich privat"
-          },
-          {
-            "value": "bus_lane",
-            "label": "Bussonderfahrstreifen"
-          },
-          {
-            "value": "car_sharing",
-            "label": "Nur für Carsharing-Fahrzeuge"
-          },
-          {
-            "value": "charging",
-            "label": "Laden von Elektrofahrzeugen"
-          },
-          {
-            "value": "disabled",
-            "label": "Behindertenparkplatz"
-          },
-          {
-            "value": "disabled_private",
-            "label": "Personenbezogener Behindertenparkplatz"
-          },
-          {
-            "value": "free",
-            "label": "Keine Parkbeschränkungen"
-          },
-          {
-            "value": "loading",
-            "label": "Ladezone"
-          },
-          {
-            "value": "maxweight",
-            "label": "Gewichtsbegrenzung"
-          },
-          {
-            "value": "mixed",
-            "label": "Nur mit Parkschein oder Bewohnerparkausweis"
-          },
-          {
-            "value": "no_parking",
-            "label": "Eingeschränktes Haltverbot"
-          },
-          {
-            "value": "no_standing",
-            "label": "Nur kurzes Halten erlaubt"
-          },
-          {
-            "value": "no_stopping",
-            "label": "Absolutes Haltverbot"
-          },
-          {
-            "value": "paid",
-            "label": "Nur mit Parkschein"
-          },
-          {
-            "value": "private",
-            "label": "Privat"
-          },
-          {
-            "value": "residents",
-            "label": "Nur mit Bewohnerparkausweis"
-          },
-          {
-            "value": "taxi",
-            "label": "Taxenstand"
-          },
-          {
-            "value": "time_limited",
-            "label": "Höchstparkdauer"
-          },
-          {
-            "value": "unspecified",
-            "label": "Unbestimmt"
-          },
-          {
-            "value": "vehicle_restriction",
-            "label": "Beschränkung auf Fahrzeugklassen"
           }
         ]
       },
@@ -322,6 +174,102 @@
         ]
       },
       {
+        "key": "condition_category",
+        "type": "string",
+        "label": "Parkbeschränkung",
+        "chapterRefs": ["condition-category"],
+        "values": [
+          {
+            "value": "access_restriction",
+            "label": "Zugangsbeschränkung"
+          },
+          {
+            "value": "assumed_free",
+            "label": "Wahrscheinlich keine Parkbeschränkungen"
+          },
+          {
+            "value": "assumed_private",
+            "label": "Sehr wahrscheinlich privat"
+          },
+          {
+            "value": "bus_lane",
+            "label": "Bussonderfahrstreifen"
+          },
+          {
+            "value": "car_sharing",
+            "label": "Nur für Carsharing-Fahrzeuge"
+          },
+          {
+            "value": "charging",
+            "label": "Laden von Elektrofahrzeugen"
+          },
+          {
+            "value": "disabled",
+            "label": "Behindertenparkplatz"
+          },
+          {
+            "value": "disabled_private",
+            "label": "Personenbezogener Behindertenparkplatz"
+          },
+          {
+            "value": "free",
+            "label": "Keine Parkbeschränkungen"
+          },
+          {
+            "value": "loading",
+            "label": "Ladezone"
+          },
+          {
+            "value": "maxweight",
+            "label": "Gewichtsbegrenzung"
+          },
+          {
+            "value": "mixed",
+            "label": "Nur mit Parkschein oder Bewohnerparkausweis"
+          },
+          {
+            "value": "no_parking",
+            "label": "Eingeschränktes Haltverbot"
+          },
+          {
+            "value": "no_standing",
+            "label": "Nur kurzes Halten erlaubt"
+          },
+          {
+            "value": "no_stopping",
+            "label": "Absolutes Haltverbot"
+          },
+          {
+            "value": "paid",
+            "label": "Nur mit Parkschein"
+          },
+          {
+            "value": "private",
+            "label": "Privat"
+          },
+          {
+            "value": "residents",
+            "label": "Nur mit Bewohnerparkausweis"
+          },
+          {
+            "value": "taxi",
+            "label": "Taxenstand"
+          },
+          {
+            "value": "time_limited",
+            "label": "Höchstparkdauer"
+          },
+          {
+            "value": "unspecified",
+            "label": "Unbestimmt"
+          },
+          {
+            "value": "vehicle_restriction",
+            "label": "Beschränkung auf Fahrzeugklassen"
+          }
+        ]
+      },
+      {
         "key": "staggered",
         "type": "string",
         "label": "Parkweise",
@@ -336,6 +284,32 @@
           {
             "value": "no",
             "label": "Nicht alternierend"
+          }
+        ]
+      },
+      {
+        "key": "length",
+        "type": "number",
+        "label": "Länge",
+        "description": "Berechnete Länge des Parkraumabschnitts in Metern. Für die Berechnung wird eine für Deutschland geeignete metrische Projektion verwendet.",
+        "values": []
+      },
+      {
+        "key": "category",
+        "type": "string",
+        "label": "Kategorie",
+        "values": [
+          {
+            "value": "bus_stop",
+            "label": "Bushaltestelle"
+          },
+          {
+            "value": "tree",
+            "label": "Baum"
+          },
+          {
+            "value": "crossing_marked",
+            "label": "Markierter Überweg"
           }
         ]
       },
@@ -998,6 +972,54 @@
         "label": "Parkzone",
         "description": "Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.",
         "values": []
+      },
+      {
+        "key": "reason",
+        "type": "string",
+        "label": "Grund",
+        "description": "Angabe eines Grundes bei Nicht-Parken.",
+        "values": [
+          {
+            "value": "missing_data",
+            "label": "Keine Parkraum-Daten in OpenStreetMap erfasst"
+          },
+          {
+            "value": "parking_tag",
+            "label": "Explizite Angabe in den Daten"
+          },
+          {
+            "value": "restriction_no_parking",
+            "label": "Explizites Parkverbot aus OSM"
+          },
+          {
+            "value": "restriction_no_stopping",
+            "label": "Explizites Halteverbot aus OSM"
+          },
+          {
+            "value": "restriction_no_standing",
+            "label": "Eingeschränktes Halteverbot aus OSM"
+          },
+          {
+            "value": "bus_stop",
+            "label": "Haltestelle"
+          },
+          {
+            "value": "cycleway",
+            "label": "Radverkehrsanlage"
+          },
+          {
+            "value": "dual_carriage",
+            "label": "Getrennte Richtungsfahrbahnen"
+          },
+          {
+            "value": "junction",
+            "label": "Knotenpunkt / Einmündung"
+          },
+          {
+            "value": "narrow",
+            "label": "Zu schmale Fahrbahn"
+          }
+        ]
       },
       {
         "key": "mapillary",
@@ -2322,12 +2344,12 @@
       }
     ]
   },
-  "parkings": {
+  "parkings_no": {
     "topic": "parking",
-    "tableName": "parkings",
-    "sourceIds": ["tilda_parkings"],
-    "title": "Straßenparken",
-    "summary": "Die Haupttabelle für straßenseitiges Parken in Form von Liniengeometrien. Die Geometrien sind von Straßenabschnitten sowie separat erfassten Straßenparken-Geometrien aus OpenStreetMap abgeleitet.",
+    "tableName": "parkings_no",
+    "sourceIds": ["tilda_parkings_no"],
+    "title": "Kein Parken",
+    "summary": "Abschnitte ohne reguläres Parken, inklusive Verboten und Bereichen mit fehlenden Parkraumdaten.",
     "groups": [
       {
         "id": "parking",
@@ -2392,6 +2414,154 @@
           {
             "value": "not_expected",
             "label": "Kein Parken zu erwarten"
+          }
+        ]
+      },
+      {
+        "key": "reason",
+        "type": "string",
+        "label": "Grund",
+        "description": "Angabe eines Grundes bei Nicht-Parken.",
+        "values": [
+          {
+            "value": "missing_data",
+            "label": "Keine Parkraum-Daten in OpenStreetMap erfasst"
+          },
+          {
+            "value": "parking_tag",
+            "label": "Explizite Angabe in den Daten"
+          },
+          {
+            "value": "restriction_no_parking",
+            "label": "Explizites Parkverbot aus OSM"
+          },
+          {
+            "value": "restriction_no_stopping",
+            "label": "Explizites Halteverbot aus OSM"
+          },
+          {
+            "value": "restriction_no_standing",
+            "label": "Eingeschränktes Halteverbot aus OSM"
+          },
+          {
+            "value": "bus_stop",
+            "label": "Haltestelle"
+          },
+          {
+            "value": "cycleway",
+            "label": "Radverkehrsanlage"
+          },
+          {
+            "value": "dual_carriage",
+            "label": "Getrennte Richtungsfahrbahnen"
+          },
+          {
+            "value": "junction",
+            "label": "Knotenpunkt / Einmündung"
+          },
+          {
+            "value": "narrow",
+            "label": "Zu schmale Fahrbahn"
+          },
+          {
+            "value": "capacity_below_zero",
+            "label": "Abschnitt zu klein für ein Fahrzeug"
+          }
+        ]
+      },
+      {
+        "key": "condition_category",
+        "type": "string",
+        "label": "Parkbeschränkung",
+        "chapterRefs": ["condition-category"],
+        "values": [
+          {
+            "value": "access_restriction",
+            "label": "Zugangsbeschränkung"
+          },
+          {
+            "value": "assumed_free",
+            "label": "Wahrscheinlich keine Parkbeschränkungen"
+          },
+          {
+            "value": "assumed_private",
+            "label": "Sehr wahrscheinlich privat"
+          },
+          {
+            "value": "bus_lane",
+            "label": "Bussonderfahrstreifen"
+          },
+          {
+            "value": "car_sharing",
+            "label": "Nur für Carsharing-Fahrzeuge"
+          },
+          {
+            "value": "charging",
+            "label": "Laden von Elektrofahrzeugen"
+          },
+          {
+            "value": "disabled",
+            "label": "Behindertenparkplatz"
+          },
+          {
+            "value": "disabled_private",
+            "label": "Personenbezogener Behindertenparkplatz"
+          },
+          {
+            "value": "free",
+            "label": "Keine Parkbeschränkungen"
+          },
+          {
+            "value": "loading",
+            "label": "Ladezone"
+          },
+          {
+            "value": "maxweight",
+            "label": "Gewichtsbegrenzung"
+          },
+          {
+            "value": "mixed",
+            "label": "Nur mit Parkschein oder Bewohnerparkausweis"
+          },
+          {
+            "value": "no_parking",
+            "label": "Eingeschränktes Haltverbot"
+          },
+          {
+            "value": "no_standing",
+            "label": "Nur kurzes Halten erlaubt"
+          },
+          {
+            "value": "no_stopping",
+            "label": "Absolutes Haltverbot"
+          },
+          {
+            "value": "paid",
+            "label": "Nur mit Parkschein"
+          },
+          {
+            "value": "private",
+            "label": "Privat"
+          },
+          {
+            "value": "residents",
+            "label": "Nur mit Bewohnerparkausweis"
+          },
+          {
+            "value": "taxi",
+            "label": "Taxenstand"
+          },
+          {
+            "value": "time_limited",
+            "label": "Höchstparkdauer"
+          },
+          {
+            "value": "unspecified",
+            "label": "Unbestimmt"
+          },
+          {
+            "value": "vehicle_restriction",
+            "label": "Beschränkung auf Fahrzeugklassen"
           }
         ]
       },
@@ -2497,102 +2667,6 @@
         ]
       },
       {
-        "key": "condition_category",
-        "type": "string",
-        "label": "Parkbeschränkung",
-        "chapterRefs": ["condition-category"],
-        "values": [
-          {
-            "value": "access_restriction",
-            "label": "Zugangsbeschränkung"
-          },
-          {
-            "value": "assumed_free",
-            "label": "Wahrscheinlich keine Parkbeschränkungen"
-          },
-          {
-            "value": "assumed_private",
-            "label": "Sehr wahrscheinlich privat"
-          },
-          {
-            "value": "bus_lane",
-            "label": "Bussonderfahrstreifen"
-          },
-          {
-            "value": "car_sharing",
-            "label": "Nur für Carsharing-Fahrzeuge"
-          },
-          {
-            "value": "charging",
-            "label": "Laden von Elektrofahrzeugen"
-          },
-          {
-            "value": "disabled",
-            "label": "Behindertenparkplatz"
-          },
-          {
-            "value": "disabled_private",
-            "label": "Personenbezogener Behindertenparkplatz"
-          },
-          {
-            "value": "free",
-            "label": "Keine Parkbeschränkungen"
-          },
-          {
-            "value": "loading",
-            "label": "Ladezone"
-          },
-          {
-            "value": "maxweight",
-            "label": "Gewichtsbegrenzung"
-          },
-          {
-            "value": "mixed",
-            "label": "Nur mit Parkschein oder Bewohnerparkausweis"
-          },
-          {
-            "value": "no_parking",
-            "label": "Eingeschränktes Haltverbot"
-          },
-          {
-            "value": "no_standing",
-            "label": "Nur kurzes Halten erlaubt"
-          },
-          {
-            "value": "no_stopping",
-            "label": "Absolutes Haltverbot"
-          },
-          {
-            "value": "paid",
-            "label": "Nur mit Parkschein"
-          },
-          {
-            "value": "private",
-            "label": "Privat"
-          },
-          {
-            "value": "residents",
-            "label": "Nur mit Bewohnerparkausweis"
-          },
-          {
-            "value": "taxi",
-            "label": "Taxenstand"
-          },
-          {
-            "value": "time_limited",
-            "label": "Höchstparkdauer"
-          },
-          {
-            "value": "unspecified",
-            "label": "Unbestimmt"
-          },
-          {
-            "value": "vehicle_restriction",
-            "label": "Beschränkung auf Fahrzeugklassen"
-          }
-        ]
-      },
-      {
         "key": "staggered",
         "type": "string",
         "label": "Parkweise",
@@ -2607,32 +2681,6 @@
           {
             "value": "no",
             "label": "Nicht alternierend"
-          }
-        ]
-      },
-      {
-        "key": "length",
-        "type": "number",
-        "label": "Länge",
-        "description": "Berechnete Länge des Parkraumabschnitts in Metern. Für die Berechnung wird eine für Deutschland geeignete metrische Projektion verwendet.",
-        "values": []
-      },
-      {
-        "key": "category",
-        "type": "string",
-        "label": "Kategorie",
-        "values": [
-          {
-            "value": "bus_stop",
-            "label": "Bushaltestelle"
-          },
-          {
-            "value": "tree",
-            "label": "Baum"
-          },
-          {
-            "value": "crossing_marked",
-            "label": "Markierter Überweg"
           }
         ]
       },
@@ -3295,54 +3343,6 @@
         "label": "Parkzone",
         "description": "Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.",
         "values": []
-      },
-      {
-        "key": "reason",
-        "type": "string",
-        "label": "Grund",
-        "description": "Angabe eines Grundes bei Nicht-Parken.",
-        "values": [
-          {
-            "value": "missing_data",
-            "label": "Keine Parkraum-Daten in OpenStreetMap erfasst"
-          },
-          {
-            "value": "parking_tag",
-            "label": "Explizite Angabe in den Daten"
-          },
-          {
-            "value": "restriction_no_parking",
-            "label": "Explizites Parkverbot aus OSM"
-          },
-          {
-            "value": "restriction_no_stopping",
-            "label": "Explizites Halteverbot aus OSM"
-          },
-          {
-            "value": "restriction_no_standing",
-            "label": "Eingeschränktes Halteverbot aus OSM"
-          },
-          {
-            "value": "bus_stop",
-            "label": "Haltestelle"
-          },
-          {
-            "value": "cycleway",
-            "label": "Radverkehrsanlage"
-          },
-          {
-            "value": "dual_carriage",
-            "label": "Getrennte Richtungsfahrbahnen"
-          },
-          {
-            "value": "junction",
-            "label": "Knotenpunkt / Einmündung"
-          },
-          {
-            "value": "narrow",
-            "label": "Zu schmale Fahrbahn"
-          }
-        ]
       },
       {
         "key": "mapillary",

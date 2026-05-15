@@ -1,5 +1,5 @@
 {
-  "parkings_no": {
+  "parkings": {
     "gfiAttributes": {
       "parking": {
         "name": "Parkposition",
@@ -19,53 +19,6 @@
           "no_standing": "Nur kurzes Halten erlaubt",
           "missing": "Daten in OSM fehlen",
           "not_expected": "Kein Parken zu erwarten"
-        }
-      },
-      "reason": {
-        "name": "Grund",
-        "condition": "contains",
-        "type": "string",
-        "format": {
-          "missing_data": "Keine Parkraum-Daten in OpenStreetMap erfasst",
-          "parking_tag": "Explizite Angabe in den Daten",
-          "restriction_no_parking": "Explizites Parkverbot aus OSM",
-          "restriction_no_stopping": "Explizites Halteverbot aus OSM",
-          "restriction_no_standing": "Eingeschränktes Halteverbot aus OSM",
-          "bus_stop": "Haltestelle",
-          "cycleway": "Radverkehrsanlage",
-          "dual_carriage": "Getrennte Richtungsfahrbahnen",
-          "junction": "Knotenpunkt / Einmündung",
-          "narrow": "Zu schmale Fahrbahn",
-          "capacity_below_zero": "Abschnitt zu klein für ein Fahrzeug"
-        }
-      },
-      "condition_category": {
-        "name": "Parkbeschränkung",
-        "condition": "contains",
-        "type": "string",
-        "format": {
-          "access_restriction": "Zugangsbeschränkung",
-          "assumed_free": "Wahrscheinlich keine Parkbeschränkungen",
-          "assumed_private": "Sehr wahrscheinlich privat",
-          "bus_lane": "Bussonderfahrstreifen",
-          "car_sharing": "Nur für Carsharing-Fahrzeuge",
-          "charging": "Laden von Elektrofahrzeugen",
-          "disabled": "Behindertenparkplatz",
-          "disabled_private": "Personenbezogener Behindertenparkplatz",
-          "free": "Keine Parkbeschränkungen",
-          "loading": "Ladezone",
-          "maxweight": "Gewichtsbegrenzung",
-          "mixed": "Nur mit Parkschein oder Bewohnerparkausweis",
-          "no_parking": "Eingeschränktes Haltverbot",
-          "no_standing": "Nur kurzes Halten erlaubt",
-          "no_stopping": "Absolutes Haltverbot",
-          "paid": "Nur mit Parkschein",
-          "private": "Privat",
-          "residents": "Nur mit Bewohnerparkausweis",
-          "taxi": "Taxenstand",
-          "time_limited": "Höchstparkdauer",
-          "unspecified": "Unbestimmt",
-          "vehicle_restriction": "Beschränkung auf Fahrzeugklassen"
         }
       },
       "capacity": {
@@ -105,6 +58,35 @@
           "diagonal": "Schrägparken"
         }
       },
+      "condition_category": {
+        "name": "Parkbeschränkung",
+        "condition": "contains",
+        "type": "string",
+        "format": {
+          "access_restriction": "Zugangsbeschränkung",
+          "assumed_free": "Wahrscheinlich keine Parkbeschränkungen",
+          "assumed_private": "Sehr wahrscheinlich privat",
+          "bus_lane": "Bussonderfahrstreifen",
+          "car_sharing": "Nur für Carsharing-Fahrzeuge",
+          "charging": "Laden von Elektrofahrzeugen",
+          "disabled": "Behindertenparkplatz",
+          "disabled_private": "Personenbezogener Behindertenparkplatz",
+          "free": "Keine Parkbeschränkungen",
+          "loading": "Ladezone",
+          "maxweight": "Gewichtsbegrenzung",
+          "mixed": "Nur mit Parkschein oder Bewohnerparkausweis",
+          "no_parking": "Eingeschränktes Haltverbot",
+          "no_standing": "Nur kurzes Halten erlaubt",
+          "no_stopping": "Absolutes Haltverbot",
+          "paid": "Nur mit Parkschein",
+          "private": "Privat",
+          "residents": "Nur mit Bewohnerparkausweis",
+          "taxi": "Taxenstand",
+          "time_limited": "Höchstparkdauer",
+          "unspecified": "Unbestimmt",
+          "vehicle_restriction": "Beschränkung auf Fahrzeugklassen"
+        }
+      },
       "staggered": {
         "name": "Parkweise",
         "condition": "contains",
@@ -112,6 +94,20 @@
         "format": {
           "yes": "Alternierendes Parken",
           "no": "Nicht alternierend"
+        }
+      },
+      "length": {
+        "name": "Länge",
+        "type": "number"
+      },
+      "category": {
+        "name": "Kategorie",
+        "condition": "contains",
+        "type": "string",
+        "format": {
+          "bus_stop": "Bushaltestelle",
+          "tree": "Baum",
+          "crossing_marked": "Markierter Überweg"
         }
       },
       "source": {
@@ -389,6 +385,23 @@
         }
       },
       "zone": "Parkzone",
+      "reason": {
+        "name": "Grund",
+        "condition": "contains",
+        "type": "string",
+        "format": {
+          "missing_data": "Keine Parkraum-Daten in OpenStreetMap erfasst",
+          "parking_tag": "Explizite Angabe in den Daten",
+          "restriction_no_parking": "Explizites Parkverbot aus OSM",
+          "restriction_no_stopping": "Explizites Halteverbot aus OSM",
+          "restriction_no_standing": "Eingeschränktes Halteverbot aus OSM",
+          "bus_stop": "Haltestelle",
+          "cycleway": "Radverkehrsanlage",
+          "dual_carriage": "Getrennte Richtungsfahrbahnen",
+          "junction": "Knotenpunkt / Einmündung",
+          "narrow": "Zu schmale Fahrbahn"
+        }
+      },
       "mapillary": {
         "name": "Mapillary",
         "type": "html",
@@ -827,7 +840,7 @@
       "traffic_calming": "Verkehrsberuhigung (OSM-Kategorie \"traffic_calming\")"
     }
   },
-  "parkings": {
+  "parkings_no": {
     "gfiAttributes": {
       "parking": {
         "name": "Parkposition",
@@ -847,6 +860,53 @@
           "no_standing": "Nur kurzes Halten erlaubt",
           "missing": "Daten in OSM fehlen",
           "not_expected": "Kein Parken zu erwarten"
+        }
+      },
+      "reason": {
+        "name": "Grund",
+        "condition": "contains",
+        "type": "string",
+        "format": {
+          "missing_data": "Keine Parkraum-Daten in OpenStreetMap erfasst",
+          "parking_tag": "Explizite Angabe in den Daten",
+          "restriction_no_parking": "Explizites Parkverbot aus OSM",
+          "restriction_no_stopping": "Explizites Halteverbot aus OSM",
+          "restriction_no_standing": "Eingeschränktes Halteverbot aus OSM",
+          "bus_stop": "Haltestelle",
+          "cycleway": "Radverkehrsanlage",
+          "dual_carriage": "Getrennte Richtungsfahrbahnen",
+          "junction": "Knotenpunkt / Einmündung",
+          "narrow": "Zu schmale Fahrbahn",
+          "capacity_below_zero": "Abschnitt zu klein für ein Fahrzeug"
+        }
+      },
+      "condition_category": {
+        "name": "Parkbeschränkung",
+        "condition": "contains",
+        "type": "string",
+        "format": {
+          "access_restriction": "Zugangsbeschränkung",
+          "assumed_free": "Wahrscheinlich keine Parkbeschränkungen",
+          "assumed_private": "Sehr wahrscheinlich privat",
+          "bus_lane": "Bussonderfahrstreifen",
+          "car_sharing": "Nur für Carsharing-Fahrzeuge",
+          "charging": "Laden von Elektrofahrzeugen",
+          "disabled": "Behindertenparkplatz",
+          "disabled_private": "Personenbezogener Behindertenparkplatz",
+          "free": "Keine Parkbeschränkungen",
+          "loading": "Ladezone",
+          "maxweight": "Gewichtsbegrenzung",
+          "mixed": "Nur mit Parkschein oder Bewohnerparkausweis",
+          "no_parking": "Eingeschränktes Haltverbot",
+          "no_standing": "Nur kurzes Halten erlaubt",
+          "no_stopping": "Absolutes Haltverbot",
+          "paid": "Nur mit Parkschein",
+          "private": "Privat",
+          "residents": "Nur mit Bewohnerparkausweis",
+          "taxi": "Taxenstand",
+          "time_limited": "Höchstparkdauer",
+          "unspecified": "Unbestimmt",
+          "vehicle_restriction": "Beschränkung auf Fahrzeugklassen"
         }
       },
       "capacity": {
@@ -886,35 +946,6 @@
           "diagonal": "Schrägparken"
         }
       },
-      "condition_category": {
-        "name": "Parkbeschränkung",
-        "condition": "contains",
-        "type": "string",
-        "format": {
-          "access_restriction": "Zugangsbeschränkung",
-          "assumed_free": "Wahrscheinlich keine Parkbeschränkungen",
-          "assumed_private": "Sehr wahrscheinlich privat",
-          "bus_lane": "Bussonderfahrstreifen",
-          "car_sharing": "Nur für Carsharing-Fahrzeuge",
-          "charging": "Laden von Elektrofahrzeugen",
-          "disabled": "Behindertenparkplatz",
-          "disabled_private": "Personenbezogener Behindertenparkplatz",
-          "free": "Keine Parkbeschränkungen",
-          "loading": "Ladezone",
-          "maxweight": "Gewichtsbegrenzung",
-          "mixed": "Nur mit Parkschein oder Bewohnerparkausweis",
-          "no_parking": "Eingeschränktes Haltverbot",
-          "no_standing": "Nur kurzes Halten erlaubt",
-          "no_stopping": "Absolutes Haltverbot",
-          "paid": "Nur mit Parkschein",
-          "private": "Privat",
-          "residents": "Nur mit Bewohnerparkausweis",
-          "taxi": "Taxenstand",
-          "time_limited": "Höchstparkdauer",
-          "unspecified": "Unbestimmt",
-          "vehicle_restriction": "Beschränkung auf Fahrzeugklassen"
-        }
-      },
       "staggered": {
         "name": "Parkweise",
         "condition": "contains",
@@ -922,20 +953,6 @@
         "format": {
           "yes": "Alternierendes Parken",
           "no": "Nicht alternierend"
-        }
-      },
-      "length": {
-        "name": "Länge",
-        "type": "number"
-      },
-      "category": {
-        "name": "Kategorie",
-        "condition": "contains",
-        "type": "string",
-        "format": {
-          "bus_stop": "Bushaltestelle",
-          "tree": "Baum",
-          "crossing_marked": "Markierter Überweg"
         }
       },
       "source": {
@@ -1213,23 +1230,6 @@
         }
       },
       "zone": "Parkzone",
-      "reason": {
-        "name": "Grund",
-        "condition": "contains",
-        "type": "string",
-        "format": {
-          "missing_data": "Keine Parkraum-Daten in OpenStreetMap erfasst",
-          "parking_tag": "Explizite Angabe in den Daten",
-          "restriction_no_parking": "Explizites Parkverbot aus OSM",
-          "restriction_no_stopping": "Explizites Halteverbot aus OSM",
-          "restriction_no_standing": "Eingeschränktes Halteverbot aus OSM",
-          "bus_stop": "Haltestelle",
-          "cycleway": "Radverkehrsanlage",
-          "dual_carriage": "Getrennte Richtungsfahrbahnen",
-          "junction": "Knotenpunkt / Einmündung",
-          "narrow": "Zu schmale Fahrbahn"
-        }
-      },
       "mapillary": {
         "name": "Mapillary",
         "type": "html",
