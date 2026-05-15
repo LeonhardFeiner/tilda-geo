@@ -2235,8 +2235,8 @@
       }
       updateBasemapHint()
 
-      document.getElementById('legend-min').textContent = CONFIG.minPct.toFixed(1) + ' %'
-      document.getElementById('legend-max').textContent = CONFIG.maxPct.toFixed(1) + ' %'
+      document.getElementById('legend-min').textContent = `${CONFIG.minPct.toFixed(1)} %`
+      document.getElementById('legend-max').textContent = `${CONFIG.maxPct.toFixed(1)} %`
 
       const map = new maplibregl.Map({
         container: 'map',
@@ -2247,7 +2247,7 @@
 
       map.addControl(new maplibregl.NavigationControl(), 'top-right')
 
-      let overlaysReady = false
+      let _overlaysReady = false
 
       function addOverlays() {
         if (map.getSource('regions')) return
@@ -2353,7 +2353,7 @@
           },
         })
 
-        overlaysReady = true
+        _overlaysReady = true
         toggleBikelanes.addEventListener('change', updateOverlayVisibility)
         toggleRoads.addEventListener('change', updateOverlayVisibility)
       }
@@ -2379,7 +2379,7 @@
       }
 
       function setBasemap(id) {
-        overlaysReady = false
+        _overlaysReady = false
         map.setStyle(CONFIG.basemapStyles[id])
         map.once('idle', () => {
           addOverlays()
@@ -2405,8 +2405,8 @@
           map.getCanvas().style.cursor = 'pointer'
           tooltip.style.display = 'block'
           tooltip.textContent = f.properties.label
-          tooltip.style.left = e.point.x + 12 + 'px'
-          tooltip.style.top = e.point.y + 12 + 'px'
+          tooltip.style.left = `${e.point.x + 12}px`
+          tooltip.style.top = `${e.point.y + 12}px`
         })
         map.on('mouseleave', 'regions-fill', () => {
           map.getCanvas().style.cursor = ''
@@ -2415,7 +2415,7 @@
       })
 
       document.getElementById('meta').textContent =
-        'Erzeugt ' + CONFIG.generatedAt + ' · Daten © OpenStreetMap / tilda-geo.de'
+        `Erzeugt ${CONFIG.generatedAt} · Daten © OpenStreetMap / tilda-geo.de`
     </script>
   </body>
 </html>

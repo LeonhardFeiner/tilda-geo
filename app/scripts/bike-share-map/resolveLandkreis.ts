@@ -52,7 +52,7 @@ export function resolveLandkreisFromCsv(csvPath: string, query: { id?: string; n
       return n === q || n.includes(q) || q.includes(n)
     })
     if (hits.length === 1) {
-      return { id: hits[0]!.id, name: hits[0]!.name }
+      return { id: hits[0]?.id, name: hits[0]?.name }
     }
     if (hits.length > 1) {
       const names = hits.map((h) => `${h.name} (${h.id})`).join(', ')

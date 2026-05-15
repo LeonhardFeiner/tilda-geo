@@ -127,7 +127,7 @@ function parseArgs(argv: string[]) {
     } else if (arg === '--stats-geojson' && argv[i + 1]) {
       statsGeojson = argv[++i]!
     } else if (arg === '--stats-api') {
-      statsApi = argv[i + 1] && !argv[i + 1]!.startsWith('--') ? argv[++i]! : DEFAULT_STATS_API_URL
+      statsApi = argv[i + 1] && !argv[i + 1]?.startsWith('--') ? argv[++i]! : DEFAULT_STATS_API_URL
     } else if (arg === '--boundaries' && argv[i + 1]) {
       boundariesGeojson = resolve(argv[++i]!)
     } else if (arg === '--fetch-missing-boundaries') {

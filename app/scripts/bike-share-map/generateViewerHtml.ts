@@ -1,5 +1,11 @@
 import { BASEMAP_OPTIONS, buildBasemapStyleJson } from './basemaps'
-import { PROJECT_LEAD, TILDA_BIKELANES_TILES, TILDA_ROADS_TILES } from './constants'
+import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
+import {
+  BIKE_SHARE_COLOR_CAP_PCT,
+  PROJECT_LEAD,
+  TILDA_BIKELANES_TILES,
+  TILDA_ROADS_TILES,
+} from './constants'
 
 export function generateViewerHtml(generatedAt: string) {
   const basemapStyles = Object.fromEntries(
@@ -21,6 +27,9 @@ export function generateViewerHtml(generatedAt: string) {
     manifestUrl: './manifest.json',
     bayernId: 'relation/2145268',
     defaultView: 'bayern-landkreise',
+    colorScales: COLOR_SCALES,
+    defaultColorScale: DEFAULT_COLOR_SCALE,
+    colorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
   }
 
   return `<!DOCTYPE html>
@@ -37,6 +46,8 @@ export function generateViewerHtml(generatedAt: string) {
     .panel {
       position: absolute; z-index: 2; top: 12px; left: 12px;
       max-width: min(400px, calc(100vw - 24px));
+      max-height: calc(100vh - 24px);
+      overflow-y: auto;
       padding: 12px 14px; border-radius: 8px;
       background: rgba(255, 255, 255, 0.95);
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
@@ -49,7 +60,7 @@ export function generateViewerHtml(generatedAt: string) {
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
     .hint { font-size: 11px; color: #666; margin-top: 4px; }
     .legend { margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; }
-    .legend-bar { height: 10px; border-radius: 3px; background: linear-gradient(to right, #e8f5e9, #1b5e20); margin: 6px 0 4px; }
+    .legend-bar { height: 10px; border-radius: 3px; margin: 6px 0 4px; }
     .legend-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
     .ranking { margin-top: 10px; border-top: 1px solid #e8e8e8; padding-top: 8px; }
@@ -62,21 +73,32 @@ export function generateViewerHtml(generatedAt: string) {
     .ranking-hint { font-weight: normal; font-size: 11px; color: #888; }
     .ranking-list {
       margin: 0; padding: 0;
-      /* 20 rows + li margins (~2px each) + 1.5 extra lines */
-      max-height: calc(11px * 1.45 * 21.5 + 2px * 20);
-      overflow-y: auto;
       font-size: 11px; line-height: 1.45; color: #444;
       list-style: none;
     }
     .ranking-list li {
-      display: flex; align-items: baseline; gap: 8px;
-      margin: 2px 0; padding: 0;
+      display: grid;
+      grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 3em;
+      gap: 2px 6px;
+      align-items: center;
+      margin: 3px 0;
+      padding: 0;
     }
-    .ranking-rank { flex: 0 0 2em; color: #666; font-variant-numeric: tabular-nums; }
-    .ranking-name { flex: 1 1 auto; min-width: 0; }
-    .ranking-pct { flex: 0 0 auto; color: #2e7d32; font-variant-numeric: tabular-nums; }
+    .ranking-rank { color: #666; font-variant-numeric: tabular-nums; font-size: 10px; }
+    .ranking-name {
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 10px;
+    }
+    .ranking-bar-track {
+      height: 9px; background: #eceff1; border-radius: 2px; overflow: hidden;
+    }
+    .ranking-bar-fill { height: 100%; border-radius: 2px; min-width: 2px; }
+    .ranking-pct {
+      text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: #444;
+    }
     .ranking-list .ranking-more {
-      display: block; color: #888; font-style: italic;
+      display: block; grid-column: 1 / -1;
+      color: #888; font-style: italic; font-size: 10px; padding: 2px 0;
     }
     .view-meta { font-size: 11px; color: #666; margin-top: 8px; }
     .footer {
@@ -106,9 +128,12 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
     <div class="legend">
       <strong>Flächenfarbe</strong>
-      <div class="legend-bar"></div>
+      <label for="color-scale-select">Farbskala</label>
+      <select id="color-scale-select"></select>
+      <div class="legend-bar" id="legend-bar"></div>
       <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
-      <p><span class="swatch" style="border-color:#b71c1c"></span>Radwege</p>
+      <p class="hint" id="scale-cap-hint" hidden></p>
+      <p><span class="swatch" id="bikelane-swatch" style="border-color:#b71c1c"></span>Radwege</p>
       <p><span class="swatch" style="border-color:#78909c"></span>Straßen (optional)</p>
       <details class="ranking" id="ranking-details">
         <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
@@ -137,6 +162,13 @@ export function generateViewerHtml(generatedAt: string) {
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
     const rankingDetails = document.getElementById('ranking-details');
+    const colorScaleSelect = document.getElementById('color-scale-select');
+    const legendBar = document.getElementById('legend-bar');
+    const bikelaneSwatch = document.getElementById('bikelane-swatch');
+    const scaleCapHint = document.getElementById('scale-cap-hint');
+    let lastPctRange = { min: 0, max: 20, scaleCapped: false, dataMax: 20 };
+    let lastRankingFeatures = [];
+    const RANKING_RENDER_MAX = 120;
 
     for (const opt of CONFIG.basemapOptions) {
       const el = document.createElement('option');
@@ -239,10 +271,58 @@ export function generateViewerHtml(generatedAt: string) {
       return [];
     }
 
-    function pctRange(features) {
-      const vals = features.map((f) => f.properties.bikeSharePct).filter((v) => typeof v === 'number');
-      if (!vals.length) return { min: 0, max: 20 };
-      return { min: Math.min(...vals), max: Math.max(...vals) };
+    function colorScaleRange(features) {
+      const vals = features
+        .map((f) => f.properties?.bikeSharePct)
+        .filter((v) => typeof v === 'number');
+      const capPct = CONFIG.colorCapPct;
+      if (!vals.length) {
+        return { min: 0, max: 20, dataMin: 0, dataMax: 20, scaleCapped: false };
+      }
+      const dataMin = Math.min(...vals);
+      const dataMax = Math.max(...vals);
+      const scaleCapped = dataMax > capPct;
+      const max = scaleCapped ? capPct : dataMax;
+      return { min: 0, max, dataMin, dataMax, scaleCapped };
+    }
+
+    function viewShowsGemeinden(viewId) {
+      return (
+        viewId === 'bayern-gemeinden' ||
+        viewId === 'bayern-gemeinden-kreisfreie' ||
+        viewId.startsWith('landkreis:')
+      );
+    }
+
+    function viewShowsAllGemeinden(viewId) {
+      return viewId === 'bayern-gemeinden' || viewId === 'bayern-gemeinden-kreisfreie';
+    }
+
+    function updateRankingVisibility(viewId) {
+      const available = !viewShowsAllGemeinden(viewId);
+      rankingDetails.hidden = !available;
+      if (!available) {
+        rankingDetails.open = false;
+        document.getElementById('ranking-list').replaceChildren();
+        document.getElementById('ranking-summary').textContent = '';
+      }
+    }
+
+    function updateScaleCapHint(viewId) {
+      if (!viewShowsGemeinden(viewId)) {
+        scaleCapHint.hidden = true;
+        scaleCapHint.textContent = '';
+        return;
+      }
+      scaleCapHint.hidden = false;
+      scaleCapHint.textContent =
+        'Bei Gemeinden endet die Farbskala bei ' +
+        CONFIG.colorCapPct +
+        ' %: darüber liegende Werte (z. B. durch Forstflächen mit mehr Rad- als Straßenkilometern) werden gleich eingefärbt.';
+    }
+
+    function clampPctForScale(pct, minPct, maxPct) {
+      return Math.max(minPct, Math.min(maxPct, pct));
     }
 
     function compareByBikeShare(a, b) {
@@ -256,30 +336,75 @@ export function generateViewerHtml(generatedAt: string) {
       return bp - ap;
     }
 
-    function updateRanking(features) {
+    function hexToRgb(hex) {
+      const h = hex.replace('#', '');
+      return [
+        Number.parseInt(h.slice(0, 2), 16),
+        Number.parseInt(h.slice(2, 4), 16),
+        Number.parseInt(h.slice(4, 6), 16),
+      ];
+    }
+
+    function lerpColor(c1, c2, t) {
+      const a = hexToRgb(c1);
+      const b = hexToRgb(c2);
+      const mix = (x, y) => Math.round(x + (y - x) * t);
+      return 'rgb(' + mix(a[0], b[0]) + ',' + mix(a[1], b[1]) + ',' + mix(a[2], b[2]) + ')';
+    }
+
+    function colorForPct(pct, min, max) {
+      const scale = colorScaleById(colorScaleSelect.value);
+      if (max <= min) return scale.mid;
+      const v = clampPctForScale(pct, min, max);
+      const t = Math.max(0, Math.min(1, (v - min) / (max - min)));
+      if (t <= 0.5) return lerpColor(scale.low, scale.mid, t * 2);
+      return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
+    }
+
+    function updateRanking(features, minPct, maxPct) {
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByBikeShare);
       const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const span = Math.max(maxPct - minPct, 0.001);
+      const shown = withPct.length > RANKING_RENDER_MAX ? withPct.slice(0, RANKING_RENDER_MAX) : withPct;
 
       summary.textContent =
-        '(' + sorted.length + ' Gebiete, absteigend nach Radinfra-Anteil)';
+        '(' + sorted.length + ' Gebiete, Balken = Anteil in dieser Ansicht)';
 
       list.replaceChildren();
-      for (let i = 0; i < withPct.length; i++) {
-        const f = withPct[i];
+      for (let i = 0; i < shown.length; i++) {
+        const f = shown[i];
+        const pct = f.properties.bikeSharePct;
         const li = document.createElement('li');
         const rank = document.createElement('span');
         rank.className = 'ranking-rank';
         rank.textContent = (i + 1) + '.';
         const name = document.createElement('span');
         name.className = 'ranking-name';
-        name.textContent = f.properties?.name || f.properties?.id || '–';
-        const pct = document.createElement('span');
-        pct.className = 'ranking-pct';
-        pct.textContent = f.properties.bikeSharePct.toFixed(1) + ' %';
-        li.append(rank, name, pct);
+        const label = f.properties?.name || f.properties?.id || '–';
+        name.textContent = label;
+        name.title = label;
+        const track = document.createElement('div');
+        track.className = 'ranking-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'ranking-bar-fill';
+        const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
+        fill.style.width = widthPct + '%';
+        fill.style.background = colorForPct(pct, minPct, maxPct);
+        track.appendChild(fill);
+        const pctEl = document.createElement('span');
+        pctEl.className = 'ranking-pct';
+        pctEl.textContent = pct.toFixed(1) + ' %';
+        li.append(rank, name, track, pctEl);
         list.appendChild(li);
+      }
+      if (withPct.length > RANKING_RENDER_MAX) {
+        const more = document.createElement('li');
+        more.className = 'ranking-more';
+        more.textContent =
+          '… ' + (withPct.length - RANKING_RENDER_MAX) + ' weitere (nach unten scrollen)';
+        list.appendChild(more);
       }
       const withoutPct = sorted.length - withPct.length;
       if (withoutPct > 0) {
@@ -346,12 +471,19 @@ export function generateViewerHtml(generatedAt: string) {
       }
 
       const ranking = params.get('ranking');
-      if (ranking != null && ranking !== '') {
+      if (ranking != null && ranking !== '' && !viewShowsAllGemeinden(viewId)) {
         const open = parseBoolParam(ranking, false);
         rankingDetails.open = open || ranking === 'open';
       }
 
+      const colors = params.get('colors') ?? params.get('palette') ?? params.get('farbskala');
+      if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
+        colorScaleSelect.value = colors;
+      }
+
       updateBasemapHint();
+      updateLegendBar(colorScaleSelect.value);
+      updateBikelaneOverlayColor(colorScaleSelect.value);
     }
 
     let currentView = CONFIG.defaultView;
@@ -415,15 +547,64 @@ export function generateViewerHtml(generatedAt: string) {
         minzoom: 9,
         layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
         paint: {
-          'line-color': '#b71c1c',
+          'line-color': colorScaleById(colorScaleSelect.value).bikelaneColor,
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.2],
         },
       });
     }
 
+    function colorScaleById(id) {
+      return CONFIG.colorScales.find((s) => s.id === id) || CONFIG.colorScales[0];
+    }
+
+    function fillColorExpression(minPct, maxPct, scaleId) {
+      const scale = colorScaleById(scaleId);
+      if (maxPct <= minPct) return scale.mid;
+      const mid = (minPct + maxPct) / 2;
+      const pct = ['coalesce', ['get', 'bikeSharePct'], 0];
+      const clamped = ['max', minPct, ['min', maxPct, pct]];
+      return [
+        'interpolate',
+        ['linear'],
+        clamped,
+        minPct,
+        scale.low,
+        mid,
+        scale.mid,
+        maxPct,
+        scale.high,
+      ];
+    }
+
+    function updateLegendBar(scaleId) {
+      const scale = colorScaleById(scaleId);
+      legendBar.style.background = scale.legendGradient;
+    }
+
+    function updateBikelaneOverlayColor(scaleId) {
+      const scale = colorScaleById(scaleId);
+      bikelaneSwatch.style.borderColor = scale.bikelaneColor;
+      if (map.getLayer('bikelanes-lines')) {
+        map.setPaintProperty('bikelanes-lines', 'line-color', scale.bikelaneColor);
+      }
+    }
+
+    function updateRegionColors(minPct, maxPct) {
+      if (!map.getLayer('regions-fill')) return;
+      map.setPaintProperty(
+        'regions-fill',
+        'fill-color',
+        fillColorExpression(minPct, maxPct, colorScaleSelect.value),
+      );
+    }
+
     function addRegionLayers(geojson, minPct, maxPct, labelMinZoom) {
+      lastPctRange = { min: minPct, max: maxPct, scaleCapped: false, dataMax: maxPct };
+      updateLegendBar(colorScaleSelect.value);
+      updateBikelaneOverlayColor(colorScaleSelect.value);
       if (map.getSource('regions')) {
         map.getSource('regions').setData(geojson);
+        updateRegionColors(minPct, maxPct);
       } else {
         map.addSource('regions', { type: 'geojson', data: geojson });
         map.addLayer({
@@ -431,12 +612,7 @@ export function generateViewerHtml(generatedAt: string) {
           type: 'fill',
           source: 'regions',
           paint: {
-            'fill-color': [
-              'interpolate', ['linear'], ['coalesce', ['get', 'bikeSharePct'], 0],
-              minPct, '#e8f5e9',
-              (minPct + maxPct) / 2, '#43a047',
-              maxPct, '#1b5e20',
-            ],
+            'fill-color': fillColorExpression(minPct, maxPct, colorScaleSelect.value),
             'fill-opacity': 0.78,
           },
         });
@@ -480,10 +656,13 @@ export function generateViewerHtml(generatedAt: string) {
     function applyView(viewId) {
       currentView = viewId;
       const filtered = filterForView(viewId).map(enrichFeature);
-      const { min, max } = pctRange(filtered);
+      const range = colorScaleRange(filtered);
+      const { min, max } = range;
       document.getElementById('legend-min').textContent = min.toFixed(1) + ' %';
       document.getElementById('legend-max').textContent = max.toFixed(1) + ' %';
-      updateRanking(filtered);
+      lastRankingFeatures = filtered;
+      updateRankingVisibility(viewId);
+      if (!rankingDetails.hidden) updateRanking(filtered, min, max);
       const geojson = { type: 'FeatureCollection', features: filtered };
       const labelMinZoom =
         viewId === 'bayern-landkreise-kreisfreie' ||
@@ -496,8 +675,17 @@ export function generateViewerHtml(generatedAt: string) {
               ? 10
               : 11;
       const viewMeta = manifest.views.find((v) => v.id === viewId);
-      document.getElementById('view-meta').textContent =
-        (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete';
+      let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete';
+      if (range.scaleCapped) {
+        metaText +=
+          ' · Skala 0–' +
+          CONFIG.colorCapPct +
+          ' % (max. ' +
+          range.dataMax.toFixed(1) +
+          ' % = volle Farbe)';
+      }
+      document.getElementById('view-meta').textContent = metaText;
+      updateScaleCapHint(viewId);
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
@@ -524,10 +712,17 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     basemapSelect.addEventListener('change', () => setBasemap(basemapSelect.value));
+    colorScaleSelect.addEventListener('change', () => {
+      updateLegendBar(colorScaleSelect.value);
+      updateBikelaneOverlayColor(colorScaleSelect.value);
+      updateRegionColors(lastPctRange.min, lastPctRange.max);
+      if (lastRankingFeatures.length && !rankingDetails.hidden) {
+        updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
+      }
+    });
     viewSelect.addEventListener('change', () => applyView(viewSelect.value));
     toggleBikelanes.addEventListener('change', updateOverlayVisibility);
     toggleRoads.addEventListener('change', updateOverlayVisibility);
-
     function updateBasemapHint() {
       const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
       basemapHint.textContent = meta?.description || '';
@@ -546,6 +741,14 @@ export function generateViewerHtml(generatedAt: string) {
         manifest = await manifestRes.json();
         allFeatures = stats.features || [];
         rawLoaded = true;
+        colorScaleSelect.innerHTML = '';
+        for (const scale of CONFIG.colorScales) {
+          const el = document.createElement('option');
+          el.value = scale.id;
+          el.textContent = scale.label;
+          if (scale.id === CONFIG.defaultColorScale) el.selected = true;
+          colorScaleSelect.appendChild(el);
+        }
         viewSelect.innerHTML = '';
         const overview = manifest.views.filter((v) => v.group === 'overview');
         const landkreise = manifest.views.filter((v) => v.group === 'landkreis');

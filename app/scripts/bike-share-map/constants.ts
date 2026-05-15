@@ -16,6 +16,9 @@ export const DEFAULT_STATS_API_URL = 'https://tilda-geo.de/api/stats'
 
 export const PROJECT_LEAD = 'Leonhard Feiner'
 
+/** Values above this % use the max choropleth color; gradient runs 0 → this when data exceeds it. */
+export const BIKE_SHARE_COLOR_CAP_PCT = 50
+
 export const BAYERN_SCOPES = {
   'bayern-landkreise': {
     id: 'bayern-landkreise',

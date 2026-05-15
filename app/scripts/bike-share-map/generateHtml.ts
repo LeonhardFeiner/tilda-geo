@@ -1,5 +1,6 @@
 import type { FeatureCollection } from 'geojson'
 import { BASEMAP_OPTIONS, buildBasemapStyleJson, type BasemapId } from './basemaps'
+import { computeBikeShareColorScaleRange } from './colorScales'
 import { PROJECT_LEAD, TILDA_BIKELANES_TILES, TILDA_ROADS_TILES } from './constants'
 import type { MapScopeConfig } from './types'
 
@@ -11,9 +12,8 @@ export function generateMapHtml(
 ) {
   const stats = regions.features
     .map((f) => f.properties?.bikeSharePct)
-    .filter((v) => typeof v === 'number')
-  const minPct = stats.length ? Math.min(...stats) : 0
-  const maxPct = stats.length ? Math.max(...stats) : 20
+    .filter((v): v is number => typeof v === 'number')
+  const { min: minPct, max: maxPct } = computeBikeShareColorScaleRange(stats)
   const labelMinZoom = scope.labelMinZoom ?? 11
   const bikelanesMinZoom = scope.bikelanesMinZoom ?? 10
 
@@ -213,7 +213,7 @@ export function generateMapHtml(
           'fill-color': [
             'interpolate',
             ['linear'],
-            ['coalesce', ['get', 'bikeSharePct'], 0],
+            ['max', CONFIG.minPct, ['min', CONFIG.maxPct, ['coalesce', ['get', 'bikeSharePct'], 0]]],
             CONFIG.minPct, '#e8f5e9',
             (CONFIG.minPct + CONFIG.maxPct) / 2, '#43a047',
             CONFIG.maxPct, '#1b5e20',
