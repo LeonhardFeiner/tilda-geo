@@ -45,7 +45,7 @@ Options:
   --stats-api [url]             Fetch GeoJSON (default: ${DEFAULT_STATS_API_URL})
   --boundaries <geojson>        Optional local polygons (CSV path only, rare)
   --fetch-missing-boundaries    Overpass for missing polygons (--boundaries mode)
-  --basemap <id>                blank | light (default) | muted | osm
+  --basemap <id>                blank | light (default) | muted | de | osm
   -h, --help
 
 Examples:

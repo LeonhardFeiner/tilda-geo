@@ -91,6 +91,19 @@ writeFileSync(
   'utf8',
 )
 writeFileSync(join(viewerDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`, 'utf8')
+
+const bundleResult = await Bun.build({
+  entrypoints: [join(scriptDir, 'statsClassSums.bundle.ts')],
+  outdir: viewerDir,
+  naming: 'statsClassSums.js',
+  format: 'iife',
+  minify: true,
+})
+if (!bundleResult.success) {
+  for (const log of bundleResult.logs) process.stderr.write(`${log}\n`)
+  process.exit(1)
+}
+
 writeFileSync(join(viewerDir, 'index.html'), generateViewerHtml(new Date().toISOString()), 'utf8')
 
 process.stdout.write(`Viewer: ${viewerDir}/index.html\n`)
@@ -102,8 +115,11 @@ process.stdout.write(`URL params (all optional):\n`)
 process.stdout.write(
   `  view / gebiet     e.g. bayern-gemeinden-kreisfreie, landkreis:relation/62371\n`,
 )
-process.stdout.write(`  basemap          blank | light | muted | osm\n`)
+process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
 process.stdout.write(`  radwege / bikelanes   1 | 0\n`)
 process.stdout.write(`  strassen / roads      1 | 0\n`)
 process.stdout.write(`  ranking          open | 1 | 0\n`)
 process.stdout.write(`  colors / palette / farbskala   green | traffic\n`)
+process.stdout.write(`  radfarbe / bikelaneColor       hex, e.g. b71c1c or #b71c1c\n`)
+process.stdout.write(`  strassenfarbe / roadColor      hex, e.g. 78909c\n`)
+process.stdout.write(`  roadClasses / bikelaneClasses  comma-separated class ids (Zählung)\n`)

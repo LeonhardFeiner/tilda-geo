@@ -1,4 +1,4 @@
-export type BasemapId = 'blank' | 'light' | 'muted' | 'osm'
+export type BasemapId = 'blank' | 'de' | 'light' | 'muted' | 'osm'
 
 export type BasemapOption = {
   id: BasemapId
@@ -17,7 +17,7 @@ export const BASEMAP_OPTIONS: BasemapOption[] = [
   {
     id: 'light',
     label: 'Hell',
-    description: 'Carto Positron – wenig Straßenkontrast, Orientierung möglich',
+    description: 'Carto Positron – wenig Straßenkontrast, Orientierung möglich (Standard)',
     attribution: '© CARTO © OpenStreetMap',
   },
   {
@@ -27,9 +27,15 @@ export const BASEMAP_OPTIONS: BasemapOption[] = [
     attribution: '© CARTO © OpenStreetMap',
   },
   {
+    id: 'de',
+    label: 'OSM Deutschland',
+    description: 'OpenStreetMap mit deutschen Beschriftungen',
+    attribution: '© OpenStreetMap Deutschland / FOSSGIS',
+  },
+  {
     id: 'osm',
-    label: 'OSM Standard',
-    description: 'Klassische OSM-Karte – viel Detail, weniger Kontrast zu Daten',
+    label: 'OSM international',
+    description: 'Klassische OSM-Karte (oft englische Beschriftung) – viel Detail',
     attribution: '© OpenStreetMap',
   },
 ]
@@ -63,11 +69,20 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
   }
 
   const tiles =
-    basemapId === 'light'
-      ? 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
-      : basemapId === 'muted'
-        ? 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
-        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+    basemapId === 'de'
+      ? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png'
+      : basemapId === 'light'
+        ? 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+        : basemapId === 'muted'
+          ? 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+          : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+
+  const attribution =
+    basemapId === 'de'
+      ? '© OpenStreetMap Deutschland / FOSSGIS'
+      : basemapId === 'osm'
+        ? '© OpenStreetMap'
+        : '© CARTO © OpenStreetMap contributors'
 
   return {
     version: 8,
@@ -76,8 +91,7 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
         type: 'raster',
         tiles: [tiles],
         tileSize: 256,
-        attribution:
-          basemapId === 'osm' ? '© OpenStreetMap' : '© CARTO © OpenStreetMap contributors',
+        attribution,
       },
     },
     layers: [
@@ -85,7 +99,7 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
         id: 'basemap-raster',
         type: 'raster',
         source: 'basemap',
-        paint: basemapId === 'osm' ? {} : { 'raster-opacity': 0.92 },
+        paint: basemapId === 'osm' || basemapId === 'de' ? {} : { 'raster-opacity': 0.92 },
       },
     ],
   }

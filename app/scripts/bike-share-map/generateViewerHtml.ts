@@ -1,20 +1,31 @@
-import { BASEMAP_OPTIONS, buildBasemapStyleJson } from './basemaps'
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basemaps'
 import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
+  DEFAULT_ROAD_OVERLAY_COLOR,
   PROJECT_LEAD,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
 } from './constants'
+import {
+  BIKELANE_CLASS_LABELS,
+  BIKELANE_CLASS_ORDER,
+  RADINFRA_DEFAULT_FILTER,
+  ROAD_CLASS_LABELS,
+  ROAD_CLASS_ORDER,
+} from './statsClassSums'
 
 export function generateViewerHtml(generatedAt: string) {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
   )
 
+  const defaultColorScale =
+    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
+
   const config = {
     generatedAt,
-    basemap: 'light',
+    basemap: DEFAULT_BASEMAP,
     basemapStyles,
     basemapOptions: BASEMAP_OPTIONS.map((b) => ({
       id: b.id,
@@ -29,7 +40,18 @@ export function generateViewerHtml(generatedAt: string) {
     defaultView: 'bayern-landkreise',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
-    colorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
+    defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
+    defaultColorCapEnabled: true,
+    defaultOverlayColors: {
+      bikelane: defaultColorScale.bikelaneColor,
+      road: DEFAULT_ROAD_OVERLAY_COLOR,
+    },
+    roadClassOptions: ROAD_CLASS_ORDER.map((id) => ({ id, label: ROAD_CLASS_LABELS[id] })),
+    bikelaneClassOptions: BIKELANE_CLASS_ORDER.map((id) => ({
+      id,
+      label: BIKELANE_CLASS_LABELS[id],
+    })),
+    radinfraDefaultFilter: RADINFRA_DEFAULT_FILTER,
   }
 
   return `<!DOCTYPE html>
@@ -59,10 +81,73 @@ export function generateViewerHtml(generatedAt: string) {
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
     .hint { font-size: 11px; color: #666; margin-top: 4px; }
-    .legend { margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd; }
-    .legend-bar { height: 10px; border-radius: 3px; margin: 6px 0 4px; }
+    .count-classes, .color-options { margin-top: 8px; }
+    .count-classes > summary, .color-options > summary {
+      cursor: pointer; font-size: 13px; font-weight: 600; color: #333;
+      user-select: none; list-style-position: outside;
+    }
+    .count-classes[open] > summary, .color-options[open] > summary { margin-bottom: 8px; }
+    .class-filters { margin: 8px 0; }
+    .class-filters strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .class-filters label {
+      display: flex; align-items: flex-start; gap: 6px;
+      font-size: 12px; font-weight: normal; margin: 3px 0; cursor: pointer;
+    }
+    #preset-radinfra {
+      margin: 4px 0 8px; font-size: 12px; padding: 4px 8px; cursor: pointer;
+    }
+    .panel-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .panel-actions button {
+      width: 100%; font-size: 12px; padding: 6px 10px; cursor: pointer;
+      border: 1px solid #ccc; border-radius: 4px; background: #fafafa;
+    }
+    .panel-actions button:hover:not(:disabled) { background: #f0f0f0; }
+    .panel-actions button:disabled { opacity: 0.55; cursor: not-allowed; }
+    #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; }
+    #copy-view-link-feedback.is-error { color: #b71c1c; }
+    .scale-cap-controls {
+      margin: 10px 0 8px; padding-top: 8px; border-top: 1px solid #e8e8e8;
+    }
+    .scale-cap-controls label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: normal; margin: 4px 0; cursor: pointer;
+    }
+    .scale-cap-value {
+      display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px;
+    }
+    .scale-cap-value input[type="number"] {
+      width: 4.5em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    .scale-cap-value input:disabled { opacity: 0.5; background: #f5f5f5; }
+    .overlay-color-controls {
+      margin: 10px 0 4px; padding-top: 8px; border-top: 1px solid #e8e8e8;
+    }
+    .overlay-color-controls-title {
+      display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 2px;
+    }
+    .overlay-color-row {
+      display: flex; align-items: center; gap: 10px; margin: 6px 0;
+    }
+    .overlay-color-row label {
+      flex: 1; font-size: 12px; font-weight: normal; margin: 0;
+    }
+    .overlay-color-row input[type="color"] {
+      width: 2.75rem; height: 1.75rem; padding: 2px; border: 1px solid #ccc;
+      border-radius: 4px; cursor: pointer; background: #fff;
+    }
+    .choropleth-legend { margin-top: 8px; }
+    .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
+    .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0; }
     .legend-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
-    .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; vertical-align: middle; margin-right: 6px; }
+    .map-legend {
+      display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd;
+    }
+    .map-legend label {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 12px; font-weight: normal; margin: 0; cursor: pointer;
+    }
+    .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
     .ranking { margin-top: 10px; border-top: 1px solid #e8e8e8; padding-top: 8px; }
     .ranking summary {
       cursor: pointer; font-size: 13px; font-weight: 600; color: #333;
@@ -119,33 +204,78 @@ export function generateViewerHtml(generatedAt: string) {
     <p id="load-error"></p>
     <label for="view-select">Gebiet</label>
     <select id="view-select"></select>
-    <label for="basemap-select">Hintergrundkarte</label>
-    <select id="basemap-select"></select>
-    <p class="hint" id="basemap-hint"></p>
-    <div class="row">
-      <label><input type="checkbox" id="toggle-bikelanes" checked /> Radwege</label>
-      <label><input type="checkbox" id="toggle-roads" /> Straßen</label>
-    </div>
-    <div class="legend">
-      <strong>Flächenfarbe</strong>
-      <label for="color-scale-select">Farbskala</label>
-      <select id="color-scale-select"></select>
+    <p class="view-meta" id="view-meta"></p>
+    <div class="choropleth-legend">
+      <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
       <div class="legend-bar" id="legend-bar"></div>
       <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
-      <p class="hint" id="scale-cap-hint" hidden></p>
-      <p><span class="swatch" id="bikelane-swatch" style="border-color:#b71c1c"></span>Radwege</p>
-      <p><span class="swatch" style="border-color:#78909c"></span>Straßen (optional)</p>
-      <details class="ranking" id="ranking-details">
+    </div>
+    <details class="count-classes" id="count-classes-details">
+          <summary>Zählung: Straßen- & Radinfra-Klassen</summary>
+          <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen.</p>
+          <button type="button" id="preset-radinfra">Radinfra.de-Standard</button>
+          <div class="class-filters" id="road-class-filters">
+            <strong>Straßen</strong>
+          </div>
+          <div class="class-filters" id="bikelane-class-filters">
+            <strong>Radinfrastruktur</strong>
+          </div>
+    </details>
+    <details class="color-options" id="color-options-details">
+      <summary>Farben & Darstellung</summary>
+      <label for="basemap-select">Hintergrundkarte</label>
+      <select id="basemap-select"></select>
+      <p class="hint" id="basemap-hint"></p>
+      <label for="color-scale-select">Farbskala (Flächen)</label>
+      <select id="color-scale-select"></select>
+      <div class="scale-cap-controls">
+        <label><input type="checkbox" id="scale-cap-enabled" /> Farbskala kappen</label>
+        <div class="scale-cap-value">
+          <label for="scale-cap-pct">Obergrenze</label>
+          <input type="number" id="scale-cap-pct" min="5" max="500" step="5" value="${BIKE_SHARE_COLOR_CAP_PCT}" />
+          <span>%</span>
+        </div>
+        <p class="hint" id="scale-cap-hint" hidden></p>
+      </div>
+      <div class="overlay-color-controls">
+        <span class="overlay-color-controls-title">Linienfarbe (Vordergrund)</span>
+        <div class="overlay-color-row">
+          <label for="overlay-bikelane-color">Radwege</label>
+          <input type="color" id="overlay-bikelane-color" value="${defaultColorScale.bikelaneColor}" />
+        </div>
+        <div class="overlay-color-row">
+          <label for="overlay-road-color">Straßen</label>
+          <input type="color" id="overlay-road-color" value="${DEFAULT_ROAD_OVERLAY_COLOR}" />
+        </div>
+      </div>
+    </details>
+    <div class="map-legend">
+      <label>
+        <input type="checkbox" id="toggle-bikelanes" checked />
+        <span class="swatch" id="bikelane-swatch"></span>
+        Radwege
+      </label>
+      <label>
+        <input type="checkbox" id="toggle-roads" />
+        <span class="swatch" id="road-swatch"></span>
+        Straßen
+      </label>
+    </div>
+    <details class="ranking" id="ranking-details">
         <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
         <ol class="ranking-list" id="ranking-list"></ol>
-      </details>
+    </details>
+    <div class="panel-actions">
+      <button type="button" id="download-view-data" disabled>Daten des Gebiets herunterladen</button>
+      <button type="button" id="copy-view-link" disabled>Link zur aktuellen Ansicht kopieren</button>
+      <span id="copy-view-link-feedback" hidden></span>
     </div>
-    <p class="view-meta" id="view-meta"></p>
     <p class="footer">
       Erzeugt ${generatedAt} · Daten © OpenStreetMap / tilda-geo.de · Projektverantwortlich: ${PROJECT_LEAD}
     </p>
   </div>
   <div id="tooltip"></div>
+  <script src="./statsClassSums.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
@@ -154,6 +284,8 @@ export function generateViewerHtml(generatedAt: string) {
     let allFeatures = [];
     let manifest = { views: [] };
     let rawLoaded = false;
+    let currentView = CONFIG.defaultView;
+    let overlaysBound = false;
 
     const viewSelect = document.getElementById('view-select');
     const basemapSelect = document.getElementById('basemap-select');
@@ -165,7 +297,19 @@ export function generateViewerHtml(generatedAt: string) {
     const colorScaleSelect = document.getElementById('color-scale-select');
     const legendBar = document.getElementById('legend-bar');
     const bikelaneSwatch = document.getElementById('bikelane-swatch');
+    const roadSwatch = document.getElementById('road-swatch');
+    const overlayBikelaneColorInput = document.getElementById('overlay-bikelane-color');
+    const overlayRoadColorInput = document.getElementById('overlay-road-color');
     const scaleCapHint = document.getElementById('scale-cap-hint');
+    const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
+    const scaleCapPctInput = document.getElementById('scale-cap-pct');
+    const downloadViewDataBtn = document.getElementById('download-view-data');
+    const copyViewLinkBtn = document.getElementById('copy-view-link');
+    const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
+    scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
+    scaleCapEnabledCb.checked = false;
+    let lastScaleCapViewAllowed = false;
+    let lastRankingViewAvailable = false;
     let lastPctRange = { min: 0, max: 20, scaleCapped: false, dataMax: 20 };
     let lastRankingFeatures = [];
     const RANKING_RENDER_MAX = 120;
@@ -178,26 +322,264 @@ export function generateViewerHtml(generatedAt: string) {
       basemapSelect.appendChild(el);
     }
 
-    function sumLengthRecord(obj) {
-      if (!obj || typeof obj !== 'object') return 0;
-      return Object.values(obj).reduce((a, v) => a + (Number(v) || 0), 0);
+    let lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
+
+    function readLengthClassFilterFromUi() {
+      const road = {};
+      const bikelane = {};
+      for (const opt of CONFIG.roadClassOptions) {
+        const el = document.querySelector('[data-road-class="' + opt.id + '"]');
+        road[opt.id] = el ? el.checked : false;
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]');
+        bikelane[opt.id] = el ? el.checked : false;
+      }
+      return { road, bikelane };
     }
+
+    function applyLengthClassFilterToUi(filter) {
+      for (const opt of CONFIG.roadClassOptions) {
+        const el = document.querySelector('[data-road-class="' + opt.id + '"]');
+        if (el) el.checked = !!filter.road[opt.id];
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]');
+        if (el) el.checked = !!filter.bikelane[opt.id];
+      }
+    }
+
+    function onLengthClassFilterChange() {
+      lengthClassFilter = readLengthClassFilterFromUi();
+      updateOverlayLayerFilters();
+      if (rawLoaded) repaintRegionsFromCounting();
+    }
+
+    function initCountClassFilters() {
+      const roadRoot = document.getElementById('road-class-filters');
+      const bikeRoot = document.getElementById('bikelane-class-filters');
+      for (const opt of CONFIG.roadClassOptions) {
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.dataset.roadClass = opt.id;
+        input.checked = !!CONFIG.radinfraDefaultFilter.road[opt.id];
+        input.addEventListener('change', onLengthClassFilterChange);
+        label.append(input, document.createTextNode(' ' + opt.label));
+        roadRoot.appendChild(label);
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        const label = document.createElement('label');
+        const input = document.createElement('input');
+        input.type = 'checkbox';
+        input.dataset.bikelaneClass = opt.id;
+        input.checked = !!CONFIG.radinfraDefaultFilter.bikelane[opt.id];
+        input.addEventListener('change', onLengthClassFilterChange);
+        label.append(input, document.createTextNode(' ' + opt.label));
+        bikeRoot.appendChild(label);
+      }
+      document.getElementById('preset-radinfra').addEventListener('click', () => {
+        lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
+        applyLengthClassFilterToUi(lengthClassFilter);
+        updateOverlayLayerFilters();
+        if (rawLoaded) repaintRegionsFromCounting();
+      });
+    }
+
+    initCountClassFilters();
 
     function enrichFeature(f) {
       const p = f.properties || {};
-      const road = sumLengthRecord(p.road_length);
-      const bike = sumLengthRecord(p.bikelane_length);
+      const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(
+        p.road_length,
+        p.bikelane_length,
+        lengthClassFilter,
+      );
       const pct = road > 0 ? (bike / road) * 100 : null;
       return {
-        ...f,
+        type: 'Feature',
+        id: p.id,
+        geometry: f.geometry,
         properties: {
           ...p,
           roadSumKm: road,
           bikelaneSumKm: bike,
-          bikeSharePct: pct,
+          bikeSharePct: pct != null ? pct : 0,
           label: (p.name || p.id) + ': ' + (pct != null ? pct.toFixed(1) : '–') + ' % Radinfra',
         },
       };
+    }
+
+    function buildRegionGeojson(features) {
+      return { type: 'FeatureCollection', features };
+    }
+
+    function slugifyFilenamePart(text) {
+      return (
+        String(text)
+          .normalize('NFD')
+          .replace(/[\u0300-\u036f]/g, '')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, '')
+          .slice(0, 80) || 'gebiet'
+      );
+    }
+
+    function downloadFilenameForView(viewId) {
+      const viewMeta = manifest.views.find((v) => v.id === viewId);
+      const label = viewMeta?.label || viewId;
+      return 'radinfra-' + slugifyFilenamePart(label) + '.csv';
+    }
+
+    function lengthRecordForStats(value) {
+      if (value == null) return {};
+      if (typeof value === 'string') {
+        try {
+          const parsed = JSON.parse(value);
+          return typeof parsed === 'object' && parsed && !Array.isArray(parsed) ? parsed : {};
+        } catch {
+          return {};
+        }
+      }
+      if (typeof value === 'object' && !Array.isArray(value)) return value;
+      return {};
+    }
+
+    function csvEscape(value) {
+      if (value == null || value === '') return '';
+      const s = String(value);
+      if (
+        s.includes('"') ||
+        s.includes(',') ||
+        s.includes('\\n') ||
+        s.includes('\\r')
+      ) {
+        return '"' + s.replace(/"/g, '""') + '"';
+      }
+      return s;
+    }
+
+    function csvStatColumns() {
+      const cols = [
+        { key: 'id', header: 'id' },
+        { key: 'name', header: 'name' },
+        { key: 'level', header: 'level' },
+        { key: 'bundesland_id', header: 'bundesland_id' },
+        { key: 'landkreis_id', header: 'landkreis_id' },
+        { key: 'road_km', header: 'road_km' },
+        { key: 'bikelane_km', header: 'bikelane_km' },
+        { key: 'bike_share_pct', header: 'bike_share_pct' },
+      ];
+      for (const opt of CONFIG.roadClassOptions) {
+        cols.push({ key: 'road_km_' + opt.id, header: 'road_km_' + opt.id });
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        cols.push({ key: 'bikelane_km_' + opt.id, header: 'bikelane_km_' + opt.id });
+      }
+      return cols;
+    }
+
+    function statsRowFromFeature(f) {
+      const p = f.properties || {};
+      const roadKm = p.roadSumKm ?? 0;
+      const bikeKm = p.bikelaneSumKm ?? 0;
+      const roadSums = TildaStats.getRoadSums(lengthRecordForStats(p.road_length));
+      const bikeSums = TildaStats.getBikelaneSums(lengthRecordForStats(p.bikelane_length));
+      const row = {
+        id: p.id ?? '',
+        name: p.name ?? '',
+        level: p.level ?? '',
+        bundesland_id: p.bundesland_id ?? '',
+        landkreis_id: p.landkreis_id ?? '',
+        road_km: roadKm,
+        bikelane_km: bikeKm,
+        bike_share_pct: roadKm > 0 ? Math.round((bikeKm / roadKm) * 1000) / 10 : '',
+      };
+      for (const opt of CONFIG.roadClassOptions) {
+        row['road_km_' + opt.id] = roadSums[opt.id] ?? 0;
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        row['bikelane_km_' + opt.id] = bikeSums[opt.id] ?? 0;
+      }
+      return row;
+    }
+
+    function buildStatsCsv(features) {
+      const columns = csvStatColumns();
+      const header = columns.map((c) => csvEscape(c.header)).join(',');
+      const lines = features.map((f) => {
+        const row = statsRowFromFeature(f);
+        return columns.map((c) => csvEscape(row[c.key])).join(',');
+      });
+      return '\\uFEFF' + header + '\\n' + lines.join('\\n') + '\\n';
+    }
+
+    function currentViewFeaturesForExport() {
+      lengthClassFilter = readLengthClassFilterFromUi();
+      return filterForView(currentView).map(enrichFeature);
+    }
+
+    function downloadCurrentViewData() {
+      if (!rawLoaded) return;
+      const features = currentViewFeaturesForExport();
+      if (!features.length) {
+        showCopyViewLinkFeedback('Keine Gebiete in dieser Ansicht.', true);
+        return;
+      }
+      const csv = buildStatsCsv(features);
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = downloadFilenameForView(currentView);
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function setPanelActionsEnabled(enabled) {
+      downloadViewDataBtn.disabled = !enabled;
+      copyViewLinkBtn.disabled = !enabled;
+    }
+
+    function updateLegendRange(min, max) {
+      document.getElementById('legend-min').textContent = min.toFixed(1) + ' %';
+      document.getElementById('legend-max').textContent = max.toFixed(1) + ' %';
+    }
+
+    function updateViewMetaText(viewId, filtered, range) {
+      const viewMeta = manifest.views.find((v) => v.id === viewId);
+      let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete';
+      if (range.scaleCapped) {
+        metaText +=
+          ' · Skala 0–' +
+          range.capPct +
+          ' % (max. ' +
+          range.dataMax.toFixed(1) +
+          ' % = volle Farbe)';
+      }
+      document.getElementById('view-meta').textContent = metaText;
+      updateScaleCapHint(viewId);
+    }
+
+    function repaintRegionsFromCounting() {
+      const filtered = filterForView(currentView).map(enrichFeature);
+      const range = colorScaleRange(filtered);
+      const { min, max } = range;
+      lastPctRange = { min, max, scaleCapped: range.scaleCapped, dataMax: range.dataMax };
+      updateLegendRange(min, max);
+      lastRankingFeatures = filtered;
+      if (!rankingDetails.hidden) updateRanking(filtered, min, max);
+      updateViewMetaText(currentView, filtered, range);
+      const geojson = buildRegionGeojson(filtered);
+      const src = map.getSource('regions');
+      if (src) {
+        src.setData(geojson);
+        updateRegionColors(min, max);
+        map.triggerRepaint();
+      } else if (rawLoaded) {
+        applyView(currentView);
+      }
     }
 
     function findBayern() {
@@ -271,19 +653,56 @@ export function generateViewerHtml(generatedAt: string) {
       return [];
     }
 
+    function defaultScaleCapEnabledForView(viewId) {
+      return viewShowsAllGemeinden(viewId) ? CONFIG.defaultColorCapEnabled : false;
+    }
+
+    function getScaleCapSettings() {
+      const capPct = Math.max(
+        5,
+        Math.min(500, Number(scaleCapPctInput.value) || CONFIG.defaultColorCapPct),
+      );
+      return { enabled: scaleCapEnabledCb.checked, capPct };
+    }
+
+    function updateScaleCapDefaultForView(viewId) {
+      const gemeindenOverview = viewShowsAllGemeinden(viewId);
+      if (gemeindenOverview && !lastScaleCapViewAllowed) {
+        scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
+      } else if (!gemeindenOverview && lastScaleCapViewAllowed) {
+        scaleCapEnabledCb.checked = false;
+      }
+      lastScaleCapViewAllowed = gemeindenOverview;
+      syncScaleCapInputState();
+      updateScaleCapHint(viewId);
+    }
+
+    function syncScaleCapInputState() {
+      scaleCapPctInput.disabled = !scaleCapEnabledCb.checked;
+    }
+
+    function onScaleCapChange() {
+      syncScaleCapInputState();
+      if (rawLoaded) applyView(currentView);
+    }
+
+    scaleCapEnabledCb.addEventListener('change', onScaleCapChange);
+    scaleCapPctInput.addEventListener('change', onScaleCapChange);
+    scaleCapPctInput.addEventListener('input', onScaleCapChange);
+
     function colorScaleRange(features) {
       const vals = features
         .map((f) => f.properties?.bikeSharePct)
         .filter((v) => typeof v === 'number');
-      const capPct = CONFIG.colorCapPct;
+      const { enabled, capPct } = getScaleCapSettings();
       if (!vals.length) {
-        return { min: 0, max: 20, dataMin: 0, dataMax: 20, scaleCapped: false };
+        return { min: 0, max: 20, dataMin: 0, dataMax: 20, scaleCapped: false, capPct };
       }
       const dataMin = Math.min(...vals);
       const dataMax = Math.max(...vals);
-      const scaleCapped = dataMax > capPct;
+      const scaleCapped = enabled && dataMax > capPct;
       const max = scaleCapped ? capPct : dataMax;
-      return { min: 0, max, dataMin, dataMax, scaleCapped };
+      return { min: 0, max, dataMin, dataMax, scaleCapped, capPct };
     }
 
     function viewShowsGemeinden(viewId) {
@@ -298,6 +717,8 @@ export function generateViewerHtml(generatedAt: string) {
       return viewId === 'bayern-gemeinden' || viewId === 'bayern-gemeinden-kreisfreie';
     }
 
+    updateScaleCapDefaultForView(CONFIG.defaultView);
+
     function updateRankingVisibility(viewId) {
       const available = !viewShowsAllGemeinden(viewId);
       rankingDetails.hidden = !available;
@@ -305,11 +726,15 @@ export function generateViewerHtml(generatedAt: string) {
         rankingDetails.open = false;
         document.getElementById('ranking-list').replaceChildren();
         document.getElementById('ranking-summary').textContent = '';
+      } else if (available && !lastRankingViewAvailable) {
+        rankingDetails.open = true;
       }
+      lastRankingViewAvailable = available;
     }
 
     function updateScaleCapHint(viewId) {
-      if (!viewShowsGemeinden(viewId)) {
+      const { enabled, capPct } = getScaleCapSettings();
+      if (!viewShowsGemeinden(viewId) || !enabled) {
         scaleCapHint.hidden = true;
         scaleCapHint.textContent = '';
         return;
@@ -317,7 +742,7 @@ export function generateViewerHtml(generatedAt: string) {
       scaleCapHint.hidden = false;
       scaleCapHint.textContent =
         'Bei Gemeinden endet die Farbskala bei ' +
-        CONFIG.colorCapPct +
+        capPct +
         ' %: darüber liegende Werte (z. B. durch Forstflächen mit mehr Rad- als Straßenkilometern) werden gleich eingefärbt.';
     }
 
@@ -434,6 +859,157 @@ export function generateViewerHtml(generatedAt: string) {
       return true;
     }
 
+    function parseHexColorParam(value) {
+      if (value == null || value === '') return null;
+      const v = value.startsWith('#') ? value : '#' + value;
+      if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null;
+      return v.toLowerCase();
+    }
+
+    function hexColorWithoutHash(value) {
+      return value.replace(/^#/, '').toLowerCase();
+    }
+
+    function lengthClassFiltersEqual(a, b) {
+      for (const opt of CONFIG.roadClassOptions) {
+        if (!!a.road[opt.id] !== !!b.road[opt.id]) return false;
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        if (!!a.bikelane[opt.id] !== !!b.bikelane[opt.id]) return false;
+      }
+      return true;
+    }
+
+    function enabledClassIds(filter, kind) {
+      const options = kind === 'road' ? CONFIG.roadClassOptions : CONFIG.bikelaneClassOptions;
+      return options.filter((opt) => filter[kind][opt.id]).map((opt) => opt.id);
+    }
+
+    function applyLengthClassFilterFromUrl(params) {
+      const roadParam = params.get('roadClasses');
+      const bikeParam = params.get('bikelaneClasses');
+      if (roadParam == null && bikeParam == null) return false;
+      const filter = structuredClone(CONFIG.radinfraDefaultFilter);
+      if (roadParam != null) {
+        const enabled = new Set(roadParam.split(',').map((s) => s.trim()).filter(Boolean));
+        for (const opt of CONFIG.roadClassOptions) {
+          filter.road[opt.id] = enabled.has(opt.id);
+        }
+      }
+      if (bikeParam != null) {
+        const enabled = new Set(bikeParam.split(',').map((s) => s.trim()).filter(Boolean));
+        for (const opt of CONFIG.bikelaneClassOptions) {
+          filter.bikelane[opt.id] = enabled.has(opt.id);
+        }
+      }
+      lengthClassFilter = filter;
+      applyLengthClassFilterToUi(lengthClassFilter);
+      return true;
+    }
+
+    function buildShareUrl() {
+      const filter = readLengthClassFilterFromUi();
+      lengthClassFilter = filter;
+      const params = new URLSearchParams();
+      const view = viewSelect.value;
+      if (view && view !== CONFIG.defaultView) params.set('view', view);
+      if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
+      if (!toggleBikelanes.checked) params.set('radwege', '0');
+      if (toggleRoads.checked) params.set('strassen', '1');
+      if (rankingDetails.open && !rankingDetails.hidden) params.set('ranking', 'open');
+      if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
+        params.set('colors', colorScaleSelect.value);
+      }
+      const { enabled, capPct } = getScaleCapSettings();
+      const defaultCapEnabled = defaultScaleCapEnabledForView(view);
+      if (capPct !== CONFIG.defaultColorCapPct) params.set('cap', String(capPct));
+      if (enabled !== defaultCapEnabled) {
+        params.set('capEnabled', enabled ? '1' : '0');
+      }
+      const scaleBike = bikelaneColorForScale(colorScaleSelect.value).toLowerCase();
+      const bikeHex = overlayBikelaneColorInput.value.toLowerCase();
+      if (bikeHex !== scaleBike) params.set('radfarbe', hexColorWithoutHash(bikeHex));
+      const roadHex = overlayRoadColorInput.value.toLowerCase();
+      if (roadHex !== CONFIG.defaultOverlayColors.road.toLowerCase()) {
+        params.set('strassenfarbe', hexColorWithoutHash(roadHex));
+      }
+      if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
+        const roads = enabledClassIds(filter, 'road');
+        const bikes = enabledClassIds(filter, 'bikelane');
+        if (roads.length) params.set('roadClasses', roads.join(','));
+        if (bikes.length) params.set('bikelaneClasses', bikes.join(','));
+      }
+      const qs = params.toString();
+      return location.origin + location.pathname + (qs ? '?' + qs : '');
+    }
+
+    let copyViewLinkFeedbackTimer = null;
+
+    function showCopyViewLinkFeedback(message, isError) {
+      copyViewLinkFeedback.textContent = message;
+      copyViewLinkFeedback.hidden = false;
+      copyViewLinkFeedback.classList.toggle('is-error', !!isError);
+      if (copyViewLinkFeedbackTimer) clearTimeout(copyViewLinkFeedbackTimer);
+      copyViewLinkFeedbackTimer = setTimeout(() => {
+        copyViewLinkFeedback.hidden = true;
+        copyViewLinkFeedback.classList.remove('is-error');
+      }, 2500);
+    }
+
+    function copyTextFallback(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.setAttribute('readonly', '');
+      ta.style.position = 'fixed';
+      ta.style.left = '-9999px';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(ta);
+      return ok;
+    }
+
+    async function copyShareLink() {
+      const url = buildShareUrl();
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(url);
+        } else if (!copyTextFallback(url)) {
+          throw new Error('copy failed');
+        }
+        showCopyViewLinkFeedback('Link kopiert.');
+      } catch {
+        showCopyViewLinkFeedback('Kopieren fehlgeschlagen.', true);
+      }
+    }
+
+    function bikelaneColorForScale(scaleId) {
+      return colorScaleById(scaleId).bikelaneColor;
+    }
+
+    function applyOverlayLineColors() {
+      const bikeColor = overlayBikelaneColorInput.value;
+      const roadColor = overlayRoadColorInput.value;
+      bikelaneSwatch.style.borderColor = bikeColor;
+      roadSwatch.style.borderColor = roadColor;
+      if (map.getLayer('bikelanes-lines')) {
+        map.setPaintProperty('bikelanes-lines', 'line-color', bikeColor);
+      }
+      if (map.getLayer('roads-lines')) {
+        map.setPaintProperty('roads-lines', 'line-color', roadColor);
+      }
+    }
+
+    function syncOverlayColorInputsFromScale(scaleId) {
+      overlayBikelaneColorInput.value = bikelaneColorForScale(scaleId);
+    }
+
+    function initOverlayColorInputs() {
+      overlayBikelaneColorInput.value = CONFIG.defaultOverlayColors.bikelane;
+      overlayRoadColorInput.value = CONFIG.defaultOverlayColors.road;
+      applyOverlayLineColors();
+    }
+
     function allViewOptionValues() {
       return [...viewSelect.options].map((o) => o.value).filter(Boolean);
     }
@@ -471,33 +1047,82 @@ export function generateViewerHtml(generatedAt: string) {
       }
 
       const ranking = params.get('ranking');
-      if (ranking != null && ranking !== '' && !viewShowsAllGemeinden(viewId)) {
-        const open = parseBoolParam(ranking, false);
-        rankingDetails.open = open || ranking === 'open';
+      if (!viewShowsAllGemeinden(viewId)) {
+        if (ranking != null && ranking !== '') {
+          rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open';
+        } else {
+          rankingDetails.open = true;
+        }
+        lastRankingViewAvailable = true;
       }
 
       const colors = params.get('colors') ?? params.get('palette') ?? params.get('farbskala');
+      let scaleFromUrl = null;
       if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
         colorScaleSelect.value = colors;
+        scaleFromUrl = colors;
       }
+
+      const cap = params.get('cap') ?? params.get('kappung');
+      if (cap != null && cap !== '') {
+        const capNum = Number(cap);
+        if (Number.isFinite(capNum)) scaleCapPctInput.value = String(capNum);
+      }
+      const capEnabled = params.get('capEnabled') ?? params.get('kappungEnabled');
+      if (capEnabled != null && capEnabled !== '') {
+        scaleCapEnabledCb.checked = parseBoolParam(
+          capEnabled,
+          defaultScaleCapEnabledForView(viewId),
+        );
+        lastScaleCapViewAllowed = viewShowsAllGemeinden(viewId);
+      } else {
+        updateScaleCapDefaultForView(viewId);
+      }
+      syncScaleCapInputState();
+
+      applyLengthClassFilterFromUrl(params);
+
+      const radfarbe =
+        params.get('radfarbe') ?? params.get('radwegeFarbe') ?? params.get('bikelaneColor');
+      const radParsed = parseHexColorParam(radfarbe);
+      if (radParsed) overlayBikelaneColorInput.value = radParsed;
+      else if (scaleFromUrl) syncOverlayColorInputsFromScale(scaleFromUrl);
+
+      const strassenfarbe =
+        params.get('strassenfarbe') ?? params.get('strassenFarbe') ?? params.get('roadColor');
+      const roadParsed = parseHexColorParam(strassenfarbe);
+      if (roadParsed) overlayRoadColorInput.value = roadParsed;
 
       updateBasemapHint();
       updateLegendBar(colorScaleSelect.value);
-      updateBikelaneOverlayColor(colorScaleSelect.value);
+      applyOverlayLineColors();
     }
-
-    let currentView = CONFIG.defaultView;
-    let overlaysBound = false;
 
     function setLayerVisibility(id, visible) {
       if (!map.getLayer(id)) return;
       map.setLayoutProperty(id, 'visibility', visible ? 'visible' : 'none');
     }
 
+    function updateOverlayLayerFilters() {
+      if (!map.getLayer('roads-lines') && !map.getLayer('bikelanes-lines')) return;
+      const roadFilter = TildaStats.maplibrePropertyInFilter(
+        'road',
+        TildaStats.enabledRoadHighwayTags(lengthClassFilter),
+      );
+      const bikeFilter = TildaStats.maplibrePropertyInFilter(
+        'category',
+        TildaStats.enabledBikelaneCategoryTags(lengthClassFilter),
+      );
+      if (map.getLayer('roads-lines')) map.setFilter('roads-lines', roadFilter);
+      if (map.getLayer('bikelanes-lines')) map.setFilter('bikelanes-lines', bikeFilter);
+      if (map.getLayer('bikelanes-casing')) map.setFilter('bikelanes-casing', bikeFilter);
+    }
+
     function updateOverlayVisibility() {
       setLayerVisibility('bikelanes-casing', toggleBikelanes.checked);
       setLayerVisibility('bikelanes-lines', toggleBikelanes.checked);
       setLayerVisibility('roads-lines', toggleRoads.checked);
+      updateOverlayLayerFilters();
     }
 
     function addTileOverlays() {
@@ -522,7 +1147,7 @@ export function generateViewerHtml(generatedAt: string) {
         minzoom: 9,
         layout: { visibility: toggleRoads.checked ? 'visible' : 'none' },
         paint: {
-          'line-color': '#78909c',
+          'line-color': overlayRoadColorInput.value,
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 14, 1.2],
           'line-opacity': 0.65,
         },
@@ -547,10 +1172,11 @@ export function generateViewerHtml(generatedAt: string) {
         minzoom: 9,
         layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
         paint: {
-          'line-color': colorScaleById(colorScaleSelect.value).bikelaneColor,
+          'line-color': overlayBikelaneColorInput.value,
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.2],
         },
       });
+      updateOverlayLayerFilters();
     }
 
     function colorScaleById(id) {
@@ -581,14 +1207,6 @@ export function generateViewerHtml(generatedAt: string) {
       legendBar.style.background = scale.legendGradient;
     }
 
-    function updateBikelaneOverlayColor(scaleId) {
-      const scale = colorScaleById(scaleId);
-      bikelaneSwatch.style.borderColor = scale.bikelaneColor;
-      if (map.getLayer('bikelanes-lines')) {
-        map.setPaintProperty('bikelanes-lines', 'line-color', scale.bikelaneColor);
-      }
-    }
-
     function updateRegionColors(minPct, maxPct) {
       if (!map.getLayer('regions-fill')) return;
       map.setPaintProperty(
@@ -601,12 +1219,13 @@ export function generateViewerHtml(generatedAt: string) {
     function addRegionLayers(geojson, minPct, maxPct, labelMinZoom) {
       lastPctRange = { min: minPct, max: maxPct, scaleCapped: false, dataMax: maxPct };
       updateLegendBar(colorScaleSelect.value);
-      updateBikelaneOverlayColor(colorScaleSelect.value);
+      applyOverlayLineColors();
       if (map.getSource('regions')) {
         map.getSource('regions').setData(geojson);
         updateRegionColors(minPct, maxPct);
+        map.triggerRepaint();
       } else {
-        map.addSource('regions', { type: 'geojson', data: geojson });
+        map.addSource('regions', { type: 'geojson', data: geojson, promoteId: 'id' });
         map.addLayer({
           id: 'regions-fill',
           type: 'fill',
@@ -662,6 +1281,7 @@ export function generateViewerHtml(generatedAt: string) {
       document.getElementById('legend-max').textContent = max.toFixed(1) + ' %';
       lastRankingFeatures = filtered;
       updateRankingVisibility(viewId);
+      updateScaleCapHint(viewId);
       if (!rankingDetails.hidden) updateRanking(filtered, min, max);
       const geojson = { type: 'FeatureCollection', features: filtered };
       const labelMinZoom =
@@ -679,13 +1299,12 @@ export function generateViewerHtml(generatedAt: string) {
       if (range.scaleCapped) {
         metaText +=
           ' · Skala 0–' +
-          CONFIG.colorCapPct +
+          range.capPct +
           ' % (max. ' +
           range.dataMax.toFixed(1) +
           ' % = volle Farbe)';
       }
       document.getElementById('view-meta').textContent = metaText;
-      updateScaleCapHint(viewId);
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
@@ -714,15 +1333,23 @@ export function generateViewerHtml(generatedAt: string) {
     basemapSelect.addEventListener('change', () => setBasemap(basemapSelect.value));
     colorScaleSelect.addEventListener('change', () => {
       updateLegendBar(colorScaleSelect.value);
-      updateBikelaneOverlayColor(colorScaleSelect.value);
+      syncOverlayColorInputsFromScale(colorScaleSelect.value);
+      applyOverlayLineColors();
       updateRegionColors(lastPctRange.min, lastPctRange.max);
       if (lastRankingFeatures.length && !rankingDetails.hidden) {
         updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
       }
     });
-    viewSelect.addEventListener('change', () => applyView(viewSelect.value));
+    viewSelect.addEventListener('change', () => {
+      updateScaleCapDefaultForView(viewSelect.value);
+      applyView(viewSelect.value);
+    });
     toggleBikelanes.addEventListener('change', updateOverlayVisibility);
     toggleRoads.addEventListener('change', updateOverlayVisibility);
+    overlayBikelaneColorInput.addEventListener('input', applyOverlayLineColors);
+    overlayRoadColorInput.addEventListener('input', applyOverlayLineColors);
+    downloadViewDataBtn.addEventListener('click', downloadCurrentViewData);
+    copyViewLinkBtn.addEventListener('click', copyShareLink);
     function updateBasemapHint() {
       const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
       basemapHint.textContent = meta?.description || '';
@@ -741,6 +1368,7 @@ export function generateViewerHtml(generatedAt: string) {
         manifest = await manifestRes.json();
         allFeatures = stats.features || [];
         rawLoaded = true;
+        setPanelActionsEnabled(true);
         colorScaleSelect.innerHTML = '';
         for (const scale of CONFIG.colorScales) {
           const el = document.createElement('option');
@@ -781,6 +1409,7 @@ export function generateViewerHtml(generatedAt: string) {
           }
           viewSelect.appendChild(group);
         }
+        initOverlayColorInputs();
         applyUrlOptions();
         applyView(currentView);
       } catch (e) {
