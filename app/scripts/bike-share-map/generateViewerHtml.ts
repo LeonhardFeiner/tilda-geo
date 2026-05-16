@@ -225,6 +225,7 @@ export function generateViewerHtml(generatedAt: string) {
     #tooltip {
       position: absolute; z-index: 3; pointer-events: none; display: none;
       padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.85); color: #fff; font-size: 12px; max-width: 320px;
+      white-space: pre-line;
     }
     #load-error { color: #b71c1c; font-size: 13px; display: none; }
   </style>
@@ -307,7 +308,7 @@ export function generateViewerHtml(generatedAt: string) {
       <span id="copy-view-link-feedback" hidden></span>
     </div>
     <p class="footer">
-      Erstellt am ${generatedDateLabel}<br />
+      Erstellt am ${generatedDateLabel} ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="${VIEWER_SOURCE_REPO_URL}" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -449,7 +450,15 @@ export function generateViewerHtml(generatedAt: string) {
           roadSumKm: road,
           bikelaneSumKm: bike,
           bikeSharePct: pct != null ? pct : 0,
-          label: (p.name || p.id) + ': ' + (pct != null ? pct.toFixed(1) : '–') + ' % Radinfra',
+          label:
+            (p.name || p.id) +
+            ': ' +
+            (pct != null ? formatUiPct(pct) : '–') +
+            ' %\\n' +
+            TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+            ' km / ' +
+            TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+            ' km',
         },
       };
     }
@@ -492,6 +501,10 @@ export function generateViewerHtml(generatedAt: string) {
 
     const CSV_SEP = ';';
 
+    function formatUiPct(value) {
+      return TildaStats.formatStatPctUi(value);
+    }
+
     function csvEscape(value) {
       if (value == null || value === '') return '';
       const s = String(value);
@@ -506,11 +519,13 @@ export function generateViewerHtml(generatedAt: string) {
       return s;
     }
 
-    function formatGermanCsvNumber(value) {
-      if (value === '' || value == null) return '';
-      const n = Number(value);
-      if (!Number.isFinite(n)) return String(value);
-      return n.toLocaleString('de-DE', { maximumFractionDigits: 3 });
+    function formatCsvStatValue(raw, kind) {
+      if (raw === '' || raw == null) return '';
+      const n = Number(raw);
+      if (!Number.isFinite(n)) return String(raw);
+      if (kind === 'pct') return TildaStats.formatStatPct(n);
+      if (kind === 'km') return TildaStats.formatStatKm(n);
+      return String(raw);
     }
 
     function csvStatColumns() {
@@ -520,22 +535,22 @@ export function generateViewerHtml(generatedAt: string) {
         { key: 'level', header: 'Verwaltungsebene', numeric: false },
         { key: 'bundesland_id', header: 'Bundesland-ID', numeric: false },
         { key: 'landkreis_id', header: 'Landkreis-ID', numeric: false },
-        { key: 'road_km', header: 'Straßen (km)', numeric: true },
-        { key: 'bikelane_km', header: 'Radinfra (km)', numeric: true },
-        { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: true },
+        { key: 'road_km', header: 'Straßen (km)', numeric: 'km' },
+        { key: 'bikelane_km', header: 'Radinfra (km)', numeric: 'km' },
+        { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: 'pct' },
       ];
       for (const opt of CONFIG.roadClassOptions) {
         cols.push({
           key: 'road_km_' + opt.id,
           header: 'Straßen: ' + opt.label + ' (km)',
-          numeric: true,
+          numeric: 'km',
         });
       }
       for (const opt of CONFIG.bikelaneClassOptions) {
         cols.push({
           key: 'bikelane_km_' + opt.id,
           header: 'Radinfra: ' + opt.label + ' (km)',
-          numeric: true,
+          numeric: 'km',
         });
       }
       return cols;
@@ -555,7 +570,7 @@ export function generateViewerHtml(generatedAt: string) {
         landkreis_id: p.landkreis_id ?? '',
         road_km: roadKm,
         bikelane_km: bikeKm,
-        bike_share_pct: roadKm > 0 ? Math.round((bikeKm / roadKm) * 1000) / 10 : '',
+        bike_share_pct: roadKm > 0 ? (bikeKm / roadKm) * 100 : '',
       };
       for (const opt of CONFIG.roadClassOptions) {
         row['road_km_' + opt.id] = roadSums[opt.id] ?? 0;
@@ -574,7 +589,7 @@ export function generateViewerHtml(generatedAt: string) {
         return columns
           .map((c) => {
             const raw = row[c.key];
-            const formatted = c.numeric ? formatGermanCsvNumber(raw) : raw;
+            const formatted = c.numeric ? formatCsvStatValue(raw, c.numeric) : raw;
             return csvEscape(formatted);
           })
           .join(CSV_SEP);
@@ -610,8 +625,8 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function updateLegendRange(min, max) {
-      document.getElementById('legend-min').textContent = min.toFixed(1) + ' %';
-      document.getElementById('legend-max').textContent = max.toFixed(1) + ' %';
+      document.getElementById('legend-min').textContent = formatUiPct(min) + ' %';
+      document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
     }
 
     function updateViewMetaText(viewId, filtered, range) {
@@ -622,7 +637,7 @@ export function generateViewerHtml(generatedAt: string) {
           ' · Skala 0–' +
           range.capPct +
           ' % (max. ' +
-          range.dataMax.toFixed(1) +
+          formatUiPct(range.dataMax) +
           ' % = volle Farbe)';
       }
       document.getElementById('view-meta').textContent = metaText;
@@ -887,7 +902,7 @@ export function generateViewerHtml(generatedAt: string) {
         track.appendChild(fill);
         const pctEl = document.createElement('span');
         pctEl.className = 'ranking-pct';
-        pctEl.textContent = pct.toFixed(1) + ' %';
+        pctEl.textContent = formatUiPct(pct) + ' %';
         li.append(rank, name, track, pctEl);
         list.appendChild(li);
       }
@@ -1377,8 +1392,8 @@ export function generateViewerHtml(generatedAt: string) {
       const filtered = filterForView(viewId).map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
-      document.getElementById('legend-min').textContent = min.toFixed(1) + ' %';
-      document.getElementById('legend-max').textContent = max.toFixed(1) + ' %';
+      document.getElementById('legend-min').textContent = formatUiPct(min) + ' %';
+      document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
       lastRankingFeatures = filtered;
       updateRankingVisibility(viewId);
       updateScaleCapHint(viewId);
@@ -1401,7 +1416,7 @@ export function generateViewerHtml(generatedAt: string) {
           ' · Skala 0–' +
           range.capPct +
           ' % (max. ' +
-          range.dataMax.toFixed(1) +
+          formatUiPct(range.dataMax) +
           ' % = volle Farbe)';
       }
       document.getElementById('view-meta').textContent = metaText;

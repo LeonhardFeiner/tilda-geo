@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import type { Feature, FeatureCollection, Geometry, Polygon, MultiPolygon } from 'geojson'
+import { formatStatPct } from './statsClassSums'
 import type { RegionStat } from './types'
 
 type BoundaryProperties = {
@@ -173,7 +174,7 @@ export function mergeStatsWithBoundaries(stats: RegionStat[], boundaries: Bounda
       geometry: boundary.geometry,
       properties: {
         ...stat,
-        label: `${stat.name}: ${stat.bikeSharePct?.toFixed(1) ?? '–'} % Radinfra (an Straßen km)`,
+        label: `${stat.name}: ${stat.bikeSharePct != null ? formatStatPct(stat.bikeSharePct) : '–'} % Radinfra (an Straßen km)`,
       },
     })
   }

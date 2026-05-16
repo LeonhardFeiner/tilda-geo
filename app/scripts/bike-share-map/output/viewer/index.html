@@ -408,6 +408,7 @@
         color: #fff;
         font-size: 12px;
         max-width: 320px;
+        white-space: pre-line;
       }
       #load-error {
         color: #b71c1c;
@@ -500,8 +501,7 @@
           <span id="copy-view-link-feedback" hidden></span>
         </div>
         <p class="footer">
-          Erstellt am 16.05.2026<br />
-          Daten: ©
+          Erstellt am 16.05.2026 · Daten: ©
           <a
             href="https://www.openstreetmap.org/copyright?locale=de"
             target="_blank"
@@ -530,7 +530,7 @@
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script>
       const CONFIG = {
-        generatedAt: '2026-05-16T08:57:07.188Z',
+        generatedAt: '2026-05-16T09:41:21.751Z',
         basemap: 'light',
         basemapStyles: {
           blank: {
@@ -819,7 +819,15 @@
             roadSumKm: road,
             bikelaneSumKm: bike,
             bikeSharePct: pct != null ? pct : 0,
-            label: (p.name || p.id) + ': ' + (pct != null ? pct.toFixed(1) : '–') + ' % Radinfra',
+            label:
+              (p.name || p.id) +
+              ': ' +
+              (pct != null ? formatUiPct(pct) : '–') +
+              ' %\n' +
+              TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+              ' km / ' +
+              TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+              ' km',
           },
         }
       }
@@ -862,6 +870,10 @@
 
       const CSV_SEP = ';'
 
+      function formatUiPct(value) {
+        return TildaStats.formatStatPctUi(value)
+      }
+
       function csvEscape(value) {
         if (value == null || value === '') return ''
         const s = String(value)
@@ -871,11 +883,13 @@
         return s
       }
 
-      function formatGermanCsvNumber(value) {
-        if (value === '' || value == null) return ''
-        const n = Number(value)
-        if (!Number.isFinite(n)) return String(value)
-        return n.toLocaleString('de-DE', { maximumFractionDigits: 3 })
+      function formatCsvStatValue(raw, kind) {
+        if (raw === '' || raw == null) return ''
+        const n = Number(raw)
+        if (!Number.isFinite(n)) return String(raw)
+        if (kind === 'pct') return TildaStats.formatStatPct(n)
+        if (kind === 'km') return TildaStats.formatStatKm(n)
+        return String(raw)
       }
 
       function csvStatColumns() {
@@ -885,22 +899,22 @@
           { key: 'level', header: 'Verwaltungsebene', numeric: false },
           { key: 'bundesland_id', header: 'Bundesland-ID', numeric: false },
           { key: 'landkreis_id', header: 'Landkreis-ID', numeric: false },
-          { key: 'road_km', header: 'Straßen (km)', numeric: true },
-          { key: 'bikelane_km', header: 'Radinfra (km)', numeric: true },
-          { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: true },
+          { key: 'road_km', header: 'Straßen (km)', numeric: 'km' },
+          { key: 'bikelane_km', header: 'Radinfra (km)', numeric: 'km' },
+          { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: 'pct' },
         ]
         for (const opt of CONFIG.roadClassOptions) {
           cols.push({
             key: 'road_km_' + opt.id,
             header: 'Straßen: ' + opt.label + ' (km)',
-            numeric: true,
+            numeric: 'km',
           })
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
           cols.push({
             key: 'bikelane_km_' + opt.id,
             header: 'Radinfra: ' + opt.label + ' (km)',
-            numeric: true,
+            numeric: 'km',
           })
         }
         return cols
@@ -920,7 +934,7 @@
           landkreis_id: p.landkreis_id ?? '',
           road_km: roadKm,
           bikelane_km: bikeKm,
-          bike_share_pct: roadKm > 0 ? Math.round((bikeKm / roadKm) * 1000) / 10 : '',
+          bike_share_pct: roadKm > 0 ? (bikeKm / roadKm) * 100 : '',
         }
         for (const opt of CONFIG.roadClassOptions) {
           row['road_km_' + opt.id] = roadSums[opt.id] ?? 0
@@ -939,7 +953,7 @@
           return columns
             .map((c) => {
               const raw = row[c.key]
-              const formatted = c.numeric ? formatGermanCsvNumber(raw) : raw
+              const formatted = c.numeric ? formatCsvStatValue(raw, c.numeric) : raw
               return csvEscape(formatted)
             })
             .join(CSV_SEP)
@@ -975,8 +989,8 @@
       }
 
       function updateLegendRange(min, max) {
-        document.getElementById('legend-min').textContent = min.toFixed(1) + ' %'
-        document.getElementById('legend-max').textContent = max.toFixed(1) + ' %'
+        document.getElementById('legend-min').textContent = formatUiPct(min) + ' %'
+        document.getElementById('legend-max').textContent = formatUiPct(max) + ' %'
       }
 
       function updateViewMetaText(viewId, filtered, range) {
@@ -987,7 +1001,7 @@
             ' · Skala 0–' +
             range.capPct +
             ' % (max. ' +
-            range.dataMax.toFixed(1) +
+            formatUiPct(range.dataMax) +
             ' % = volle Farbe)'
         }
         document.getElementById('view-meta').textContent = metaText
@@ -1260,7 +1274,7 @@
           track.appendChild(fill)
           const pctEl = document.createElement('span')
           pctEl.className = 'ranking-pct'
-          pctEl.textContent = pct.toFixed(1) + ' %'
+          pctEl.textContent = formatUiPct(pct) + ' %'
           li.append(rank, name, track, pctEl)
           list.appendChild(li)
         }
@@ -1760,8 +1774,8 @@
         const filtered = filterForView(viewId).map(enrichFeature)
         const range = colorScaleRange(filtered)
         const { min, max } = range
-        document.getElementById('legend-min').textContent = min.toFixed(1) + ' %'
-        document.getElementById('legend-max').textContent = max.toFixed(1) + ' %'
+        document.getElementById('legend-min').textContent = formatUiPct(min) + ' %'
+        document.getElementById('legend-max').textContent = formatUiPct(max) + ' %'
         lastRankingFeatures = filtered
         updateRankingVisibility(viewId)
         updateScaleCapHint(viewId)
@@ -1784,7 +1798,7 @@
             ' · Skala 0–' +
             range.capPct +
             ' % (max. ' +
-            range.dataMax.toFixed(1) +
+            formatUiPct(range.dataMax) +
             ' % = volle Farbe)'
         }
         document.getElementById('view-meta').textContent = metaText

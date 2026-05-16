@@ -123,6 +123,35 @@ export const RADINFRA_DEFAULT_FILTER: LengthClassFilter = {
   },
 }
 
+/** Max decimals for km / % in viewer UI and CSV export. */
+export const STAT_KM_MAX_DECIMALS = 3
+export const STAT_PCT_MAX_DECIMALS = 3
+/** One decimal for map UI (legend, ranking, scale hints, tooltips). */
+export const STAT_PCT_UI_DECIMALS = 1
+export const STAT_KM_BIKE_UI_DECIMALS = 1
+export const STAT_KM_ROAD_UI_DECIMALS = 0
+
+export function formatStatKm(value: number, maxFractionDigits = STAT_KM_MAX_DECIMALS) {
+  if (!Number.isFinite(value)) return '–'
+  return value.toLocaleString('de-DE', { maximumFractionDigits: maxFractionDigits })
+}
+
+export function formatStatPct(
+  value: number,
+  maxFractionDigits = STAT_PCT_MAX_DECIMALS,
+  minFractionDigits = 0,
+) {
+  if (!Number.isFinite(value)) return '–'
+  return value.toLocaleString('de-DE', {
+    minimumFractionDigits: minFractionDigits,
+    maximumFractionDigits: maxFractionDigits,
+  })
+}
+
+export function formatStatPctUi(value: number) {
+  return formatStatPct(value, STAT_PCT_UI_DECIMALS, STAT_PCT_UI_DECIMALS)
+}
+
 function sum(nums: Array<number | undefined | null>) {
   let t = 0
   for (const n of nums) {

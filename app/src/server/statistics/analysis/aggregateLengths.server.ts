@@ -80,7 +80,7 @@ async function registerCustomFunctions() {
         aggregated_length JSONB;
       BEGIN
         SELECT
-          jsonb_object_agg(aggregator_key, ROUND(total_length_km / 1000.0))
+          jsonb_object_agg(aggregator_key, (total_length_km / 1000.0)::double precision)
         INTO aggregated_length
         FROM (
           SELECT

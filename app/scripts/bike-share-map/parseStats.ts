@@ -3,10 +3,12 @@ import { booleanPointInPolygon, centroid } from '@turf/turf'
 import type { Feature, FeatureCollection, Geometry, Polygon, MultiPolygon } from 'geojson'
 import { BAYERN_ID } from './constants'
 import type { LandkreisRef } from './resolveLandkreis'
+import { formatStatPct } from './statsClassSums'
 import type { RegionStat, StatsFilter } from './types'
 
-function parseIntCell(value: string | undefined) {
-  const n = Number.parseInt((value ?? '').trim(), 10)
+function parseFloatCell(value: string | undefined) {
+  const normalized = (value ?? '').trim().replace(',', '.')
+  const n = Number.parseFloat(normalized)
   return Number.isFinite(n) ? n : 0
 }
 
@@ -14,7 +16,7 @@ function sumPrefixedColumns(row: Record<string, string>, prefix: string) {
   let total = 0
   for (const [key, raw] of Object.entries(row)) {
     if (!key.startsWith(prefix)) continue
-    total += parseIntCell(raw)
+    total += parseFloatCell(raw)
   }
   return total
 }
@@ -58,9 +60,11 @@ export function parseStatsCsv(csvPath: string, filter: StatsFilter) {
   for (const row of rows) {
     if (!rowMatchesFilter(row, filter)) continue
 
-    const roadSumKm = hasRoadSum ? parseIntCell(row.road_sum_sum) : sumPrefixedColumns(row, 'road_')
+    const roadSumKm = hasRoadSum
+      ? parseFloatCell(row.road_sum_sum)
+      : sumPrefixedColumns(row, 'road_')
     const bikelaneSumKm = hasBikelaneSum
-      ? parseIntCell(row.bikelane_sum_sum)
+      ? parseFloatCell(row.bikelane_sum_sum)
       : sumPrefixedColumns(row, 'bikelane_')
 
     const bikeSharePct = roadSumKm > 0 ? (bikelaneSumKm / roadSumKm) * 100 : null
@@ -150,7 +154,7 @@ function statFromFeatureProperties(p: Record<string, unknown>) {
   }
   return {
     ...stat,
-    label: `${name}: ${bikeSharePct?.toFixed(1) ?? '–'} % Radinfra (an Straßen km)`,
+    label: `${name}: ${bikeSharePct != null ? formatStatPct(bikeSharePct) : '–'} % Radinfra (an Straßen km)`,
   }
 }
 
