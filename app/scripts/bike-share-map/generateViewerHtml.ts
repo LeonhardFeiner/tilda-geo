@@ -4,6 +4,7 @@ import {
   BIKE_SHARE_COLOR_CAP_PCT,
   DEFAULT_ROAD_OVERLAY_COLOR,
   PROJECT_LEAD,
+  VIEWER_SOURCE_REPO_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
 } from './constants'
@@ -22,6 +23,12 @@ export function generateViewerHtml(generatedAt: string) {
 
   const defaultColorScale =
     COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
+
+  const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 
   const config = {
     generatedAt,
@@ -211,8 +218,10 @@ export function generateViewerHtml(generatedAt: string) {
     .view-meta { font-size: 11px; color: #666; margin-top: 8px; }
     .footer {
       font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
-      border-top: 1px solid #eee; line-height: 1.5;
+      border-top: 1px solid #eee; line-height: 1.55;
     }
+    .footer a { color: #1565c0; text-decoration: none; }
+    .footer a:hover { text-decoration: underline; }
     #tooltip {
       position: absolute; z-index: 3; pointer-events: none; display: none;
       padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.85); color: #fff; font-size: 12px; max-width: 320px;
@@ -298,7 +307,11 @@ export function generateViewerHtml(generatedAt: string) {
       <span id="copy-view-link-feedback" hidden></span>
     </div>
     <p class="footer">
-      Erzeugt ${generatedAt} · Daten © OpenStreetMap / tilda-geo.de · Projektverantwortlich: ${PROJECT_LEAD}
+      Erstellt am ${generatedDateLabel}<br />
+      Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
+      (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
+      basierend auf dem <a href="${VIEWER_SOURCE_REPO_URL}" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
+      erstellt von ${PROJECT_LEAD}
     </p>
     </div>
   </details>
@@ -477,12 +490,14 @@ export function generateViewerHtml(generatedAt: string) {
       return {};
     }
 
+    const CSV_SEP = ';';
+
     function csvEscape(value) {
       if (value == null || value === '') return '';
       const s = String(value);
       if (
         s.includes('"') ||
-        s.includes(',') ||
+        s.includes(CSV_SEP) ||
         s.includes('\\n') ||
         s.includes('\\r')
       ) {
@@ -491,22 +506,37 @@ export function generateViewerHtml(generatedAt: string) {
       return s;
     }
 
+    function formatGermanCsvNumber(value) {
+      if (value === '' || value == null) return '';
+      const n = Number(value);
+      if (!Number.isFinite(n)) return String(value);
+      return n.toLocaleString('de-DE', { maximumFractionDigits: 3 });
+    }
+
     function csvStatColumns() {
       const cols = [
-        { key: 'id', header: 'id' },
-        { key: 'name', header: 'name' },
-        { key: 'level', header: 'level' },
-        { key: 'bundesland_id', header: 'bundesland_id' },
-        { key: 'landkreis_id', header: 'landkreis_id' },
-        { key: 'road_km', header: 'road_km' },
-        { key: 'bikelane_km', header: 'bikelane_km' },
-        { key: 'bike_share_pct', header: 'bike_share_pct' },
+        { key: 'id', header: 'OSM-ID', numeric: false },
+        { key: 'name', header: 'Name', numeric: false },
+        { key: 'level', header: 'Verwaltungsebene', numeric: false },
+        { key: 'bundesland_id', header: 'Bundesland-ID', numeric: false },
+        { key: 'landkreis_id', header: 'Landkreis-ID', numeric: false },
+        { key: 'road_km', header: 'Straßen (km)', numeric: true },
+        { key: 'bikelane_km', header: 'Radinfra (km)', numeric: true },
+        { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: true },
       ];
       for (const opt of CONFIG.roadClassOptions) {
-        cols.push({ key: 'road_km_' + opt.id, header: 'road_km_' + opt.id });
+        cols.push({
+          key: 'road_km_' + opt.id,
+          header: 'Straßen: ' + opt.label + ' (km)',
+          numeric: true,
+        });
       }
       for (const opt of CONFIG.bikelaneClassOptions) {
-        cols.push({ key: 'bikelane_km_' + opt.id, header: 'bikelane_km_' + opt.id });
+        cols.push({
+          key: 'bikelane_km_' + opt.id,
+          header: 'Radinfra: ' + opt.label + ' (km)',
+          numeric: true,
+        });
       }
       return cols;
     }
@@ -538,10 +568,16 @@ export function generateViewerHtml(generatedAt: string) {
 
     function buildStatsCsv(features) {
       const columns = csvStatColumns();
-      const header = columns.map((c) => csvEscape(c.header)).join(',');
+      const header = columns.map((c) => csvEscape(c.header)).join(CSV_SEP);
       const lines = features.map((f) => {
         const row = statsRowFromFeature(f);
-        return columns.map((c) => csvEscape(row[c.key])).join(',');
+        return columns
+          .map((c) => {
+            const raw = row[c.key];
+            const formatted = c.numeric ? formatGermanCsvNumber(raw) : raw;
+            return csvEscape(formatted);
+          })
+          .join(CSV_SEP);
       });
       return '\\uFEFF' + header + '\\n' + lines.join('\\n') + '\\n';
     }

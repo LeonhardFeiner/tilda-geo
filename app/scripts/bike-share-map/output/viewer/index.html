@@ -388,7 +388,14 @@
         margin-top: 6px;
         padding-top: 6px;
         border-top: 1px solid #eee;
-        line-height: 1.5;
+        line-height: 1.55;
+      }
+      .footer a {
+        color: #1565c0;
+        text-decoration: none;
+      }
+      .footer a:hover {
+        text-decoration: underline;
       }
       #tooltip {
         position: absolute;
@@ -463,7 +470,7 @@
             </div>
             <div class="overlay-color-row">
               <label for="overlay-road-color">Straßen</label>
-              <input type="color" id="overlay-road-color" value="#78909c" />
+              <input type="color" id="overlay-road-color" value="#546e7a" />
             </div>
           </div>
         </details>
@@ -493,8 +500,27 @@
           <span id="copy-view-link-feedback" hidden></span>
         </div>
         <p class="footer">
-          Erzeugt 2026-05-15T16:02:27.575Z · Daten © OpenStreetMap / tilda-geo.de ·
-          Projektverantwortlich: Leonhard Feiner
+          Erstellt am 16.05.2026<br />
+          Daten: ©
+          <a
+            href="https://www.openstreetmap.org/copyright?locale=de"
+            target="_blank"
+            rel="noopener noreferrer"
+            >OpenStreetMap-Mitwirkende</a
+          >
+          (<a
+            href="https://www.openstreetmap.org/copyright?locale=de"
+            target="_blank"
+            rel="noopener noreferrer"
+            >ODbL</a
+          >) · basierend auf dem
+          <a
+            href="https://github.com/LeonhardFeiner/tilda-geo"
+            target="_blank"
+            rel="noopener noreferrer"
+            >Fork von tilda-geo</a
+          >
+          · erstellt von Leonhard Feiner
         </p>
       </div>
     </details>
@@ -504,7 +530,7 @@
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script>
       const CONFIG = {
-        generatedAt: '2026-05-15T16:02:27.575Z',
+        generatedAt: '2026-05-16T08:57:07.188Z',
         basemap: 'light',
         basemapStyles: {
           blank: {
@@ -633,7 +659,7 @@
         defaultColorScale: 'green',
         defaultColorCapPct: 50,
         defaultColorCapEnabled: true,
-        defaultOverlayColors: { bikelane: '#b71c1c', road: '#78909c' },
+        defaultOverlayColors: { bikelane: '#b71c1c', road: '#546e7a' },
         roadClassOptions: [
           { id: 'motorway_like', label: 'Autobahn & Kraftfahrstraßen' },
           { id: 'primary_like', label: 'Bundes- und Landesstraßen' },
@@ -834,31 +860,48 @@
         return {}
       }
 
+      const CSV_SEP = ';'
+
       function csvEscape(value) {
         if (value == null || value === '') return ''
         const s = String(value)
-        if (s.includes('"') || s.includes(',') || s.includes('\n') || s.includes('\r')) {
+        if (s.includes('"') || s.includes(CSV_SEP) || s.includes('\n') || s.includes('\r')) {
           return '"' + s.replace(/"/g, '""') + '"'
         }
         return s
       }
 
+      function formatGermanCsvNumber(value) {
+        if (value === '' || value == null) return ''
+        const n = Number(value)
+        if (!Number.isFinite(n)) return String(value)
+        return n.toLocaleString('de-DE', { maximumFractionDigits: 3 })
+      }
+
       function csvStatColumns() {
         const cols = [
-          { key: 'id', header: 'id' },
-          { key: 'name', header: 'name' },
-          { key: 'level', header: 'level' },
-          { key: 'bundesland_id', header: 'bundesland_id' },
-          { key: 'landkreis_id', header: 'landkreis_id' },
-          { key: 'road_km', header: 'road_km' },
-          { key: 'bikelane_km', header: 'bikelane_km' },
-          { key: 'bike_share_pct', header: 'bike_share_pct' },
+          { key: 'id', header: 'OSM-ID', numeric: false },
+          { key: 'name', header: 'Name', numeric: false },
+          { key: 'level', header: 'Verwaltungsebene', numeric: false },
+          { key: 'bundesland_id', header: 'Bundesland-ID', numeric: false },
+          { key: 'landkreis_id', header: 'Landkreis-ID', numeric: false },
+          { key: 'road_km', header: 'Straßen (km)', numeric: true },
+          { key: 'bikelane_km', header: 'Radinfra (km)', numeric: true },
+          { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: true },
         ]
         for (const opt of CONFIG.roadClassOptions) {
-          cols.push({ key: 'road_km_' + opt.id, header: 'road_km_' + opt.id })
+          cols.push({
+            key: 'road_km_' + opt.id,
+            header: 'Straßen: ' + opt.label + ' (km)',
+            numeric: true,
+          })
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
-          cols.push({ key: 'bikelane_km_' + opt.id, header: 'bikelane_km_' + opt.id })
+          cols.push({
+            key: 'bikelane_km_' + opt.id,
+            header: 'Radinfra: ' + opt.label + ' (km)',
+            numeric: true,
+          })
         }
         return cols
       }
@@ -890,10 +933,16 @@
 
       function buildStatsCsv(features) {
         const columns = csvStatColumns()
-        const header = columns.map((c) => csvEscape(c.header)).join(',')
+        const header = columns.map((c) => csvEscape(c.header)).join(CSV_SEP)
         const lines = features.map((f) => {
           const row = statsRowFromFeature(f)
-          return columns.map((c) => csvEscape(row[c.key])).join(',')
+          return columns
+            .map((c) => {
+              const raw = row[c.key]
+              const formatted = c.numeric ? formatGermanCsvNumber(raw) : raw
+              return csvEscape(formatted)
+            })
+            .join(CSV_SEP)
         })
         return '\uFEFF' + header + '\n' + lines.join('\n') + '\n'
       }
