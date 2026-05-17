@@ -122,4 +122,8 @@ process.stdout.write(`  ranking          open | 1 | 0\n`)
 process.stdout.write(`  colors / palette / farbskala   green | traffic\n`)
 process.stdout.write(`  radfarbe / bikelaneColor       hex, e.g. b71c1c or #b71c1c\n`)
 process.stdout.write(`  strassenfarbe / roadColor      hex, e.g. 78909c\n`)
+process.stdout.write(`  radwegeMinZoom                 Radwege min zoom (4–14)\n`)
+process.stdout.write(
+  `  strassenMinZoomMajor / Full    Straßen Haupt (4–14) / Wohn (11–14, Kachel-Limit)\n`,
+)
 process.stdout.write(`  roadClasses / bikelaneClasses  comma-separated class ids (Zählung)\n`)

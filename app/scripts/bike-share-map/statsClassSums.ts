@@ -246,6 +246,31 @@ export function enabledRoadHighwayTags(filter: LengthClassFilter) {
   return tags
 }
 
+const ROAD_CLASSES_MAJOR = ['motorway_like', 'primary_like', 'secondary_like'] as const
+const ROAD_CLASSES_RESIDENTIAL = ['residential_like'] as const
+
+export function enabledMajorRoadHighwayTags(filter: LengthClassFilter) {
+  const tags: string[] = []
+  for (const roadClass of ROAD_CLASSES_MAJOR) {
+    if (!filter.road[roadClass]) continue
+    for (const [highway, cls] of Object.entries(highwayClassDefinition)) {
+      if (cls === roadClass) tags.push(highway)
+    }
+  }
+  return tags
+}
+
+export function enabledResidentialRoadHighwayTags(filter: LengthClassFilter) {
+  const tags: string[] = []
+  for (const roadClass of ROAD_CLASSES_RESIDENTIAL) {
+    if (!filter.road[roadClass]) continue
+    for (const [highway, cls] of Object.entries(highwayClassDefinition)) {
+      if (cls === roadClass) tags.push(highway)
+    }
+  }
+  return tags
+}
+
 export function enabledBikelaneCategoryTags(filter: LengthClassFilter) {
   const tags: string[] = []
   for (const c of BIKELANE_CLASS_ORDER) {
@@ -258,5 +283,5 @@ export function enabledBikelaneCategoryTags(filter: LengthClassFilter) {
 /** MapLibre filter: show features whose `property` is in `values` (empty → hide all). */
 export function maplibrePropertyInFilter(property: string, values: string[]) {
   if (!values.length) return ['literal', false]
-  return ['in', ['get', property], ['literal', values]]
+  return ['match', ['get', property], values, true, false]
 }

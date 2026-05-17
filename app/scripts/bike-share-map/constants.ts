@@ -24,6 +24,24 @@ export const BIKE_SHARE_COLOR_CAP_PCT = 50
 /** Default line color for Straßen vector overlay in the interactive viewer. */
 export const DEFAULT_ROAD_OVERLAY_COLOR = '#546e7a'
 
+/** MapLibre minzoom for Radwege line overlay (tiles load from zoom 4). */
+export const DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM = 9
+
+/** Straßen: Hauptstraßen vs. Wohnstraßen (aligned with tile generalization). */
+export const DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR = 9
+export const DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL = 11
+
+/** Lower bound from processing/topics/roads_bikelanes/roads/RoadGeneralization.lua */
+export const TILE_ROAD_RESIDENTIAL_MIN_ZOOM = 11
+
+export const OVERLAY_LINE_MIN_ZOOM_LIMITS = { min: 4, max: 14 } as const
+
+/** UI range for Wohnstraßen – cannot go below tile generalization. */
+export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
+  min: TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
+  max: OVERLAY_LINE_MIN_ZOOM_LIMITS.max,
+} as const
+
 export const BAYERN_SCOPES = {
   'bayern-landkreise': {
     id: 'bayern-landkreise',

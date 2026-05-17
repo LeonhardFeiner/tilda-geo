@@ -2,7 +2,13 @@ import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basem
 import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
+  DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM,
+  DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL,
+  DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR,
   DEFAULT_ROAD_OVERLAY_COLOR,
+  OVERLAY_LINE_MIN_ZOOM_LIMITS,
+  OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS,
+  TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
   PROJECT_LEAD,
   VIEWER_SOURCE_REPO_URL,
   TILDA_BIKELANES_TILES,
@@ -53,6 +59,14 @@ export function generateViewerHtml(generatedAt: string) {
       bikelane: defaultColorScale.bikelaneColor,
       road: DEFAULT_ROAD_OVERLAY_COLOR,
     },
+    defaultOverlayMinZoom: {
+      bikelane: DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM,
+      roadMajor: DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR,
+      roadFull: DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL,
+    },
+    overlayMinZoomLimits: OVERLAY_LINE_MIN_ZOOM_LIMITS,
+    overlayRoadFullMinZoomLimits: OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS,
+    tileRoadResidentialMinZoom: TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
     roadClassOptions: ROAD_CLASS_ORDER.map((id) => ({ id, label: ROAD_CLASS_LABELS[id] })),
     bikelaneClassOptions: BIKELANE_CLASS_ORDER.map((id) => ({
       id,
@@ -149,10 +163,11 @@ export function generateViewerHtml(generatedAt: string) {
       width: 4.5em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
     }
     .scale-cap-value input:disabled { opacity: 0.5; background: #f5f5f5; }
+    .overlay-display-controls,
     .overlay-color-controls {
       margin: 10px 0 4px; padding-top: 8px; border-top: 1px solid #e8e8e8;
     }
-    .overlay-color-controls-title {
+    .overlay-section-title {
       display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 2px;
     }
     .overlay-color-row {
@@ -165,6 +180,18 @@ export function generateViewerHtml(generatedAt: string) {
       width: 2.75rem; height: 1.75rem; padding: 2px; border: 1px solid #ccc;
       border-radius: 4px; cursor: pointer; background: #fff;
     }
+    .overlay-layer-block { margin-bottom: 10px; }
+    .overlay-layer-block:last-child { margin-bottom: 0; }
+    .overlay-minzoom-row {
+      display: flex; align-items: center; gap: 10px; margin: 4px 0 0;
+    }
+    .overlay-minzoom-row label {
+      flex: 1; font-size: 12px; font-weight: normal; margin: 0;
+    }
+    .overlay-minzoom-row input[type="number"] {
+      width: 4em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
+    }
+    .overlay-layer-hint { margin: 2px 0 0; }
     .choropleth-legend { margin-top: 8px; }
     .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
     .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0; }
@@ -274,8 +301,47 @@ export function generateViewerHtml(generatedAt: string) {
         </div>
         <p class="hint" id="scale-cap-hint" hidden></p>
       </div>
+      <div class="overlay-display-controls">
+        <span class="overlay-section-title">Darstellung (Zoomstufen)</span>
+        <div class="overlay-minzoom-row">
+            <label for="overlay-bikelane-minzoom">Radwege – ab Zoomstufe</label>
+            <input
+              type="number"
+              id="overlay-bikelane-minzoom"
+              min="${OVERLAY_LINE_MIN_ZOOM_LIMITS.min}"
+              max="${OVERLAY_LINE_MIN_ZOOM_LIMITS.max}"
+              step="1"
+              value="${DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM}"
+            />
+          </div>
+          <p class="hint overlay-layer-hint">Radwege erst nach starkem Zoom sichtbar.</p>
+        <div class="overlay-minzoom-row">
+            <label for="overlay-road-minzoom-major">Straßen – ab Zoomstufe (Hauptstraßen)</label>
+            <input
+              type="number"
+              id="overlay-road-minzoom-major"
+              min="${OVERLAY_LINE_MIN_ZOOM_LIMITS.min}"
+              max="${OVERLAY_LINE_MIN_ZOOM_LIMITS.max}"
+              step="1"
+              value="${DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR}"
+            />
+          </div>
+          <p class="hint overlay-layer-hint">Hauptstraßen (Autobahn bis Kreisstraße); in den Kacheln ab niedrigem Zoom verfügbar.</p>
+        <div class="overlay-minzoom-row">
+            <label for="overlay-road-minzoom-full">Straßen – vollständig ab Zoomstufe</label>
+            <input
+              type="number"
+              id="overlay-road-minzoom-full"
+              min="${OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS.min}"
+              max="${OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS.max}"
+              step="1"
+              value="${DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL}"
+            />
+          </div>
+          <p class="hint overlay-layer-hint">Inkl. Wohn- und Erschließungsstraßen. In den Kacheln erst ab Zoomstufe ${TILE_ROAD_RESIDENTIAL_MIN_ZOOM} (TILDA-Verarbeitung) – niedrigere Werte sind nicht möglich.</p>
+      </div>
       <div class="overlay-color-controls">
-        <span class="overlay-color-controls-title">Linienfarbe (Vordergrund)</span>
+        <span class="overlay-section-title">Linienfarbe (Vordergrund)</span>
         <div class="overlay-color-row">
           <label for="overlay-bikelane-color">Radwege</label>
           <input type="color" id="overlay-bikelane-color" value="${defaultColorScale.bikelaneColor}" />
@@ -342,6 +408,9 @@ export function generateViewerHtml(generatedAt: string) {
     const roadSwatch = document.getElementById('road-swatch');
     const overlayBikelaneColorInput = document.getElementById('overlay-bikelane-color');
     const overlayRoadColorInput = document.getElementById('overlay-road-color');
+    const overlayBikelaneMinzoomInput = document.getElementById('overlay-bikelane-minzoom');
+    const overlayRoadMinzoomMajorInput = document.getElementById('overlay-road-minzoom-major');
+    const overlayRoadMinzoomFullInput = document.getElementById('overlay-road-minzoom-full');
     const scaleCapHint = document.getElementById('scale-cap-hint');
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
@@ -1048,6 +1117,16 @@ export function generateViewerHtml(generatedAt: string) {
       if (roadHex !== CONFIG.defaultOverlayColors.road.toLowerCase()) {
         params.set('strassenfarbe', hexColorWithoutHash(roadHex));
       }
+      const { bikelane: bikeMinZ, roadMajor, roadFull } = overlayMinZoomFromInputs();
+      if (bikeMinZ !== CONFIG.defaultOverlayMinZoom.bikelane) {
+        params.set('radwegeMinZoom', String(bikeMinZ));
+      }
+      if (roadMajor !== CONFIG.defaultOverlayMinZoom.roadMajor) {
+        params.set('strassenMinZoomMajor', String(roadMajor));
+      }
+      if (roadFull !== CONFIG.defaultOverlayMinZoom.roadFull) {
+        params.set('strassenMinZoomFull', String(roadFull));
+      }
       if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
         const roads = enabledClassIds(filter, 'road');
         const bikes = enabledClassIds(filter, 'bikelane');
@@ -1102,6 +1181,63 @@ export function generateViewerHtml(generatedAt: string) {
       return colorScaleById(scaleId).bikelaneColor;
     }
 
+    function clampOverlayMinZoom(value, fallback, limits = CONFIG.overlayMinZoomLimits) {
+      const n = Number(value);
+      if (!Number.isFinite(n)) return fallback;
+      return Math.max(limits.min, Math.min(limits.max, Math.round(n)));
+    }
+
+    function overlayMinZoomFromInputs() {
+      let roadMajor = clampOverlayMinZoom(
+        overlayRoadMinzoomMajorInput.value,
+        CONFIG.defaultOverlayMinZoom.roadMajor,
+      );
+      let roadFull = clampOverlayMinZoom(
+        overlayRoadMinzoomFullInput.value,
+        CONFIG.defaultOverlayMinZoom.roadFull,
+        CONFIG.overlayRoadFullMinZoomLimits,
+      );
+      if (roadFull < roadMajor) roadFull = roadMajor;
+      return {
+        bikelane: clampOverlayMinZoom(
+          overlayBikelaneMinzoomInput.value,
+          CONFIG.defaultOverlayMinZoom.bikelane,
+        ),
+        roadMajor,
+        roadFull,
+      };
+    }
+
+    function syncOverlayMinZoomInputs() {
+      const { bikelane, roadMajor, roadFull } = overlayMinZoomFromInputs();
+      overlayBikelaneMinzoomInput.value = String(bikelane);
+      overlayRoadMinzoomMajorInput.value = String(roadMajor);
+      overlayRoadMinzoomFullInput.value = String(roadFull);
+    }
+
+    function overlayMinZoomOpacityExpr(threshold) {
+      return ['step', ['zoom'], 0, threshold, 0.65];
+    }
+
+    function applyOverlayMinZoom() {
+      const { bikelane, roadMajor, roadFull } = overlayMinZoomFromInputs();
+      syncOverlayMinZoomInputs();
+      const bikeOpacity = overlayMinZoomOpacityExpr(bikelane);
+      const majorOpacity = overlayMinZoomOpacityExpr(roadMajor);
+      const fullOpacity = overlayMinZoomOpacityExpr(roadFull);
+      if (map.getLayer('bikelanes-lines')) {
+        map.setPaintProperty('bikelanes-lines', 'line-opacity', bikeOpacity);
+        map.setPaintProperty('bikelanes-casing', 'line-opacity', bikeOpacity);
+      }
+      if (map.getLayer('roads-lines-major')) {
+        map.setPaintProperty('roads-lines-major', 'line-opacity', majorOpacity);
+      }
+      if (map.getLayer('roads-lines-residential')) {
+        map.setPaintProperty('roads-lines-residential', 'line-opacity', fullOpacity);
+      }
+      map.triggerRepaint();
+    }
+
     function applyOverlayLineColors() {
       const bikeColor = overlayBikelaneColorInput.value;
       const roadColor = overlayRoadColorInput.value;
@@ -1110,8 +1246,11 @@ export function generateViewerHtml(generatedAt: string) {
       if (map.getLayer('bikelanes-lines')) {
         map.setPaintProperty('bikelanes-lines', 'line-color', bikeColor);
       }
-      if (map.getLayer('roads-lines')) {
-        map.setPaintProperty('roads-lines', 'line-color', roadColor);
+      if (map.getLayer('roads-lines-major')) {
+        map.setPaintProperty('roads-lines-major', 'line-color', roadColor);
+      }
+      if (map.getLayer('roads-lines-residential')) {
+        map.setPaintProperty('roads-lines-residential', 'line-color', roadColor);
       }
     }
 
@@ -1122,6 +1261,9 @@ export function generateViewerHtml(generatedAt: string) {
     function initOverlayColorInputs() {
       overlayBikelaneColorInput.value = CONFIG.defaultOverlayColors.bikelane;
       overlayRoadColorInput.value = CONFIG.defaultOverlayColors.road;
+      overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
+      overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
+      overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
       applyOverlayLineColors();
     }
 
@@ -1208,9 +1350,39 @@ export function generateViewerHtml(generatedAt: string) {
       const roadParsed = parseHexColorParam(strassenfarbe);
       if (roadParsed) overlayRoadColorInput.value = roadParsed;
 
+      const radwegeMinZoom =
+        params.get('radwegeMinZoom') ?? params.get('bikelaneMinZoom') ?? params.get('radwegeMinzoom');
+      if (radwegeMinZoom != null && radwegeMinZoom !== '') {
+        overlayBikelaneMinzoomInput.value = String(
+          clampOverlayMinZoom(radwegeMinZoom, CONFIG.defaultOverlayMinZoom.bikelane),
+        );
+      }
+      const strassenMinZoomMajor =
+        params.get('strassenMinZoomMajor') ??
+        params.get('strassenMinZoom') ??
+        params.get('roadMinZoom') ??
+        params.get('strassenMinzoom');
+      if (strassenMinZoomMajor != null && strassenMinZoomMajor !== '') {
+        overlayRoadMinzoomMajorInput.value = String(
+          clampOverlayMinZoom(strassenMinZoomMajor, CONFIG.defaultOverlayMinZoom.roadMajor),
+        );
+      }
+      const strassenMinZoomFull =
+        params.get('strassenMinZoomFull') ?? params.get('strassenMinZoomVoll');
+      if (strassenMinZoomFull != null && strassenMinZoomFull !== '') {
+        overlayRoadMinzoomFullInput.value = String(
+          clampOverlayMinZoom(
+            strassenMinZoomFull,
+            CONFIG.defaultOverlayMinZoom.roadFull,
+            CONFIG.overlayRoadFullMinZoomLimits,
+          ),
+        );
+      }
+
       updateBasemapHint();
       updateLegendBar(colorScaleSelect.value);
       applyOverlayLineColors();
+      applyOverlayMinZoom();
     }
 
     function setLayerVisibility(id, visible) {
@@ -1219,16 +1391,29 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function updateOverlayLayerFilters() {
-      if (!map.getLayer('roads-lines') && !map.getLayer('bikelanes-lines')) return;
-      const roadFilter = TildaStats.maplibrePropertyInFilter(
+      if (
+        !map.getLayer('roads-lines-major') &&
+        !map.getLayer('roads-lines-residential') &&
+        !map.getLayer('bikelanes-lines')
+      ) {
+        return;
+      }
+      const roadMajorFilter = TildaStats.maplibrePropertyInFilter(
         'road',
-        TildaStats.enabledRoadHighwayTags(lengthClassFilter),
+        TildaStats.enabledMajorRoadHighwayTags(lengthClassFilter),
+      );
+      const roadResidentialFilter = TildaStats.maplibrePropertyInFilter(
+        'road',
+        TildaStats.enabledResidentialRoadHighwayTags(lengthClassFilter),
       );
       const bikeFilter = TildaStats.maplibrePropertyInFilter(
         'category',
         TildaStats.enabledBikelaneCategoryTags(lengthClassFilter),
       );
-      if (map.getLayer('roads-lines')) map.setFilter('roads-lines', roadFilter);
+      if (map.getLayer('roads-lines-major')) map.setFilter('roads-lines-major', roadMajorFilter);
+      if (map.getLayer('roads-lines-residential')) {
+        map.setFilter('roads-lines-residential', roadResidentialFilter);
+      }
       if (map.getLayer('bikelanes-lines')) map.setFilter('bikelanes-lines', bikeFilter);
       if (map.getLayer('bikelanes-casing')) map.setFilter('bikelanes-casing', bikeFilter);
     }
@@ -1236,12 +1421,19 @@ export function generateViewerHtml(generatedAt: string) {
     function updateOverlayVisibility() {
       setLayerVisibility('bikelanes-casing', toggleBikelanes.checked);
       setLayerVisibility('bikelanes-lines', toggleBikelanes.checked);
-      setLayerVisibility('roads-lines', toggleRoads.checked);
+      setLayerVisibility('roads-lines-major', toggleRoads.checked);
+      setLayerVisibility('roads-lines-residential', toggleRoads.checked);
       updateOverlayLayerFilters();
     }
 
     function addTileOverlays() {
-      if (map.getSource('bikelanes')) return;
+      if (map.getSource('bikelanes')) {
+        applyOverlayMinZoom();
+        updateOverlayLayerFilters();
+        return;
+      }
+      const overlayMinZoom = overlayMinZoomFromInputs();
+      const layerMinZoom = CONFIG.overlayMinZoomLimits.min;
       map.addSource('bikelanes', {
         type: 'vector',
         tiles: [CONFIG.bikelanesTiles],
@@ -1254,29 +1446,41 @@ export function generateViewerHtml(generatedAt: string) {
         minzoom: 4,
         maxzoom: 14,
       });
+      const roadPaint = (minZoomThreshold) => ({
+        'line-color': overlayRoadColorInput.value,
+        'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 14, 1.2],
+        'line-opacity': overlayMinZoomOpacityExpr(minZoomThreshold),
+      });
+      const roadLayout = { visibility: toggleRoads.checked ? 'visible' : 'none' };
       map.addLayer({
-        id: 'roads-lines',
+        id: 'roads-lines-major',
         type: 'line',
         source: 'roads',
         'source-layer': 'roads',
-        minzoom: 9,
-        layout: { visibility: toggleRoads.checked ? 'visible' : 'none' },
-        paint: {
-          'line-color': overlayRoadColorInput.value,
-          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 0.4, 14, 1.2],
-          'line-opacity': 0.65,
-        },
+        minzoom: layerMinZoom,
+        layout: roadLayout,
+        paint: roadPaint(overlayMinZoom.roadMajor),
+      });
+      map.addLayer({
+        id: 'roads-lines-residential',
+        type: 'line',
+        source: 'roads',
+        'source-layer': 'roads',
+        minzoom: layerMinZoom,
+        layout: roadLayout,
+        paint: roadPaint(overlayMinZoom.roadFull),
       });
       map.addLayer({
         id: 'bikelanes-casing',
         type: 'line',
         source: 'bikelanes',
         'source-layer': 'bikelanes',
-        minzoom: 9,
+        minzoom: layerMinZoom,
         layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
         paint: {
           'line-color': '#ffffff',
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.5, 14, 4],
+          'line-opacity': overlayMinZoomOpacityExpr(overlayMinZoom.bikelane),
         },
       });
       map.addLayer({
@@ -1284,11 +1488,12 @@ export function generateViewerHtml(generatedAt: string) {
         type: 'line',
         source: 'bikelanes',
         'source-layer': 'bikelanes',
-        minzoom: 9,
+        minzoom: layerMinZoom,
         layout: { visibility: toggleBikelanes.checked ? 'visible' : 'none' },
         paint: {
           'line-color': overlayBikelaneColorInput.value,
           'line-width': ['interpolate', ['linear'], ['zoom'], 10, 1.2, 14, 2.2],
+          'line-opacity': overlayMinZoomOpacityExpr(overlayMinZoom.bikelane),
         },
       });
       updateOverlayLayerFilters();
@@ -1338,6 +1543,7 @@ export function generateViewerHtml(generatedAt: string) {
       if (map.getSource('regions')) {
         map.getSource('regions').setData(geojson);
         updateRegionColors(minPct, maxPct);
+        applyOverlayMinZoom();
         map.triggerRepaint();
       } else {
         map.addSource('regions', { type: 'geojson', data: geojson, promoteId: 'id' });
@@ -1464,6 +1670,14 @@ export function generateViewerHtml(generatedAt: string) {
     toggleRoads.addEventListener('change', updateOverlayVisibility);
     overlayBikelaneColorInput.addEventListener('input', applyOverlayLineColors);
     overlayRoadColorInput.addEventListener('input', applyOverlayLineColors);
+    for (const input of [
+      overlayBikelaneMinzoomInput,
+      overlayRoadMinzoomMajorInput,
+      overlayRoadMinzoomFullInput,
+    ]) {
+      input.addEventListener('input', applyOverlayMinZoom);
+      input.addEventListener('change', applyOverlayMinZoom);
+    }
     downloadViewDataBtn.addEventListener('click', downloadCurrentViewData);
     copyViewLinkBtn.addEventListener('click', copyShareLink);
     function updateBasemapHint() {
