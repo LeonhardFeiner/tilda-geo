@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url'
 import { DEFAULT_STATS_CSV } from './constants'
 import { generateViewerHtml } from './generateViewerHtml'
 import { gemeindeIdsForLandkreisFromCsv } from './parseStats'
-import { listLandkreiseFromCsv } from './resolveLandkreis'
+import { listLandkreiseFromCsv, type LandkreisRef } from './resolveLandkreis'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const outputRoot = join(scriptDir, 'output')
@@ -19,8 +19,8 @@ const statsCsv = process.argv.includes('--stats-csv')
   : fileURLToPath(DEFAULT_STATS_CSV)
 
 const allLevel6 = listLandkreiseFromCsv(statsCsv)
-const landkreise = []
-const kreisfreieStaedte = []
+const landkreise: LandkreisRef[] = []
+const kreisfreieStaedte: LandkreisRef[] = []
 for (const lk of allLevel6) {
   if (gemeindeIdsForLandkreisFromCsv(statsCsv, lk.id).size === 0) {
     kreisfreieStaedte.push(lk)

@@ -29,6 +29,9 @@ export function generateViewerHtml(generatedAt: string) {
 
   const defaultColorScale =
     COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
+  if (!defaultColorScale) {
+    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`)
+  }
 
   const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
     day: '2-digit',

@@ -148,7 +148,7 @@
   }
   function H(T) {
     let j = 0
-    for (let q of T) if (typeof q === 'number' && Number.isFinite(q)) j += q
+    for (const q of T) if (typeof q === 'number' && Number.isFinite(q)) j += q
     return j
   }
   function X(T) {
@@ -160,9 +160,9 @@
         return {}
       }
     if (typeof T !== 'object' || Array.isArray(T)) return {}
-    let j = {}
-    for (let [q, z] of Object.entries(T)) {
-      let G = typeof z === 'number' ? z : Number(z)
+    const j = {}
+    for (const [q, z] of Object.entries(T)) {
+      const G = typeof z === 'number' ? z : Number(z)
       if (Number.isFinite(G)) j[q] = G
     }
     return j
@@ -171,7 +171,7 @@
     return U[T] ?? 'secondary_like'
   }
   function B(T) {
-    let j = (q) =>
+    const j = (q) =>
       Object.entries(T)
         .map(([z, G]) => (M(z) === q ? G : void 0))
         .filter((z) => typeof z === 'number' && Number.isFinite(z))
@@ -184,7 +184,7 @@
     }
   }
   function N(T) {
-    let j = T ?? {},
+    const j = T ?? {},
       q = (z) =>
         Object.entries(j)
           .map(([G, V]) => {
@@ -205,37 +205,37 @@
     let z = B(X(T)),
       G = N(X(j)),
       V = 0
-    for (let Q of J) if (q.road[Q]) V += z[Q]
+    for (const Q of J) if (q.road[Q]) V += z[Q]
     let W = 0
-    for (let Q of Y) if (q.bikelane[Q]) W += G[Q]
+    for (const Q of Y) if (q.bikelane[Q]) W += G[Q]
     return { roadKm: V, bikeKm: W }
   }
   function y(T) {
-    let j = []
-    for (let [q, z] of Object.entries(U)) if (T.road[z]) j.push(q)
+    const j = []
+    for (const [q, z] of Object.entries(U)) if (T.road[z]) j.push(q)
     return j
   }
   var D = ['motorway_like', 'primary_like', 'secondary_like'],
     c = ['residential_like']
   function d(T) {
-    let j = []
-    for (let q of D) {
+    const j = []
+    for (const q of D) {
       if (!T.road[q]) continue
-      for (let [z, G] of Object.entries(U)) if (G === q) j.push(z)
+      for (const [z, G] of Object.entries(U)) if (G === q) j.push(z)
     }
     return j
   }
   function _(T) {
-    let j = []
-    for (let q of c) {
+    const j = []
+    for (const q of c) {
       if (!T.road[q]) continue
-      for (let [z, G] of Object.entries(U)) if (G === q) j.push(z)
+      for (const [z, G] of Object.entries(U)) if (G === q) j.push(z)
     }
     return j
   }
   function C(T) {
-    let j = []
-    for (let q of Y) {
+    const j = []
+    for (const q of Y) {
       if (!T.bikelane[q]) continue
       j.push(...Z[q])
     }

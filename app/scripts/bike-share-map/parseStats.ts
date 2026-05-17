@@ -41,6 +41,7 @@ function rowMatchesFilter(row: Record<string, string>, filter: StatsFilter) {
 export function parseStatsCsv(csvPath: string, filter: StatsFilter) {
   const text = readFileSync(csvPath, 'utf8').replace(/^\uFEFF/, '')
   const [headerLine, ...lines] = text.split(/\r?\n/).filter((line) => line.length > 0)
+  if (!headerLine) return []
   const headers = headerLine.split(',')
 
   const rows: Record<string, string>[] = []
@@ -59,6 +60,7 @@ export function parseStatsCsv(csvPath: string, filter: StatsFilter) {
   const stats: RegionStat[] = []
   for (const row of rows) {
     if (!rowMatchesFilter(row, filter)) continue
+    if (!row.id || !row.name) continue
 
     const roadSumKm = hasRoadSum
       ? parseFloatCell(row.road_sum_sum)
@@ -106,7 +108,9 @@ function findBayernFeature(geojson: FeatureCollection) {
     const p = feature.properties
     if (!p || String(p.level) !== '4') continue
     if (p.id === BAYERN_ID || p.name === 'Bayern') {
-      if (feature.geometry && isPolygonGeometry(feature.geometry)) return feature
+      if (feature.geometry && isPolygonGeometry(feature.geometry)) {
+        return feature as Feature<Polygon | MultiPolygon>
+      }
     }
   }
   return null
@@ -122,7 +126,9 @@ function findLandkreisFeature(geojson: FeatureCollection, landkreis: LandkreisRe
     const p = feature.properties
     if (!p || String(p.level) !== '6') continue
     if (p.id === landkreis.id) {
-      if (feature.geometry && isPolygonGeometry(feature.geometry)) return feature
+      if (feature.geometry && isPolygonGeometry(feature.geometry)) {
+        return feature as Feature<Polygon | MultiPolygon>
+      }
     }
   }
   for (const feature of geojson.features) {
@@ -134,7 +140,9 @@ function findLandkreisFeature(geojson: FeatureCollection, landkreis: LandkreisRe
       name.toLowerCase().includes(landkreis.name.toLowerCase()) ||
       landkreis.name.toLowerCase().includes(name.toLowerCase())
     ) {
-      if (feature.geometry && isPolygonGeometry(feature.geometry)) return feature
+      if (feature.geometry && isPolygonGeometry(feature.geometry)) {
+        return feature as Feature<Polygon | MultiPolygon>
+      }
     }
   }
   return null

@@ -602,7 +602,7 @@
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script>
       const CONFIG = {
-        generatedAt: '2026-05-17T00:11:46.902Z',
+        generatedAt: '2026-05-17T00:53:57.536Z',
         basemap: 'light',
         basemapStyles: {
           blank: {
@@ -772,7 +772,7 @@
       let manifest = { views: [] }
       let rawLoaded = false
       let currentView = CONFIG.defaultView
-      let overlaysBound = false
+      let _overlaysBound = false
 
       const viewSelect = document.getElementById('view-select')
       const basemapSelect = document.getElementById('basemap-select')
@@ -821,11 +821,11 @@
         const road = {}
         const bikelane = {}
         for (const opt of CONFIG.roadClassOptions) {
-          const el = document.querySelector('[data-road-class="' + opt.id + '"]')
+          const el = document.querySelector(`[data-road-class="${opt.id}"]`)
           road[opt.id] = el ? el.checked : false
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
-          const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]')
+          const el = document.querySelector(`[data-bikelane-class="${opt.id}"]`)
           bikelane[opt.id] = el ? el.checked : false
         }
         return { road, bikelane }
@@ -833,11 +833,11 @@
 
       function applyLengthClassFilterToUi(filter) {
         for (const opt of CONFIG.roadClassOptions) {
-          const el = document.querySelector('[data-road-class="' + opt.id + '"]')
+          const el = document.querySelector(`[data-road-class="${opt.id}"]`)
           if (el) el.checked = !!filter.road[opt.id]
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
-          const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]')
+          const el = document.querySelector(`[data-bikelane-class="${opt.id}"]`)
           if (el) el.checked = !!filter.bikelane[opt.id]
         }
       }
@@ -858,7 +858,7 @@
           input.dataset.roadClass = opt.id
           input.checked = !!CONFIG.radinfraDefaultFilter.road[opt.id]
           input.addEventListener('change', onLengthClassFilterChange)
-          label.append(input, document.createTextNode(' ' + opt.label))
+          label.append(input, document.createTextNode(` ${opt.label}`))
           roadRoot.appendChild(label)
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
@@ -868,7 +868,7 @@
           input.dataset.bikelaneClass = opt.id
           input.checked = !!CONFIG.radinfraDefaultFilter.bikelane[opt.id]
           input.addEventListener('change', onLengthClassFilterChange)
-          label.append(input, document.createTextNode(' ' + opt.label))
+          label.append(input, document.createTextNode(` ${opt.label}`))
           bikeRoot.appendChild(label)
         }
         document.getElementById('preset-radinfra').addEventListener('click', () => {
@@ -930,7 +930,7 @@
       function downloadFilenameForView(viewId) {
         const viewMeta = manifest.views.find((v) => v.id === viewId)
         const label = viewMeta?.label || viewId
-        return 'radinfra-' + slugifyFilenamePart(label) + '.csv'
+        return `radinfra-${slugifyFilenamePart(label)}.csv`
       }
 
       function lengthRecordForStats(value) {
@@ -957,7 +957,7 @@
         if (value == null || value === '') return ''
         const s = String(value)
         if (s.includes('"') || s.includes(CSV_SEP) || s.includes('\n') || s.includes('\r')) {
-          return '"' + s.replace(/"/g, '""') + '"'
+          return `"${s.replace(/"/g, '""')}"`
         }
         return s
       }
@@ -984,15 +984,15 @@
         ]
         for (const opt of CONFIG.roadClassOptions) {
           cols.push({
-            key: 'road_km_' + opt.id,
-            header: 'Straßen: ' + opt.label + ' (km)',
+            key: `road_km_${opt.id}`,
+            header: `Straßen: ${opt.label} (km)`,
             numeric: 'km',
           })
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
           cols.push({
-            key: 'bikelane_km_' + opt.id,
-            header: 'Radinfra: ' + opt.label + ' (km)',
+            key: `bikelane_km_${opt.id}`,
+            header: `Radinfra: ${opt.label} (km)`,
             numeric: 'km',
           })
         }
@@ -1016,10 +1016,10 @@
           bike_share_pct: roadKm > 0 ? (bikeKm / roadKm) * 100 : '',
         }
         for (const opt of CONFIG.roadClassOptions) {
-          row['road_km_' + opt.id] = roadSums[opt.id] ?? 0
+          row[`road_km_${opt.id}`] = roadSums[opt.id] ?? 0
         }
         for (const opt of CONFIG.bikelaneClassOptions) {
-          row['bikelane_km_' + opt.id] = bikeSums[opt.id] ?? 0
+          row[`bikelane_km_${opt.id}`] = bikeSums[opt.id] ?? 0
         }
         return row
       }
@@ -1037,7 +1037,7 @@
             })
             .join(CSV_SEP)
         })
-        return '\uFEFF' + header + '\n' + lines.join('\n') + '\n'
+        return `\uFEFF${header}\n${lines.join('\n')}\n`
       }
 
       function currentViewFeaturesForExport() {
@@ -1068,13 +1068,13 @@
       }
 
       function updateLegendRange(min, max) {
-        document.getElementById('legend-min').textContent = formatUiPct(min) + ' %'
-        document.getElementById('legend-max').textContent = formatUiPct(max) + ' %'
+        document.getElementById('legend-min').textContent = `${formatUiPct(min)} %`
+        document.getElementById('legend-max').textContent = `${formatUiPct(max)} %`
       }
 
       function updateViewMetaText(viewId, filtered, range) {
         const viewMeta = manifest.views.find((v) => v.id === viewId)
-        let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete'
+        let metaText = `${viewMeta?.label || viewId} · ${filtered.length} Gebiete`
         if (range.scaleCapped) {
           metaText +=
             ' · Skala 0–' +
@@ -1304,7 +1304,7 @@
         const a = hexToRgb(c1)
         const b = hexToRgb(c2)
         const mix = (x, y) => Math.round(x + (y - x) * t)
-        return 'rgb(' + mix(a[0], b[0]) + ',' + mix(a[1], b[1]) + ',' + mix(a[2], b[2]) + ')'
+        return `rgb(${mix(a[0], b[0])},${mix(a[1], b[1])},${mix(a[2], b[2])})`
       }
 
       function colorForPct(pct, min, max) {
@@ -1325,7 +1325,7 @@
         const shown =
           withPct.length > RANKING_RENDER_MAX ? withPct.slice(0, RANKING_RENDER_MAX) : withPct
 
-        summary.textContent = '(' + sorted.length + ' Gebiete, Balken = Anteil in dieser Ansicht)'
+        summary.textContent = `(${sorted.length} Gebiete, Balken = Anteil in dieser Ansicht)`
 
         list.replaceChildren()
         for (let i = 0; i < shown.length; i++) {
@@ -1334,7 +1334,7 @@
           const li = document.createElement('li')
           const rank = document.createElement('span')
           rank.className = 'ranking-rank'
-          rank.textContent = i + 1 + '.'
+          rank.textContent = `${i + 1}.`
           const name = document.createElement('span')
           name.className = 'ranking-name'
           const label = f.properties?.name || f.properties?.id || '–'
@@ -1348,27 +1348,26 @@
             2,
             ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100,
           )
-          fill.style.width = widthPct + '%'
+          fill.style.width = `${widthPct}%`
           fill.style.background = colorForPct(pct, minPct, maxPct)
           track.appendChild(fill)
           const pctEl = document.createElement('span')
           pctEl.className = 'ranking-pct'
-          pctEl.textContent = formatUiPct(pct) + ' %'
+          pctEl.textContent = `${formatUiPct(pct)} %`
           li.append(rank, name, track, pctEl)
           list.appendChild(li)
         }
         if (withPct.length > RANKING_RENDER_MAX) {
           const more = document.createElement('li')
           more.className = 'ranking-more'
-          more.textContent =
-            '… ' + (withPct.length - RANKING_RENDER_MAX) + ' weitere (nach unten scrollen)'
+          more.textContent = `… ${withPct.length - RANKING_RENDER_MAX} weitere (nach unten scrollen)`
           list.appendChild(more)
         }
         const withoutPct = sorted.length - withPct.length
         if (withoutPct > 0) {
           const note = document.createElement('li')
           note.className = 'ranking-more'
-          note.textContent = withoutPct + ' ohne Straßendaten'
+          note.textContent = `${withoutPct} ohne Straßendaten`
           list.appendChild(note)
         }
       }
@@ -1427,7 +1426,7 @@
 
       function parseHexColorParam(value) {
         if (value == null || value === '') return null
-        const v = value.startsWith('#') ? value : '#' + value
+        const v = value.startsWith('#') ? value : `#${value}`
         if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null
         return v.toLowerCase()
       }
@@ -1526,7 +1525,7 @@
           if (bikes.length) params.set('bikelaneClasses', bikes.join(','))
         }
         const qs = params.toString()
-        return location.origin + location.pathname + (qs ? '?' + qs : '')
+        return location.origin + location.pathname + (qs ? `?${qs}` : '')
       }
 
       let copyViewLinkFeedbackTimer = null
@@ -1580,7 +1579,7 @@
       }
 
       function overlayMinZoomFromInputs() {
-        let roadMajor = clampOverlayMinZoom(
+        const roadMajor = clampOverlayMinZoom(
           overlayRoadMinzoomMajorInput.value,
           CONFIG.defaultOverlayMinZoom.roadMajor,
         )
@@ -1682,7 +1681,7 @@
         const basemap = params.get('basemap')
         if (basemap && CONFIG.basemapStyles[basemap]) {
           basemapSelect.value = basemap
-          overlaysBound = false
+          _overlaysBound = false
           map.setStyle(CONFIG.basemapStyles[basemap])
         }
 
@@ -1968,7 +1967,7 @@
             layout: { 'text-field': ['get', 'name'], 'text-size': 10 },
             paint: { 'text-color': '#111', 'text-halo-color': '#fff', 'text-halo-width': 1.5 },
           })
-          overlaysBound = true
+          _overlaysBound = true
           const tooltip = document.getElementById('tooltip')
           map.on('mousemove', 'regions-fill', (e) => {
             const f = e.features?.[0]
@@ -1976,8 +1975,8 @@
             map.getCanvas().style.cursor = 'pointer'
             tooltip.style.display = 'block'
             tooltip.textContent = f.properties.label
-            tooltip.style.left = e.point.x + 12 + 'px'
-            tooltip.style.top = e.point.y + 12 + 'px'
+            tooltip.style.left = `${e.point.x + 12}px`
+            tooltip.style.top = `${e.point.y + 12}px`
           })
           map.on('mouseleave', 'regions-fill', () => {
             map.getCanvas().style.cursor = ''
@@ -1992,8 +1991,8 @@
         const filtered = filterForView(viewId).map(enrichFeature)
         const range = colorScaleRange(filtered)
         const { min, max } = range
-        document.getElementById('legend-min').textContent = formatUiPct(min) + ' %'
-        document.getElementById('legend-max').textContent = formatUiPct(max) + ' %'
+        document.getElementById('legend-min').textContent = `${formatUiPct(min)} %`
+        document.getElementById('legend-max').textContent = `${formatUiPct(max)} %`
         lastRankingFeatures = filtered
         updateRankingVisibility(viewId)
         updateScaleCapHint(viewId)
@@ -2010,7 +2009,7 @@
                 ? 10
                 : 11
         const viewMeta = manifest.views.find((v) => v.id === viewId)
-        let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete'
+        let metaText = `${viewMeta?.label || viewId} · ${filtered.length} Gebiete`
         if (range.scaleCapped) {
           metaText +=
             ' · Skala 0–' +
@@ -2045,7 +2044,7 @@
         map.setStyle(CONFIG.basemapStyles[id])
         map.once('idle', () => {
           map.jumpTo({ center, zoom })
-          overlaysBound = false
+          _overlaysBound = false
           applyView(currentView)
         })
         const meta = CONFIG.basemapOptions.find((b) => b.id === id)

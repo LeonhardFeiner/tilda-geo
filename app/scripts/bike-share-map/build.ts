@@ -184,7 +184,8 @@ async function main() {
       featureCollection = mergeStatsWithBoundaries(stats, boundaries)
     } else {
       const geojsonSource = resolveStatsGeojsonSource(args.statsGeojson, args.statsApi, true)
-      const raw = await loadStatsGeojson(geojsonSource!)
+      if (!geojsonSource) throw new Error('Stats GeoJSON source is required')
+      const raw = await loadStatsGeojson(geojsonSource)
       const gemeindeIds = gemeindeIdsForLandkreisFromCsv(args.statsCsv, landkreis.id)
       featureCollection = buildLandkreisGemeindenFromStatsGeojson(raw, landkreis, gemeindeIds)
     }
@@ -202,7 +203,8 @@ async function main() {
     scope = bayernScope
 
     const geojsonSource = resolveStatsGeojsonSource(args.statsGeojson, args.statsApi, true)
-    const raw = await loadStatsGeojson(geojsonSource!)
+    if (!geojsonSource) throw new Error('Stats GeoJSON source is required')
+    const raw = await loadStatsGeojson(geojsonSource)
     featureCollection = buildFeatureCollectionFromStatsGeojson(raw, scope.filter)
     process.stdout.write(`Regions from stats GeoJSON: ${featureCollection.features.length}\n`)
   }
