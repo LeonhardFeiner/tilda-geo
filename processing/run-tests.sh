@@ -24,4 +24,10 @@ else
   echo "No internet connection — skipping Docker build."
 fi
 
+if ! docker run --rm -v "$(pwd)/processing:/processing" --entrypoint /bin/true test_img >/dev/null 2>&1; then
+  echo "Docker cannot bind-mount $(pwd)/processing — skipping processing Docker tests."
+  echo "To run them locally: open a normal terminal in the repo and run ./processing/run-tests.sh"
+  exit 0
+fi
+
 docker run --rm -v "$(pwd)/processing:/processing" test_img
