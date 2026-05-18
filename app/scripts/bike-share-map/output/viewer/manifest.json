@@ -1,537 +1,114 @@
 {
-  "bayernId": "relation/2145268",
+  "version": 2,
+  "deutschlandId": "relation/51477",
   "kreisfreieStaedteIds": [
     "relation/62772",
     "relation/62654",
     "relation/62532",
     "relation/62407",
+    "relation/62340",
     "relation/62525",
     "relation/62640",
+    "relation/62646",
+    "relation/62644",
+    "relation/62508",
+    "relation/62634",
+    "relation/62470",
+    "relation/62531",
+    "relation/62559",
+    "relation/62658",
+    "relation/62594",
     "relation/62717",
+    "relation/3659532",
+    "relation/62430",
+    "relation/62581",
+    "relation/62414",
+    "relation/62526",
+    "relation/1829065",
+    "relation/191645",
+    "relation/62456",
+    "relation/62539",
+    "relation/62562",
+    "relation/62745",
     "relation/62403",
+    "relation/62713",
+    "relation/27020",
+    "relation/62573",
+    "relation/62400",
+    "relation/62523",
+    "relation/62768",
     "relation/62374",
+    "relation/62522",
+    "relation/62671",
+    "relation/1800297",
+    "relation/62638",
+    "relation/62499",
+    "relation/535895",
+    "relation/285864",
+    "relation/62751",
+    "relation/62396",
     "relation/62589",
     "relation/62381",
+    "relation/62693",
+    "relation/62652",
+    "relation/62518",
+    "relation/62598",
     "relation/62349",
     "relation/62701",
+    "relation/27021",
+    "relation/62512",
+    "relation/62578",
+    "relation/62748",
+    "relation/62391",
     "relation/62484",
+    "relation/62649",
+    "relation/62449",
+    "relation/27027",
+    "relation/62347",
+    "relation/62481",
+    "relation/62630",
+    "relation/62691",
     "relation/62590",
+    "relation/62410",
+    "relation/62385",
     "relation/62428",
+    "relation/62591",
+    "relation/62528",
+    "relation/62724",
     "relation/62780",
+    "relation/62734",
+    "relation/62695",
+    "relation/62409",
+    "relation/62631",
     "relation/62629",
+    "relation/62471",
+    "relation/62642",
+    "relation/62369",
     "relation/62411",
+    "relation/62455",
     "relation/2168233",
+    "relation/62405",
+    "relation/62659",
     "relation/62720",
     "relation/62534",
+    "relation/62685",
+    "relation/62699",
+    "relation/62352",
     "relation/62636",
+    "relation/2793104",
+    "relation/62450",
+    "relation/172679",
+    "relation/62495",
     "relation/62554",
-    "relation/62464"
+    "relation/62493",
+    "relation/62496",
+    "relation/62444",
+    "relation/62418",
+    "relation/62453",
+    "relation/62478",
+    "relation/62464",
+    "relation/62719"
   ],
-  "views": [
-    {
-      "id": "bayern-landkreise-kreisfreie",
-      "label": "Landkreise + kreisfreie Städte",
-      "group": "overview"
-    },
-    {
-      "id": "bayern-gemeinden-kreisfreie",
-      "label": "Gemeinden + kreisfreie Städte",
-      "group": "overview"
-    },
-    {
-      "id": "bayern-landkreise",
-      "label": "Alle Landkreise",
-      "group": "overview"
-    },
-    {
-      "id": "bayern-kreisfreie-staedte",
-      "label": "Alle kreisfreien Städte",
-      "group": "overview"
-    },
-    {
-      "id": "bayern-gemeinden",
-      "label": "Alle Gemeinden",
-      "group": "overview"
-    },
-    {
-      "id": "landkreis:relation/62377",
-      "label": "Landkreis Aichach-Friedberg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62663",
-      "label": "Landkreis Altötting",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62765",
-      "label": "Landkreis Amberg-Sulzbach",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62609",
-      "label": "Landkreis Ansbach",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62497",
-      "label": "Landkreis Aschaffenburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62622",
-      "label": "Landkreis Augsburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62406",
-      "label": "Landkreis Bad Kissingen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62472",
-      "label": "Landkreis Bad Tölz-Wolfratshausen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62627",
-      "label": "Landkreis Bamberg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62378",
-      "label": "Landkreis Bayreuth",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62712",
-      "label": "Landkreis Berchtesgadener Land",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62548",
-      "label": "Landkreis Cham",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62561",
-      "label": "Landkreis Coburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62556",
-      "label": "Landkreis Dachau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62711",
-      "label": "Landkreis Deggendorf",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62521",
-      "label": "Landkreis Dillingen an der Donau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62707",
-      "label": "Landkreis Dingolfing-Landau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62389",
-      "label": "Landkreis Donau-Ries",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2168230",
-      "label": "Landkreis Ebersberg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62684",
-      "label": "Landkreis Eichstätt",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62356",
-      "label": "Landkreis Erding",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62448",
-      "label": "Landkreis Erlangen-Höchstadt",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62687",
-      "label": "Landkreis Forchheim",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62633",
-      "label": "Landkreis Freising",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2083466",
-      "label": "Landkreis Freyung-Grafenau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62595",
-      "label": "Landkreis Fürstenfeldbruck",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62778",
-      "label": "Landkreis Fürth",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62726",
-      "label": "Landkreis Garmisch-Partenkirchen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62664",
-      "label": "Landkreis Günzburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62520",
-      "label": "Landkreis Haßberge",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2145179",
-      "label": "Landkreis Hof",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62614",
-      "label": "Landkreis Kelheim",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62457",
-      "label": "Landkreis Kitzingen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62383",
-      "label": "Landkreis Kronach",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2145178",
-      "label": "Landkreis Kulmbach",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62498",
-      "label": "Landkreis Landsberg am Lech",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62657",
-      "label": "Landkreis Landshut",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62515",
-      "label": "Landkreis Lichtenfels",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62672",
-      "label": "Landkreis Lindau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62641",
-      "label": "Landkreis Main-Spessart",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2168231",
-      "label": "Landkreis Miesbach",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62404",
-      "label": "Landkreis Miltenberg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2168232",
-      "label": "Landkreis Mühldorf am Inn",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62580",
-      "label": "Landkreis München",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62469",
-      "label": "Landkreis Neu-Ulm",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62655",
-      "label": "Landkreis Neuburg-Schrobenhausen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62620",
-      "label": "Landkreis Neumarkt in der Oberpfalz",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62514",
-      "label": "Landkreis Neustadt an der Aisch-Bad Windsheim",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/975339",
-      "label": "Landkreis Neustadt an der Waldnaab",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62744",
-      "label": "Landkreis Nürnberger Land",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62415",
-      "label": "Landkreis Oberallgäu",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62533",
-      "label": "Landkreis Ostallgäu",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62541",
-      "label": "Landkreis Passau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62371",
-      "label": "Landkreis Pfaffenhofen an der Ilm",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62709",
-      "label": "Landkreis Regen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62565",
-      "label": "Landkreis Regensburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62739",
-      "label": "Landkreis Rhön-Grabfeld",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2156362",
-      "label": "Landkreis Rosenheim",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62431",
-      "label": "Landkreis Roth",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62592",
-      "label": "Landkreis Rottal-Inn",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62686",
-      "label": "Landkreis Schwandorf",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62530",
-      "label": "Landkreis Schweinfurt",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62458",
-      "label": "Landkreis Starnberg",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62727",
-      "label": "Landkreis Straubing-Bogen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62575",
-      "label": "Landkreis Tirschenreuth",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/2156363",
-      "label": "Landkreis Traunstein",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62398",
-      "label": "Landkreis Unterallgäu",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62600",
-      "label": "Landkreis Weilheim-Schongau",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62390",
-      "label": "Landkreis Weißenburg-Gunzenhausen",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62491",
-      "label": "Landkreis Wunsiedel im Fichtelgebirge",
-      "group": "landkreis"
-    },
-    {
-      "id": "landkreis:relation/62465",
-      "label": "Landkreis Würzburg",
-      "group": "landkreis"
-    },
-    {
-      "id": "kreisfrei:relation/62772",
-      "label": "Amberg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62654",
-      "label": "Ansbach",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62532",
-      "label": "Aschaffenburg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62407",
-      "label": "Augsburg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62525",
-      "label": "Bamberg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62640",
-      "label": "Bayreuth",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62717",
-      "label": "Coburg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62403",
-      "label": "Erlangen",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62374",
-      "label": "Fürth",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62589",
-      "label": "Hof",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62381",
-      "label": "Ingolstadt",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62349",
-      "label": "Kaufbeuren",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62701",
-      "label": "Kempten (Allgäu)",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62484",
-      "label": "Landshut",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62590",
-      "label": "Memmingen",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62428",
-      "label": "München",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62780",
-      "label": "Nürnberg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62629",
-      "label": "Passau",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62411",
-      "label": "Regensburg",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/2168233",
-      "label": "Rosenheim",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62720",
-      "label": "Schwabach",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62534",
-      "label": "Schweinfurt",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62636",
-      "label": "Straubing",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62554",
-      "label": "Weiden in der Oberpfalz",
-      "group": "kreisfrei"
-    },
-    {
-      "id": "kreisfrei:relation/62464",
-      "label": "Würzburg",
-      "group": "kreisfrei"
-    }
-  ]
+  "stadtstaatIds": ["relation/62422", "relation/62782"],
+  "featureCount": 22654
 }

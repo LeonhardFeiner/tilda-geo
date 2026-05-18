@@ -21,6 +21,7 @@ import {
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
 } from './statsClassSums'
+import { viewerRegionNavScript } from './viewerRegionNavScript'
 
 export function generateViewerHtml(generatedAt: string) {
   const basemapStyles = Object.fromEntries(
@@ -52,12 +53,11 @@ export function generateViewerHtml(generatedAt: string) {
     roadsTiles: TILDA_ROADS_TILES,
     statsUrl: './stats.geojson',
     manifestUrl: './manifest.json',
-    bayernId: 'relation/2145268',
-    defaultView: 'bayern-landkreise',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
-    defaultColorCapEnabled: true,
+    defaultColorCapEnabled: false,
+    defaultRobustScaleEnabled: true,
     defaultOverlayColors: {
       bikelane: defaultColorScale.bikelaneColor,
       road: DEFAULT_ROAD_OVERLAY_COLOR,
@@ -241,9 +241,43 @@ export function generateViewerHtml(generatedAt: string) {
     .ranking-pct {
       text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: #444;
     }
-    .ranking-list .ranking-more {
+    .ranking-list .ranking-more,
+    .ranking-list .ranking-divider {
       display: block; grid-column: 1 / -1;
       color: #888; font-style: italic; font-size: 10px; padding: 2px 0;
+    }
+    .ranking-divider { text-align: center; font-style: normal; color: #aaa; }
+    .ranking-toolbar {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
+      margin-bottom: 6px;
+    }
+    .ranking-mode {
+      display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
+    }
+    .ranking-mode-btn {
+      font-size: 11px; padding: 3px 8px; border: none; background: #f5f5f5;
+      color: #444; cursor: pointer;
+    }
+    .ranking-mode-btn:hover { background: #ebebeb; }
+    .ranking-mode-btn[aria-pressed="true"] {
+      background: #e3f2fd; color: #1565c0; font-weight: 600;
+    }
+    .view-csv-row { margin-top: 6px; }
+    .view-csv-btn {
+      font-size: 11px; padding: 3px 8px;
+    }
+    .ranking-toolbar .view-csv-btn {
+      margin-left: auto;
+      border: 1px solid #ccc; border-radius: 4px; background: #fff;
+      color: #1565c0; cursor: pointer;
+    }
+    .view-csv-btn:hover { background: #f5f9ff; }
+    .view-csv-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .ranking-scroll {
+      max-height: min(40vh, 320px);
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
     }
     .view-meta { font-size: 11px; color: #666; margin-top: 8px; }
     .footer {
@@ -257,7 +291,59 @@ export function generateViewerHtml(generatedAt: string) {
       padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.85); color: #fff; font-size: 12px; max-width: 320px;
       white-space: pre-line;
     }
+    .region-detail {
+      position: absolute; z-index: 4; left: 12px; bottom: 12px;
+      width: min(360px, calc(100vw - 24px));
+      max-height: min(52vh, 420px);
+      overflow: auto;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
+      padding: 10px 12px 12px;
+      font-size: 12px;
+      color: #333;
+    }
+    .region-detail[hidden] { display: none !important; }
+    .region-detail-header {
+      display: flex; align-items: flex-start; gap: 8px;
+      margin-bottom: 8px; padding-right: 24px;
+    }
+    .region-detail-header h3 {
+      margin: 0; font-size: 14px; line-height: 1.3; color: #111;
+    }
+    .region-detail-close {
+      position: absolute; top: 6px; right: 8px;
+      border: none; background: transparent; font-size: 20px; line-height: 1;
+      color: #666; cursor: pointer; padding: 2px 6px;
+    }
+    .region-detail-close:hover { color: #111; }
+    .region-detail-meta { margin: 0 0 8px; color: #555; line-height: 1.45; }
+    .region-detail-section { margin-top: 8px; }
+    .region-detail-section h4 {
+      margin: 0 0 4px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.02em; color: #666;
+    }
+    .region-detail-rows { margin: 0; padding: 0; list-style: none; }
+    .region-detail-rows li {
+      display: flex; justify-content: space-between; gap: 8px;
+      padding: 2px 0; border-bottom: 1px solid #f0f0f0;
+    }
+    .region-detail-rows li:last-child { border-bottom: none; }
+    .region-detail-rows .km {
+      font-variant-numeric: tabular-nums; color: #444; white-space: nowrap;
+    }
+    .region-detail-tags {
+      margin-top: 4px; font-size: 11px;
+    }
+    .region-detail-tags summary {
+      cursor: pointer; color: #1565c0; user-select: none;
+    }
+    .region-detail-tags[open] summary { margin-bottom: 4px; }
     #load-error { color: #b71c1c; font-size: 13px; display: none; }
+    body.ui-minimal #panel-main { display: none !important; }
+    .region-nav { margin-bottom: 4px; }
+    .region-nav[hidden] { display: none !important; }
   </style>
 </head>
 <body>
@@ -269,8 +355,17 @@ export function generateViewerHtml(generatedAt: string) {
     </summary>
     <div class="panel-body">
     <p id="load-error"></p>
-    <label for="view-select">Gebiet</label>
-    <select id="view-select"></select>
+    <div class="panel-options" id="panel-options">
+    <div class="region-nav" id="region-nav">
+    <label for="gebiet-select">Gebiet</label>
+    <select id="gebiet-select"></select>
+    <p class="region-nav" id="untergebiet-wrap">
+      <label for="untergebiet-select">Untergebiet</label>
+      <select id="untergebiet-select"></select>
+    </p>
+    <label for="darstellung-select">Karte zeigt</label>
+    <select id="darstellung-select"></select>
+    </div>
     <p class="view-meta" id="view-meta"></p>
     <div class="choropleth-legend">
       <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
@@ -296,6 +391,7 @@ export function generateViewerHtml(generatedAt: string) {
       <label for="color-scale-select">Farbskala (Flächen)</label>
       <select id="color-scale-select"></select>
       <div class="scale-cap-controls">
+        <label><input type="checkbox" id="scale-robust-enabled" checked /> Ausreißer bei Skalenende ignorieren</label>
         <label><input type="checkbox" id="scale-cap-enabled" /> Farbskala kappen</label>
         <div class="scale-cap-value">
           <label for="scale-cap-pct">Obergrenze</label>
@@ -369,12 +465,40 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
     <details class="ranking" id="ranking-details">
         <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
-        <ol class="ranking-list" id="ranking-list"></ol>
+        <div class="ranking-toolbar" id="ranking-toolbar" hidden>
+          <div class="ranking-mode" role="group" aria-label="Ranglisten-Ansicht">
+            <button type="button" class="ranking-mode-btn" data-ranking-mode="topflop" aria-pressed="true">Top &amp; Flop</button>
+            <button type="button" class="ranking-mode-btn" data-ranking-mode="all" aria-pressed="false">Alle</button>
+          </div>
+          <button
+            type="button"
+            class="view-csv-btn"
+            id="view-csv-btn-toolbar"
+            disabled
+            title="Gebietsdaten der aktuellen Ansicht (Rang, Summen, Klassen) als CSV"
+          >
+            CSV
+          </button>
+        </div>
+        <div class="ranking-scroll" id="ranking-scroll">
+          <ol class="ranking-list" id="ranking-list"></ol>
+        </div>
     </details>
+    <div class="view-csv-row" id="view-csv-row" hidden>
+      <button
+        type="button"
+        class="view-csv-btn"
+        id="view-csv-btn"
+        disabled
+        title="Gebietsdaten der aktuellen Ansicht (Rang, Summen, Klassen) als CSV"
+      >
+        CSV
+      </button>
+    </div>
     <div class="panel-actions">
-      <button type="button" id="download-view-data" disabled>Daten des Gebiets herunterladen</button>
       <button type="button" id="copy-view-link" disabled>Link zur aktuellen Ansicht kopieren</button>
       <span id="copy-view-link-feedback" hidden></span>
+    </div>
     </div>
     <p class="footer">
       Erstellt am ${generatedDateLabel} ·
@@ -386,25 +510,38 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
   </details>
   <div id="tooltip"></div>
+  <div id="region-detail" class="region-detail" hidden>
+    <button type="button" class="region-detail-close" id="region-detail-close" aria-label="Schließen">×</button>
+    <div class="region-detail-header">
+      <h3 id="region-detail-title"></h3>
+    </div>
+    <p class="region-detail-meta" id="region-detail-meta"></p>
+    <div id="region-detail-body"></div>
+  </div>
   <script src="./statsClassSums.js"></script>
+  <script src="./regionNavigation.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
 
     let allFeatures = [];
-    let manifest = { views: [] };
+    let manifest = {};
     let rawLoaded = false;
-    let currentView = CONFIG.defaultView;
     let overlaysBound = false;
 
-    const viewSelect = document.getElementById('view-select');
+    ${viewerRegionNavScript()}
     const basemapSelect = document.getElementById('basemap-select');
     const basemapHint = document.getElementById('basemap-hint');
     const toggleBikelanes = document.getElementById('toggle-bikelanes');
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
     const rankingDetails = document.getElementById('ranking-details');
+    const rankingToolbar = document.getElementById('ranking-toolbar');
+    const viewCsvRow = document.getElementById('view-csv-row');
+    const viewCsvBtnToolbar = document.getElementById('view-csv-btn-toolbar');
+    const viewCsvBtn = document.getElementById('view-csv-btn');
+    const rankingModeButtons = [...document.querySelectorAll('.ranking-mode-btn')];
     const colorScaleSelect = document.getElementById('color-scale-select');
     const legendBar = document.getElementById('legend-bar');
     const bikelaneSwatch = document.getElementById('bikelane-swatch');
@@ -415,21 +552,34 @@ export function generateViewerHtml(generatedAt: string) {
     const overlayRoadMinzoomMajorInput = document.getElementById('overlay-road-minzoom-major');
     const overlayRoadMinzoomFullInput = document.getElementById('overlay-road-minzoom-full');
     const scaleCapHint = document.getElementById('scale-cap-hint');
+    const scaleRobustEnabledCb = document.getElementById('scale-robust-enabled');
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
-    const downloadViewDataBtn = document.getElementById('download-view-data');
     const copyViewLinkBtn = document.getElementById('copy-view-link');
     const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
     const panelMobileMq = window.matchMedia('(max-width: 768px)');
     scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
-    scaleCapEnabledCb.checked = false;
+    scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
+    scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
     let lastScaleCapViewAllowed = false;
     let lastRankingViewAvailable = false;
     let lastPctRange = { min: 0, max: 20, scaleCapped: false, dataMax: 20 };
     let lastRankingFeatures = [];
-    const RANKING_RENDER_MAX = 120;
+    let lastRankingSorted = [];
+    let lastRankingMinPct = 0;
+    let lastRankingMaxPct = 20;
+    let rankingMode = 'topflop';
+    const RANKING_TOP_N = 15;
+    const rankByFeatureId = new Map();
+    let selectedFeatureId = null;
+    let regionClickBound = false;
+    const regionDetailEl = document.getElementById('region-detail');
+    const regionDetailTitle = document.getElementById('region-detail-title');
+    const regionDetailMeta = document.getElementById('region-detail-meta');
+    const regionDetailBody = document.getElementById('region-detail-body');
+    const regionDetailClose = document.getElementById('region-detail-close');
 
     for (const opt of CONFIG.basemapOptions) {
       const el = document.createElement('option');
@@ -513,6 +663,19 @@ export function generateViewerHtml(generatedAt: string) {
         lengthClassFilter,
       );
       const pct = road > 0 ? (bike / road) * 100 : null;
+      const lowRoad = TildaStats.isLowRoadNetworkForScale(road);
+      let label =
+        (p.name || p.id) +
+        ': ' +
+        (pct != null ? formatUiPct(pct) : '–') +
+        ' %\\n' +
+        TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+        ' km / ' +
+        TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+        ' km';
+      if (lowRoad && pct != null) {
+        label += '\\n(wenig Straßennetz – Anteil kann unrepräsentativ sein)';
+      }
       return {
         type: 'Feature',
         id: p.id,
@@ -522,15 +685,7 @@ export function generateViewerHtml(generatedAt: string) {
           roadSumKm: road,
           bikelaneSumKm: bike,
           bikeSharePct: pct != null ? pct : 0,
-          label:
-            (p.name || p.id) +
-            ': ' +
-            (pct != null ? formatUiPct(pct) : '–') +
-            ' %\\n' +
-            TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-            ' km / ' +
-            TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
-            ' km',
+          label,
         },
       };
     }
@@ -551,9 +706,8 @@ export function generateViewerHtml(generatedAt: string) {
       );
     }
 
-    function downloadFilenameForView(viewId) {
-      const viewMeta = manifest.views.find((v) => v.id === viewId);
-      const label = viewMeta?.label || viewId;
+    function downloadFilenameForView() {
+      const label = RegionNav.viewLabel(currentViewScope, regionIndex);
       return 'radinfra-' + slugifyFilenamePart(label) + '.csv';
     }
 
@@ -602,6 +756,7 @@ export function generateViewerHtml(generatedAt: string) {
 
     function csvStatColumns() {
       const cols = [
+        { key: 'rank', header: 'Platz', numeric: false },
         { key: 'id', header: 'OSM-ID', numeric: false },
         { key: 'name', header: 'Name', numeric: false },
         { key: 'level', header: 'Verwaltungsebene', numeric: false },
@@ -628,13 +783,14 @@ export function generateViewerHtml(generatedAt: string) {
       return cols;
     }
 
-    function statsRowFromFeature(f) {
+    function statsRowFromFeature(f, rank) {
       const p = f.properties || {};
       const roadKm = p.roadSumKm ?? 0;
       const bikeKm = p.bikelaneSumKm ?? 0;
       const roadSums = TildaStats.getRoadSums(lengthRecordForStats(p.road_length));
       const bikeSums = TildaStats.getBikelaneSums(lengthRecordForStats(p.bikelane_length));
       const row = {
+        rank: rank ?? '',
         id: p.id ?? '',
         name: p.name ?? '',
         level: p.level ?? '',
@@ -654,10 +810,19 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function buildStatsCsv(features) {
+      const sorted = [...features].sort(compareByBikeShare);
+      const rankIndex = new Map();
+      sorted
+        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .forEach((f, i) => {
+          const id = f.properties?.id;
+          if (id) rankIndex.set(id, i + 1);
+        });
       const columns = csvStatColumns();
       const header = columns.map((c) => csvEscape(c.header)).join(CSV_SEP);
-      const lines = features.map((f) => {
-        const row = statsRowFromFeature(f);
+      const lines = sorted.map((f) => {
+        const id = f.properties?.id;
+        const row = statsRowFromFeature(f, id ? rankIndex.get(id) : '');
         return columns
           .map((c) => {
             const raw = row[c.key];
@@ -671,7 +836,7 @@ export function generateViewerHtml(generatedAt: string) {
 
     function currentViewFeaturesForExport() {
       lengthClassFilter = readLengthClassFilterFromUi();
-      return filterForView(currentView).map(enrichFeature);
+      return filteredFeaturesForCurrentView().map(enrichFeature);
     }
 
     function downloadCurrentViewData() {
@@ -686,13 +851,18 @@ export function generateViewerHtml(generatedAt: string) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = downloadFilenameForView(currentView);
+      link.download = downloadFilenameForView();
       link.click();
       URL.revokeObjectURL(url);
     }
 
+    function setCsvExportEnabled(enabled) {
+      viewCsvBtnToolbar.disabled = !enabled;
+      viewCsvBtn.disabled = !enabled;
+    }
+
     function setPanelActionsEnabled(enabled) {
-      downloadViewDataBtn.disabled = !enabled;
+      setCsvExportEnabled(enabled);
       copyViewLinkBtn.disabled = !enabled;
     }
 
@@ -701,30 +871,45 @@ export function generateViewerHtml(generatedAt: string) {
       document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
     }
 
-    function updateViewMetaText(viewId, filtered, range) {
-      const viewMeta = manifest.views.find((v) => v.id === viewId);
-      let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete';
+    function updateViewMetaText(filtered, range) {
+      let metaText = RegionNav.viewLabel(currentViewScope, regionIndex) + ' · ' + filtered.length + ' Gebiete';
       if (range.scaleCapped) {
-        metaText +=
-          ' · Skala 0–' +
-          range.capPct +
-          ' % (max. ' +
-          formatUiPct(range.dataMax) +
-          ' % = volle Farbe)';
+        if (range.robustApplied && !getScaleCapSettings().enabled) {
+          const parts = ['Skala 0–' + formatUiPct(range.max) + ' %'];
+          if (range.dataMax > range.max) {
+            parts.push('max. ' + formatUiPct(range.dataMax) + ' % in Daten');
+          }
+          if (range.outlierCount > 0) {
+            parts.push(range.outlierCount + ' Ausreißer ignoriert');
+          }
+          if (range.excludedLowRoadCount > 0) {
+            parts.push(range.excludedLowRoadCount + ' mit wenig Straßennetz');
+          }
+          metaText += ' · ' + parts.join(', ');
+        } else {
+          metaText +=
+            ' · Skala 0–' +
+            range.capPct +
+            ' % (max. ' +
+            formatUiPct(range.dataMax) +
+            ' % = volle Farbe)';
+        }
       }
       document.getElementById('view-meta').textContent = metaText;
-      updateScaleCapHint(viewId);
+      updateScaleCapHint();
     }
 
     function repaintRegionsFromCounting() {
-      const filtered = filterForView(currentView).map(enrichFeature);
+      const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
       lastPctRange = { min, max, scaleCapped: range.scaleCapped, dataMax: range.dataMax };
       updateLegendRange(min, max);
       lastRankingFeatures = filtered;
       if (!rankingDetails.hidden) updateRanking(filtered, min, max);
-      updateViewMetaText(currentView, filtered, range);
+      else rebuildRankIndex(filtered);
+      updateViewMetaText(filtered, range);
+      refreshSelectedRegionIfNeeded();
       const geojson = buildRegionGeojson(filtered);
       const src = map.getSource('regions');
       if (src) {
@@ -732,83 +917,20 @@ export function generateViewerHtml(generatedAt: string) {
         updateRegionColors(min, max);
         map.triggerRepaint();
       } else if (rawLoaded) {
-        applyView(currentView);
+        applyCurrentView();
       }
     }
 
-    function findBayern() {
-      return allFeatures.find(
-        (f) => f.properties?.level === '4' && f.properties?.id === CONFIG.bayernId,
-      );
+    function defaultScaleCapEnabledForView() {
+      return RegionNav.viewShowsManyGemeinden(currentViewScope)
+        ? CONFIG.defaultColorCapEnabled
+        : false;
     }
 
-    function regionLevel(f) {
-      return String(f.properties?.level ?? '');
-    }
-
-    function kreisfreiIds() {
-      return new Set(manifest.kreisfreieStaedteIds || []);
-    }
-
-    function inBayern(f) {
-      if (f.properties?.bundesland_id === CONFIG.bayernId) return true;
-      const bayern = findBayern();
-      if (!bayern) return true;
-      return turf.booleanPointInPolygon(turf.centroid(f), bayern);
-    }
-
-    function filterForView(viewId) {
-      const kreisfrei = kreisfreiIds();
-      if (viewId === 'bayern-landkreise-kreisfreie') {
-        return allFeatures.filter((f) => regionLevel(f) === '6' && f.geometry && inBayern(f));
-      }
-      if (viewId === 'bayern-landkreise') {
-        return allFeatures.filter((f) => {
-          if (regionLevel(f) !== '6' || !f.geometry) return false;
-          if (kreisfrei.has(f.properties?.id)) return false;
-          return inBayern(f);
-        });
-      }
-      if (viewId === 'bayern-kreisfreie-staedte') {
-        return allFeatures.filter((f) => {
-          if (regionLevel(f) !== '6' || !f.geometry) return false;
-          return kreisfrei.has(f.properties?.id);
-        });
-      }
-      if (viewId === 'bayern-gemeinden-kreisfreie') {
-        const gemeinden = allFeatures.filter(
-          (f) => regionLevel(f) === '8' && f.geometry && inBayern(f),
-        );
-        const cities = allFeatures.filter(
-          (f) => regionLevel(f) === '6' && f.geometry && kreisfrei.has(f.properties?.id),
-        );
-        return [...gemeinden, ...cities];
-      }
-      if (viewId === 'bayern-gemeinden') {
-        return allFeatures.filter((f) => regionLevel(f) === '8' && f.geometry && inBayern(f));
-      }
-      if (viewId.startsWith('landkreis:')) {
-        const lkId = viewId.slice('landkreis:'.length);
-        const lk = allFeatures.find((f) => f.properties?.id === lkId && regionLevel(f) === '6');
-        const gemeinden = allFeatures.filter((f) => {
-          if (regionLevel(f) !== '8' || !f.geometry) return false;
-          if (f.properties?.landkreis_id === lkId) return true;
-          if (!lk) return false;
-          return turf.booleanPointInPolygon(turf.centroid(f), lk);
-        });
-        // Kreisfreie Städte have no level-8 children – show the city polygon
-        return gemeinden;
-      }
-      if (viewId.startsWith('kreisfrei:')) {
-        const cityId = viewId.slice('kreisfrei:'.length);
-        const city = allFeatures.find((f) => f.properties?.id === cityId && regionLevel(f) === '6');
-        return city ? [city] : [];
-      }
-      return [];
-    }
-
-    function defaultScaleCapEnabledForView(viewId) {
-      return viewShowsAllGemeinden(viewId) ? CONFIG.defaultColorCapEnabled : false;
+    function defaultRobustScaleEnabledForView() {
+      return RegionNav.viewShowsGemeindenLevel(currentViewScope)
+        ? CONFIG.defaultRobustScaleEnabled
+        : false;
     }
 
     function getScaleCapSettings() {
@@ -816,19 +938,28 @@ export function generateViewerHtml(generatedAt: string) {
         5,
         Math.min(500, Number(scaleCapPctInput.value) || CONFIG.defaultColorCapPct),
       );
-      return { enabled: scaleCapEnabledCb.checked, capPct };
+      return {
+        enabled: scaleCapEnabledCb.checked,
+        capPct,
+        robustEnabled: scaleRobustEnabledCb.checked,
+      };
     }
 
-    function updateScaleCapDefaultForView(viewId) {
-      const gemeindenOverview = viewShowsAllGemeinden(viewId);
-      if (gemeindenOverview && !lastScaleCapViewAllowed) {
-        scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
-      } else if (!gemeindenOverview && lastScaleCapViewAllowed) {
+    function updateScaleCapDefaultForView() {
+      const gemeindenLevel = RegionNav.viewShowsGemeindenLevel(currentViewScope);
+      const gemeindenOverview = RegionNav.viewShowsManyGemeinden(currentViewScope);
+      if (gemeindenLevel && !lastScaleCapViewAllowed) {
+        scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
+        if (gemeindenOverview) {
+          scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
+        }
+      } else if (!gemeindenLevel && lastScaleCapViewAllowed) {
+        scaleRobustEnabledCb.checked = false;
         scaleCapEnabledCb.checked = false;
       }
-      lastScaleCapViewAllowed = gemeindenOverview;
+      lastScaleCapViewAllowed = gemeindenLevel;
       syncScaleCapInputState();
-      updateScaleCapHint(viewId);
+      updateScaleCapHint();
     }
 
     function syncScaleCapInputState() {
@@ -837,45 +968,36 @@ export function generateViewerHtml(generatedAt: string) {
 
     function onScaleCapChange() {
       syncScaleCapInputState();
-      if (rawLoaded) applyView(currentView);
+      if (rawLoaded) applyCurrentView();
     }
 
+    scaleRobustEnabledCb.addEventListener('change', onScaleCapChange);
     scaleCapEnabledCb.addEventListener('change', onScaleCapChange);
     scaleCapPctInput.addEventListener('change', onScaleCapChange);
     scaleCapPctInput.addEventListener('input', onScaleCapChange);
 
     function colorScaleRange(features) {
-      const vals = features
-        .map((f) => f.properties?.bikeSharePct)
-        .filter((v) => typeof v === 'number');
-      const { enabled, capPct } = getScaleCapSettings();
-      if (!vals.length) {
-        return { min: 0, max: 20, dataMin: 0, dataMax: 20, scaleCapped: false, capPct };
-      }
-      const dataMin = Math.min(...vals);
-      const dataMax = Math.max(...vals);
-      const scaleCapped = enabled && dataMax > capPct;
-      const max = scaleCapped ? capPct : dataMax;
-      return { min: 0, max, dataMin, dataMax, scaleCapped, capPct };
+      const { enabled, capPct, robustEnabled } = getScaleCapSettings();
+      const inputs = features
+        .map((f) => ({
+          bikeSharePct: f.properties?.bikeSharePct,
+          roadSumKm: f.properties?.roadSumKm,
+        }))
+        .filter((i) => typeof i.bikeSharePct === 'number');
+      return TildaStats.computeChoroplethScaleRange(inputs, {
+        robustEnabled,
+        manualCapEnabled: enabled,
+        manualCapPct: capPct,
+      });
     }
 
-    function viewShowsGemeinden(viewId) {
-      return (
-        viewId === 'bayern-gemeinden' ||
-        viewId === 'bayern-gemeinden-kreisfreie' ||
-        viewId.startsWith('landkreis:')
-      );
-    }
+    updateScaleCapDefaultForView();
 
-    function viewShowsAllGemeinden(viewId) {
-      return viewId === 'bayern-gemeinden' || viewId === 'bayern-gemeinden-kreisfreie';
-    }
-
-    updateScaleCapDefaultForView(CONFIG.defaultView);
-
-    function updateRankingVisibility(viewId) {
-      const available = !viewShowsAllGemeinden(viewId);
+    function updateRankingVisibility() {
+      const available = !RegionNav.viewShowsManyGemeinden(currentViewScope);
       rankingDetails.hidden = !available;
+      rankingToolbar.hidden = !available;
+      viewCsvRow.hidden = available;
       if (!available) {
         rankingDetails.open = false;
         document.getElementById('ranking-list').replaceChildren();
@@ -886,18 +1008,89 @@ export function generateViewerHtml(generatedAt: string) {
       lastRankingViewAvailable = available;
     }
 
-    function updateScaleCapHint(viewId) {
-      const { enabled, capPct } = getScaleCapSettings();
-      if (!viewShowsGemeinden(viewId) || !enabled) {
+    function syncRankingModeButtons() {
+      for (const btn of rankingModeButtons) {
+        const active = btn.dataset.rankingMode === rankingMode;
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      }
+    }
+
+    function setRankingMode(mode) {
+      if (mode !== 'topflop' && mode !== 'all') return;
+      rankingMode = mode;
+      syncRankingModeButtons();
+      if (lastRankingSorted.length) {
+        updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct);
+      }
+    }
+
+    function rankingDisplayRows(sortedWithPct) {
+      const n = sortedWithPct.length;
+      if (rankingMode === 'all' || n <= RANKING_TOP_N * 2) {
+        return sortedWithPct.map((f, i) => ({ type: 'row', f, rank: i + 1 }));
+      }
+      const rows = [];
+      for (let i = 0; i < RANKING_TOP_N; i++) {
+        rows.push({ type: 'row', f: sortedWithPct[i], rank: i + 1 });
+      }
+      rows.push({ type: 'divider' });
+      for (let i = n - RANKING_TOP_N; i < n; i++) {
+        rows.push({ type: 'row', f: sortedWithPct[i], rank: i + 1 });
+      }
+      return rows;
+    }
+
+    function appendRankingRow(list, rank, f, minPct, maxPct, span) {
+      const pct = f.properties.bikeSharePct;
+      const li = document.createElement('li');
+      const rankEl = document.createElement('span');
+      rankEl.className = 'ranking-rank';
+      rankEl.textContent = rank + '.';
+      const name = document.createElement('span');
+      name.className = 'ranking-name';
+      const label = f.properties?.name || f.properties?.id || '–';
+      name.textContent = label;
+      name.title = label;
+      const track = document.createElement('div');
+      track.className = 'ranking-bar-track';
+      const fill = document.createElement('div');
+      fill.className = 'ranking-bar-fill';
+      const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
+      fill.style.width = widthPct + '%';
+      fill.style.background = colorForPct(pct, minPct, maxPct);
+      track.appendChild(fill);
+      const pctEl = document.createElement('span');
+      pctEl.className = 'ranking-pct';
+      pctEl.textContent = formatUiPct(pct) + ' %';
+      li.append(rankEl, name, track, pctEl);
+      list.appendChild(li);
+    }
+
+    function updateScaleCapHint() {
+      const { enabled, capPct, robustEnabled } = getScaleCapSettings();
+      const gemeindenLevel = RegionNav.viewShowsGemeindenLevel(currentViewScope);
+      if (!gemeindenLevel || (!enabled && !robustEnabled)) {
         scaleCapHint.hidden = true;
         scaleCapHint.textContent = '';
         return;
       }
       scaleCapHint.hidden = false;
-      scaleCapHint.textContent =
-        'Bei Gemeinden endet die Farbskala bei ' +
-        capPct +
-        ' %: darüber liegende Werte (z. B. durch Forstflächen mit mehr Rad- als Straßenkilometern) werden gleich eingefärbt.';
+      const hints = [];
+      if (robustEnabled) {
+        hints.push(
+          'Ausreißer ignorieren: Gebiete mit wenig Straßennetz (< ' +
+            TildaStats.DEFAULT_MIN_ROAD_KM_FOR_SCALE +
+            ' km) fließen nicht in die Skalenobergrenze ein; hohe Werte werden per 95. Perzentil und IQR begrenzt (z. B. Forstgemeinden).',
+        );
+      }
+      if (enabled) {
+        hints.push(
+          'Farbskala kappen bei ' +
+            capPct +
+            ' %: darüber liegende Werte werden gleich eingefärbt.',
+        );
+      }
+      scaleCapHint.textContent = hints.join(' ');
     }
 
     function clampPctForScale(pct, minPct, maxPct) {
@@ -940,50 +1133,190 @@ export function generateViewerHtml(generatedAt: string) {
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
+    function rebuildRankIndex(sorted) {
+      rankByFeatureId.clear();
+      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      withPct.forEach((f, i) => {
+        const id = f.properties?.id;
+        if (id) rankByFeatureId.set(id, { rank: i + 1, total: withPct.length });
+      });
+    }
+
+    function appendLengthRows(parent, title, rows) {
+      if (!rows.length) return;
+      const section = document.createElement('section');
+      section.className = 'region-detail-section';
+      const h4 = document.createElement('h4');
+      h4.textContent = title;
+      section.appendChild(h4);
+      const ul = document.createElement('ul');
+      ul.className = 'region-detail-rows';
+      for (const row of rows) {
+        const li = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = row.label;
+        const km = document.createElement('span');
+        km.className = 'km';
+        km.textContent =
+          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km';
+        li.append(label, km);
+        ul.appendChild(li);
+      }
+      section.appendChild(ul);
+      parent.appendChild(section);
+    }
+
+    function appendTagLengthDetails(parent, title, rows) {
+      if (!rows.length) return;
+      const details = document.createElement('details');
+      details.className = 'region-detail-tags';
+      const summary = document.createElement('summary');
+      summary.textContent = title + ' (' + rows.length + ')';
+      details.appendChild(summary);
+      const ul = document.createElement('ul');
+      ul.className = 'region-detail-rows';
+      for (const row of rows) {
+        const li = document.createElement('li');
+        const label = document.createElement('span');
+        label.textContent = row.label;
+        const km = document.createElement('span');
+        km.className = 'km';
+        km.textContent =
+          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km';
+        li.append(label, km);
+        ul.appendChild(li);
+      }
+      details.appendChild(ul);
+      parent.appendChild(details);
+    }
+
+    function showRegionDetail(feature) {
+      const p = feature.properties || {};
+      regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
+      const rankInfo = rankByFeatureId.get(p.id);
+      const rankText = rankInfo
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' in dieser Ansicht'
+        : 'Kein Rang (ohne Straßendaten in der Zählung)';
+      const pct =
+        p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
+          ? formatUiPct(p.bikeSharePct) + ' %'
+          : '–';
+      regionDetailMeta.textContent =
+        rankText +
+        ' · ' +
+        pct +
+        ' · ' +
+        TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+        ' km Rad / ' +
+        TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+        ' km Straße';
+      regionDetailBody.replaceChildren();
+      const filter = readLengthClassFilterFromUi();
+      appendLengthRows(
+        regionDetailBody,
+        'Straßen nach Klasse',
+        TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
+      );
+      appendTagLengthDetails(
+        regionDetailBody,
+        'Einzelne Straßentypen',
+        TildaStats.listFilteredHighwayTagLengths(p.road_length, filter),
+      );
+      appendLengthRows(
+        regionDetailBody,
+        'Radinfrastruktur nach Klasse',
+        TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
+      );
+      appendTagLengthDetails(
+        regionDetailBody,
+        'Einzelne Radweg-Typen',
+        TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
+      );
+      regionDetailEl.hidden = false;
+    }
+
+    function setSelectedFeatureId(id) {
+      if (selectedFeatureId && map.getSource('regions')) {
+        try {
+          map.removeFeatureState({ source: 'regions', id: selectedFeatureId }, 'selected');
+        } catch {
+          /* feature may have left the current source */
+        }
+      }
+      selectedFeatureId = id;
+      if (id && map.getSource('regions')) {
+        map.setFeatureState({ source: 'regions', id }, { selected: true });
+      }
+    }
+
+    function selectRegionById(id) {
+      const feature = lastRankingFeatures.find((f) => f.properties?.id === id);
+      if (!feature) return;
+      setSelectedFeatureId(id);
+      showRegionDetail(feature);
+    }
+
+    function clearRegionSelection() {
+      setSelectedFeatureId(null);
+      regionDetailEl.hidden = true;
+    }
+
+    function refreshSelectedRegionIfNeeded() {
+      if (!selectedFeatureId) return;
+      const feature = lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId);
+      if (feature) {
+        setSelectedFeatureId(selectedFeatureId);
+        showRegionDetail(feature);
+      } else {
+        clearRegionSelection();
+      }
+    }
+
+    function bindRegionMapInteraction() {
+      if (regionClickBound) return;
+      regionClickBound = true;
+      regionDetailClose.addEventListener('click', clearRegionSelection);
+      map.on('click', 'regions-fill', (e) => {
+        const f = e.features?.[0];
+        if (!f?.properties?.id) return;
+        selectRegionById(f.properties.id);
+      });
+      map.on('click', (e) => {
+        const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
+        if (!hits.length) clearRegionSelection();
+      });
+    }
+
     function updateRanking(features, minPct, maxPct) {
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByBikeShare);
       const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
       const span = Math.max(maxPct - minPct, 0.001);
-      const shown = withPct.length > RANKING_RENDER_MAX ? withPct.slice(0, RANKING_RENDER_MAX) : withPct;
+      lastRankingSorted = sorted;
+      lastRankingMinPct = minPct;
+      lastRankingMaxPct = maxPct;
+      rebuildRankIndex(sorted);
 
+      const modeHint =
+        rankingMode === 'topflop' && withPct.length > RANKING_TOP_N * 2
+          ? ' · Top & Flop je ' + RANKING_TOP_N
+          : rankingMode === 'all'
+            ? ' · alle ' + withPct.length
+            : '';
       summary.textContent =
-        '(' + sorted.length + ' Gebiete, Balken = Anteil in dieser Ansicht)';
+        '(' + sorted.length + ' Gebiete' + modeHint + ', Balken = Anteil in dieser Ansicht)';
 
       list.replaceChildren();
-      for (let i = 0; i < shown.length; i++) {
-        const f = shown[i];
-        const pct = f.properties.bikeSharePct;
-        const li = document.createElement('li');
-        const rank = document.createElement('span');
-        rank.className = 'ranking-rank';
-        rank.textContent = (i + 1) + '.';
-        const name = document.createElement('span');
-        name.className = 'ranking-name';
-        const label = f.properties?.name || f.properties?.id || '–';
-        name.textContent = label;
-        name.title = label;
-        const track = document.createElement('div');
-        track.className = 'ranking-bar-track';
-        const fill = document.createElement('div');
-        fill.className = 'ranking-bar-fill';
-        const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
-        fill.style.width = widthPct + '%';
-        fill.style.background = colorForPct(pct, minPct, maxPct);
-        track.appendChild(fill);
-        const pctEl = document.createElement('span');
-        pctEl.className = 'ranking-pct';
-        pctEl.textContent = formatUiPct(pct) + ' %';
-        li.append(rank, name, track, pctEl);
-        list.appendChild(li);
-      }
-      if (withPct.length > RANKING_RENDER_MAX) {
-        const more = document.createElement('li');
-        more.className = 'ranking-more';
-        more.textContent =
-          '… ' + (withPct.length - RANKING_RENDER_MAX) + ' weitere (nach unten scrollen)';
-        list.appendChild(more);
+      for (const row of rankingDisplayRows(withPct)) {
+        if (row.type === 'divider') {
+          const gap = document.createElement('li');
+          gap.className = 'ranking-divider';
+          gap.textContent = '…';
+          list.appendChild(gap);
+          continue;
+        }
+        appendRankingRow(list, row.rank, row.f, minPct, maxPct, span);
       }
       const withoutPct = sorted.length - withPct.length;
       if (withoutPct > 0) {
@@ -1002,11 +1335,9 @@ export function generateViewerHtml(generatedAt: string) {
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
-    function updatePanelSummaryPreview(viewId) {
-      if (!panelSummaryPreview) return;
-      const v = viewId ?? currentView;
-      const viewMeta = manifest.views.find((item) => item.id === v);
-      panelSummaryPreview.textContent = viewMeta?.label || v;
+    function updatePanelSummaryPreview() {
+      if (!panelSummaryPreview || !regionIndex) return;
+      panelSummaryPreview.textContent = RegionNav.viewLabel(currentViewScope, regionIndex);
     }
 
     function notifyMapResize() {
@@ -1098,20 +1429,27 @@ export function generateViewerHtml(generatedAt: string) {
       const filter = readLengthClassFilterFromUi();
       lengthClassFilter = filter;
       const params = new URLSearchParams();
-      const view = viewSelect.value;
-      if (view && view !== CONFIG.defaultView) params.set('view', view);
+      appendViewScopeToUrl(params);
+      if (isUiMinimal()) params.set('minimal', '1');
       if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
       if (!toggleBikelanes.checked) params.set('radwege', '0');
       if (toggleRoads.checked) params.set('strassen', '1');
       if (rankingDetails.open && !rankingDetails.hidden) params.set('ranking', 'open');
+      if (rankingMode !== 'topflop' && !rankingDetails.hidden) {
+        params.set('rankingMode', rankingMode);
+      }
       if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
         params.set('colors', colorScaleSelect.value);
       }
-      const { enabled, capPct } = getScaleCapSettings();
-      const defaultCapEnabled = defaultScaleCapEnabledForView(view);
+      const { enabled, capPct, robustEnabled } = getScaleCapSettings();
+      const defaultCapEnabled = defaultScaleCapEnabledForView();
+      const defaultRobust = defaultRobustScaleEnabledForView();
       if (capPct !== CONFIG.defaultColorCapPct) params.set('cap', String(capPct));
       if (enabled !== defaultCapEnabled) {
         params.set('capEnabled', enabled ? '1' : '0');
+      }
+      if (robustEnabled !== defaultRobust) {
+        params.set('robustScale', robustEnabled ? '1' : '0');
       }
       const scaleBike = bikelaneColorForScale(colorScaleSelect.value).toLowerCase();
       const bikeHex = overlayBikelaneColorInput.value.toLowerCase();
@@ -1270,25 +1608,12 @@ export function generateViewerHtml(generatedAt: string) {
       applyOverlayLineColors();
     }
 
-    function allViewOptionValues() {
-      return [...viewSelect.options].map((o) => o.value).filter(Boolean);
-    }
-
-    function resolveViewIdFromUrl() {
-      const params = urlParams();
-      const requested = params.get('view') || params.get('gebiet');
-      if (!requested) return CONFIG.defaultView;
-      const decoded = decodeURIComponent(requested);
-      const known = new Set(allViewOptionValues());
-      if (known.has(decoded)) return decoded;
-      return CONFIG.defaultView;
-    }
-
     function applyUrlOptions() {
       const params = urlParams();
-      const viewId = resolveViewIdFromUrl();
-      viewSelect.value = viewId;
-      currentView = viewId;
+      if (regionIndex) {
+        const scope = resolveViewScopeFromUrl();
+        applyViewScopeToUi(scope);
+      }
 
       const basemap = params.get('basemap');
       if (basemap && CONFIG.basemapStyles[basemap]) {
@@ -1307,11 +1632,16 @@ export function generateViewerHtml(generatedAt: string) {
       }
 
       const ranking = params.get('ranking');
-      if (!viewShowsAllGemeinden(viewId)) {
+      if (!RegionNav.viewShowsManyGemeinden(currentViewScope)) {
         if (ranking != null && ranking !== '') {
           rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open';
         } else {
           rankingDetails.open = true;
+        }
+        const rankingModeParam = params.get('rankingMode');
+        if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
+          rankingMode = rankingModeParam;
+          syncRankingModeButtons();
         }
         lastRankingViewAvailable = true;
       }
@@ -1332,11 +1662,18 @@ export function generateViewerHtml(generatedAt: string) {
       if (capEnabled != null && capEnabled !== '') {
         scaleCapEnabledCb.checked = parseBoolParam(
           capEnabled,
-          defaultScaleCapEnabledForView(viewId),
+          defaultScaleCapEnabledForView(),
         );
-        lastScaleCapViewAllowed = viewShowsAllGemeinden(viewId);
+        lastScaleCapViewAllowed = RegionNav.viewShowsGemeindenLevel(currentViewScope);
       } else {
-        updateScaleCapDefaultForView(viewId);
+        updateScaleCapDefaultForView();
+      }
+      const robustScale = params.get('robustScale') ?? params.get('ausreisser');
+      if (robustScale != null && robustScale !== '') {
+        scaleRobustEnabledCb.checked = parseBoolParam(
+          robustScale,
+          defaultRobustScaleEnabledForView(),
+        );
       }
       syncScaleCapInputState();
 
@@ -1565,8 +1902,18 @@ export function generateViewerHtml(generatedAt: string) {
           type: 'line',
           source: 'regions',
           paint: {
-            'line-color': '#263238',
-            'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 1.2],
+            'line-color': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false],
+              '#1565c0',
+              '#263238',
+            ],
+            'line-width': [
+              'case',
+              ['boolean', ['feature-state', 'selected'], false],
+              3,
+              ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 1.2],
+            ],
           },
         });
         map.addLayer({
@@ -1592,48 +1939,43 @@ export function generateViewerHtml(generatedAt: string) {
           map.getCanvas().style.cursor = '';
           tooltip.style.display = 'none';
         });
+        bindRegionMapInteraction();
       }
       updateOverlayVisibility();
     }
 
-    function applyView(viewId) {
-      currentView = viewId;
-      const filtered = filterForView(viewId).map(enrichFeature);
+    function applyCurrentView() {
+      syncViewScopeFromUi();
+      const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
       document.getElementById('legend-min').textContent = formatUiPct(min) + ' %';
       document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
       lastRankingFeatures = filtered;
-      updateRankingVisibility(viewId);
-      updateScaleCapHint(viewId);
+      updateRankingVisibility();
+      updateScaleCapHint();
       if (!rankingDetails.hidden) updateRanking(filtered, min, max);
+      else rebuildRankIndex(filtered);
+      updateViewMetaText(filtered, range);
+      updatePanelSummaryPreview();
+      refreshSelectedRegionIfNeeded();
       const geojson = { type: 'FeatureCollection', features: filtered };
-      const labelMinZoom =
-        viewId === 'bayern-landkreise-kreisfreie' ||
-        viewId === 'bayern-landkreise' ||
-        viewId === 'bayern-kreisfreie-staedte'
-          ? 8
-          : viewId === 'bayern-gemeinden-kreisfreie' || viewId === 'bayern-gemeinden'
-            ? 10
-            : viewId.startsWith('kreisfrei:')
-              ? 10
-              : 11;
-      const viewMeta = manifest.views.find((v) => v.id === viewId);
-      let metaText = (viewMeta?.label || viewId) + ' · ' + filtered.length + ' Gebiete';
-      if (range.scaleCapped) {
-        metaText +=
-          ' · Skala 0–' +
-          range.capPct +
-          ' % (max. ' +
-          formatUiPct(range.dataMax) +
-          ' % = volle Farbe)';
-      }
-      document.getElementById('view-meta').textContent = metaText;
-      updatePanelSummaryPreview(viewId);
+      const labelMinZoom = labelMinZoomForView();
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
-        const bbox = turf.bbox(geojson);
+        const boundsFeatures = filtered.length
+          ? geojson
+          : {
+              type: 'FeatureCollection',
+              features: RegionNav.scopeBoundsFeatures(
+                allFeatures,
+                currentViewScope.gebiet,
+                currentViewScope.untergebiet,
+                regionIndex,
+              ),
+            };
+        const bbox = turf.bbox(boundsFeatures);
         if (bbox.every(Number.isFinite)) {
           map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48, duration: 0 });
         }
@@ -1649,7 +1991,7 @@ export function generateViewerHtml(generatedAt: string) {
       map.once('idle', () => {
         map.jumpTo({ center, zoom });
         overlaysBound = false;
-        applyView(currentView);
+        applyCurrentView();
       });
       const meta = CONFIG.basemapOptions.find((b) => b.id === id);
       basemapHint.textContent = meta?.description || '';
@@ -1665,10 +2007,9 @@ export function generateViewerHtml(generatedAt: string) {
         updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
       }
     });
-    viewSelect.addEventListener('change', () => {
-      updateScaleCapDefaultForView(viewSelect.value);
-      applyView(viewSelect.value);
-    });
+    gebietSelect.addEventListener('change', onGebietChange);
+    untergebietSelect.addEventListener('change', onUntergebietChange);
+    darstellungSelect.addEventListener('change', onDarstellungChange);
     toggleBikelanes.addEventListener('change', updateOverlayVisibility);
     toggleRoads.addEventListener('change', updateOverlayVisibility);
     overlayBikelaneColorInput.addEventListener('input', applyOverlayLineColors);
@@ -1681,7 +2022,12 @@ export function generateViewerHtml(generatedAt: string) {
       input.addEventListener('input', applyOverlayMinZoom);
       input.addEventListener('change', applyOverlayMinZoom);
     }
-    downloadViewDataBtn.addEventListener('click', downloadCurrentViewData);
+    viewCsvBtnToolbar.addEventListener('click', downloadCurrentViewData);
+    viewCsvBtn.addEventListener('click', downloadCurrentViewData);
+    for (const btn of rankingModeButtons) {
+      btn.addEventListener('click', () => setRankingMode(btn.dataset.rankingMode));
+    }
+    syncRankingModeButtons();
     copyViewLinkBtn.addEventListener('click', copyShareLink);
     function updateBasemapHint() {
       const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
@@ -1693,13 +2039,13 @@ export function generateViewerHtml(generatedAt: string) {
       try {
         const [statsRes, manifestRes] = await Promise.all([
           fetch(CONFIG.statsUrl),
-          fetch(CONFIG.manifestUrl),
+          fetch(CONFIG.manifestUrl).catch(() => ({ ok: true, json: async () => ({}) })),
         ]);
         if (!statsRes.ok) throw new Error('stats.geojson fehlt – zuerst export-stats-geojson ausführen');
-        if (!manifestRes.ok) throw new Error('manifest.json fehlt – buildViewer ausführen');
         const stats = await statsRes.json();
-        manifest = await manifestRes.json();
+        manifest = manifestRes.ok ? await manifestRes.json() : {};
         allFeatures = stats.features || [];
+        rebuildRegionIndex();
         rawLoaded = true;
         setPanelActionsEnabled(true);
         colorScaleSelect.innerHTML = '';
@@ -1710,41 +2056,12 @@ export function generateViewerHtml(generatedAt: string) {
           if (scale.id === CONFIG.defaultColorScale) el.selected = true;
           colorScaleSelect.appendChild(el);
         }
-        viewSelect.innerHTML = '';
-        const overview = manifest.views.filter((v) => v.group === 'overview');
-        const landkreise = manifest.views.filter((v) => v.group === 'landkreis');
-        const kreisfreie = manifest.views.filter((v) => v.group === 'kreisfrei');
-        for (const v of overview) {
-          const el = document.createElement('option');
-          el.value = v.id;
-          el.textContent = v.label;
-          viewSelect.appendChild(el);
-        }
-        if (landkreise.length) {
-          const group = document.createElement('optgroup');
-          group.label = 'Landkreise (Gemeinden)';
-          for (const v of landkreise) {
-            const el = document.createElement('option');
-            el.value = v.id;
-            el.textContent = v.label;
-            group.appendChild(el);
-          }
-          viewSelect.appendChild(group);
-        }
-        if (kreisfreie.length) {
-          const group = document.createElement('optgroup');
-          group.label = 'Kreisfreie Städte';
-          for (const v of kreisfreie) {
-            const el = document.createElement('option');
-            el.value = v.id;
-            el.textContent = v.label;
-            group.appendChild(el);
-          }
-          viewSelect.appendChild(group);
-        }
+        populateGebietSelect();
+        populateUntergebietSelect();
+        populateDarstellungSelect();
         initOverlayColorInputs();
         applyUrlOptions();
-        applyView(currentView);
+        applyCurrentView();
       } catch (e) {
         loadError.style.display = 'block';
         loadError.textContent = String(e.message || e);

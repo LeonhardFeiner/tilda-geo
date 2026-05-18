@@ -238,6 +238,72 @@ export function computeFilteredLengths(
   return { roadKm, bikeKm }
 }
 
+export type ClassLengthRow = {
+  id: string
+  label: string
+  km: number
+}
+
+export function listFilteredRoadClassLengths(road_length: unknown, filter: LengthClassFilter) {
+  const sums = getRoadSums(asLengthRecord(road_length))
+  const rows: ClassLengthRow[] = []
+  for (const c of ROAD_CLASS_ORDER) {
+    if (!filter.road[c]) continue
+    const km = sums[c]
+    if (km > 0) rows.push({ id: c, label: ROAD_CLASS_LABELS[c], km })
+  }
+  return rows
+}
+
+export function listFilteredBikelaneClassLengths(
+  bikelane_length: unknown,
+  filter: LengthClassFilter,
+) {
+  const sums = getBikelaneSums(asLengthRecord(bikelane_length))
+  const rows: ClassLengthRow[] = []
+  for (const c of BIKELANE_CLASS_ORDER) {
+    if (!filter.bikelane[c]) continue
+    const km = sums[c]
+    if (km > 0) rows.push({ id: c, label: BIKELANE_CLASS_LABELS[c], km })
+  }
+  return rows
+}
+
+const bikelaneTagToClass = new Map<string, BikelaneClass>(
+  Object.entries(bikelaneCategoryTags).flatMap(([cls, tags]) =>
+    tags.map((tag) => [tag, cls as BikelaneClass]),
+  ),
+)
+
+export function listFilteredHighwayTagLengths(road_length: unknown, filter: LengthClassFilter) {
+  const record = asLengthRecord(road_length)
+  const rows: ClassLengthRow[] = []
+  for (const [tag, km] of Object.entries(record)) {
+    if (!(km > 0)) continue
+    const roadClass = roadClassForKey(tag)
+    if (!filter.road[roadClass]) continue
+    rows.push({ id: tag, label: tag, km })
+  }
+  rows.sort((a, b) => b.km - a.km)
+  return rows
+}
+
+export function listFilteredBikelaneTagLengths(
+  bikelane_length: unknown,
+  filter: LengthClassFilter,
+) {
+  const record = asLengthRecord(bikelane_length)
+  const rows: ClassLengthRow[] = []
+  for (const [tag, km] of Object.entries(record)) {
+    if (!(km > 0)) continue
+    const cls = bikelaneTagToClass.get(tag)
+    if (!cls || !filter.bikelane[cls]) continue
+    rows.push({ id: tag, label: tag, km })
+  }
+  rows.sort((a, b) => b.km - a.km)
+  return rows
+}
+
 export function enabledRoadHighwayTags(filter: LengthClassFilter) {
   const tags: string[] = []
   for (const [highway, roadClass] of Object.entries(highwayClassDefinition)) {
@@ -285,3 +351,11 @@ export function maplibrePropertyInFilter(property: string, values: string[]) {
   if (!values.length) return ['literal', false]
   return ['match', ['get', property], values, true, false]
 }
+
+export {
+  computeChoroplethScaleRange,
+  DEFAULT_IQR_MULTIPLIER,
+  DEFAULT_MIN_ROAD_KM_FOR_SCALE,
+  DEFAULT_PERCENTILE_HIGH,
+  isLowRoadNetworkForScale,
+} from './choroplethScale'
