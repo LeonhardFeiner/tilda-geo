@@ -20,7 +20,7 @@ const dbStatGeometrySchema = z.discriminatedUnion('type', [geometryMultiPolygon,
 const DbStatSchema = z.object({
   id: z.string(),
   name: z.string(),
-  level: z.enum(['4', '6', '8']),
+  level: z.enum(['2', '3', '4', '5', '6', '7', '8', '9']),
   road_length: z.record(z.string(), z.number()),
   bikelane_length: z.record(z.string(), z.number()).nullable(),
   geometry: dbStatGeometrySchema,

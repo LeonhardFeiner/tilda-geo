@@ -20,6 +20,7 @@ const raw = await geoDataClient.$queryRaw<
     id: string
     name: string | null
     level: string | null
+    parent_id: string | null
     bundesland_id: string | null
     landkreis_id: string | null
     road_length: unknown
@@ -31,6 +32,7 @@ const raw = await geoDataClient.$queryRaw<
     a.id,
     a.name,
     a.level,
+    parent.id AS parent_id,
     bl.id AS bundesland_id,
     lk.id AS landkreis_id,
     a.road_length,
@@ -50,8 +52,17 @@ const raw = await geoDataClient.$queryRaw<
     SELECT b.id
     FROM public.aggregated_lengths b
     WHERE
+      (b.level)::int < (a.level)::int
+      AND ST_Contains(ST_MakeValid(b.geom), ST_PointOnSurface(ST_MakeValid(a.geom)))
+    ORDER BY (b.level)::int DESC, ST_Area(b.geom) ASC NULLS LAST
+    LIMIT 1
+  ) parent ON TRUE
+  LEFT JOIN LATERAL (
+    SELECT b.id
+    FROM public.aggregated_lengths b
+    WHERE
       b.level = '4'
-      AND a.level IN ('6', '8')
+      AND (a.level)::int > 4
       AND ST_Contains(ST_MakeValid(b.geom), ST_PointOnSurface(ST_MakeValid(a.geom)))
     LIMIT 1
   ) bl ON TRUE
@@ -60,7 +71,7 @@ const raw = await geoDataClient.$queryRaw<
     FROM public.aggregated_lengths b
     WHERE
       b.level = '6'
-      AND a.level = '8'
+      AND (a.level)::int > 6
       AND ST_Contains(ST_MakeValid(b.geom), ST_PointOnSurface(ST_MakeValid(a.geom)))
     ORDER BY ST_Area(b.geom) ASC NULLS LAST
     LIMIT 1
@@ -72,6 +83,7 @@ const features = raw.map((row) =>
     id: row.id,
     name: row.name ?? '',
     level: row.level ?? '',
+    ...(row.parent_id ? { parent_id: row.parent_id } : {}),
     ...(row.bundesland_id ? { bundesland_id: row.bundesland_id } : {}),
     ...(row.landkreis_id ? { landkreis_id: row.landkreis_id } : {}),
     road_length: row.road_length,

@@ -1,6 +1,9 @@
 import type { TableId } from '@/data/processingTypes/tableId.generated.const'
 import { geoDataLongRunningTxOptions } from '@/server/geoDataLongRunningTxOptions.server'
+import { STATS_ADMIN_LEVELS } from '@/server/statistics/aggregatedLengthsLevels'
 import { geoDataClient } from '../../prisma-client.server'
+
+const statsAdminLevelsInList = STATS_ADMIN_LEVELS.map((level) => `'${level}'`).join(', ')
 
 const lengthCounterIdentifier = (id: TableId) =>
   `atlas_aggregate_${id.toLowerCase()}` as `atlas_aggregate_${Lowercase<TableId>}`
@@ -119,7 +122,7 @@ export async function aggregateLengths() {
     );
     `
   return geoDataClient.$transaction(async (tx) => {
-    await tx.$executeRaw`
+    await tx.$executeRawUnsafe(`
       INSERT INTO "aggregated_lengths" (id, name, level, geom, bikelane_length, road_length)
       SELECT
         id,
@@ -129,7 +132,7 @@ export async function aggregateLengths() {
         atlas_aggregate_bikelanes(geom),
         atlas_aggregate_roads(geom)
       FROM "boundaries"
-      WHERE (tags->>'admin_level')::TEXT IN ('4', '6', '8')
+      WHERE (tags->>'admin_level')::TEXT IN (${statsAdminLevelsInList})
       ON CONFLICT (id)
         DO UPDATE SET
           name = EXCLUDED.name,
@@ -137,7 +140,7 @@ export async function aggregateLengths() {
           geom = EXCLUDED.geom,
           bikelane_length = EXCLUDED.bikelane_length,
           road_length = EXCLUDED.road_length;
-  `
+  `)
     await tx.$executeRaw`
     DROP INDEX IF EXISTS "aggregated_lengths_geom_idx";`
     await tx.$executeRaw`

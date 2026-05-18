@@ -8,9 +8,12 @@ UPDATE boundaries
 SET geom = ST_SimplifyPreserveTopology(
   geom,
   CASE
+    WHEN (tags ->> 'admin_level')::int <= 3 THEN 50 -- land / coarse
     WHEN (tags ->> 'admin_level')::int = 4 THEN 30 -- bundesland
+    WHEN (tags ->> 'admin_level')::int = 5 THEN 25 -- regierungsbezirk
     WHEN (tags ->> 'admin_level')::int = 6 THEN 20 -- landkreise
-    ELSE 10 -- gemeinden level 8
+    WHEN (tags ->> 'admin_level')::int = 7 THEN 15 -- verwaltungsgemeinschaft
+    ELSE 10 -- gemeinden level 8/9
   END
 );
 
