@@ -1,0 +1,758 @@
+var g = 4096
+function R($, Z, W) {
+  let q = Z,
+    Q = q + W,
+    J = [],
+    F = ''
+  while (q < Q) {
+    let V = $[q++]
+    if ((V & 128) === 0) J.push(V)
+    else if ((V & 224) === 192) {
+      let K = $[q++] & 63
+      J.push(((V & 31) << 6) | K)
+    } else if ((V & 240) === 224) {
+      let K = $[q++] & 63,
+        k = $[q++] & 63
+      J.push(((V & 31) << 12) | (K << 6) | k)
+    } else if ((V & 248) === 240) {
+      let K = $[q++] & 63,
+        k = $[q++] & 63,
+        x = $[q++] & 63,
+        X = ((V & 7) << 18) | (K << 12) | (k << 6) | x
+      if (X > 65535) ((X -= 65536), J.push(((X >>> 10) & 1023) | 55296), (X = 56320 | (X & 1023)))
+      J.push(X)
+    } else J.push(V)
+    if (J.length >= g) ((F += String.fromCharCode(...J)), (J.length = 0))
+  }
+  if (J.length > 0) F += String.fromCharCode(...J)
+  return F
+}
+var p = new TextDecoder(),
+  h = 200
+function y($, Z, W) {
+  let q = $.subarray(Z, Z + W)
+  return p.decode(q)
+}
+function T($, Z, W) {
+  if (W > h) return y($, Z, W)
+  else return R($, Z, W)
+}
+class Y {
+  type
+  data
+  constructor($, Z) {
+    ;((this.type = $), (this.data = Z))
+  }
+}
+class G extends Error {
+  constructor($) {
+    super($)
+    let Z = Object.create(G.prototype)
+    ;(Object.setPrototypeOf(this, Z),
+      Object.defineProperty(this, 'name', { configurable: !0, enumerable: !1, value: G.name }))
+  }
+}
+var H = 4294967295
+function D($, Z, W) {
+  let q = Math.floor(W / 4294967296),
+    Q = W
+  ;($.setUint32(Z, q), $.setUint32(Z + 4, Q))
+}
+function U($, Z) {
+  let W = $.getInt32(Z),
+    q = $.getUint32(Z + 4)
+  return W * 4294967296 + q
+}
+function L($, Z) {
+  let W = $.getUint32(Z),
+    q = $.getUint32(Z + 4)
+  return W * 4294967296 + q
+}
+var u = -1,
+  c = 4294967295,
+  f = 17179869183
+function b({ sec: $, nsec: Z }) {
+  if ($ >= 0 && Z >= 0 && $ <= f)
+    if (Z === 0 && $ <= c) {
+      let W = new Uint8Array(4)
+      return (new DataView(W.buffer).setUint32(0, $), W)
+    } else {
+      let W = $ / 4294967296,
+        q = $ & 4294967295,
+        Q = new Uint8Array(8),
+        J = new DataView(Q.buffer)
+      return (J.setUint32(0, (Z << 2) | (W & 3)), J.setUint32(4, q), Q)
+    }
+  else {
+    let W = new Uint8Array(12),
+      q = new DataView(W.buffer)
+    return (q.setUint32(0, Z), D(q, 4, $), W)
+  }
+}
+function n($) {
+  let Z = $.getTime(),
+    W = Math.floor(Z / 1000),
+    q = (Z - W * 1000) * 1e6,
+    Q = Math.floor(q / 1e9)
+  return { sec: W + Q, nsec: q - Q * 1e9 }
+}
+function r($) {
+  if ($ instanceof Date) {
+    let Z = n($)
+    return b(Z)
+  } else return null
+}
+function i($) {
+  let Z = new DataView($.buffer, $.byteOffset, $.byteLength)
+  switch ($.byteLength) {
+    case 4: {
+      let W = Z.getUint32(0),
+        q = 0
+      return { sec: W, nsec: 0 }
+    }
+    case 8: {
+      let W = Z.getUint32(0),
+        q = Z.getUint32(4),
+        Q = (W & 3) * 4294967296 + q,
+        J = W >>> 2
+      return { sec: Q, nsec: J }
+    }
+    case 12: {
+      let W = U(Z, 4),
+        q = Z.getUint32(0)
+      return { sec: W, nsec: q }
+    }
+    default:
+      throw new G(`Unrecognized data size for timestamp (expected 4, 8, or 12): ${$.length}`)
+  }
+}
+function d($) {
+  let Z = i($)
+  return new Date(Z.sec * 1000 + Z.nsec / 1e6)
+}
+var B = { type: u, encode: r, decode: d }
+class C {
+  static defaultCodec = new C()
+  __brand
+  builtInEncoders = []
+  builtInDecoders = []
+  encoders = []
+  decoders = []
+  constructor() {
+    this.register(B)
+  }
+  register({ type: $, encode: Z, decode: W }) {
+    if ($ >= 0) ((this.encoders[$] = Z), (this.decoders[$] = W))
+    else {
+      let q = -1 - $
+      ;((this.builtInEncoders[q] = Z), (this.builtInDecoders[q] = W))
+    }
+  }
+  tryToEncode($, Z) {
+    for (let W = 0; W < this.builtInEncoders.length; W++) {
+      let q = this.builtInEncoders[W]
+      if (q != null) {
+        let Q = q($, Z)
+        if (Q != null) {
+          let J = -1 - W
+          return new Y(J, Q)
+        }
+      }
+    }
+    for (let W = 0; W < this.encoders.length; W++) {
+      let q = this.encoders[W]
+      if (q != null) {
+        let Q = q($, Z)
+        if (Q != null) return new Y(W, Q)
+      }
+    }
+    if ($ instanceof Y) return $
+    return null
+  }
+  decode($, Z, W) {
+    let q = Z < 0 ? this.builtInDecoders[-1 - Z] : this.decoders[Z]
+    if (q) return q($, Z, W)
+    else return new Y(Z, $)
+  }
+}
+function a($) {
+  return (
+    $ instanceof ArrayBuffer || (typeof SharedArrayBuffer < 'u' && $ instanceof SharedArrayBuffer)
+  )
+}
+function _($) {
+  if ($ instanceof Uint8Array) return $
+  else if (ArrayBuffer.isView($)) return new Uint8Array($.buffer, $.byteOffset, $.byteLength)
+  else if (a($)) return new Uint8Array($)
+  else return Uint8Array.from($)
+}
+function z($) {
+  return `${$ < 0 ? '-' : ''}0x${Math.abs($).toString(16).padStart(2, '0')}`
+}
+var o = 16,
+  s = 16
+class O {
+  hit = 0
+  miss = 0
+  caches
+  maxKeyLength
+  maxLengthPerKey
+  constructor($ = o, Z = s) {
+    ;((this.maxKeyLength = $), (this.maxLengthPerKey = Z), (this.caches = []))
+    for (let W = 0; W < this.maxKeyLength; W++) this.caches.push([])
+  }
+  canBeCached($) {
+    return $ > 0 && $ <= this.maxKeyLength
+  }
+  find($, Z, W) {
+    let q = this.caches[W - 1]
+    $: for (let Q of q) {
+      let J = Q.bytes
+      for (let F = 0; F < W; F++) if (J[F] !== $[Z + F]) continue $
+      return Q.str
+    }
+    return null
+  }
+  store($, Z) {
+    let W = this.caches[$.length - 1],
+      q = { bytes: $, str: Z }
+    if (W.length >= this.maxLengthPerKey) W[(Math.random() * W.length) | 0] = q
+    else W.push(q)
+  }
+  decode($, Z, W) {
+    let q = this.find($, Z, W)
+    if (q != null) return (this.hit++, q)
+    this.miss++
+    let Q = R($, Z, W),
+      J = Uint8Array.prototype.slice.call($, Z, Z + W)
+    return (this.store(J, Q), Q)
+  }
+}
+var S = 'array',
+  N = 'map_key',
+  j = 'map_value',
+  t = ($) => {
+    if (typeof $ === 'string' || typeof $ === 'number') return $
+    throw new G('The type of key must be string or number but ' + typeof $)
+  }
+class l {
+  stack = []
+  stackHeadPosition = -1
+  get length() {
+    return this.stackHeadPosition + 1
+  }
+  top() {
+    return this.stack[this.stackHeadPosition]
+  }
+  pushArrayState($) {
+    let Z = this.getUninitializedStateFromPool()
+    ;((Z.type = S), (Z.position = 0), (Z.size = $), (Z.array = Array($)))
+  }
+  pushMapState($) {
+    let Z = this.getUninitializedStateFromPool()
+    ;((Z.type = N), (Z.readCount = 0), (Z.size = $), (Z.map = {}))
+  }
+  getUninitializedStateFromPool() {
+    if ((this.stackHeadPosition++, this.stackHeadPosition === this.stack.length)) {
+      let $ = {
+        type: void 0,
+        size: 0,
+        array: void 0,
+        position: 0,
+        readCount: 0,
+        map: void 0,
+        key: null,
+      }
+      this.stack.push($)
+    }
+    return this.stack[this.stackHeadPosition]
+  }
+  release($) {
+    if (this.stack[this.stackHeadPosition] !== $)
+      throw Error('Invalid stack state. Released state is not on top of the stack.')
+    if ($.type === S) {
+      let W = $
+      ;((W.size = 0), (W.array = void 0), (W.position = 0), (W.type = void 0))
+    }
+    if ($.type === N || $.type === j) {
+      let W = $
+      ;((W.size = 0), (W.map = void 0), (W.readCount = 0), (W.type = void 0))
+    }
+    this.stackHeadPosition--
+  }
+  reset() {
+    ;((this.stack.length = 0), (this.stackHeadPosition = -1))
+  }
+}
+var P = -1,
+  v = new DataView(new ArrayBuffer(0)),
+  e = new Uint8Array(v.buffer)
+try {
+  v.getInt8(0)
+} catch ($) {
+  if (!($ instanceof RangeError))
+    throw Error(
+      'This module is not supported in the current JavaScript engine because DataView does not throw RangeError on out-of-bounds access',
+    )
+}
+var I = RangeError('Insufficient data'),
+  $0 = new O()
+class M {
+  extensionCodec
+  context
+  useBigInt64
+  rawStrings
+  maxStrLength
+  maxBinLength
+  maxArrayLength
+  maxMapLength
+  maxExtLength
+  keyDecoder
+  mapKeyConverter
+  totalPos = 0
+  pos = 0
+  view = v
+  bytes = e
+  headByte = P
+  stack = new l()
+  entered = !1
+  constructor($) {
+    ;((this.extensionCodec = $?.extensionCodec ?? C.defaultCodec),
+      (this.context = $?.context),
+      (this.useBigInt64 = $?.useBigInt64 ?? !1),
+      (this.rawStrings = $?.rawStrings ?? !1),
+      (this.maxStrLength = $?.maxStrLength ?? H),
+      (this.maxBinLength = $?.maxBinLength ?? H),
+      (this.maxArrayLength = $?.maxArrayLength ?? H),
+      (this.maxMapLength = $?.maxMapLength ?? H),
+      (this.maxExtLength = $?.maxExtLength ?? H),
+      (this.keyDecoder = $?.keyDecoder !== void 0 ? $.keyDecoder : $0),
+      (this.mapKeyConverter = $?.mapKeyConverter ?? t))
+  }
+  clone() {
+    return new M({
+      extensionCodec: this.extensionCodec,
+      context: this.context,
+      useBigInt64: this.useBigInt64,
+      rawStrings: this.rawStrings,
+      maxStrLength: this.maxStrLength,
+      maxBinLength: this.maxBinLength,
+      maxArrayLength: this.maxArrayLength,
+      maxMapLength: this.maxMapLength,
+      maxExtLength: this.maxExtLength,
+      keyDecoder: this.keyDecoder,
+    })
+  }
+  reinitializeState() {
+    ;((this.totalPos = 0), (this.headByte = P), this.stack.reset())
+  }
+  setBuffer($) {
+    let Z = _($)
+    ;((this.bytes = Z),
+      (this.view = new DataView(Z.buffer, Z.byteOffset, Z.byteLength)),
+      (this.pos = 0))
+  }
+  appendBuffer($) {
+    if (this.headByte === P && !this.hasRemaining(1)) this.setBuffer($)
+    else {
+      let Z = this.bytes.subarray(this.pos),
+        W = _($),
+        q = new Uint8Array(Z.length + W.length)
+      ;(q.set(Z), q.set(W, Z.length), this.setBuffer(q))
+    }
+  }
+  hasRemaining($) {
+    return this.view.byteLength - this.pos >= $
+  }
+  createExtraByteError($) {
+    let { view: Z, pos: W } = this
+    return RangeError(`Extra ${Z.byteLength - W} of ${Z.byteLength} byte(s) found at buffer[${$}]`)
+  }
+  decode($) {
+    if (this.entered) return this.clone().decode($)
+    try {
+      ;((this.entered = !0), this.reinitializeState(), this.setBuffer($))
+      let Z = this.doDecodeSync()
+      if (this.hasRemaining(1)) throw this.createExtraByteError(this.pos)
+      return Z
+    } finally {
+      this.entered = !1
+    }
+  }
+  *decodeMulti($) {
+    if (this.entered) {
+      yield* this.clone().decodeMulti($)
+      return
+    }
+    try {
+      ;((this.entered = !0), this.reinitializeState(), this.setBuffer($))
+      while (this.hasRemaining(1)) yield this.doDecodeSync()
+    } finally {
+      this.entered = !1
+    }
+  }
+  async decodeAsync($) {
+    if (this.entered) return this.clone().decodeAsync($)
+    try {
+      this.entered = !0
+      let Z = !1,
+        W
+      for await (let F of $) {
+        if (Z) throw ((this.entered = !1), this.createExtraByteError(this.totalPos))
+        this.appendBuffer(F)
+        try {
+          ;((W = this.doDecodeSync()), (Z = !0))
+        } catch (V) {
+          if (!(V instanceof RangeError)) throw V
+        }
+        this.totalPos += this.pos
+      }
+      if (Z) {
+        if (this.hasRemaining(1)) throw this.createExtraByteError(this.totalPos)
+        return W
+      }
+      let { headByte: q, pos: Q, totalPos: J } = this
+      throw RangeError(`Insufficient data in parsing ${z(q)} at ${J} (${Q} in the current buffer)`)
+    } finally {
+      this.entered = !1
+    }
+  }
+  decodeArrayStream($) {
+    return this.decodeMultiAsync($, !0)
+  }
+  decodeStream($) {
+    return this.decodeMultiAsync($, !1)
+  }
+  async *decodeMultiAsync($, Z) {
+    if (this.entered) {
+      yield* this.clone().decodeMultiAsync($, Z)
+      return
+    }
+    try {
+      this.entered = !0
+      let W = Z,
+        q = -1
+      for await (let Q of $) {
+        if (Z && q === 0) throw this.createExtraByteError(this.totalPos)
+        if ((this.appendBuffer(Q), W)) ((q = this.readArraySize()), (W = !1), this.complete())
+        try {
+          while (!0) if ((yield this.doDecodeSync(), --q === 0)) break
+        } catch (J) {
+          if (!(J instanceof RangeError)) throw J
+        }
+        this.totalPos += this.pos
+      }
+    } finally {
+      this.entered = !1
+    }
+  }
+  doDecodeSync() {
+    $: while (!0) {
+      let $ = this.readHeadByte(),
+        Z
+      if ($ >= 224) Z = $ - 256
+      else if ($ < 192)
+        if ($ < 128) Z = $
+        else if ($ < 144) {
+          let q = $ - 128
+          if (q !== 0) {
+            ;(this.pushMapState(q), this.complete())
+            continue $
+          } else Z = {}
+        } else if ($ < 160) {
+          let q = $ - 144
+          if (q !== 0) {
+            ;(this.pushArrayState(q), this.complete())
+            continue $
+          } else Z = []
+        } else {
+          let q = $ - 160
+          Z = this.decodeString(q, 0)
+        }
+      else if ($ === 192) Z = null
+      else if ($ === 194) Z = !1
+      else if ($ === 195) Z = !0
+      else if ($ === 202) Z = this.readF32()
+      else if ($ === 203) Z = this.readF64()
+      else if ($ === 204) Z = this.readU8()
+      else if ($ === 205) Z = this.readU16()
+      else if ($ === 206) Z = this.readU32()
+      else if ($ === 207)
+        if (this.useBigInt64) Z = this.readU64AsBigInt()
+        else Z = this.readU64()
+      else if ($ === 208) Z = this.readI8()
+      else if ($ === 209) Z = this.readI16()
+      else if ($ === 210) Z = this.readI32()
+      else if ($ === 211)
+        if (this.useBigInt64) Z = this.readI64AsBigInt()
+        else Z = this.readI64()
+      else if ($ === 217) {
+        let q = this.lookU8()
+        Z = this.decodeString(q, 1)
+      } else if ($ === 218) {
+        let q = this.lookU16()
+        Z = this.decodeString(q, 2)
+      } else if ($ === 219) {
+        let q = this.lookU32()
+        Z = this.decodeString(q, 4)
+      } else if ($ === 220) {
+        let q = this.readU16()
+        if (q !== 0) {
+          ;(this.pushArrayState(q), this.complete())
+          continue $
+        } else Z = []
+      } else if ($ === 221) {
+        let q = this.readU32()
+        if (q !== 0) {
+          ;(this.pushArrayState(q), this.complete())
+          continue $
+        } else Z = []
+      } else if ($ === 222) {
+        let q = this.readU16()
+        if (q !== 0) {
+          ;(this.pushMapState(q), this.complete())
+          continue $
+        } else Z = {}
+      } else if ($ === 223) {
+        let q = this.readU32()
+        if (q !== 0) {
+          ;(this.pushMapState(q), this.complete())
+          continue $
+        } else Z = {}
+      } else if ($ === 196) {
+        let q = this.lookU8()
+        Z = this.decodeBinary(q, 1)
+      } else if ($ === 197) {
+        let q = this.lookU16()
+        Z = this.decodeBinary(q, 2)
+      } else if ($ === 198) {
+        let q = this.lookU32()
+        Z = this.decodeBinary(q, 4)
+      } else if ($ === 212) Z = this.decodeExtension(1, 0)
+      else if ($ === 213) Z = this.decodeExtension(2, 0)
+      else if ($ === 214) Z = this.decodeExtension(4, 0)
+      else if ($ === 215) Z = this.decodeExtension(8, 0)
+      else if ($ === 216) Z = this.decodeExtension(16, 0)
+      else if ($ === 199) {
+        let q = this.lookU8()
+        Z = this.decodeExtension(q, 1)
+      } else if ($ === 200) {
+        let q = this.lookU16()
+        Z = this.decodeExtension(q, 2)
+      } else if ($ === 201) {
+        let q = this.lookU32()
+        Z = this.decodeExtension(q, 4)
+      } else throw new G(`Unrecognized type byte: ${z($)}`)
+      this.complete()
+      let W = this.stack
+      while (W.length > 0) {
+        let q = W.top()
+        if (q.type === S)
+          if (((q.array[q.position] = Z), q.position++, q.position === q.size))
+            ((Z = q.array), W.release(q))
+          else continue $
+        else if (q.type === N) {
+          if (Z === '__proto__') throw new G('The key __proto__ is not allowed')
+          ;((q.key = this.mapKeyConverter(Z)), (q.type = j))
+          continue $
+        } else if (((q.map[q.key] = Z), q.readCount++, q.readCount === q.size))
+          ((Z = q.map), W.release(q))
+        else {
+          ;((q.key = null), (q.type = N))
+          continue $
+        }
+      }
+      return Z
+    }
+  }
+  readHeadByte() {
+    if (this.headByte === P) this.headByte = this.readU8()
+    return this.headByte
+  }
+  complete() {
+    this.headByte = P
+  }
+  readArraySize() {
+    let $ = this.readHeadByte()
+    switch ($) {
+      case 220:
+        return this.readU16()
+      case 221:
+        return this.readU32()
+      default:
+        if ($ < 160) return $ - 144
+        else throw new G(`Unrecognized array type byte: ${z($)}`)
+    }
+  }
+  pushMapState($) {
+    if ($ > this.maxMapLength)
+      throw new G(
+        `Max length exceeded: map length (${$}) > maxMapLengthLength (${this.maxMapLength})`,
+      )
+    this.stack.pushMapState($)
+  }
+  pushArrayState($) {
+    if ($ > this.maxArrayLength)
+      throw new G(
+        `Max length exceeded: array length (${$}) > maxArrayLength (${this.maxArrayLength})`,
+      )
+    this.stack.pushArrayState($)
+  }
+  decodeString($, Z) {
+    if (!this.rawStrings || this.stateIsMapKey()) return this.decodeUtf8String($, Z)
+    return this.decodeBinary($, Z)
+  }
+  decodeUtf8String($, Z) {
+    if ($ > this.maxStrLength)
+      throw new G(
+        `Max length exceeded: UTF-8 byte length (${$}) > maxStrLength (${this.maxStrLength})`,
+      )
+    if (this.bytes.byteLength < this.pos + Z + $) throw I
+    let W = this.pos + Z,
+      q
+    if (this.stateIsMapKey() && this.keyDecoder?.canBeCached($))
+      q = this.keyDecoder.decode(this.bytes, W, $)
+    else q = T(this.bytes, W, $)
+    return ((this.pos += Z + $), q)
+  }
+  stateIsMapKey() {
+    if (this.stack.length > 0) return this.stack.top().type === N
+    return !1
+  }
+  decodeBinary($, Z) {
+    if ($ > this.maxBinLength)
+      throw new G(`Max length exceeded: bin length (${$}) > maxBinLength (${this.maxBinLength})`)
+    if (!this.hasRemaining($ + Z)) throw I
+    let W = this.pos + Z,
+      q = this.bytes.subarray(W, W + $)
+    return ((this.pos += Z + $), q)
+  }
+  decodeExtension($, Z) {
+    if ($ > this.maxExtLength)
+      throw new G(`Max length exceeded: ext length (${$}) > maxExtLength (${this.maxExtLength})`)
+    let W = this.view.getInt8(this.pos + Z),
+      q = this.decodeBinary($, Z + 1)
+    return this.extensionCodec.decode(q, W, this.context)
+  }
+  lookU8() {
+    return this.view.getUint8(this.pos)
+  }
+  lookU16() {
+    return this.view.getUint16(this.pos)
+  }
+  lookU32() {
+    return this.view.getUint32(this.pos)
+  }
+  readU8() {
+    let $ = this.view.getUint8(this.pos)
+    return (this.pos++, $)
+  }
+  readI8() {
+    let $ = this.view.getInt8(this.pos)
+    return (this.pos++, $)
+  }
+  readU16() {
+    let $ = this.view.getUint16(this.pos)
+    return ((this.pos += 2), $)
+  }
+  readI16() {
+    let $ = this.view.getInt16(this.pos)
+    return ((this.pos += 2), $)
+  }
+  readU32() {
+    let $ = this.view.getUint32(this.pos)
+    return ((this.pos += 4), $)
+  }
+  readI32() {
+    let $ = this.view.getInt32(this.pos)
+    return ((this.pos += 4), $)
+  }
+  readU64() {
+    let $ = L(this.view, this.pos)
+    return ((this.pos += 8), $)
+  }
+  readI64() {
+    let $ = U(this.view, this.pos)
+    return ((this.pos += 8), $)
+  }
+  readU64AsBigInt() {
+    let $ = this.view.getBigUint64(this.pos)
+    return ((this.pos += 8), $)
+  }
+  readI64AsBigInt() {
+    let $ = this.view.getBigInt64(this.pos)
+    return ((this.pos += 8), $)
+  }
+  readF32() {
+    let $ = this.view.getFloat32(this.pos)
+    return ((this.pos += 4), $)
+  }
+  readF64() {
+    let $ = this.view.getFloat64(this.pos)
+    return ((this.pos += 8), $)
+  }
+}
+function A($, Z) {
+  return new M(Z).decode($)
+}
+var w = 1
+function m($) {
+  let Z = A($)
+  if (Z.version !== w || !Z.landkreis) throw Error('Ungültiges neighbors.msgpack')
+  return {
+    version: w,
+    landkreis: Z.landkreis,
+    landkreisStadtstaat: Z.landkreisStadtstaat ?? {},
+    gemeinde: Z.gemeinde ?? {},
+  }
+}
+function Z0($) {
+  if (!$ || typeof $ !== 'object') return null
+  let Z = $
+  if (Z.version !== w) return null
+  if (!Z.landkreis || typeof Z.landkreis !== 'object') return null
+  return {
+    version: w,
+    landkreis: Z.landkreis,
+    landkreisStadtstaat: Z.landkreisStadtstaat ?? {},
+    gemeinde: Z.gemeinde ?? {},
+  }
+}
+function E($) {
+  try {
+    return Z0(JSON.parse($))
+  } catch {
+    return null
+  }
+}
+self.onmessage = async ($) => {
+  if ($.data.type !== 'load') return
+  let { msgpackUrl: Z, jsonUrl: W } = $.data
+  try {
+    let q = await fetch(Z)
+    if (q.ok) {
+      let Q = new Uint8Array(await q.arrayBuffer()),
+        J = m(Q)
+      self.postMessage({ type: 'ok', file: J })
+      return
+    }
+  } catch {}
+  try {
+    let q = await fetch(W)
+    if (!q.ok) {
+      self.postMessage({ type: 'error', message: `Nachbarn nicht gefunden (${q.status})` })
+      return
+    }
+    let Q = E(await q.text())
+    if (!Q) {
+      self.postMessage({ type: 'error', message: 'Ungültige neighbors.json' })
+      return
+    }
+    self.postMessage({ type: 'ok', file: Q })
+  } catch (q) {
+    self.postMessage({
+      type: 'error',
+      message: q instanceof Error ? q.message : 'Nachbarn laden fehlgeschlagen',
+    })
+  }
+}

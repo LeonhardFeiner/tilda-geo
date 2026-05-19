@@ -1,35 +1,51 @@
 ;(() => {
-  var O = Object.defineProperty
-  var Q = (n) => n
-  function X(n, r) {
-    this[n] = Q.bind(null, r)
+  var t1 = Object.defineProperty
+  var i1 = ($) => $
+  function e1($, Z) {
+    this[$] = i1.bind(null, Z)
   }
-  var Y = (n, r) => {
-    for (var s in r) O(n, s, { get: r[s], enumerable: !0, configurable: !0, set: X.bind(r, s) })
+  var $6 = ($, Z) => {
+    for (var q in Z) t1($, q, { get: Z[q], enumerable: !0, configurable: !0, set: e1.bind(Z, q) })
   }
-  var N = {}
-  Y(N, {
-    stadtstaatCandidateIds: () => rn,
-    simplePresetToViewScope: () => d,
-    simplePresetLabel: () => v,
-    simplePresetDarstellung: () => C,
-    resolveFocusContext: () => M,
-    presetUsesNeighborFilter: () => q,
-    parseSimpleViewPreset: () => t,
-    neighborCandidateIds: () => sn,
-    listSimplePresetsForFocus: () => i,
-    landkreisIdsInBundesland: () => J,
-    gemeindenIdsInLandkreise: () => e,
-    gemeindenIdsInLandkreis: () => nn,
-    gemeindeUnitIdsInLandkreise: () => y,
-    filterFeaturesForSimpleView: () => kn,
-    expertViewScopeFromFocus: () => _n,
-    defaultSimplePresetForFocus: () => j,
-    SIMPLE_VIEW_PRESET_IDS: () => W,
+  var s = (($) =>
+    typeof require < 'u'
+      ? require
+      : typeof Proxy < 'u'
+        ? new Proxy($, { get: (Z, q) => (typeof require < 'u' ? require : Z)[q] })
+        : $)(function ($) {
+    if (typeof require < 'u') return require.apply(this, arguments)
+    throw Error('Dynamic require of "' + $ + '" is not supported')
   })
-  var F = 'deutschland',
-    Z = new Set(['relation/62422', 'relation/62782', 'relation/62772']),
-    g = [
+  var d0 = {}
+  $6(d0, {
+    stadtstaatCandidateIds: () => S8,
+    simplePresetToViewScope: () => E0,
+    simplePresetLabel: () => B8,
+    simplePresetDarstellung: () => a1,
+    resolveFocusContext: () => f1,
+    presetUsesNeighborFilter: () => s0,
+    precomputedNeighborsFileFromJson: () => k0,
+    parseSimpleViewPreset: () => V8,
+    parsePrecomputedNeighborsJsonText: () => w1,
+    parsePrecomputedNeighborsJson: () => L1,
+    neighborIndexFromPrecomputed: () => u0,
+    neighborCandidateIds: () => P8,
+    listSimplePresetsForFocus: () => u1,
+    landkreisIdsInBundesland: () => s1,
+    gemeindenIdsInLandkreise: () => T8,
+    gemeindenIdsInLandkreis: () => E8,
+    gemeindeUnitIdsInLandkreise: () => S0,
+    filterFeaturesForSimpleView: () => d1,
+    expertViewScopeFromFocus: () => h8,
+    defaultSimplePresetForFocus: () => g1,
+    decodeNeighborsPack: () => P1,
+    computeSimpleAllowedIds: () => K0,
+    buildNeighborIndex: () => j1,
+    SIMPLE_VIEW_PRESET_IDS: () => a0,
+  })
+  var r = 'deutschland',
+    Z6 = new Set(['relation/62422', 'relation/62782', 'relation/62772']),
+    q6 = [
       { id: 'bundeslaender', label: 'Bundesländer', minLevel: 4, sortLevel: 4 },
       { id: 'regierungsbezirke', label: 'Regierungsbezirke', minLevel: 5, sortLevel: 5 },
       {
@@ -62,325 +78,3023 @@
       { id: 'stadtbezirke', label: 'Stadtbezirke', minLevel: 9, sortLevel: 9 },
       { id: 'stadtteile', label: 'Stadtteile', minLevel: 10, sortLevel: 10 },
     ]
-  function a(n) {
-    return String(n.properties?.level ?? '')
+  function g($) {
+    return String($.properties?.level ?? '')
   }
-  function S(n) {
-    return String(n.properties?.id ?? '')
+  function a($) {
+    return String($.properties?.id ?? '')
   }
-  function h(n) {
-    return a(n) === '4' && Z.has(S(n))
+  function x($) {
+    return g($) === '4' && Z6.has(a($))
   }
-  function H(n, r) {
-    return n === 'deutschland' && !r
+  function n0($, Z) {
+    return $ === 'deutschland' && !Z
   }
-  function I(n, r) {
-    if (n === 'deutschland') return 2
-    if (!r) return 4
-    if (r.startsWith('rb:')) return 5
-    if (r.startsWith('lk:') || r.startsWith('kreisfrei:') || r.startsWith('stadt:')) return 6
+  function P0($, Z) {
+    if ($ === 'deutschland') return 2
+    if (!Z) return 4
+    if (Z.startsWith('rb:')) return 5
+    if (Z.startsWith('lk:') || Z.startsWith('kreisfrei:') || Z.startsWith('stadt:')) return 6
     return 4
   }
-  function D(n, r) {
-    if (r.startsWith('rb:')) return r.slice(3)
-    if (r.startsWith('lk:')) return r.slice(3)
-    if (r.startsWith('kreisfrei:')) return r.slice(9)
-    if (r.startsWith('stadt:')) return r.slice(6)
-    if (n === 'deutschland') return null
-    return n
+  function o0($, Z) {
+    if (Z.startsWith('rb:')) return Z.slice(3)
+    if (Z.startsWith('lk:')) return Z.slice(3)
+    if (Z.startsWith('kreisfrei:')) return Z.slice(9)
+    if (Z.startsWith('stadt:')) return Z.slice(6)
+    if ($ === 'deutschland') return null
+    return $
   }
-  function z(n, r) {
-    let s = [],
-      o = n,
-      l = new Set()
-    while (o && !l.has(o)) {
-      l.add(o)
-      let k = r.parentById.get(o)
-      if (!k) break
-      ;(s.push(k), (o = k))
+  function t0($, Z) {
+    let q = [],
+      J = $,
+      H = new Set()
+    while (J && !H.has(J)) {
+      H.add(J)
+      let W = Z.parentById.get(J)
+      if (!W) break
+      ;(q.push(W), (J = W))
     }
-    return s
+    return q
   }
-  function K(n, r) {
-    if (a(n) !== '8') return !1
-    let s = S(n)
-    for (let l of z(s, r)) {
-      let k = r.byId.get(l)
-      if (k && a(k) === '7') return !1
+  function J6($, Z) {
+    if (g($) !== '8') return !1
+    let q = a($)
+    for (let H of t0(q, Z)) {
+      let W = Z.byId.get(H)
+      if (W && g(W) === '7') return !1
     }
-    let o = r.parentById.get(s)
-    if (o) {
-      let l = r.byId.get(o)
-      if (l && a(l) === '7') return !1
+    let J = Z.parentById.get(q)
+    if (J) {
+      let H = Z.byId.get(J)
+      if (H && g(H) === '7') return !1
     }
     return !0
   }
-  function f(n, r, s) {
-    let o = a(n),
-      l = S(n)
-    if (o === '7') return !0
-    if (K(n, s)) return !0
-    if (r === 'gemeindeverbaende_kreisfrei' && o === '6' && s.kreisfreieIds.has(l)) return !0
+  function r0($, Z, q) {
+    let J = g($),
+      H = a($)
+    if (J === '7') return !0
+    if (J6($, q)) return !0
+    if (Z === 'gemeindeverbaende_kreisfrei' && J === '6' && q.kreisfreieIds.has(H)) return !0
     return !1
   }
-  function E(n, r, s, o) {
-    let l = S(n)
-    if (!l || !n.geometry) return !1
-    let k = D(r, s)
-    if (r === 'deutschland' && !s) return !0
-    if (!k) return !1
-    if (l === k) return !0
-    if (z(l, o).includes(k)) return !0
-    let _ = a(n),
-      u = n.properties ?? {}
-    if (I(r, s) === 4 && _ > '4' && u.bundesland_id === k) return !0
-    if (I(r, s) === 6 && _ > '6' && u.landkreis_id === k) return !0
+  function i0($, Z, q, J) {
+    let H = a($)
+    if (!H || !$.geometry) return !1
+    let W = o0(Z, q)
+    if (Z === 'deutschland' && !q) return !0
+    if (!W) return !1
+    if (H === W) return !0
+    if (t0(H, J).includes(W)) return !0
+    let Y = g($),
+      _ = $.properties ?? {}
+    if (P0(Z, q) === 4 && Y > '4' && _.bundesland_id === W) return !0
+    if (P0(Z, q) === 6 && Y > '6' && _.landkreis_id === W) return !0
     return !1
   }
-  function B(n, r, s, o, l) {
-    let k = a(n),
-      _ = S(n),
-      u = s.kreisfreieIds.has(_),
-      m = H(o, l)
-    switch (r) {
+  function X6($, Z, q, J, H) {
+    let W = g($),
+      Y = a($),
+      _ = q.kreisfreieIds.has(Y),
+      X = n0(J, H)
+    switch (Z) {
       case 'bundeslaender':
-        return k === '4'
+        return W === '4'
       case 'regierungsbezirke':
-        return k === '5'
+        return W === '5'
       case 'landkreise':
-        return k === '6' && !u
+        return W === '6' && !_
       case 'kreisfreie':
-        return k === '6' && u
+        return W === '6' && _
       case 'landkreis_kreisfrei':
-        return k === '6' || (m && h(n))
+        return W === '6' || (X && x($))
       case 'gemeindeverbaende':
-        return f(n, 'gemeindeverbaende', s)
+        return r0($, 'gemeindeverbaende', q)
       case 'gemeindeverbaende_kreisfrei':
-        return f(n, 'gemeindeverbaende_kreisfrei', s) || (m && h(n))
+        return r0($, 'gemeindeverbaende_kreisfrei', q) || (X && x($))
       case 'gemeinden':
-        return k === '8'
+        return W === '8'
       case 'gemeinden_kreisfrei':
-        return k === '8' || (k === '6' && u) || (m && h(n))
+        return W === '8' || (W === '6' && _) || (X && x($))
       case 'stadtbezirke':
-        return k === '9'
+        return W === '9'
       case 'stadtteile':
-        return k === '10'
+        return W === '10'
       default:
         return !1
     }
   }
-  function A(n) {
-    return g.find((s) => s.id === n)?.minLevel ?? 99
+  function W6($) {
+    return q6.find((q) => q.id === $)?.minLevel ?? 99
   }
-  function P(n, r, s) {
-    let o = I(r.gebiet, r.untergebiet),
-      l = D(r.gebiet, r.untergebiet)
-    return n.filter((k) => {
-      if (!B(k, r.darstellung, s, r.gebiet, r.untergebiet)) return !1
-      if (!E(k, r.gebiet, r.untergebiet, s)) return !1
-      if (l && S(k) === l && A(r.darstellung) <= o) return !1
+  function Y6($, Z, q) {
+    let J = n0(Z.gebiet, Z.untergebiet),
+      W = ((X) => {
+        switch (X) {
+          case 'bundeslaender':
+            return ['4']
+          case 'regierungsbezirke':
+            return ['5']
+          case 'landkreise':
+          case 'kreisfreie':
+            return ['6']
+          case 'landkreis_kreisfrei':
+            return J ? ['4', '6'] : ['6']
+          case 'gemeinden':
+            return ['8']
+          case 'gemeinden_kreisfrei':
+            return J ? ['4', '6', '8'] : ['6', '8']
+          case 'stadtbezirke':
+            return ['9']
+          case 'stadtteile':
+            return ['10']
+          default:
+            return null
+        }
+      })(Z.darstellung)
+    if (!W) return $
+    let Y = [],
+      _ = new Set()
+    for (let X of W)
+      for (let K of q.idsByLevel.get(X) ?? []) {
+        if (_.has(K)) continue
+        _.add(K)
+        let N = q.byId.get(K)
+        if (N) Y.push(N)
+      }
+    return Y
+  }
+  function L0($, Z, q) {
+    let J = P0(Z.gebiet, Z.untergebiet),
+      H = o0(Z.gebiet, Z.untergebiet)
+    return Y6($, Z, q).filter((Y) => {
+      if (!X6(Y, Z.darstellung, q, Z.gebiet, Z.untergebiet)) return !1
+      if (!i0(Y, Z.gebiet, Z.untergebiet, q)) return !1
+      if (H && a(Y) === H && W6(Z.darstellung) <= J) return !1
       return !0
     })
   }
-  function U(n, r) {
-    let s = []
-    for (let o of r.byId.values()) {
-      if (a(o) !== '5') continue
-      if (n !== 'deutschland' && o.properties?.bundesland_id !== n) continue
-      if (!E(o, n, '', r)) continue
-      s.push({ id: S(o), name: String(o.properties?.name ?? S(o)), level: '5' })
+  function e0($, Z) {
+    let q = []
+    for (let J of Z.byId.values()) {
+      if (g(J) !== '5') continue
+      if ($ !== 'deutschland' && J.properties?.bundesland_id !== $) continue
+      if (!i0(J, $, '', Z)) continue
+      q.push({ id: a(J), name: String(J.properties?.name ?? a(J)), level: '5' })
     }
-    return (s.sort((o, l) => o.name.localeCompare(l.name, 'de')), s)
+    return (q.sort((J, H) => J.name.localeCompare(H.name, 'de')), q)
   }
-  var W = [
-    'de_bundeslaender',
-    'de_landkreis_kreisfrei',
-    'bl_regierungsbezirke',
-    'bl_landkreis_kreisfrei',
-    'bl_gemeinden_kreisfrei',
-    'lk_gemeinden',
-    'lk_neighbors_landkreise',
-    'lk_neighbors_gemeinden',
-    'gm_neighbors',
-  ]
-  function $(n, r) {
-    let s = r.byId.get(n)
-    return s ? String(s.properties?.name ?? n) : n
+  var _6 = 4096
+  function w0($, Z, q) {
+    let J = Z,
+      H = J + q,
+      W = [],
+      Y = ''
+    while (J < H) {
+      let _ = $[J++]
+      if ((_ & 128) === 0) W.push(_)
+      else if ((_ & 224) === 192) {
+        let X = $[J++] & 63
+        W.push(((_ & 31) << 6) | X)
+      } else if ((_ & 240) === 224) {
+        let X = $[J++] & 63,
+          K = $[J++] & 63
+        W.push(((_ & 31) << 12) | (X << 6) | K)
+      } else if ((_ & 248) === 240) {
+        let X = $[J++] & 63,
+          K = $[J++] & 63,
+          N = $[J++] & 63,
+          G = ((_ & 7) << 18) | (X << 12) | (K << 6) | N
+        if (G > 65535) ((G -= 65536), W.push(((G >>> 10) & 1023) | 55296), (G = 56320 | (G & 1023)))
+        W.push(G)
+      } else W.push(_)
+      if (W.length >= _6) ((Y += String.fromCharCode(...W)), (W.length = 0))
+    }
+    if (W.length > 0) Y += String.fromCharCode(...W)
+    return Y
   }
-  function R(n, r) {
-    if (!n.bundeslandId) return 'Bundesland'
-    return $(n.bundeslandId, r)
+  var H6 = new TextDecoder(),
+    K6 = 200
+  function N6($, Z, q) {
+    let J = $.subarray(Z, Z + q)
+    return H6.decode(J)
   }
-  function T(n, r) {
-    let s = n.landkreisId ?? (n.kind === 'landkreis' ? n.focusId : null)
-    if (!s) return 'Landkreis'
-    return $(s, r)
+  function $1($, Z, q) {
+    if (q > K6) return N6($, Z, q)
+    else return w0($, Z, q)
   }
-  function c(n) {
-    return String(n.properties?.level ?? '')
+  class n {
+    type
+    data
+    constructor($, Z) {
+      ;((this.type = $), (this.data = Z))
+    }
   }
-  function V(n) {
-    return String(n.properties?.id ?? '')
+  class w extends Error {
+    constructor($) {
+      super($)
+      let Z = Object.create(w.prototype)
+      ;(Object.setPrototypeOf(this, Z),
+        Object.defineProperty(this, 'name', { configurable: !0, enumerable: !1, value: w.name }))
+    }
   }
-  function G(n, r) {
-    return r.kreisfreieIds.has(n) ? `kreisfrei:${n}` : `lk:${n}`
+  var o = 4294967295
+  function Z1($, Z, q) {
+    let J = Math.floor(q / 4294967296),
+      H = q
+    ;($.setUint32(Z, J), $.setUint32(Z + 4, H))
   }
-  function t(n) {
-    if (!n) return null
-    return W.includes(n) ? n : null
+  function N0($, Z) {
+    let q = $.getInt32(Z),
+      J = $.getUint32(Z + 4)
+    return q * 4294967296 + J
   }
-  function M(n, r) {
-    let s = n?.trim() || r.deutschlandId || F
-    if (s === F || s === r.deutschlandId)
+  function q1($, Z) {
+    let q = $.getUint32(Z),
+      J = $.getUint32(Z + 4)
+    return q * 4294967296 + J
+  }
+  var G6 = -1,
+    U6 = 4294967295,
+    M6 = 17179869183
+  function V6({ sec: $, nsec: Z }) {
+    if ($ >= 0 && Z >= 0 && $ <= M6)
+      if (Z === 0 && $ <= U6) {
+        let q = new Uint8Array(4)
+        return (new DataView(q.buffer).setUint32(0, $), q)
+      } else {
+        let q = $ / 4294967296,
+          J = $ & 4294967295,
+          H = new Uint8Array(8),
+          W = new DataView(H.buffer)
+        return (W.setUint32(0, (Z << 2) | (q & 3)), W.setUint32(4, J), H)
+      }
+    else {
+      let q = new Uint8Array(12),
+        J = new DataView(q.buffer)
+      return (J.setUint32(0, Z), Z1(J, 4, $), q)
+    }
+  }
+  function Q6($) {
+    let Z = $.getTime(),
+      q = Math.floor(Z / 1000),
+      J = (Z - q * 1000) * 1e6,
+      H = Math.floor(J / 1e9)
+    return { sec: q + H, nsec: J - H * 1e9 }
+  }
+  function R6($) {
+    if ($ instanceof Date) {
+      let Z = Q6($)
+      return V6(Z)
+    } else return null
+  }
+  function D6($) {
+    let Z = new DataView($.buffer, $.byteOffset, $.byteLength)
+    switch ($.byteLength) {
+      case 4: {
+        let q = Z.getUint32(0),
+          J = 0
+        return { sec: q, nsec: 0 }
+      }
+      case 8: {
+        let q = Z.getUint32(0),
+          J = Z.getUint32(4),
+          H = (q & 3) * 4294967296 + J,
+          W = q >>> 2
+        return { sec: H, nsec: W }
+      }
+      case 12: {
+        let q = N0(Z, 4),
+          J = Z.getUint32(0)
+        return { sec: q, nsec: J }
+      }
+      default:
+        throw new w(`Unrecognized data size for timestamp (expected 4, 8, or 12): ${$.length}`)
+    }
+  }
+  function A6($) {
+    let Z = D6($)
+    return new Date(Z.sec * 1000 + Z.nsec / 1e6)
+  }
+  var J1 = { type: G6, encode: R6, decode: A6 }
+  class G0 {
+    static defaultCodec = new G0()
+    __brand
+    builtInEncoders = []
+    builtInDecoders = []
+    encoders = []
+    decoders = []
+    constructor() {
+      this.register(J1)
+    }
+    register({ type: $, encode: Z, decode: q }) {
+      if ($ >= 0) ((this.encoders[$] = Z), (this.decoders[$] = q))
+      else {
+        let J = -1 - $
+        ;((this.builtInEncoders[J] = Z), (this.builtInDecoders[J] = q))
+      }
+    }
+    tryToEncode($, Z) {
+      for (let q = 0; q < this.builtInEncoders.length; q++) {
+        let J = this.builtInEncoders[q]
+        if (J != null) {
+          let H = J($, Z)
+          if (H != null) {
+            let W = -1 - q
+            return new n(W, H)
+          }
+        }
+      }
+      for (let q = 0; q < this.encoders.length; q++) {
+        let J = this.encoders[q]
+        if (J != null) {
+          let H = J($, Z)
+          if (H != null) return new n(q, H)
+        }
+      }
+      if ($ instanceof n) return $
+      return null
+    }
+    decode($, Z, q) {
+      let J = Z < 0 ? this.builtInDecoders[-1 - Z] : this.decoders[Z]
+      if (J) return J($, Z, q)
+      else return new n(Z, $)
+    }
+  }
+  function z6($) {
+    return (
+      $ instanceof ArrayBuffer || (typeof SharedArrayBuffer < 'u' && $ instanceof SharedArrayBuffer)
+    )
+  }
+  function j0($) {
+    if ($ instanceof Uint8Array) return $
+    else if (ArrayBuffer.isView($)) return new Uint8Array($.buffer, $.byteOffset, $.byteLength)
+    else if (z6($)) return new Uint8Array($)
+    else return Uint8Array.from($)
+  }
+  function U0($) {
+    return `${$ < 0 ? '-' : ''}0x${Math.abs($).toString(16).padStart(2, '0')}`
+  }
+  var C6 = 16,
+    F6 = 16
+  class v0 {
+    hit = 0
+    miss = 0
+    caches
+    maxKeyLength
+    maxLengthPerKey
+    constructor($ = C6, Z = F6) {
+      ;((this.maxKeyLength = $), (this.maxLengthPerKey = Z), (this.caches = []))
+      for (let q = 0; q < this.maxKeyLength; q++) this.caches.push([])
+    }
+    canBeCached($) {
+      return $ > 0 && $ <= this.maxKeyLength
+    }
+    find($, Z, q) {
+      let J = this.caches[q - 1]
+      $: for (let H of J) {
+        let W = H.bytes
+        for (let Y = 0; Y < q; Y++) if (W[Y] !== $[Z + Y]) continue $
+        return H.str
+      }
+      return null
+    }
+    store($, Z) {
+      let q = this.caches[$.length - 1],
+        J = { bytes: $, str: Z }
+      if (q.length >= this.maxLengthPerKey) q[(Math.random() * q.length) | 0] = J
+      else q.push(J)
+    }
+    decode($, Z, q) {
+      let J = this.find($, Z, q)
+      if (J != null) return (this.hit++, J)
+      this.miss++
+      let H = w0($, Z, q),
+        W = Uint8Array.prototype.slice.call($, Z, Z + q)
+      return (this.store(W, H), H)
+    }
+  }
+  var h0 = 'array',
+    X0 = 'map_key',
+    W1 = 'map_value',
+    O6 = ($) => {
+      if (typeof $ === 'string' || typeof $ === 'number') return $
+      throw new w('The type of key must be string or number but ' + typeof $)
+    }
+  class Y1 {
+    stack = []
+    stackHeadPosition = -1
+    get length() {
+      return this.stackHeadPosition + 1
+    }
+    top() {
+      return this.stack[this.stackHeadPosition]
+    }
+    pushArrayState($) {
+      let Z = this.getUninitializedStateFromPool()
+      ;((Z.type = h0), (Z.position = 0), (Z.size = $), (Z.array = Array($)))
+    }
+    pushMapState($) {
+      let Z = this.getUninitializedStateFromPool()
+      ;((Z.type = X0), (Z.readCount = 0), (Z.size = $), (Z.map = {}))
+    }
+    getUninitializedStateFromPool() {
+      if ((this.stackHeadPosition++, this.stackHeadPosition === this.stack.length)) {
+        let $ = {
+          type: void 0,
+          size: 0,
+          array: void 0,
+          position: 0,
+          readCount: 0,
+          map: void 0,
+          key: null,
+        }
+        this.stack.push($)
+      }
+      return this.stack[this.stackHeadPosition]
+    }
+    release($) {
+      if (this.stack[this.stackHeadPosition] !== $)
+        throw Error('Invalid stack state. Released state is not on top of the stack.')
+      if ($.type === h0) {
+        let q = $
+        ;((q.size = 0), (q.array = void 0), (q.position = 0), (q.type = void 0))
+      }
+      if ($.type === X0 || $.type === W1) {
+        let q = $
+        ;((q.size = 0), (q.map = void 0), (q.readCount = 0), (q.type = void 0))
+      }
+      this.stackHeadPosition--
+    }
+    reset() {
+      ;((this.stack.length = 0), (this.stackHeadPosition = -1))
+    }
+  }
+  var J0 = -1,
+    I0 = new DataView(new ArrayBuffer(0)),
+    k6 = new Uint8Array(I0.buffer)
+  try {
+    I0.getInt8(0)
+  } catch ($) {
+    if (!($ instanceof RangeError))
+      throw Error(
+        'This module is not supported in the current JavaScript engine because DataView does not throw RangeError on out-of-bounds access',
+      )
+  }
+  var X1 = RangeError('Insufficient data'),
+    B6 = new v0()
+  class M0 {
+    extensionCodec
+    context
+    useBigInt64
+    rawStrings
+    maxStrLength
+    maxBinLength
+    maxArrayLength
+    maxMapLength
+    maxExtLength
+    keyDecoder
+    mapKeyConverter
+    totalPos = 0
+    pos = 0
+    view = I0
+    bytes = k6
+    headByte = J0
+    stack = new Y1()
+    entered = !1
+    constructor($) {
+      ;((this.extensionCodec = $?.extensionCodec ?? G0.defaultCodec),
+        (this.context = $?.context),
+        (this.useBigInt64 = $?.useBigInt64 ?? !1),
+        (this.rawStrings = $?.rawStrings ?? !1),
+        (this.maxStrLength = $?.maxStrLength ?? o),
+        (this.maxBinLength = $?.maxBinLength ?? o),
+        (this.maxArrayLength = $?.maxArrayLength ?? o),
+        (this.maxMapLength = $?.maxMapLength ?? o),
+        (this.maxExtLength = $?.maxExtLength ?? o),
+        (this.keyDecoder = $?.keyDecoder !== void 0 ? $.keyDecoder : B6),
+        (this.mapKeyConverter = $?.mapKeyConverter ?? O6))
+    }
+    clone() {
+      return new M0({
+        extensionCodec: this.extensionCodec,
+        context: this.context,
+        useBigInt64: this.useBigInt64,
+        rawStrings: this.rawStrings,
+        maxStrLength: this.maxStrLength,
+        maxBinLength: this.maxBinLength,
+        maxArrayLength: this.maxArrayLength,
+        maxMapLength: this.maxMapLength,
+        maxExtLength: this.maxExtLength,
+        keyDecoder: this.keyDecoder,
+      })
+    }
+    reinitializeState() {
+      ;((this.totalPos = 0), (this.headByte = J0), this.stack.reset())
+    }
+    setBuffer($) {
+      let Z = j0($)
+      ;((this.bytes = Z),
+        (this.view = new DataView(Z.buffer, Z.byteOffset, Z.byteLength)),
+        (this.pos = 0))
+    }
+    appendBuffer($) {
+      if (this.headByte === J0 && !this.hasRemaining(1)) this.setBuffer($)
+      else {
+        let Z = this.bytes.subarray(this.pos),
+          q = j0($),
+          J = new Uint8Array(Z.length + q.length)
+        ;(J.set(Z), J.set(q, Z.length), this.setBuffer(J))
+      }
+    }
+    hasRemaining($) {
+      return this.view.byteLength - this.pos >= $
+    }
+    createExtraByteError($) {
+      let { view: Z, pos: q } = this
+      return RangeError(
+        `Extra ${Z.byteLength - q} of ${Z.byteLength} byte(s) found at buffer[${$}]`,
+      )
+    }
+    decode($) {
+      if (this.entered) return this.clone().decode($)
+      try {
+        ;((this.entered = !0), this.reinitializeState(), this.setBuffer($))
+        let Z = this.doDecodeSync()
+        if (this.hasRemaining(1)) throw this.createExtraByteError(this.pos)
+        return Z
+      } finally {
+        this.entered = !1
+      }
+    }
+    *decodeMulti($) {
+      if (this.entered) {
+        yield* this.clone().decodeMulti($)
+        return
+      }
+      try {
+        ;((this.entered = !0), this.reinitializeState(), this.setBuffer($))
+        while (this.hasRemaining(1)) yield this.doDecodeSync()
+      } finally {
+        this.entered = !1
+      }
+    }
+    async decodeAsync($) {
+      if (this.entered) return this.clone().decodeAsync($)
+      try {
+        this.entered = !0
+        let Z = !1,
+          q
+        for await (let Y of $) {
+          if (Z) throw ((this.entered = !1), this.createExtraByteError(this.totalPos))
+          this.appendBuffer(Y)
+          try {
+            ;((q = this.doDecodeSync()), (Z = !0))
+          } catch (_) {
+            if (!(_ instanceof RangeError)) throw _
+          }
+          this.totalPos += this.pos
+        }
+        if (Z) {
+          if (this.hasRemaining(1)) throw this.createExtraByteError(this.totalPos)
+          return q
+        }
+        let { headByte: J, pos: H, totalPos: W } = this
+        throw RangeError(
+          `Insufficient data in parsing ${U0(J)} at ${W} (${H} in the current buffer)`,
+        )
+      } finally {
+        this.entered = !1
+      }
+    }
+    decodeArrayStream($) {
+      return this.decodeMultiAsync($, !0)
+    }
+    decodeStream($) {
+      return this.decodeMultiAsync($, !1)
+    }
+    async *decodeMultiAsync($, Z) {
+      if (this.entered) {
+        yield* this.clone().decodeMultiAsync($, Z)
+        return
+      }
+      try {
+        this.entered = !0
+        let q = Z,
+          J = -1
+        for await (let H of $) {
+          if (Z && J === 0) throw this.createExtraByteError(this.totalPos)
+          if ((this.appendBuffer(H), q)) ((J = this.readArraySize()), (q = !1), this.complete())
+          try {
+            while (!0) if ((yield this.doDecodeSync(), --J === 0)) break
+          } catch (W) {
+            if (!(W instanceof RangeError)) throw W
+          }
+          this.totalPos += this.pos
+        }
+      } finally {
+        this.entered = !1
+      }
+    }
+    doDecodeSync() {
+      $: while (!0) {
+        let $ = this.readHeadByte(),
+          Z
+        if ($ >= 224) Z = $ - 256
+        else if ($ < 192)
+          if ($ < 128) Z = $
+          else if ($ < 144) {
+            let J = $ - 128
+            if (J !== 0) {
+              ;(this.pushMapState(J), this.complete())
+              continue $
+            } else Z = {}
+          } else if ($ < 160) {
+            let J = $ - 144
+            if (J !== 0) {
+              ;(this.pushArrayState(J), this.complete())
+              continue $
+            } else Z = []
+          } else {
+            let J = $ - 160
+            Z = this.decodeString(J, 0)
+          }
+        else if ($ === 192) Z = null
+        else if ($ === 194) Z = !1
+        else if ($ === 195) Z = !0
+        else if ($ === 202) Z = this.readF32()
+        else if ($ === 203) Z = this.readF64()
+        else if ($ === 204) Z = this.readU8()
+        else if ($ === 205) Z = this.readU16()
+        else if ($ === 206) Z = this.readU32()
+        else if ($ === 207)
+          if (this.useBigInt64) Z = this.readU64AsBigInt()
+          else Z = this.readU64()
+        else if ($ === 208) Z = this.readI8()
+        else if ($ === 209) Z = this.readI16()
+        else if ($ === 210) Z = this.readI32()
+        else if ($ === 211)
+          if (this.useBigInt64) Z = this.readI64AsBigInt()
+          else Z = this.readI64()
+        else if ($ === 217) {
+          let J = this.lookU8()
+          Z = this.decodeString(J, 1)
+        } else if ($ === 218) {
+          let J = this.lookU16()
+          Z = this.decodeString(J, 2)
+        } else if ($ === 219) {
+          let J = this.lookU32()
+          Z = this.decodeString(J, 4)
+        } else if ($ === 220) {
+          let J = this.readU16()
+          if (J !== 0) {
+            ;(this.pushArrayState(J), this.complete())
+            continue $
+          } else Z = []
+        } else if ($ === 221) {
+          let J = this.readU32()
+          if (J !== 0) {
+            ;(this.pushArrayState(J), this.complete())
+            continue $
+          } else Z = []
+        } else if ($ === 222) {
+          let J = this.readU16()
+          if (J !== 0) {
+            ;(this.pushMapState(J), this.complete())
+            continue $
+          } else Z = {}
+        } else if ($ === 223) {
+          let J = this.readU32()
+          if (J !== 0) {
+            ;(this.pushMapState(J), this.complete())
+            continue $
+          } else Z = {}
+        } else if ($ === 196) {
+          let J = this.lookU8()
+          Z = this.decodeBinary(J, 1)
+        } else if ($ === 197) {
+          let J = this.lookU16()
+          Z = this.decodeBinary(J, 2)
+        } else if ($ === 198) {
+          let J = this.lookU32()
+          Z = this.decodeBinary(J, 4)
+        } else if ($ === 212) Z = this.decodeExtension(1, 0)
+        else if ($ === 213) Z = this.decodeExtension(2, 0)
+        else if ($ === 214) Z = this.decodeExtension(4, 0)
+        else if ($ === 215) Z = this.decodeExtension(8, 0)
+        else if ($ === 216) Z = this.decodeExtension(16, 0)
+        else if ($ === 199) {
+          let J = this.lookU8()
+          Z = this.decodeExtension(J, 1)
+        } else if ($ === 200) {
+          let J = this.lookU16()
+          Z = this.decodeExtension(J, 2)
+        } else if ($ === 201) {
+          let J = this.lookU32()
+          Z = this.decodeExtension(J, 4)
+        } else throw new w(`Unrecognized type byte: ${U0($)}`)
+        this.complete()
+        let q = this.stack
+        while (q.length > 0) {
+          let J = q.top()
+          if (J.type === h0)
+            if (((J.array[J.position] = Z), J.position++, J.position === J.size))
+              ((Z = J.array), q.release(J))
+            else continue $
+          else if (J.type === X0) {
+            if (Z === '__proto__') throw new w('The key __proto__ is not allowed')
+            ;((J.key = this.mapKeyConverter(Z)), (J.type = W1))
+            continue $
+          } else if (((J.map[J.key] = Z), J.readCount++, J.readCount === J.size))
+            ((Z = J.map), q.release(J))
+          else {
+            ;((J.key = null), (J.type = X0))
+            continue $
+          }
+        }
+        return Z
+      }
+    }
+    readHeadByte() {
+      if (this.headByte === J0) this.headByte = this.readU8()
+      return this.headByte
+    }
+    complete() {
+      this.headByte = J0
+    }
+    readArraySize() {
+      let $ = this.readHeadByte()
+      switch ($) {
+        case 220:
+          return this.readU16()
+        case 221:
+          return this.readU32()
+        default:
+          if ($ < 160) return $ - 144
+          else throw new w(`Unrecognized array type byte: ${U0($)}`)
+      }
+    }
+    pushMapState($) {
+      if ($ > this.maxMapLength)
+        throw new w(
+          `Max length exceeded: map length (${$}) > maxMapLengthLength (${this.maxMapLength})`,
+        )
+      this.stack.pushMapState($)
+    }
+    pushArrayState($) {
+      if ($ > this.maxArrayLength)
+        throw new w(
+          `Max length exceeded: array length (${$}) > maxArrayLength (${this.maxArrayLength})`,
+        )
+      this.stack.pushArrayState($)
+    }
+    decodeString($, Z) {
+      if (!this.rawStrings || this.stateIsMapKey()) return this.decodeUtf8String($, Z)
+      return this.decodeBinary($, Z)
+    }
+    decodeUtf8String($, Z) {
+      if ($ > this.maxStrLength)
+        throw new w(
+          `Max length exceeded: UTF-8 byte length (${$}) > maxStrLength (${this.maxStrLength})`,
+        )
+      if (this.bytes.byteLength < this.pos + Z + $) throw X1
+      let q = this.pos + Z,
+        J
+      if (this.stateIsMapKey() && this.keyDecoder?.canBeCached($))
+        J = this.keyDecoder.decode(this.bytes, q, $)
+      else J = $1(this.bytes, q, $)
+      return ((this.pos += Z + $), J)
+    }
+    stateIsMapKey() {
+      if (this.stack.length > 0) return this.stack.top().type === X0
+      return !1
+    }
+    decodeBinary($, Z) {
+      if ($ > this.maxBinLength)
+        throw new w(`Max length exceeded: bin length (${$}) > maxBinLength (${this.maxBinLength})`)
+      if (!this.hasRemaining($ + Z)) throw X1
+      let q = this.pos + Z,
+        J = this.bytes.subarray(q, q + $)
+      return ((this.pos += Z + $), J)
+    }
+    decodeExtension($, Z) {
+      if ($ > this.maxExtLength)
+        throw new w(`Max length exceeded: ext length (${$}) > maxExtLength (${this.maxExtLength})`)
+      let q = this.view.getInt8(this.pos + Z),
+        J = this.decodeBinary($, Z + 1)
+      return this.extensionCodec.decode(J, q, this.context)
+    }
+    lookU8() {
+      return this.view.getUint8(this.pos)
+    }
+    lookU16() {
+      return this.view.getUint16(this.pos)
+    }
+    lookU32() {
+      return this.view.getUint32(this.pos)
+    }
+    readU8() {
+      let $ = this.view.getUint8(this.pos)
+      return (this.pos++, $)
+    }
+    readI8() {
+      let $ = this.view.getInt8(this.pos)
+      return (this.pos++, $)
+    }
+    readU16() {
+      let $ = this.view.getUint16(this.pos)
+      return ((this.pos += 2), $)
+    }
+    readI16() {
+      let $ = this.view.getInt16(this.pos)
+      return ((this.pos += 2), $)
+    }
+    readU32() {
+      let $ = this.view.getUint32(this.pos)
+      return ((this.pos += 4), $)
+    }
+    readI32() {
+      let $ = this.view.getInt32(this.pos)
+      return ((this.pos += 4), $)
+    }
+    readU64() {
+      let $ = q1(this.view, this.pos)
+      return ((this.pos += 8), $)
+    }
+    readI64() {
+      let $ = N0(this.view, this.pos)
+      return ((this.pos += 8), $)
+    }
+    readU64AsBigInt() {
+      let $ = this.view.getBigUint64(this.pos)
+      return ((this.pos += 8), $)
+    }
+    readI64AsBigInt() {
+      let $ = this.view.getBigInt64(this.pos)
+      return ((this.pos += 8), $)
+    }
+    readF32() {
+      let $ = this.view.getFloat32(this.pos)
+      return ((this.pos += 4), $)
+    }
+    readF64() {
+      let $ = this.view.getFloat64(this.pos)
+      return ((this.pos += 8), $)
+    }
+  }
+  function y0($, Z) {
+    return new M0(Z).decode($)
+  }
+  var v = 6371008.8,
+    K$ = {
+      centimeters: v * 100,
+      centimetres: v * 100,
+      degrees: 360 / (2 * Math.PI),
+      feet: v * 3.28084,
+      inches: v * 39.37,
+      kilometers: v / 1000,
+      kilometres: v / 1000,
+      meters: v,
+      metres: v,
+      miles: v / 1609.344,
+      millimeters: v * 1000,
+      millimetres: v * 1000,
+      nauticalmiles: v / 1852,
+      radians: 1,
+      yards: v * 1.0936,
+    }
+  function l($, Z, q = {}) {
+    let J = { type: 'Feature' }
+    if (q.id === 0 || q.id) J.id = q.id
+    if (q.bbox) J.bbox = q.bbox
+    return ((J.properties = Z || {}), (J.geometry = $), J)
+  }
+  function m0($, Z, q = {}) {
+    if (!$) throw Error('coordinates is required')
+    if (!Array.isArray($)) throw Error('coordinates must be an Array')
+    if ($.length < 2) throw Error('coordinates must be at least 2 numbers long')
+    if (!_1($[0]) || !_1($[1])) throw Error('coordinates must contain numbers')
+    return l({ type: 'Point', coordinates: $ }, Z, q)
+  }
+  function c0($, Z, q = {}) {
+    if ($.length < 2) throw Error('coordinates must be an array of two or more positions')
+    return l({ type: 'LineString', coordinates: $ }, Z, q)
+  }
+  function W0($, Z = {}) {
+    let q = { type: 'FeatureCollection' }
+    if (Z.id) q.id = Z.id
+    if (Z.bbox) q.bbox = Z.bbox
+    return ((q.features = $), q)
+  }
+  function H1($, Z, q = {}) {
+    return l({ type: 'MultiLineString', coordinates: $ }, Z, q)
+  }
+  function _1($) {
+    return !isNaN($) && $ !== null && !Array.isArray($)
+  }
+  function f0($, Z, q) {
+    if ($ === null) return
+    var J,
+      H,
+      W,
+      Y,
+      _,
+      X,
+      K,
+      N = 0,
+      G = 0,
+      M,
+      V = $.type,
+      Q = V === 'FeatureCollection',
+      D = V === 'Feature',
+      A = Q ? $.features.length : 1
+    for (var R = 0; R < A; R++) {
+      ;((K = Q ? $.features[R].geometry : D ? $.geometry : $),
+        (M = K ? K.type === 'GeometryCollection' : !1),
+        (_ = M ? K.geometries.length : 1))
+      for (var F = 0; F < _; F++) {
+        var k = 0,
+          O = 0
+        if (((Y = M ? K.geometries[F] : K), Y === null)) continue
+        X = Y.coordinates
+        var B = Y.type
+        switch (((N = q && (B === 'Polygon' || B === 'MultiPolygon') ? 1 : 0), B)) {
+          case null:
+            break
+          case 'Point':
+            if (Z(X, G, R, k, O) === !1) return !1
+            ;(G++, k++)
+            break
+          case 'LineString':
+          case 'MultiPoint':
+            for (J = 0; J < X.length; J++) {
+              if (Z(X[J], G, R, k, O) === !1) return !1
+              if ((G++, B === 'MultiPoint')) k++
+            }
+            if (B === 'LineString') k++
+            break
+          case 'Polygon':
+          case 'MultiLineString':
+            for (J = 0; J < X.length; J++) {
+              for (H = 0; H < X[J].length - N; H++) {
+                if (Z(X[J][H], G, R, k, O) === !1) return !1
+                G++
+              }
+              if (B === 'MultiLineString') k++
+              if (B === 'Polygon') O++
+            }
+            if (B === 'Polygon') k++
+            break
+          case 'MultiPolygon':
+            for (J = 0; J < X.length; J++) {
+              O = 0
+              for (H = 0; H < X[J].length; H++) {
+                for (W = 0; W < X[J][H].length - N; W++) {
+                  if (Z(X[J][H][W], G, R, k, O) === !1) return !1
+                  G++
+                }
+                O++
+              }
+              k++
+            }
+            break
+          case 'GeometryCollection':
+            for (J = 0; J < Y.geometries.length; J++)
+              if (f0(Y.geometries[J], Z, q) === !1) return !1
+            break
+          default:
+            throw Error('Unknown Geometry Type')
+        }
+      }
+    }
+  }
+  function w6($, Z) {
+    var q,
+      J,
+      H,
+      W,
+      Y,
+      _,
+      X,
+      K,
+      N,
+      G,
+      M = 0,
+      V = $.type === 'FeatureCollection',
+      Q = $.type === 'Feature',
+      D = V ? $.features.length : 1
+    for (q = 0; q < D; q++) {
+      ;((_ = V ? $.features[q].geometry : Q ? $.geometry : $),
+        (K = V ? $.features[q].properties : Q ? $.properties : {}),
+        (N = V ? $.features[q].bbox : Q ? $.bbox : void 0),
+        (G = V ? $.features[q].id : Q ? $.id : void 0),
+        (X = _ ? _.type === 'GeometryCollection' : !1),
+        (Y = X ? _.geometries.length : 1))
+      for (H = 0; H < Y; H++) {
+        if (((W = X ? _.geometries[H] : _), W === null)) {
+          if (Z(null, M, K, N, G) === !1) return !1
+          continue
+        }
+        switch (W.type) {
+          case 'Point':
+          case 'LineString':
+          case 'MultiPoint':
+          case 'Polygon':
+          case 'MultiLineString':
+          case 'MultiPolygon': {
+            if (Z(W, M, K, N, G) === !1) return !1
+            break
+          }
+          case 'GeometryCollection': {
+            for (J = 0; J < W.geometries.length; J++)
+              if (Z(W.geometries[J], M, K, N, G) === !1) return !1
+            break
+          }
+          default:
+            throw Error('Unknown Geometry Type')
+        }
+      }
+      M++
+    }
+  }
+  function i($, Z) {
+    w6($, function (q, J, H, W, Y) {
+      var _ = q === null ? null : q.type
+      switch (_) {
+        case null:
+        case 'Point':
+        case 'LineString':
+        case 'Polygon':
+          if (Z(l(q, H, { bbox: W, id: Y }), J, 0) === !1) return !1
+          return
+      }
+      var X
+      switch (_) {
+        case 'MultiPoint':
+          X = 'Point'
+          break
+        case 'MultiLineString':
+          X = 'LineString'
+          break
+        case 'MultiPolygon':
+          X = 'Polygon'
+          break
+      }
+      for (var K = 0; K < q.coordinates.length; K++) {
+        var N = q.coordinates[K],
+          G = { type: X, coordinates: N }
+        if (Z(l(G, H), J, K) === !1) return !1
+      }
+    })
+  }
+  function j6($, Z = {}) {
+    if ($.bbox != null && Z.recompute !== !0) return $.bbox
+    let q = [1 / 0, 1 / 0, -1 / 0, -1 / 0]
+    return (
+      f0($, (J) => {
+        if (q[0] > J[0]) q[0] = J[0]
+        if (q[1] > J[1]) q[1] = J[1]
+        if (q[2] < J[0]) q[2] = J[0]
+        if (q[3] < J[1]) q[3] = J[1]
+      }),
+      q
+    )
+  }
+  var K1 = j6
+  var z = 0.00000000000000011102230246251565,
+    E = 134217729,
+    Y0 = 0.00000000000000033306690738754706
+  function d($, Z, q, J, H) {
+    let W,
+      Y,
+      _,
+      X,
+      K = Z[0],
+      N = J[0],
+      G = 0,
+      M = 0
+    if (N > K === N > -K) ((W = K), (K = Z[++G]))
+    else ((W = N), (N = J[++M]))
+    let V = 0
+    if (G < $ && M < q) {
+      if (N > K === N > -K) ((Y = K + W), (_ = W - (Y - K)), (K = Z[++G]))
+      else ((Y = N + W), (_ = W - (Y - N)), (N = J[++M]))
+      if (((W = Y), _ !== 0)) H[V++] = _
+      while (G < $ && M < q) {
+        if (N > K === N > -K) ((Y = W + K), (X = Y - W), (_ = W - (Y - X) + (K - X)), (K = Z[++G]))
+        else ((Y = W + N), (X = Y - W), (_ = W - (Y - X) + (N - X)), (N = J[++M]))
+        if (((W = Y), _ !== 0)) H[V++] = _
+      }
+    }
+    while (G < $)
+      if (((Y = W + K), (X = Y - W), (_ = W - (Y - X) + (K - X)), (K = Z[++G]), (W = Y), _ !== 0))
+        H[V++] = _
+    while (M < q)
+      if (((Y = W + N), (X = Y - W), (_ = W - (Y - X) + (N - X)), (N = J[++M]), (W = Y), _ !== 0))
+        H[V++] = _
+    if (W !== 0 || V === 0) H[V++] = W
+    return V
+  }
+  function _0($, Z) {
+    let q = Z[0]
+    for (let J = 1; J < $; J++) q += Z[J]
+    return q
+  }
+  function U($) {
+    return new Float64Array($)
+  }
+  var v6 = (3 + 16 * z) * z,
+    h6 = (2 + 12 * z) * z,
+    I6 = (9 + 64 * z) * z * z,
+    e = U(4),
+    N1 = U(8),
+    G1 = U(12),
+    U1 = U(16),
+    j = U(4)
+  function y6($, Z, q, J, H, W, Y) {
+    let _,
+      X,
+      K,
+      N,
+      G,
+      M,
+      V,
+      Q,
+      D,
+      A,
+      R,
+      F,
+      k,
+      O,
+      B,
+      S,
+      I,
+      P,
+      y = $ - H,
+      b = q - H,
+      m = Z - W,
+      c = J - W
+    ;((O = y * c),
+      (M = E * y),
+      (V = M - (M - y)),
+      (Q = y - V),
+      (M = E * c),
+      (D = M - (M - c)),
+      (A = c - D),
+      (B = Q * A - (O - V * D - Q * D - V * A)),
+      (S = m * b),
+      (M = E * m),
+      (V = M - (M - m)),
+      (Q = m - V),
+      (M = E * b),
+      (D = M - (M - b)),
+      (A = b - D),
+      (I = Q * A - (S - V * D - Q * D - V * A)),
+      (R = B - I),
+      (G = B - R),
+      (e[0] = B - (R + G) + (G - I)),
+      (F = O + R),
+      (G = F - O),
+      (k = O - (F - G) + (R - G)),
+      (R = k - S),
+      (G = k - R),
+      (e[1] = k - (R + G) + (G - S)),
+      (P = F + R),
+      (G = P - F),
+      (e[2] = F - (P - G) + (R - G)),
+      (e[3] = P))
+    let p = _0(4, e),
+      q0 = h6 * Y
+    if (p >= q0 || -p >= q0) return p
+    if (
+      ((G = $ - y),
+      (_ = $ - (y + G) + (G - H)),
+      (G = q - b),
+      (K = q - (b + G) + (G - H)),
+      (G = Z - m),
+      (X = Z - (m + G) + (G - W)),
+      (G = J - c),
+      (N = J - (c + G) + (G - W)),
+      _ === 0 && X === 0 && K === 0 && N === 0)
+    )
+      return p
+    if (
+      ((q0 = I6 * Y + Y0 * Math.abs(p)),
+      (p += y * N + c * _ - (m * K + b * X)),
+      p >= q0 || -p >= q0)
+    )
+      return p
+    ;((O = _ * c),
+      (M = E * _),
+      (V = M - (M - _)),
+      (Q = _ - V),
+      (M = E * c),
+      (D = M - (M - c)),
+      (A = c - D),
+      (B = Q * A - (O - V * D - Q * D - V * A)),
+      (S = X * b),
+      (M = E * X),
+      (V = M - (M - X)),
+      (Q = X - V),
+      (M = E * b),
+      (D = M - (M - b)),
+      (A = b - D),
+      (I = Q * A - (S - V * D - Q * D - V * A)),
+      (R = B - I),
+      (G = B - R),
+      (j[0] = B - (R + G) + (G - I)),
+      (F = O + R),
+      (G = F - O),
+      (k = O - (F - G) + (R - G)),
+      (R = k - S),
+      (G = k - R),
+      (j[1] = k - (R + G) + (G - S)),
+      (P = F + R),
+      (G = P - F),
+      (j[2] = F - (P - G) + (R - G)),
+      (j[3] = P))
+    let r1 = d(4, e, 4, j, N1)
+    ;((O = y * N),
+      (M = E * y),
+      (V = M - (M - y)),
+      (Q = y - V),
+      (M = E * N),
+      (D = M - (M - N)),
+      (A = N - D),
+      (B = Q * A - (O - V * D - Q * D - V * A)),
+      (S = m * K),
+      (M = E * m),
+      (V = M - (M - m)),
+      (Q = m - V),
+      (M = E * K),
+      (D = M - (M - K)),
+      (A = K - D),
+      (I = Q * A - (S - V * D - Q * D - V * A)),
+      (R = B - I),
+      (G = B - R),
+      (j[0] = B - (R + G) + (G - I)),
+      (F = O + R),
+      (G = F - O),
+      (k = O - (F - G) + (R - G)),
+      (R = k - S),
+      (G = k - R),
+      (j[1] = k - (R + G) + (G - S)),
+      (P = F + R),
+      (G = P - F),
+      (j[2] = F - (P - G) + (R - G)),
+      (j[3] = P))
+    let n1 = d(r1, N1, 4, j, G1)
+    ;((O = _ * N),
+      (M = E * _),
+      (V = M - (M - _)),
+      (Q = _ - V),
+      (M = E * N),
+      (D = M - (M - N)),
+      (A = N - D),
+      (B = Q * A - (O - V * D - Q * D - V * A)),
+      (S = X * K),
+      (M = E * X),
+      (V = M - (M - X)),
+      (Q = X - V),
+      (M = E * K),
+      (D = M - (M - K)),
+      (A = K - D),
+      (I = Q * A - (S - V * D - Q * D - V * A)),
+      (R = B - I),
+      (G = B - R),
+      (j[0] = B - (R + G) + (G - I)),
+      (F = O + R),
+      (G = F - O),
+      (k = O - (F - G) + (R - G)),
+      (R = k - S),
+      (G = k - R),
+      (j[1] = k - (R + G) + (G - S)),
+      (P = F + R),
+      (G = P - F),
+      (j[2] = F - (P - G) + (R - G)),
+      (j[3] = P))
+    let o1 = d(n1, G1, 4, j, U1)
+    return U1[o1 - 1]
+  }
+  function p0($, Z, q, J, H, W) {
+    let Y = (Z - W) * (q - H),
+      _ = ($ - H) * (J - W),
+      X = Y - _,
+      K = Math.abs(Y + _)
+    if (Math.abs(X) >= v6 * K) return X
+    return -y6($, Z, q, J, H, W, K)
+  }
+  var C$ = (7 + 56 * z) * z,
+    F$ = (3 + 28 * z) * z,
+    O$ = (26 + 288 * z) * z * z,
+    k$ = U(4),
+    B$ = U(4),
+    T$ = U(4),
+    E$ = U(4),
+    S$ = U(4),
+    P$ = U(4),
+    L$ = U(4),
+    w$ = U(4),
+    j$ = U(4),
+    v$ = U(8),
+    h$ = U(8),
+    I$ = U(8),
+    y$ = U(4),
+    b$ = U(8),
+    m$ = U(8),
+    c$ = U(8),
+    f$ = U(12),
+    p$ = U(192),
+    x$ = U(192)
+  var g$ = (10 + 96 * z) * z,
+    a$ = (4 + 48 * z) * z,
+    s$ = (44 + 576 * z) * z * z,
+    d$ = U(4),
+    r$ = U(4),
+    n$ = U(4),
+    o$ = U(4),
+    t$ = U(4),
+    i$ = U(4),
+    e$ = U(4),
+    $Z = U(4),
+    ZZ = U(8),
+    qZ = U(8),
+    JZ = U(8),
+    XZ = U(8),
+    WZ = U(8),
+    YZ = U(8),
+    _Z = U(8),
+    HZ = U(8),
+    KZ = U(8),
+    NZ = U(4),
+    GZ = U(4),
+    UZ = U(4),
+    MZ = U(8),
+    VZ = U(16),
+    QZ = U(16),
+    RZ = U(16),
+    DZ = U(32),
+    AZ = U(32),
+    zZ = U(48),
+    CZ = U(64),
+    FZ = U(1152),
+    OZ = U(1152)
+  var EZ = (16 + 224 * z) * z,
+    SZ = (5 + 72 * z) * z,
+    PZ = (71 + 1408 * z) * z * z,
+    LZ = U(4),
+    wZ = U(4),
+    jZ = U(4),
+    vZ = U(4),
+    hZ = U(4),
+    IZ = U(4),
+    yZ = U(4),
+    bZ = U(4),
+    mZ = U(4),
+    cZ = U(4),
+    fZ = U(24),
+    pZ = U(24),
+    xZ = U(24),
+    lZ = U(24),
+    uZ = U(24),
+    gZ = U(24),
+    aZ = U(24),
+    sZ = U(24),
+    dZ = U(24),
+    rZ = U(24),
+    nZ = U(1152),
+    oZ = U(1152),
+    tZ = U(1152),
+    iZ = U(1152),
+    eZ = U(1152),
+    $q = U(2304),
+    Zq = U(2304),
+    qq = U(3456),
+    Jq = U(5760),
+    Xq = U(8),
+    Wq = U(8),
+    Yq = U(8),
+    _q = U(16),
+    Hq = U(24),
+    Kq = U(48),
+    Nq = U(48),
+    Gq = U(96),
+    Uq = U(192),
+    Mq = U(384),
+    Vq = U(384),
+    Qq = U(384),
+    Rq = U(768)
+  var Dq = U(96),
+    Aq = U(96),
+    zq = U(96),
+    Cq = U(1152)
+  function V1($, Z) {
+    var q,
+      J,
+      H = 0,
+      W,
+      Y,
+      _,
+      X,
+      K,
+      N,
+      G,
+      M = $[0],
+      V = $[1],
+      Q = Z.length
+    for (q = 0; q < Q; q++) {
+      J = 0
+      var D = Z[q],
+        A = D.length - 1
+      if (((N = D[0]), N[0] !== D[A][0] && N[1] !== D[A][1]))
+        throw Error('First and last coordinates in a ring must be the same')
+      ;((Y = N[0] - M), (_ = N[1] - V))
+      for (J; J < A; J++) {
+        if (((G = D[J + 1]), (X = G[0] - M), (K = G[1] - V), _ === 0 && K === 0)) {
+          if ((X <= 0 && Y >= 0) || (Y <= 0 && X >= 0)) return 0
+        } else if ((K >= 0 && _ <= 0) || (K <= 0 && _ >= 0)) {
+          if (((W = p0(Y, X, _, K, 0, 0)), W === 0)) return 0
+          if ((W > 0 && K > 0 && _ <= 0) || (W < 0 && K <= 0 && _ > 0)) H++
+        }
+        ;((N = G), (_ = K), (Y = X))
+      }
+    }
+    if (H % 2 === 0) return !1
+    return !0
+  }
+  function V0($) {
+    if (!$) throw Error('coord is required')
+    if (!Array.isArray($)) {
+      if ($.type === 'Feature' && $.geometry !== null && $.geometry.type === 'Point')
+        return [...$.geometry.coordinates]
+      if ($.type === 'Point') return [...$.coordinates]
+    }
+    if (Array.isArray($) && $.length >= 2 && !Array.isArray($[0]) && !Array.isArray($[1]))
+      return [...$]
+    throw Error('coord must be GeoJSON Point or an Array of numbers')
+  }
+  function Q1($) {
+    if (Array.isArray($)) return $
+    if ($.type === 'Feature') {
+      if ($.geometry !== null) return $.geometry.coordinates
+    } else if ($.coordinates) return $.coordinates
+    throw Error('coords must be GeoJSON Feature, Geometry Object or an Array')
+  }
+  function u($) {
+    if ($.type === 'Feature') return $.geometry
+    return $
+  }
+  function T($, Z, q = {}) {
+    if (!$) throw Error('point is required')
+    if (!Z) throw Error('polygon is required')
+    let J = V0($),
+      H = u(Z),
+      W = H.type,
+      Y = Z.bbox,
+      _ = H.coordinates
+    if (Y && m6(J, Y) === !1) return !1
+    if (W === 'Polygon') _ = [_]
+    let X = !1
+    for (var K = 0; K < _.length; ++K) {
+      let N = V1(J, _[K])
+      if (N === 0) return q.ignoreBoundary ? !1 : !0
+      else if (N) X = !0
+    }
+    return X
+  }
+  function m6($, Z) {
+    return Z[0] <= $[0] && Z[1] <= $[1] && Z[2] >= $[0] && Z[3] >= $[1]
+  }
+  class l0 {
+    constructor($ = [], Z = c6) {
+      if (((this.data = $), (this.length = this.data.length), (this.compare = Z), this.length > 0))
+        for (let q = (this.length >> 1) - 1; q >= 0; q--) this._down(q)
+    }
+    push($) {
+      ;(this.data.push($), this.length++, this._up(this.length - 1))
+    }
+    pop() {
+      if (this.length === 0) return
+      let $ = this.data[0],
+        Z = this.data.pop()
+      if ((this.length--, this.length > 0)) ((this.data[0] = Z), this._down(0))
+      return $
+    }
+    peek() {
+      return this.data[0]
+    }
+    _up($) {
+      let { data: Z, compare: q } = this,
+        J = Z[$]
+      while ($ > 0) {
+        let H = ($ - 1) >> 1,
+          W = Z[H]
+        if (q(J, W) >= 0) break
+        ;((Z[$] = W), ($ = H))
+      }
+      Z[$] = J
+    }
+    _down($) {
+      let { data: Z, compare: q } = this,
+        J = this.length >> 1,
+        H = Z[$]
+      while ($ < J) {
+        let W = ($ << 1) + 1,
+          Y = Z[W],
+          _ = W + 1
+        if (_ < this.length && q(Z[_], Y) < 0) ((W = _), (Y = Z[_]))
+        if (q(Y, H) >= 0) break
+        ;((Z[$] = Y), ($ = W))
+      }
+      Z[$] = H
+    }
+  }
+  function c6($, Z) {
+    return $ < Z ? -1 : $ > Z ? 1 : 0
+  }
+  function D1($, Z) {
+    if ($.p.x > Z.p.x) return 1
+    if ($.p.x < Z.p.x) return -1
+    if ($.p.y !== Z.p.y) return $.p.y > Z.p.y ? 1 : -1
+    return 1
+  }
+  function f6($, Z) {
+    if ($.rightSweepEvent.p.x > Z.rightSweepEvent.p.x) return 1
+    if ($.rightSweepEvent.p.x < Z.rightSweepEvent.p.x) return -1
+    if ($.rightSweepEvent.p.y !== Z.rightSweepEvent.p.y)
+      return $.rightSweepEvent.p.y < Z.rightSweepEvent.p.y ? 1 : -1
+    return 1
+  }
+  class x0 {
+    constructor($, Z, q, J) {
+      ;((this.p = { x: $[0], y: $[1] }),
+        (this.featureId = Z),
+        (this.ringId = q),
+        (this.eventId = J),
+        (this.otherEvent = null),
+        (this.isLeftEndpoint = null))
+    }
+    isSamePoint($) {
+      return this.p.x === $.p.x && this.p.y === $.p.y
+    }
+  }
+  function p6($, Z) {
+    if ($.type === 'FeatureCollection') {
+      let q = $.features
+      for (let J = 0; J < q.length; J++) R1(q[J], Z)
+    } else R1($, Z)
+  }
+  var Q0 = 0,
+    R0 = 0,
+    D0 = 0
+  function R1($, Z) {
+    let q = $.type === 'Feature' ? $.geometry : $,
+      J = q.coordinates
+    if (q.type === 'Polygon' || q.type === 'MultiLineString') J = [J]
+    if (q.type === 'LineString') J = [[J]]
+    for (let H = 0; H < J.length; H++)
+      for (let W = 0; W < J[H].length; W++) {
+        let Y = J[H][W][0],
+          _ = null
+        R0 = R0 + 1
+        for (let X = 0; X < J[H][W].length - 1; X++) {
+          _ = J[H][W][X + 1]
+          let K = new x0(Y, Q0, R0, D0),
+            N = new x0(_, Q0, R0, D0 + 1)
+          if (((K.otherEvent = N), (N.otherEvent = K), D1(K, N) > 0))
+            ((N.isLeftEndpoint = !0), (K.isLeftEndpoint = !1))
+          else ((K.isLeftEndpoint = !0), (N.isLeftEndpoint = !1))
+          ;(Z.push(K), Z.push(N), (Y = _), (D0 = D0 + 1))
+        }
+      }
+    Q0 = Q0 + 1
+  }
+  class A1 {
+    constructor($) {
+      ;((this.leftSweepEvent = $), (this.rightSweepEvent = $.otherEvent))
+    }
+  }
+  function x6($, Z) {
+    if ($ === null || Z === null) return !1
+    if (
+      $.leftSweepEvent.ringId === Z.leftSweepEvent.ringId &&
+      ($.rightSweepEvent.isSamePoint(Z.leftSweepEvent) ||
+        $.rightSweepEvent.isSamePoint(Z.leftSweepEvent) ||
+        $.rightSweepEvent.isSamePoint(Z.rightSweepEvent) ||
+        $.leftSweepEvent.isSamePoint(Z.leftSweepEvent) ||
+        $.leftSweepEvent.isSamePoint(Z.rightSweepEvent))
+    )
+      return !1
+    let q = $.leftSweepEvent.p.x,
+      J = $.leftSweepEvent.p.y,
+      H = $.rightSweepEvent.p.x,
+      W = $.rightSweepEvent.p.y,
+      Y = Z.leftSweepEvent.p.x,
+      _ = Z.leftSweepEvent.p.y,
+      X = Z.rightSweepEvent.p.x,
+      K = Z.rightSweepEvent.p.y,
+      N = (K - _) * (H - q) - (X - Y) * (W - J),
+      G = (X - Y) * (J - _) - (K - _) * (q - Y),
+      M = (H - q) * (J - _) - (W - J) * (q - Y)
+    if (N === 0) {
+      if (G === 0 && M === 0) return !1
+      return !1
+    }
+    let V = G / N,
+      Q = M / N
+    if (V >= 0 && V <= 1 && Q >= 0 && Q <= 1) {
+      let D = q + V * (H - q),
+        A = J + V * (W - J)
+      return [D, A]
+    }
+    return !1
+  }
+  function l6($, Z) {
+    Z = Z ? Z : !1
+    let q = [],
+      J = new l0([], f6)
+    while ($.length) {
+      let H = $.pop()
+      if (H.isLeftEndpoint) {
+        let W = new A1(H)
+        for (let Y = 0; Y < J.data.length; Y++) {
+          let _ = J.data[Y]
+          if (Z) {
+            if (_.leftSweepEvent.featureId === H.featureId) continue
+          }
+          let X = x6(W, _)
+          if (X !== !1) q.push(X)
+        }
+        J.push(W)
+      } else if (H.isLeftEndpoint === !1) J.pop()
+    }
+    return q
+  }
+  function u6($, Z) {
+    let q = new l0([], D1)
+    return (p6($, q), l6(q, Z))
+  }
+  var z1 = u6
+  var g6 = z1
+  function A0($, Z, q = {}) {
+    let { removeDuplicates: J = !0, ignoreSelfIntersections: H = !0 } = q,
+      W = []
+    if ($.type === 'FeatureCollection') W = W.concat($.features)
+    else if ($.type === 'Feature') W.push($)
+    else if (
+      $.type === 'LineString' ||
+      $.type === 'Polygon' ||
+      $.type === 'MultiLineString' ||
+      $.type === 'MultiPolygon'
+    )
+      W.push(l($))
+    if (Z.type === 'FeatureCollection') W = W.concat(Z.features)
+    else if (Z.type === 'Feature') W.push(Z)
+    else if (
+      Z.type === 'LineString' ||
+      Z.type === 'Polygon' ||
+      Z.type === 'MultiLineString' ||
+      Z.type === 'MultiPolygon'
+    )
+      W.push(l(Z))
+    let Y = g6(W0(W), H),
+      _ = []
+    if (J) {
+      let X = {}
+      Y.forEach((K) => {
+        let N = K.join(',')
+        if (!X[N]) ((X[N] = !0), _.push(K))
+      })
+    } else _ = Y
+    return W0(_.map((X) => m0(X)))
+  }
+  function z0($, Z = {}) {
+    let q = u($)
+    if (!Z.properties && $.type === 'Feature') Z.properties = $.properties
+    switch (q.type) {
+      case 'Polygon':
+        return a6(q, Z)
+      case 'MultiPolygon':
+        return s6(q, Z)
+      default:
+        throw Error('invalid poly')
+    }
+  }
+  function a6($, Z = {}) {
+    let J = u($).coordinates,
+      H = Z.properties ? Z.properties : $.type === 'Feature' ? $.properties : {}
+    return C1(J, H)
+  }
+  function s6($, Z = {}) {
+    let J = u($).coordinates,
+      H = Z.properties ? Z.properties : $.type === 'Feature' ? $.properties : {},
+      W = []
+    return (
+      J.forEach((Y) => {
+        W.push(C1(Y, H))
+      }),
+      W0(W)
+    )
+  }
+  function C1($, Z) {
+    if ($.length > 1) return H1($, Z)
+    return c0($[0], Z)
+  }
+  function k1($, Z, { ignoreSelfIntersections: q = !0 } = { ignoreSelfIntersections: !0 }) {
+    let J = !0
+    return (
+      i($, (H) => {
+        i(Z, (W) => {
+          if (J === !1) return !1
+          J = d6(H.geometry, W.geometry, q)
+        })
+      }),
+      J
+    )
+  }
+  function d6($, Z, q) {
+    switch ($.type) {
+      case 'Point':
+        switch (Z.type) {
+          case 'Point':
+            return !t6($.coordinates, Z.coordinates)
+          case 'LineString':
+            return !F1(Z, $)
+          case 'Polygon':
+            return !T($, Z)
+        }
+        break
+      case 'LineString':
+        switch (Z.type) {
+          case 'Point':
+            return !F1($, Z)
+          case 'LineString':
+            return !r6($, Z, q)
+          case 'Polygon':
+            return !O1(Z, $, q)
+        }
+        break
+      case 'Polygon':
+        switch (Z.type) {
+          case 'Point':
+            return !T(Z, $)
+          case 'LineString':
+            return !O1($, Z, q)
+          case 'Polygon':
+            return !n6(Z, $, q)
+        }
+    }
+    return !1
+  }
+  function F1($, Z) {
+    for (let q = 0; q < $.coordinates.length - 1; q++)
+      if (o6($.coordinates[q], $.coordinates[q + 1], Z.coordinates)) return !0
+    return !1
+  }
+  function r6($, Z, q) {
+    if (A0($, Z, { ignoreSelfIntersections: q }).features.length > 0) return !0
+    return !1
+  }
+  function O1($, Z, q) {
+    for (let H of Z.coordinates) if (T(H, $)) return !0
+    if (A0(Z, z0($), { ignoreSelfIntersections: q }).features.length > 0) return !0
+    return !1
+  }
+  function n6($, Z, q) {
+    for (let H of $.coordinates[0]) if (T(H, Z)) return !0
+    for (let H of Z.coordinates[0]) if (T(H, $)) return !0
+    if (A0(z0($), z0(Z), { ignoreSelfIntersections: q }).features.length > 0) return !0
+    return !1
+  }
+  function o6($, Z, q) {
+    let J = q[0] - $[0],
+      H = q[1] - $[1],
+      W = Z[0] - $[0],
+      Y = Z[1] - $[1]
+    if (J * Y - H * W !== 0) return !1
+    if (Math.abs(W) >= Math.abs(Y))
+      if (W > 0) return $[0] <= q[0] && q[0] <= Z[0]
+      else return Z[0] <= q[0] && q[0] <= $[0]
+    else if (Y > 0) return $[1] <= q[1] && q[1] <= Z[1]
+    else return Z[1] <= q[1] && q[1] <= $[1]
+  }
+  function t6($, Z) {
+    return $[0] === Z[0] && $[1] === Z[1]
+  }
+  function i6($, Z, { ignoreSelfIntersections: q = !0 } = {}) {
+    let J = !1
+    return (
+      i($, (H) => {
+        i(Z, (W) => {
+          if (J === !0) return !0
+          J = !k1(H.geometry, W.geometry, { ignoreSelfIntersections: q })
+        })
+      }),
+      J
+    )
+  }
+  var B1 = i6
+  function C($, Z, q = {}) {
+    let J = V0($),
+      H = Q1(Z)
+    for (let W = 0; W < H.length - 1; W++) {
+      let Y = !1
+      if (q.ignoreEndVertices) {
+        if (W === 0) Y = 'start'
+        if (W === H.length - 2) Y = 'end'
+        if (W === 0 && W + 1 === H.length - 1) Y = 'both'
+      }
+      if (e6(H[W], H[W + 1], J, Y, typeof q.epsilon > 'u' ? null : q.epsilon)) return !0
+    }
+    return !1
+  }
+  function e6($, Z, q, J, H) {
+    let W = q[0],
+      Y = q[1],
+      _ = $[0],
+      X = $[1],
+      K = Z[0],
+      N = Z[1],
+      G = q[0] - _,
+      M = q[1] - X,
+      V = K - _,
+      Q = N - X,
+      D = G * Q - M * V
+    if (H !== null) {
+      if (Math.abs(D) > H) return !1
+    } else if (D !== 0) return !1
+    if (Math.abs(V) === Math.abs(Q) && Math.abs(V) === 0) {
+      if (J) return !1
+      if (q[0] === $[0] && q[1] === $[1]) return !0
+      else return !1
+    }
+    if (!J) {
+      if (Math.abs(V) >= Math.abs(Q)) return V > 0 ? _ <= W && W <= K : K <= W && W <= _
+      return Q > 0 ? X <= Y && Y <= N : N <= Y && Y <= X
+    } else if (J === 'start') {
+      if (Math.abs(V) >= Math.abs(Q)) return V > 0 ? _ < W && W <= K : K <= W && W < _
+      return Q > 0 ? X < Y && Y <= N : N <= Y && Y < X
+    } else if (J === 'end') {
+      if (Math.abs(V) >= Math.abs(Q)) return V > 0 ? _ <= W && W < K : K < W && W <= _
+      return Q > 0 ? X <= Y && Y < N : N < Y && Y <= X
+    } else if (J === 'both') {
+      if (Math.abs(V) >= Math.abs(Q)) return V > 0 ? _ < W && W < K : K < W && W < _
+      return Q > 0 ? X < Y && Y < N : N < Y && Y < X
+    }
+    return !1
+  }
+  function $8($, Z) {
+    var q = u($),
+      J = u(Z),
+      H = q.type,
+      W = J.type
+    switch (H) {
+      case 'Point':
+        switch (W) {
+          case 'LineString':
+            return L(q, J)
+          case 'MultiLineString':
+            var Y = !1
+            for (var _ = 0; _ < J.coordinates.length; _++)
+              if (L(q, { type: 'LineString', coordinates: J.coordinates[_] })) Y = !0
+            return Y
+          case 'Polygon':
+            for (var X = 0; X < J.coordinates.length; X++)
+              if (C(q, { type: 'LineString', coordinates: J.coordinates[X] })) return !0
+            return !1
+          case 'MultiPolygon':
+            for (var X = 0; X < J.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates[X].length; _++)
+                if (C(q, { type: 'LineString', coordinates: J.coordinates[X][_] })) return !0
+            return !1
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      case 'MultiPoint':
+        switch (W) {
+          case 'LineString':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++) {
+              if (!Y) {
+                if (L({ type: 'Point', coordinates: q.coordinates[X] }, J)) Y = !0
+              }
+              if (C({ type: 'Point', coordinates: q.coordinates[X] }, J, { ignoreEndVertices: !0 }))
+                return !1
+            }
+            return Y
+          case 'MultiLineString':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    L(
+                      { type: 'Point', coordinates: q.coordinates[X] },
+                      { type: 'LineString', coordinates: J.coordinates[_] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  C(
+                    { type: 'Point', coordinates: q.coordinates[X] },
+                    { type: 'LineString', coordinates: J.coordinates[_] },
+                    { ignoreEndVertices: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          case 'Polygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++) {
+              if (!Y) {
+                if (
+                  C(
+                    { type: 'Point', coordinates: q.coordinates[X] },
+                    { type: 'LineString', coordinates: J.coordinates[0] },
+                  )
+                )
+                  Y = !0
+              }
+              if (T({ type: 'Point', coordinates: q.coordinates[X] }, J, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          case 'MultiPolygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[X] },
+                      { type: 'LineString', coordinates: J.coordinates[_][0] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T(
+                    { type: 'Point', coordinates: q.coordinates[X] },
+                    { type: 'Polygon', coordinates: J.coordinates[_] },
+                    { ignoreBoundary: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      case 'LineString':
+        switch (W) {
+          case 'Point':
+            return L(J, q)
+          case 'MultiPoint':
+            var Y = !1
+            for (var X = 0; X < J.coordinates.length; X++) {
+              if (!Y) {
+                if (L({ type: 'Point', coordinates: J.coordinates[X] }, q)) Y = !0
+              }
+              if (C({ type: 'Point', coordinates: J.coordinates[X] }, q, { ignoreEndVertices: !0 }))
+                return !1
+            }
+            return Y
+          case 'LineString':
+            var K = !1
+            if (L({ type: 'Point', coordinates: q.coordinates[0] }, J)) K = !0
+            if (L({ type: 'Point', coordinates: q.coordinates[q.coordinates.length - 1] }, J))
+              K = !0
+            if (K === !1) return !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              if (C({ type: 'Point', coordinates: q.coordinates[X] }, J, { ignoreEndVertices: !0 }))
+                return !1
+            return K
+          case 'MultiLineString':
+            var K = !1
+            for (var X = 0; X < J.coordinates.length; X++) {
+              if (
+                L(
+                  { type: 'Point', coordinates: q.coordinates[0] },
+                  { type: 'LineString', coordinates: J.coordinates[X] },
+                )
+              )
+                K = !0
+              if (
+                L(
+                  { type: 'Point', coordinates: q.coordinates[q.coordinates.length - 1] },
+                  { type: 'LineString', coordinates: J.coordinates[X] },
+                )
+              )
+                K = !0
+              for (var _ = 0; _ < q.coordinates[X].length; _++)
+                if (
+                  C(
+                    { type: 'Point', coordinates: q.coordinates[_] },
+                    { type: 'LineString', coordinates: J.coordinates[X] },
+                    { ignoreEndVertices: !0 },
+                  )
+                )
+                  return !1
+            }
+            return K
+          case 'Polygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++) {
+              if (!Y) {
+                if (
+                  C(
+                    { type: 'Point', coordinates: q.coordinates[X] },
+                    { type: 'LineString', coordinates: J.coordinates[0] },
+                  )
+                )
+                  Y = !0
+              }
+              if (T({ type: 'Point', coordinates: q.coordinates[X] }, J, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          case 'MultiPolygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++) {
+              for (var _ = 0; _ < J.coordinates.length; _++)
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[X] },
+                      { type: 'LineString', coordinates: J.coordinates[_][0] },
+                    )
+                  )
+                    Y = !0
+                }
+              if (T({ type: 'Point', coordinates: q.coordinates[X] }, J, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      case 'MultiLineString':
+        switch (W) {
+          case 'Point':
+            for (var X = 0; X < q.coordinates.length; X++)
+              if (L(J, { type: 'LineString', coordinates: q.coordinates[X] })) return !0
+            return !1
+          case 'MultiPoint':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    L(
+                      { type: 'Point', coordinates: J.coordinates[_] },
+                      { type: 'LineString', coordinates: q.coordinates[_] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  C(
+                    { type: 'Point', coordinates: J.coordinates[_] },
+                    { type: 'LineString', coordinates: q.coordinates[_] },
+                    { ignoreEndVertices: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          case 'LineString':
+            var K = !1
+            for (var X = 0; X < q.coordinates.length; X++) {
+              if (L({ type: 'Point', coordinates: q.coordinates[X][0] }, J)) K = !0
+              if (
+                L({ type: 'Point', coordinates: q.coordinates[X][q.coordinates[X].length - 1] }, J)
+              )
+                K = !0
+              for (var _ = 0; _ < J.coordinates.length; _++)
+                if (
+                  C(
+                    { type: 'Point', coordinates: J.coordinates[_] },
+                    { type: 'LineString', coordinates: q.coordinates[X] },
+                    { ignoreEndVertices: !0 },
+                  )
+                )
+                  return !1
+            }
+            return K
+          case 'MultiLineString':
+            var K = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (
+                  L(
+                    { type: 'Point', coordinates: q.coordinates[X][0] },
+                    { type: 'LineString', coordinates: J.coordinates[_] },
+                  )
+                )
+                  K = !0
+                if (
+                  L(
+                    { type: 'Point', coordinates: q.coordinates[X][q.coordinates[X].length - 1] },
+                    { type: 'LineString', coordinates: J.coordinates[_] },
+                  )
+                )
+                  K = !0
+                for (var N = 0; N < q.coordinates[X].length; N++)
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[X][N] },
+                      { type: 'LineString', coordinates: J.coordinates[_] },
+                      { ignoreEndVertices: !0 },
+                    )
+                  )
+                    return !1
+              }
+            return K
+          case 'Polygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < q.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[X][_] },
+                      { type: 'LineString', coordinates: J.coordinates[0] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T({ type: 'Point', coordinates: q.coordinates[X][_] }, J, { ignoreBoundary: !0 })
+                )
+                  return !1
+              }
+            return Y
+          case 'MultiPolygon':
+            var Y = !1
+            for (var X = 0; X < J.coordinates[0].length; X++)
+              for (var _ = 0; _ < q.coordinates.length; _++)
+                for (var N = 0; N < q.coordinates[_].length; N++) {
+                  if (!Y) {
+                    if (
+                      C(
+                        { type: 'Point', coordinates: q.coordinates[_][N] },
+                        { type: 'LineString', coordinates: J.coordinates[0][X] },
+                      )
+                    )
+                      Y = !0
+                  }
+                  if (
+                    T(
+                      { type: 'Point', coordinates: q.coordinates[_][N] },
+                      { type: 'Polygon', coordinates: [J.coordinates[0][X]] },
+                      { ignoreBoundary: !0 },
+                    )
+                  )
+                    return !1
+                }
+            return Y
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      case 'Polygon':
+        switch (W) {
+          case 'Point':
+            for (var X = 0; X < q.coordinates.length; X++)
+              if (C(J, { type: 'LineString', coordinates: q.coordinates[X] })) return !0
+            return !1
+          case 'MultiPoint':
+            var Y = !1
+            for (var X = 0; X < J.coordinates.length; X++) {
+              if (!Y) {
+                if (
+                  C(
+                    { type: 'Point', coordinates: J.coordinates[X] },
+                    { type: 'LineString', coordinates: q.coordinates[0] },
+                  )
+                )
+                  Y = !0
+              }
+              if (T({ type: 'Point', coordinates: J.coordinates[X] }, q, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          case 'LineString':
+            var Y = !1
+            for (var X = 0; X < J.coordinates.length; X++) {
+              if (!Y) {
+                if (
+                  C(
+                    { type: 'Point', coordinates: J.coordinates[X] },
+                    { type: 'LineString', coordinates: q.coordinates[0] },
+                  )
+                )
+                  Y = !0
+              }
+              if (T({ type: 'Point', coordinates: J.coordinates[X] }, q, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          case 'MultiLineString':
+            var Y = !1
+            for (var X = 0; X < J.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates[X].length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: J.coordinates[X][_] },
+                      { type: 'LineString', coordinates: q.coordinates[0] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T({ type: 'Point', coordinates: J.coordinates[X][_] }, q, { ignoreBoundary: !0 })
+                )
+                  return !1
+              }
+            return Y
+          case 'Polygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates[0].length; X++) {
+              if (!Y) {
+                if (
+                  C(
+                    { type: 'Point', coordinates: q.coordinates[0][X] },
+                    { type: 'LineString', coordinates: J.coordinates[0] },
+                  )
+                )
+                  Y = !0
+              }
+              if (T({ type: 'Point', coordinates: q.coordinates[0][X] }, J, { ignoreBoundary: !0 }))
+                return !1
+            }
+            return Y
+          case 'MultiPolygon':
+            var Y = !1
+            for (var X = 0; X < J.coordinates[0].length; X++)
+              for (var _ = 0; _ < q.coordinates[0].length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[0][_] },
+                      { type: 'LineString', coordinates: J.coordinates[0][X] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T(
+                    { type: 'Point', coordinates: q.coordinates[0][_] },
+                    { type: 'Polygon', coordinates: J.coordinates[0][X] },
+                    { ignoreBoundary: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      case 'MultiPolygon':
+        switch (W) {
+          case 'Point':
+            for (var X = 0; X < q.coordinates[0].length; X++)
+              if (C(J, { type: 'LineString', coordinates: q.coordinates[0][X] })) return !0
+            return !1
+          case 'MultiPoint':
+            var Y = !1
+            for (var X = 0; X < q.coordinates[0].length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: J.coordinates[_] },
+                      { type: 'LineString', coordinates: q.coordinates[0][X] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T(
+                    { type: 'Point', coordinates: J.coordinates[_] },
+                    { type: 'Polygon', coordinates: q.coordinates[0][X] },
+                    { ignoreBoundary: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          case 'LineString':
+            var Y = !1
+            for (var X = 0; X < q.coordinates[0].length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: J.coordinates[_] },
+                      { type: 'LineString', coordinates: q.coordinates[0][X] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T(
+                    { type: 'Point', coordinates: J.coordinates[_] },
+                    { type: 'Polygon', coordinates: q.coordinates[0][X] },
+                    { ignoreBoundary: !0 },
+                  )
+                )
+                  return !1
+              }
+            return Y
+          case 'MultiLineString':
+            var Y = !1
+            for (var X = 0; X < q.coordinates.length; X++)
+              for (var _ = 0; _ < J.coordinates.length; _++)
+                for (var N = 0; N < J.coordinates[_].length; N++) {
+                  if (!Y) {
+                    if (
+                      C(
+                        { type: 'Point', coordinates: J.coordinates[_][N] },
+                        { type: 'LineString', coordinates: q.coordinates[X][0] },
+                      )
+                    )
+                      Y = !0
+                  }
+                  if (
+                    T(
+                      { type: 'Point', coordinates: J.coordinates[_][N] },
+                      { type: 'Polygon', coordinates: [q.coordinates[X][0]] },
+                      { ignoreBoundary: !0 },
+                    )
+                  )
+                    return !1
+                }
+            return Y
+          case 'Polygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates[0].length; X++)
+              for (var _ = 0; _ < q.coordinates[0][X].length; _++) {
+                if (!Y) {
+                  if (
+                    C(
+                      { type: 'Point', coordinates: q.coordinates[0][X][_] },
+                      { type: 'LineString', coordinates: J.coordinates[0] },
+                    )
+                  )
+                    Y = !0
+                }
+                if (
+                  T({ type: 'Point', coordinates: q.coordinates[0][X][_] }, J, {
+                    ignoreBoundary: !0,
+                  })
+                )
+                  return !1
+              }
+            return Y
+          case 'MultiPolygon':
+            var Y = !1
+            for (var X = 0; X < q.coordinates[0].length; X++)
+              for (var _ = 0; _ < J.coordinates[0].length; _++)
+                for (var N = 0; N < q.coordinates[0].length; N++) {
+                  if (!Y) {
+                    if (
+                      C(
+                        { type: 'Point', coordinates: q.coordinates[0][X][N] },
+                        { type: 'LineString', coordinates: J.coordinates[0][_] },
+                      )
+                    )
+                      Y = !0
+                  }
+                  if (
+                    T(
+                      { type: 'Point', coordinates: q.coordinates[0][X][N] },
+                      { type: 'Polygon', coordinates: J.coordinates[0][_] },
+                      { ignoreBoundary: !0 },
+                    )
+                  )
+                    return !1
+                }
+            return Y
+          default:
+            throw Error('feature2 ' + W + ' geometry not supported')
+        }
+      default:
+        throw Error('feature1 ' + H + ' geometry not supported')
+    }
+  }
+  function L($, Z) {
+    if (T1(Z.coordinates[0], $.coordinates)) return !0
+    if (T1(Z.coordinates[Z.coordinates.length - 1], $.coordinates)) return !0
+    return !1
+  }
+  function T1($, Z) {
+    return $[0] === Z[0] && $[1] === Z[1]
+  }
+  var E1 = $8
+  var C0 = 1
+  function P1($) {
+    let Z = y0($)
+    if (Z.version !== C0 || !Z.landkreis) throw Error('Ungültiges neighbors.msgpack')
+    return {
+      version: C0,
+      landkreis: Z.landkreis,
+      landkreisStadtstaat: Z.landkreisStadtstaat ?? {},
+      gemeinde: Z.gemeinde ?? {},
+    }
+  }
+  function F0($) {
+    return String($.properties?.level ?? '')
+  }
+  function O0($) {
+    return String($.properties?.id ?? '')
+  }
+  function S1($) {
+    return new Map(Object.entries($))
+  }
+  function Z8($, Z) {
+    return $.gemeindeNeighbors.get(Z) ?? $.gemeindeNeighborRecord?.[Z]
+  }
+  function u0($) {
+    return {
+      landkreisNeighbors: S1($.landkreis),
+      landkreisStadtstaatNeighbors: S1($.landkreisStadtstaat),
+      gemeindeNeighbors: new Map(),
+      gemeindeNeighborRecord: $.gemeinde,
+      precomputed: !0,
+    }
+  }
+  function k0($) {
+    if (!$ || typeof $ !== 'object') return null
+    let Z = $
+    if (Z.version !== C0) return null
+    if (!Z.landkreis || typeof Z.landkreis !== 'object') return null
+    return {
+      version: C0,
+      landkreis: Z.landkreis,
+      landkreisStadtstaat: Z.landkreisStadtstaat ?? {},
+      gemeinde: Z.gemeinde ?? {},
+    }
+  }
+  function L1($) {
+    let Z = k0($)
+    return Z ? u0(Z) : null
+  }
+  function w1($) {
+    try {
+      return k0(JSON.parse($))
+    } catch {
+      return null
+    }
+  }
+  function $0($) {
+    if (!$.geometry) return null
+    try {
+      return K1($)
+    } catch {
+      return null
+    }
+  }
+  function B0($, Z) {
+    return $[0] <= Z[2] && $[2] >= Z[0] && $[1] <= Z[3] && $[3] >= Z[1]
+  }
+  function H0($, Z) {
+    try {
+      return E1($, Z) || B1($, Z)
+    } catch {
+      return !1
+    }
+  }
+  function q8($, Z, q) {
+    if (Z === q) return
+    let J = $.get(Z) ?? new Set()
+    ;(J.add(q), $.set(Z, J))
+    let H = $.get(q) ?? new Set()
+    ;(H.add(Z), $.set(q, H))
+  }
+  function J8($) {
+    let Z = new Map()
+    for (let [q, J] of $) Z.set(q, [...J])
+    return Z
+  }
+  function X8($, Z) {
+    let q = new Set($),
+      J = []
+    for (let H of Z.byId.values()) {
+      let W = O0(H),
+        Y = F0(H)
+      if (Y === '8') {
+        let _ = String(H.properties?.landkreis_id ?? '')
+        if (q.has(_)) J.push(W)
+        continue
+      }
+      if (Y === '6' && Z.kreisfreieIds.has(W) && q.has(W)) J.push(W)
+    }
+    return J
+  }
+  function W8($) {
+    let Z = new Map()
+    for (let q of $.byId.values()) {
+      if (F0(q) !== '6') continue
+      let J = O0(q),
+        H = String(q.properties?.bundesland_id ?? '')
+      if (!H) continue
+      let W = Z.get(H) ?? []
+      ;(W.push(J), Z.set(H, W))
+    }
+    return Z
+  }
+  function Y8($) {
+    let Z = new Map()
+    for (let q of $.byId.values()) {
+      if (F0(q) !== '6') continue
+      let J = O0(q),
+        H = $0(q)
+      if (J && H) Z.set(J, H)
+    }
+    return Z
+  }
+  function _8($, Z) {
+    let q = new Map(),
+      J = W8($)
+    for (let H of J.values())
+      for (let W = 0; W < H.length; W++) {
+        let Y = H[W],
+          _ = $.byId.get(Y),
+          X = Z.get(Y)
+        if (!_ || !X) continue
+        for (let K = W + 1; K < H.length; K++) {
+          let N = H[K],
+            G = $.byId.get(N),
+            M = Z.get(N)
+          if (!G || !M) continue
+          if (!B0(X, M)) continue
+          if (H0(_, G)) q8(q, Y, N)
+        }
+      }
+    return J8(q)
+  }
+  function H8($, Z) {
+    let q = $.stadtstaaten.map((W) => W.id),
+      J = new Map()
+    for (let W of q) {
+      let Y = $.byId.get(W),
+        _ = Y ? $0(Y) : null
+      if (_) J.set(W, _)
+    }
+    let H = new Map()
+    for (let [W, Y] of Z) {
+      let _ = $.byId.get(W)
+      if (!_) continue
+      let X = []
+      for (let K of q) {
+        let N = J.get(K),
+          G = $.byId.get(K)
+        if (!N || !G) continue
+        if (!B0(Y, N)) continue
+        if (H0(_, G)) X.push(K)
+      }
+      if (X.length) H.set(W, X)
+    }
+    return H
+  }
+  function j1($) {
+    let Z = Y8($)
+    return {
+      landkreisNeighbors: _8($, Z),
+      landkreisStadtstaatNeighbors: H8($, Z),
+      gemeindeNeighbors: new Map(),
+      gemeindeNeighborRecord: null,
+      precomputed: !1,
+    }
+  }
+  function K8($, Z, q = !0) {
+    let J = new Set()
+    if (q) J.add($)
+    for (let H of Z.get($) ?? []) J.add(H)
+    return J
+  }
+  function N8($, Z) {
+    let q = Z.byId.get($)
+    if (!q) return []
+    let J = String(q.properties?.bundesland_id ?? ''),
+      H = []
+    for (let W of Z.byId.values()) {
+      if (F0(W) !== '6') continue
+      let Y = O0(W)
+      if (!Y || Y === $) continue
+      if (J && String(W.properties?.bundesland_id ?? '') !== J) continue
+      if (H0(q, W)) H.push(Y)
+    }
+    return H
+  }
+  function v1($, Z, q) {
+    let J = q.landkreisNeighbors.get($)
+    if (J === void 0) ((J = N8($, Z)), q.landkreisNeighbors.set($, J))
+    let H = K8($, q.landkreisNeighbors)
+    for (let W of q.landkreisStadtstaatNeighbors.get($) ?? []) H.add(W)
+    return H
+  }
+  function G8($, Z, q) {
+    let J = Z.byId.get($),
+      H = q.get($) ?? (J ? $0(J) : null)
+    if (!J || !H) return []
+    if (q.get($) === void 0 && H) q.set($, H)
+    let W = []
+    for (let { id: Y } of Z.stadtstaaten) {
+      let _ = Z.byId.get(Y)
+      if (!_) continue
+      let X = q.get(Y)
+      if (!X) {
+        if (((X = $0(_) ?? void 0), X)) q.set(Y, X)
+      }
+      if (!X || !B0(H, X)) continue
+      if (H0(J, _)) W.push(Y)
+    }
+    return W
+  }
+  function U8($, Z, q, J) {
+    let H = Z8(J, $)
+    if (H !== void 0) return new Set([$, ...H])
+    let W = q.byId.get($)
+    if (!W?.geometry) return new Set([$])
+    let Y = v1(Z, q, J),
+      _ = X8(Y, q),
+      X = new Map(),
+      K = $0(W)
+    if (K) X.set($, K)
+    let N = new Set([$])
+    for (let M of _) {
+      if (M === $) continue
+      let V = q.byId.get(M)
+      if (!V?.geometry) continue
+      let Q = X.get(M)
+      if (!Q) {
+        if (((Q = $0(V) ?? void 0), Q)) X.set(M, Q)
+      }
+      if (!Q || !K || !B0(K, Q)) continue
+      if (H0(W, V)) N.add(M)
+    }
+    for (let M of G8($, q, X)) N.add(M)
+    let G = [...N].filter((M) => M !== $)
+    return (J.gemeindeNeighbors.set($, G), N)
+  }
+  function h1($, Z, q, J) {
+    if (
+      $ === 'lk_neighbors_other' ||
+      (($ === 'lk_neighbors_landkreise' ||
+        $ === 'lk_neighbors_gemeinden' ||
+        $ === 'neighbors_other') &&
+        Z.landkreisId &&
+        !($ === 'neighbors_other' && Z.gemeindeId))
+    ) {
+      if (!Z.landkreisId) return new Set([Z.focusId])
+      return v1(Z.landkreisId, q, J)
+    }
+    if (($ === 'gm_neighbors' || $ === 'neighbors_other') && Z.gemeindeId && Z.landkreisId)
+      return U8(Z.gemeindeId, Z.landkreisId, q, J)
+    if ($ === 'gm_neighbors' && Z.gemeindeId) return new Set([Z.gemeindeId])
+    return new Set([Z.focusId])
+  }
+  var a0 = [
+      'de_bundeslaender',
+      'de_landkreis_kreisfrei',
+      'bl_regierungsbezirke',
+      'bl_landkreis_kreisfrei',
+      'bl_gemeinden_kreisfrei',
+      'lk_gemeinden',
+      'neighbors_other',
+      'gm_neighbors',
+      'lk_neighbors_other',
+      'lk_neighbors_landkreise',
+      'lk_neighbors_gemeinden',
+    ],
+    M8 = new Set([
+      'de_bundeslaender',
+      'de_landkreis_kreisfrei',
+      'bl_regierungsbezirke',
+      'bl_landkreis_kreisfrei',
+      'bl_gemeinden_kreisfrei',
+      'lk_gemeinden',
+    ])
+  function c1($, Z) {
+    let q = Z.byId.get($)
+    return q ? String(q.properties?.name ?? $) : $
+  }
+  function g0($, Z) {
+    if (!$.bundeslandId) return 'Bundesland'
+    return c1($.bundeslandId, Z)
+  }
+  function T0($, Z) {
+    let q = $.landkreisId ?? ($.kind === 'landkreis' ? $.focusId : null)
+    if (!q) return 'Landkreis'
+    return c1(q, Z)
+  }
+  function h($) {
+    return String($.properties?.level ?? '')
+  }
+  function f($) {
+    return String($.properties?.id ?? '')
+  }
+  function I1($, Z) {
+    return Z.kreisfreieIds.has($) ? `kreisfrei:${$}` : `lk:${$}`
+  }
+  function V8($) {
+    if (!$) return null
+    return a0.includes($) ? $ : null
+  }
+  function f1($, Z) {
+    let q = $?.trim() || Z.deutschlandId || r
+    if (q === r || q === Z.deutschlandId)
       return {
-        focusId: r.deutschlandId ?? F,
+        focusId: Z.deutschlandId ?? r,
         focusName: 'Deutschland',
         kind: 'deutschland',
-        gebiet: F,
+        gebiet: r,
         untergebiet: '',
         bundeslandId: '',
         landkreisId: null,
         gemeindeId: null,
       }
-    let o = r.byId.get(s)
-    if (!o) return null
-    let l = V(o),
-      k = String(o.properties?.name ?? l),
-      _ = c(o)
-    if (_ === '4')
+    let J = Z.byId.get(q)
+    if (!J) return null
+    let H = f(J),
+      W = String(J.properties?.name ?? H),
+      Y = h(J)
+    if (Y === '4')
       return {
-        focusId: l,
-        focusName: k,
+        focusId: H,
+        focusName: W,
         kind: 'bundesland',
-        gebiet: l,
+        gebiet: H,
         untergebiet: '',
-        bundeslandId: l,
+        bundeslandId: H,
         landkreisId: null,
         gemeindeId: null,
       }
-    if (_ === '5') {
-      let u = String(o.properties?.bundesland_id ?? '')
-      if (!u) return null
-      let m = r.byId.get(u)
+    if (Y === '5') {
+      let _ = String(J.properties?.bundesland_id ?? '')
+      if (!_) return null
+      let X = Z.byId.get(_)
       return {
-        focusId: l,
-        focusName: k,
+        focusId: H,
+        focusName: W,
         kind: 'bundesland',
-        gebiet: u,
+        gebiet: _,
         untergebiet: '',
-        bundeslandId: u,
+        bundeslandId: _,
         landkreisId: null,
         gemeindeId: null,
       }
     }
-    if (_ === '6') {
-      let u = String(o.properties?.bundesland_id ?? L(l, r, '4') ?? '')
-      if (!u) return null
+    if (Y === '6') {
+      let _ = String(J.properties?.bundesland_id ?? Q8(H, Z, '4') ?? '')
+      if (!_) return null
       return {
-        focusId: l,
-        focusName: k,
+        focusId: H,
+        focusName: W,
         kind: 'landkreis',
-        gebiet: u,
-        untergebiet: G(l, r),
-        bundeslandId: u,
-        landkreisId: l,
+        gebiet: _,
+        untergebiet: I1(H, Z),
+        bundeslandId: _,
+        landkreisId: H,
         gemeindeId: null,
       }
     }
-    if (_ === '8') {
-      let u = String(o.properties?.landkreis_id ?? ''),
-        m = String(o.properties?.bundesland_id ?? '')
-      if (!u || !m) return null
+    if (Y === '8') {
+      let _ = String(J.properties?.landkreis_id ?? ''),
+        X = String(J.properties?.bundesland_id ?? '')
+      if (!_ || !X) return null
       return {
-        focusId: l,
-        focusName: k,
+        focusId: H,
+        focusName: W,
         kind: 'gemeinde',
-        gebiet: m,
-        untergebiet: G(u, r),
-        bundeslandId: m,
-        landkreisId: u,
-        gemeindeId: l,
+        gebiet: X,
+        untergebiet: I1(_, Z),
+        bundeslandId: X,
+        landkreisId: _,
+        gemeindeId: H,
       }
     }
     return null
   }
-  function L(n, r, s) {
-    let o = n
-    while (o) {
-      let l = r.byId.get(o)
-      if (!l) break
-      if (c(l) === s) return o
-      o = r.parentById.get(o)
+  function Q8($, Z, q) {
+    let J = $
+    while (J) {
+      let H = Z.byId.get(J)
+      if (!H) break
+      if (h(H) === q) return J
+      J = Z.parentById.get(J)
     }
     return null
   }
-  function p() {
-    return ['de_bundeslaender', 'de_landkreis_kreisfrei']
+  function Z0($, Z) {
+    let q = Z.byId.get($)
+    return !!q && h(q) === '6' && !Z.kreisfreieIds.has($)
   }
-  function w(n, r) {
-    let s = []
-    if (U(n.gebiet, r).length > 0) s.push('bl_regierungsbezirke')
-    return (s.push('bl_landkreis_kreisfrei'), s.push('bl_gemeinden_kreisfrei'), s)
+  function y1($, Z) {
+    let q = new Set()
+    for (let J of $) if (Z0(J, Z)) q.add(J)
+    return q
   }
-  function b() {
-    return ['lk_gemeinden', 'lk_neighbors_landkreise']
+  function R8($, Z) {
+    let q = new Set()
+    for (let J of $) {
+      let H = Z.byId.get(J)
+      if (H && h(H) === '8') q.add(J)
+    }
+    return q
   }
-  function x() {
-    return ['gm_neighbors']
+  function p1($, Z) {
+    return S0($, Z).filter((q) => {
+      let J = Z.byId.get(q)
+      return !!J && h(J) === '8'
+    })
   }
-  function i(n, r) {
-    let s = [],
-      o = (l) => {
-        for (let k of l) if (!s.includes(k)) s.push(k)
+  function D8($, Z) {
+    let q = new Set()
+    for (let J of $) {
+      let H = Z.byId.get(J)
+      if (!H) continue
+      if (x(H) || h(H) === '6') q.add(J)
+    }
+    return q
+  }
+  function x1($, Z) {
+    return [...$].some((q) => q !== Z)
+  }
+  function A8($, Z) {
+    let q = Z.byId.get($)
+    if (!q) return !1
+    if (x(q)) return !0
+    let J = h(q)
+    if (J === '6') return !0
+    return J !== '8'
+  }
+  function z8($, Z, q, J, H) {
+    let W = E0($, Z)
+    if (W)
+      return new Set(
+        L0(J, W, q)
+          .map(f)
+          .filter((_) => _.length > 0),
+      )
+    let Y = K0($, Z, q, H)
+    return new Set(
+      d1(J, $, Z, q, Y)
+        .map(f)
+        .filter((_) => _.length > 0),
+    )
+  }
+  function l1($, Z) {
+    if ($.size !== Z.size) return !1
+    for (let q of $) if (!Z.has(q)) return !1
+    return !0
+  }
+  var C8 = new Set(['lk_neighbors_landkreise', 'lk_neighbors_gemeinden', 'gm_neighbors'])
+  function F8($, Z, q, J, H) {
+    let W = [],
+      Y = []
+    for (let _ of $) {
+      if (M8.has(_)) {
+        W.push(_)
+        continue
       }
-    if ((o(p()), n.kind !== 'deutschland')) o(w(n, r))
-    if (n.landkreisId) o(b())
-    if (n.gemeindeId) o(x())
-    return s
+      let X = z8(_, Z, q, J, H)
+      if (C8.has(_)) {
+        ;(W.push(_), Y.push(X))
+        continue
+      }
+      if (_ === 'neighbors_other' || _ === 'lk_neighbors_other') {
+        if (Y.some((K) => l1(K, X))) continue
+        ;(W.push(_), Y.push(X))
+        continue
+      }
+      W.push(_)
+    }
+    return W
   }
-  function j(n, r) {
-    let s = i(n, r)
-    if (n.kind === 'deutschland')
-      return s.includes('de_landkreis_kreisfrei') ? 'de_landkreis_kreisfrei' : 'de_bundeslaender'
-    if (n.kind === 'bundesland') return 'bl_landkreis_kreisfrei'
-    if (n.landkreisId) return 'lk_gemeinden'
-    return s.at(-1) ?? 'de_landkreis_kreisfrei'
+  function O8($, Z, q) {
+    if (!q) return !1
+    if ($.kind !== 'gemeinde' || !$.gemeindeId || !$.landkreisId) return !1
+    if (!Z0($.landkreisId, Z)) return !1
+    let J = K0('neighbors_other', $, Z, q)
+    if (!J || !x1(J, $.gemeindeId)) return !1
+    return [...J].some((H) => H !== $.gemeindeId && A8(H, Z))
   }
-  function v(n, r, s) {
-    switch (n) {
+  function b1($, Z, q, J) {
+    if (!q) return !1
+    let H =
+      J === 'lk_neighbors_other' && $.kind === 'gemeinde'
+        ? $.landkreisId
+        : $.kind === 'landkreis'
+          ? $.landkreisId
+          : null
+    if (!H || !Z0(H, Z)) return !1
+    let W = K0(J, $, Z, q)
+    if (!W || !x1(W, H)) return !1
+    let Y = K0('lk_neighbors_landkreise', $, Z, q)
+    if (Y && l1(W, Y)) return !1
+    return !0
+  }
+  function k8($, Z, q, J) {
+    switch ($) {
+      case 'de_bundeslaender':
+      case 'de_landkreis_kreisfrei':
+        return !0
+      case 'bl_regierungsbezirke':
+        return Z.kind !== 'deutschland' && e0(Z.gebiet, q).length > 0
+      case 'bl_landkreis_kreisfrei':
+      case 'bl_gemeinden_kreisfrei':
+        return Z.kind !== 'deutschland'
+      case 'lk_gemeinden':
+        return !!Z.landkreisId && Z0(Z.landkreisId, q)
+      case 'neighbors_other':
+        if (Z.kind === 'gemeinde') return O8(Z, q, J)
+        if (Z.kind === 'landkreis') return b1(Z, q, J, 'neighbors_other')
+        return !1
+      case 'gm_neighbors':
+        return !!Z.gemeindeId
+      case 'lk_neighbors_other':
+        return Z.kind === 'gemeinde' && b1(Z, q, J, 'lk_neighbors_other')
+      case 'lk_neighbors_landkreise':
+      case 'lk_neighbors_gemeinden':
+        return (
+          !!Z.landkreisId &&
+          Z0(Z.landkreisId, q) &&
+          (Z.kind === 'landkreis' || Z.kind === 'gemeinde')
+        )
+      default:
+        return !1
+    }
+  }
+  function u1($, Z, q) {
+    let J = q?.features ?? [...Z.byId.values()],
+      H = q?.neighbors ?? null,
+      W = a0.filter((Y) => k8(Y, $, Z, H))
+    return F8(W, $, Z, J, H)
+  }
+  function g1($, Z) {
+    let q = u1($, Z)
+    if ($.kind === 'deutschland')
+      return q.includes('de_landkreis_kreisfrei') ? 'de_landkreis_kreisfrei' : 'de_bundeslaender'
+    if ($.kind === 'bundesland') return 'bl_landkreis_kreisfrei'
+    if ($.landkreisId) return 'lk_gemeinden'
+    return q.at(-1) ?? 'de_landkreis_kreisfrei'
+  }
+  function B8($, Z, q) {
+    switch ($) {
       case 'de_bundeslaender':
         return 'Bundesländer in Deutschland'
       case 'de_landkreis_kreisfrei':
         return 'Landkreise in Deutschland'
       case 'bl_regierungsbezirke':
-        return 'Regierungsbezirke in ' + R(r, s)
+        return 'Regierungsbezirke in ' + g0(Z, q)
       case 'bl_landkreis_kreisfrei':
-        return 'Landkreise in ' + R(r, s)
+        return 'Landkreise in ' + g0(Z, q)
       case 'bl_gemeinden_kreisfrei':
-        return 'Gemeinden in ' + R(r, s)
+        return 'Gemeinden in ' + g0(Z, q)
       case 'lk_gemeinden':
-        return 'Gemeinden in ' + T(r, s)
-      case 'lk_neighbors_landkreise':
-      case 'lk_neighbors_gemeinden':
-        return 'Nachbarn von ' + T(r, s)
+        return 'Gemeinden in ' + T0(Z, q)
+      case 'neighbors_other':
+        return 'Nachbarn von ' + Z.focusName
       case 'gm_neighbors':
-        return 'Nachbarn von ' + r.focusName
+        return 'Nachbargemeinden von ' + Z.focusName
+      case 'lk_neighbors_other':
+        return 'Nachbarn von ' + T0(Z, q)
+      case 'lk_neighbors_landkreise':
+        return 'Nachbarlandkreise von ' + T0(Z, q)
+      case 'lk_neighbors_gemeinden':
+        return 'Nachbargemeinden von ' + T0(Z, q)
       default:
-        return n
+        return $
     }
   }
-  function q(n) {
-    return n === 'lk_neighbors_landkreise' || n === 'lk_neighbors_gemeinden' || n === 'gm_neighbors'
+  function s0($) {
+    return (
+      $ === 'lk_neighbors_landkreise' ||
+      $ === 'lk_neighbors_gemeinden' ||
+      $ === 'lk_neighbors_other' ||
+      $ === 'neighbors_other' ||
+      $ === 'gm_neighbors'
+    )
   }
-  function C(n) {
-    switch (n) {
+  function a1($, Z) {
+    switch ($) {
       case 'de_bundeslaender':
         return 'bundeslaender'
       case 'de_landkreis_kreisfrei':
       case 'bl_landkreis_kreisfrei':
       case 'lk_neighbors_landkreise':
-      case 'lk_neighbors_gemeinden':
+      case 'lk_neighbors_other':
         return 'landkreis_kreisfrei'
+      case 'neighbors_other':
+        return Z?.kind === 'gemeinde' ? 'gemeinden_kreisfrei' : 'landkreis_kreisfrei'
+      case 'lk_neighbors_gemeinden':
+        return 'gemeinden'
       case 'bl_regierungsbezirke':
         return 'regierungsbezirke'
       case 'bl_gemeinden_kreisfrei':
@@ -392,99 +3106,149 @@
         return 'gemeinden'
     }
   }
-  function d(n, r) {
-    if (q(n)) return null
-    let s = C(n)
-    if (n.startsWith('de_')) return { gebiet: F, untergebiet: '', darstellung: s }
-    if (n.startsWith('bl_')) return { gebiet: r.gebiet, untergebiet: '', darstellung: s }
-    if (n === 'lk_gemeinden')
-      return { gebiet: r.gebiet, untergebiet: r.untergebiet, darstellung: s }
+  function E0($, Z) {
+    if (s0($)) return null
+    let q = a1($)
+    if ($.startsWith('de_')) return { gebiet: r, untergebiet: '', darstellung: q }
+    if ($.startsWith('bl_')) return { gebiet: Z.gebiet, untergebiet: '', darstellung: q }
+    if ($ === 'lk_gemeinden')
+      return { gebiet: Z.gebiet, untergebiet: Z.untergebiet, darstellung: q }
     return null
   }
-  function J(n, r) {
-    let s = []
-    for (let o of r.byId.values()) {
-      if (c(o) !== '6') continue
-      if (String(o.properties?.bundesland_id ?? '') !== n) continue
-      s.push(V(o))
+  function s1($, Z) {
+    let q = []
+    for (let J of Z.byId.values()) {
+      if (h(J) !== '6') continue
+      if (String(J.properties?.bundesland_id ?? '') !== $) continue
+      q.push(f(J))
     }
-    return s
+    return q
   }
-  function y(n, r) {
-    let s = new Set(n),
-      o = []
-    for (let l of r.byId.values()) {
-      let k = V(l),
-        _ = c(l)
-      if (_ === '8') {
-        let u = String(l.properties?.landkreis_id ?? '')
-        if (s.has(u)) o.push(k)
+  function S0($, Z) {
+    let q = new Set($),
+      J = []
+    for (let H of Z.byId.values()) {
+      let W = f(H),
+        Y = h(H)
+      if (Y === '8') {
+        let _ = String(H.properties?.landkreis_id ?? '')
+        if (q.has(_)) J.push(W)
         continue
       }
-      if (_ === '6' && r.kreisfreieIds.has(k) && s.has(k)) o.push(k)
+      if (Y === '6' && Z.kreisfreieIds.has(W) && q.has(W)) J.push(W)
     }
-    return o
+    return J
   }
-  function e(n, r) {
-    return y(n, r)
+  function T8($, Z) {
+    return S0($, Z)
   }
-  function nn(n, r) {
-    return y([n], r)
+  function E8($, Z) {
+    return S0([$], Z)
   }
-  function rn(n) {
-    return n.stadtstaaten.map((r) => r.id)
+  function S8($) {
+    return $.stadtstaaten.map((Z) => Z.id)
   }
-  function sn(n, r, s) {
-    if (n === 'lk_neighbors_landkreise' || n === 'lk_neighbors_gemeinden') {
-      if (!r.landkreisId) return []
-      return J(r.bundeslandId, s)
+  function P8($, Z, q) {
+    if (
+      $ === 'lk_neighbors_landkreise' ||
+      $ === 'lk_neighbors_gemeinden' ||
+      $ === 'lk_neighbors_other' ||
+      $ === 'neighbors_other'
+    ) {
+      if (!Z.landkreisId) return []
+      return s1(Z.bundeslandId, q)
     }
     return []
   }
-  function on(n, r, s) {
-    let o = V(n)
-    if (!o || !r.has(o)) return !1
-    if (c(n) === '6') return !0
-    if (h(n)) return !0
+  function L8($, Z, q) {
+    let J = f($)
+    if (!J || !Z.has(J)) return !1
+    return Z0(J, q)
+  }
+  function m1($, Z) {
+    let q = f($)
+    if (!q || !Z.has(q)) return !1
+    return h($) === '8'
+  }
+  function w8($, Z, q, J) {
+    let H = f($)
+    if (!H || !Z.has(H)) return !1
+    if (J.kind === 'gemeinde') return j8($, Z, q)
+    return x($) || h($) === '6'
+  }
+  function j8($, Z, q) {
+    let J = f($)
+    if (!J || !Z.has(J)) return !1
+    let H = h($)
+    if (H === '8') return !0
+    if (H === '6' && q.kreisfreieIds.has(J)) return !0
+    if (x($)) return !0
     return !1
   }
-  function ln(n, r, s) {
-    let o = V(n)
-    if (!o || !r.has(o)) return !1
-    let l = c(n)
-    if (l === '8') return !0
-    if (l === '6' && s.kreisfreieIds.has(o)) return !0
-    if (h(n)) return !0
-    return !1
+  function v8($, Z, q) {
+    if (
+      ($ === 'lk_neighbors_landkreise' ||
+        $ === 'lk_neighbors_gemeinden' ||
+        $ === 'lk_neighbors_other' ||
+        ($ === 'neighbors_other' && Z.kind === 'landkreis')) &&
+      Z.landkreisId
+    ) {
+      if ($ === 'lk_neighbors_gemeinden') return new Set(p1([Z.landkreisId], q))
+      return new Set([Z.landkreisId])
+    }
+    if (
+      ($ === 'gm_neighbors' || ($ === 'neighbors_other' && Z.kind === 'gemeinde')) &&
+      Z.gemeindeId
+    )
+      return new Set([Z.gemeindeId])
+    return new Set([Z.focusId])
   }
-  function kn(n, r, s, o, l) {
-    let k = C(r),
-      _ = d(r, s)
-    if (_) return P(n, _, o)
-    if (!l?.size) return []
-    return n.filter((u) => {
-      let m = V(u)
-      if (!m || !l.has(m)) return !1
-      if (r === 'lk_neighbors_landkreise' || r === 'lk_neighbors_gemeinden') return on(u, l, o)
-      if (r === 'gm_neighbors') return ln(u, l, o)
-      return un(u, k, o, s)
+  function K0($, Z, q, J) {
+    if (!s0($)) return null
+    if (!J) return v8($, Z, q)
+    let H = h1($, Z, q, J)
+    if ($ === 'lk_neighbors_landkreise' && Z.landkreisId) return y1(H, q)
+    if ($ === 'lk_neighbors_gemeinden' && Z.landkreisId) {
+      let W = y1(H, q)
+      return new Set(p1(W, q))
+    }
+    if (($ === 'neighbors_other' && Z.kind === 'landkreis') || $ === 'lk_neighbors_other') {
+      if (!Z.landkreisId) return H
+      return D8(H, q)
+    }
+    if ($ === 'gm_neighbors') return R8(H, q)
+    return H
+  }
+  function d1($, Z, q, J, H) {
+    let W = E0(Z, q)
+    if (W) return L0($, W, J)
+    if (!H?.size) return []
+    return $.filter((Y) => {
+      let _ = f(Y)
+      if (!_ || !H.has(_)) return !1
+      if (Z === 'lk_neighbors_landkreise') return L8(Y, H, J)
+      if (Z === 'lk_neighbors_gemeinden') return m1(Y, H)
+      if (Z === 'neighbors_other') return w8(Y, H, J, q)
+      if (Z === 'lk_neighbors_other') {
+        let X = f(Y)
+        if (!X || !H.has(X)) return !1
+        return x(Y) || h(Y) === '6'
+      }
+      if (Z === 'gm_neighbors') return m1(Y, H)
+      return !1
     })
   }
-  function un(n, r, s, o) {
-    let l = { gebiet: o.gebiet, untergebiet: o.untergebiet, darstellung: r }
-    return P([n], l, s).length > 0
-  }
-  function _n(n, r) {
-    let s = M(n, r)
-    if (!s) return null
-    let o = j(s, r),
-      l = d(o, s)
-    if (l) return l
-    if (s.kind === 'landkreis' && s.landkreisId)
-      return { gebiet: s.gebiet, untergebiet: s.untergebiet, darstellung: 'gemeinden' }
-    if (s.kind === 'gemeinde')
-      return { gebiet: s.gebiet, untergebiet: s.untergebiet, darstellung: 'gemeinden' }
+  function h8($, Z) {
+    let q = f1($, Z)
+    if (!q) return null
+    let J = g1(q, Z),
+      H = E0(J, q)
+    if (H) return H
+    if (q.kind === 'landkreis' && q.landkreisId)
+      return { gebiet: q.gebiet, untergebiet: q.untergebiet, darstellung: 'gemeinden' }
+    if (q.kind === 'gemeinde')
+      return { gebiet: q.gebiet, untergebiet: q.untergebiet, darstellung: 'gemeinden' }
     return null
   }
-  globalThis.SimpleView = N
+  globalThis.SimpleView = d0
 })()

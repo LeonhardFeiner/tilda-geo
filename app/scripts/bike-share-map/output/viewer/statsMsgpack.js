@@ -1,0 +1,720 @@
+;(() => {
+  var Q = ((F) =>
+    typeof require < 'u'
+      ? require
+      : typeof Proxy < 'u'
+        ? new Proxy(F, { get: (G, Z) => (typeof require < 'u' ? require : G)[Z] })
+        : F)(function (F) {
+    if (typeof require < 'u') return require.apply(this, arguments)
+    throw Error('Dynamic require of "' + F + '" is not supported')
+  })
+  var h = 4096
+  function x(F, G, Z) {
+    let $ = G,
+      q = $ + Z,
+      k = [],
+      V = ''
+    while ($ < q) {
+      let W = F[$++]
+      if ((W & 128) === 0) k.push(W)
+      else if ((W & 224) === 192) {
+        let H = F[$++] & 63
+        k.push(((W & 31) << 6) | H)
+      } else if ((W & 240) === 224) {
+        let H = F[$++] & 63,
+          w = F[$++] & 63
+        k.push(((W & 31) << 12) | (H << 6) | w)
+      } else if ((W & 248) === 240) {
+        let H = F[$++] & 63,
+          w = F[$++] & 63,
+          E = F[$++] & 63,
+          N = ((W & 7) << 18) | (H << 12) | (w << 6) | E
+        if (N > 65535) ((N -= 65536), k.push(((N >>> 10) & 1023) | 55296), (N = 56320 | (N & 1023)))
+        k.push(N)
+      } else k.push(W)
+      if (k.length >= h) ((V += String.fromCharCode(...k)), (k.length = 0))
+    }
+    if (k.length > 0) V += String.fromCharCode(...k)
+    return V
+  }
+  var p = new TextDecoder(),
+    u = 200
+  function i(F, G, Z) {
+    let $ = F.subarray(G, G + Z)
+    return p.decode($)
+  }
+  function l(F, G, Z) {
+    if (Z > u) return i(F, G, Z)
+    else return x(F, G, Z)
+  }
+  class P {
+    type
+    data
+    constructor(F, G) {
+      ;((this.type = F), (this.data = G))
+    }
+  }
+  class J extends Error {
+    constructor(F) {
+      super(F)
+      let G = Object.create(J.prototype)
+      ;(Object.setPrototypeOf(this, G),
+        Object.defineProperty(this, 'name', { configurable: !0, enumerable: !1, value: J.name }))
+    }
+  }
+  var X = 4294967295
+  function v(F, G, Z) {
+    let $ = Math.floor(Z / 4294967296),
+      q = Z
+    ;(F.setUint32(G, $), F.setUint32(G + 4, q))
+  }
+  function R(F, G) {
+    let Z = F.getInt32(G),
+      $ = F.getUint32(G + 4)
+    return Z * 4294967296 + $
+  }
+  function T(F, G) {
+    let Z = F.getUint32(G),
+      $ = F.getUint32(G + 4)
+    return Z * 4294967296 + $
+  }
+  var d = -1,
+    n = 4294967295,
+    b = 17179869183
+  function c({ sec: F, nsec: G }) {
+    if (F >= 0 && G >= 0 && F <= b)
+      if (G === 0 && F <= n) {
+        let Z = new Uint8Array(4)
+        return (new DataView(Z.buffer).setUint32(0, F), Z)
+      } else {
+        let Z = F / 4294967296,
+          $ = F & 4294967295,
+          q = new Uint8Array(8),
+          k = new DataView(q.buffer)
+        return (k.setUint32(0, (G << 2) | (Z & 3)), k.setUint32(4, $), q)
+      }
+    else {
+      let Z = new Uint8Array(12),
+        $ = new DataView(Z.buffer)
+      return ($.setUint32(0, G), v($, 4, F), Z)
+    }
+  }
+  function y(F) {
+    let G = F.getTime(),
+      Z = Math.floor(G / 1000),
+      $ = (G - Z * 1000) * 1e6,
+      q = Math.floor($ / 1e9)
+    return { sec: Z + q, nsec: $ - q * 1e9 }
+  }
+  function r(F) {
+    if (F instanceof Date) {
+      let G = y(F)
+      return c(G)
+    } else return null
+  }
+  function f(F) {
+    let G = new DataView(F.buffer, F.byteOffset, F.byteLength)
+    switch (F.byteLength) {
+      case 4: {
+        let Z = G.getUint32(0),
+          $ = 0
+        return { sec: Z, nsec: 0 }
+      }
+      case 8: {
+        let Z = G.getUint32(0),
+          $ = G.getUint32(4),
+          q = (Z & 3) * 4294967296 + $,
+          k = Z >>> 2
+        return { sec: q, nsec: k }
+      }
+      case 12: {
+        let Z = R(G, 4),
+          $ = G.getUint32(0)
+        return { sec: Z, nsec: $ }
+      }
+      default:
+        throw new J(`Unrecognized data size for timestamp (expected 4, 8, or 12): ${F.length}`)
+    }
+  }
+  function a(F) {
+    let G = f(F)
+    return new Date(G.sec * 1000 + G.nsec / 1e6)
+  }
+  var g = { type: d, encode: r, decode: a }
+  class C {
+    static defaultCodec = new C()
+    __brand
+    builtInEncoders = []
+    builtInDecoders = []
+    encoders = []
+    decoders = []
+    constructor() {
+      this.register(g)
+    }
+    register({ type: F, encode: G, decode: Z }) {
+      if (F >= 0) ((this.encoders[F] = G), (this.decoders[F] = Z))
+      else {
+        let $ = -1 - F
+        ;((this.builtInEncoders[$] = G), (this.builtInDecoders[$] = Z))
+      }
+    }
+    tryToEncode(F, G) {
+      for (let Z = 0; Z < this.builtInEncoders.length; Z++) {
+        let $ = this.builtInEncoders[Z]
+        if ($ != null) {
+          let q = $(F, G)
+          if (q != null) {
+            let k = -1 - Z
+            return new P(k, q)
+          }
+        }
+      }
+      for (let Z = 0; Z < this.encoders.length; Z++) {
+        let $ = this.encoders[Z]
+        if ($ != null) {
+          let q = $(F, G)
+          if (q != null) return new P(Z, q)
+        }
+      }
+      if (F instanceof P) return F
+      return null
+    }
+    decode(F, G, Z) {
+      let $ = G < 0 ? this.builtInDecoders[-1 - G] : this.decoders[G]
+      if ($) return $(F, G, Z)
+      else return new P(G, F)
+    }
+  }
+  function o(F) {
+    return (
+      F instanceof ArrayBuffer || (typeof SharedArrayBuffer < 'u' && F instanceof SharedArrayBuffer)
+    )
+  }
+  function z(F) {
+    if (F instanceof Uint8Array) return F
+    else if (ArrayBuffer.isView(F)) return new Uint8Array(F.buffer, F.byteOffset, F.byteLength)
+    else if (o(F)) return new Uint8Array(F)
+    else return Uint8Array.from(F)
+  }
+  function S(F) {
+    return `${F < 0 ? '-' : ''}0x${Math.abs(F).toString(16).padStart(2, '0')}`
+  }
+  var s = 16,
+    t = 16
+  class M {
+    hit = 0
+    miss = 0
+    caches
+    maxKeyLength
+    maxLengthPerKey
+    constructor(F = s, G = t) {
+      ;((this.maxKeyLength = F), (this.maxLengthPerKey = G), (this.caches = []))
+      for (let Z = 0; Z < this.maxKeyLength; Z++) this.caches.push([])
+    }
+    canBeCached(F) {
+      return F > 0 && F <= this.maxKeyLength
+    }
+    find(F, G, Z) {
+      let $ = this.caches[Z - 1]
+      F: for (let q of $) {
+        let k = q.bytes
+        for (let V = 0; V < Z; V++) if (k[V] !== F[G + V]) continue F
+        return q.str
+      }
+      return null
+    }
+    store(F, G) {
+      let Z = this.caches[F.length - 1],
+        $ = { bytes: F, str: G }
+      if (Z.length >= this.maxLengthPerKey) Z[(Math.random() * Z.length) | 0] = $
+      else Z.push($)
+    }
+    decode(F, G, Z) {
+      let $ = this.find(F, G, Z)
+      if ($ != null) return (this.hit++, $)
+      this.miss++
+      let q = x(F, G, Z),
+        k = Uint8Array.prototype.slice.call(F, G, G + Z)
+      return (this.store(k, q), q)
+    }
+  }
+  var _ = 'array',
+    I = 'map_key',
+    L = 'map_value',
+    e = (F) => {
+      if (typeof F === 'string' || typeof F === 'number') return F
+      throw new J('The type of key must be string or number but ' + typeof F)
+    }
+  class m {
+    stack = []
+    stackHeadPosition = -1
+    get length() {
+      return this.stackHeadPosition + 1
+    }
+    top() {
+      return this.stack[this.stackHeadPosition]
+    }
+    pushArrayState(F) {
+      let G = this.getUninitializedStateFromPool()
+      ;((G.type = _), (G.position = 0), (G.size = F), (G.array = Array(F)))
+    }
+    pushMapState(F) {
+      let G = this.getUninitializedStateFromPool()
+      ;((G.type = I), (G.readCount = 0), (G.size = F), (G.map = {}))
+    }
+    getUninitializedStateFromPool() {
+      if ((this.stackHeadPosition++, this.stackHeadPosition === this.stack.length)) {
+        let F = {
+          type: void 0,
+          size: 0,
+          array: void 0,
+          position: 0,
+          readCount: 0,
+          map: void 0,
+          key: null,
+        }
+        this.stack.push(F)
+      }
+      return this.stack[this.stackHeadPosition]
+    }
+    release(F) {
+      if (this.stack[this.stackHeadPosition] !== F)
+        throw Error('Invalid stack state. Released state is not on top of the stack.')
+      if (F.type === _) {
+        let Z = F
+        ;((Z.size = 0), (Z.array = void 0), (Z.position = 0), (Z.type = void 0))
+      }
+      if (F.type === I || F.type === L) {
+        let Z = F
+        ;((Z.size = 0), (Z.map = void 0), (Z.readCount = 0), (Z.type = void 0))
+      }
+      this.stackHeadPosition--
+    }
+    reset() {
+      ;((this.stack.length = 0), (this.stackHeadPosition = -1))
+    }
+  }
+  var Y = -1,
+    A = new DataView(new ArrayBuffer(0)),
+    FF = new Uint8Array(A.buffer)
+  try {
+    A.getInt8(0)
+  } catch (F) {
+    if (!(F instanceof RangeError))
+      throw Error(
+        'This module is not supported in the current JavaScript engine because DataView does not throw RangeError on out-of-bounds access',
+      )
+  }
+  var D = RangeError('Insufficient data'),
+    GF = new M()
+  class U {
+    extensionCodec
+    context
+    useBigInt64
+    rawStrings
+    maxStrLength
+    maxBinLength
+    maxArrayLength
+    maxMapLength
+    maxExtLength
+    keyDecoder
+    mapKeyConverter
+    totalPos = 0
+    pos = 0
+    view = A
+    bytes = FF
+    headByte = Y
+    stack = new m()
+    entered = !1
+    constructor(F) {
+      ;((this.extensionCodec = F?.extensionCodec ?? C.defaultCodec),
+        (this.context = F?.context),
+        (this.useBigInt64 = F?.useBigInt64 ?? !1),
+        (this.rawStrings = F?.rawStrings ?? !1),
+        (this.maxStrLength = F?.maxStrLength ?? X),
+        (this.maxBinLength = F?.maxBinLength ?? X),
+        (this.maxArrayLength = F?.maxArrayLength ?? X),
+        (this.maxMapLength = F?.maxMapLength ?? X),
+        (this.maxExtLength = F?.maxExtLength ?? X),
+        (this.keyDecoder = F?.keyDecoder !== void 0 ? F.keyDecoder : GF),
+        (this.mapKeyConverter = F?.mapKeyConverter ?? e))
+    }
+    clone() {
+      return new U({
+        extensionCodec: this.extensionCodec,
+        context: this.context,
+        useBigInt64: this.useBigInt64,
+        rawStrings: this.rawStrings,
+        maxStrLength: this.maxStrLength,
+        maxBinLength: this.maxBinLength,
+        maxArrayLength: this.maxArrayLength,
+        maxMapLength: this.maxMapLength,
+        maxExtLength: this.maxExtLength,
+        keyDecoder: this.keyDecoder,
+      })
+    }
+    reinitializeState() {
+      ;((this.totalPos = 0), (this.headByte = Y), this.stack.reset())
+    }
+    setBuffer(F) {
+      let G = z(F)
+      ;((this.bytes = G),
+        (this.view = new DataView(G.buffer, G.byteOffset, G.byteLength)),
+        (this.pos = 0))
+    }
+    appendBuffer(F) {
+      if (this.headByte === Y && !this.hasRemaining(1)) this.setBuffer(F)
+      else {
+        let G = this.bytes.subarray(this.pos),
+          Z = z(F),
+          $ = new Uint8Array(G.length + Z.length)
+        ;($.set(G), $.set(Z, G.length), this.setBuffer($))
+      }
+    }
+    hasRemaining(F) {
+      return this.view.byteLength - this.pos >= F
+    }
+    createExtraByteError(F) {
+      let { view: G, pos: Z } = this
+      return RangeError(
+        `Extra ${G.byteLength - Z} of ${G.byteLength} byte(s) found at buffer[${F}]`,
+      )
+    }
+    decode(F) {
+      if (this.entered) return this.clone().decode(F)
+      try {
+        ;((this.entered = !0), this.reinitializeState(), this.setBuffer(F))
+        let G = this.doDecodeSync()
+        if (this.hasRemaining(1)) throw this.createExtraByteError(this.pos)
+        return G
+      } finally {
+        this.entered = !1
+      }
+    }
+    *decodeMulti(F) {
+      if (this.entered) {
+        yield* this.clone().decodeMulti(F)
+        return
+      }
+      try {
+        ;((this.entered = !0), this.reinitializeState(), this.setBuffer(F))
+        while (this.hasRemaining(1)) yield this.doDecodeSync()
+      } finally {
+        this.entered = !1
+      }
+    }
+    async decodeAsync(F) {
+      if (this.entered) return this.clone().decodeAsync(F)
+      try {
+        this.entered = !0
+        let G = !1,
+          Z
+        for await (let V of F) {
+          if (G) throw ((this.entered = !1), this.createExtraByteError(this.totalPos))
+          this.appendBuffer(V)
+          try {
+            ;((Z = this.doDecodeSync()), (G = !0))
+          } catch (W) {
+            if (!(W instanceof RangeError)) throw W
+          }
+          this.totalPos += this.pos
+        }
+        if (G) {
+          if (this.hasRemaining(1)) throw this.createExtraByteError(this.totalPos)
+          return Z
+        }
+        let { headByte: $, pos: q, totalPos: k } = this
+        throw RangeError(
+          `Insufficient data in parsing ${S($)} at ${k} (${q} in the current buffer)`,
+        )
+      } finally {
+        this.entered = !1
+      }
+    }
+    decodeArrayStream(F) {
+      return this.decodeMultiAsync(F, !0)
+    }
+    decodeStream(F) {
+      return this.decodeMultiAsync(F, !1)
+    }
+    async *decodeMultiAsync(F, G) {
+      if (this.entered) {
+        yield* this.clone().decodeMultiAsync(F, G)
+        return
+      }
+      try {
+        this.entered = !0
+        let Z = G,
+          $ = -1
+        for await (let q of F) {
+          if (G && $ === 0) throw this.createExtraByteError(this.totalPos)
+          if ((this.appendBuffer(q), Z)) (($ = this.readArraySize()), (Z = !1), this.complete())
+          try {
+            while (!0) if ((yield this.doDecodeSync(), --$ === 0)) break
+          } catch (k) {
+            if (!(k instanceof RangeError)) throw k
+          }
+          this.totalPos += this.pos
+        }
+      } finally {
+        this.entered = !1
+      }
+    }
+    doDecodeSync() {
+      F: while (!0) {
+        let F = this.readHeadByte(),
+          G
+        if (F >= 224) G = F - 256
+        else if (F < 192)
+          if (F < 128) G = F
+          else if (F < 144) {
+            let $ = F - 128
+            if ($ !== 0) {
+              ;(this.pushMapState($), this.complete())
+              continue F
+            } else G = {}
+          } else if (F < 160) {
+            let $ = F - 144
+            if ($ !== 0) {
+              ;(this.pushArrayState($), this.complete())
+              continue F
+            } else G = []
+          } else {
+            let $ = F - 160
+            G = this.decodeString($, 0)
+          }
+        else if (F === 192) G = null
+        else if (F === 194) G = !1
+        else if (F === 195) G = !0
+        else if (F === 202) G = this.readF32()
+        else if (F === 203) G = this.readF64()
+        else if (F === 204) G = this.readU8()
+        else if (F === 205) G = this.readU16()
+        else if (F === 206) G = this.readU32()
+        else if (F === 207)
+          if (this.useBigInt64) G = this.readU64AsBigInt()
+          else G = this.readU64()
+        else if (F === 208) G = this.readI8()
+        else if (F === 209) G = this.readI16()
+        else if (F === 210) G = this.readI32()
+        else if (F === 211)
+          if (this.useBigInt64) G = this.readI64AsBigInt()
+          else G = this.readI64()
+        else if (F === 217) {
+          let $ = this.lookU8()
+          G = this.decodeString($, 1)
+        } else if (F === 218) {
+          let $ = this.lookU16()
+          G = this.decodeString($, 2)
+        } else if (F === 219) {
+          let $ = this.lookU32()
+          G = this.decodeString($, 4)
+        } else if (F === 220) {
+          let $ = this.readU16()
+          if ($ !== 0) {
+            ;(this.pushArrayState($), this.complete())
+            continue F
+          } else G = []
+        } else if (F === 221) {
+          let $ = this.readU32()
+          if ($ !== 0) {
+            ;(this.pushArrayState($), this.complete())
+            continue F
+          } else G = []
+        } else if (F === 222) {
+          let $ = this.readU16()
+          if ($ !== 0) {
+            ;(this.pushMapState($), this.complete())
+            continue F
+          } else G = {}
+        } else if (F === 223) {
+          let $ = this.readU32()
+          if ($ !== 0) {
+            ;(this.pushMapState($), this.complete())
+            continue F
+          } else G = {}
+        } else if (F === 196) {
+          let $ = this.lookU8()
+          G = this.decodeBinary($, 1)
+        } else if (F === 197) {
+          let $ = this.lookU16()
+          G = this.decodeBinary($, 2)
+        } else if (F === 198) {
+          let $ = this.lookU32()
+          G = this.decodeBinary($, 4)
+        } else if (F === 212) G = this.decodeExtension(1, 0)
+        else if (F === 213) G = this.decodeExtension(2, 0)
+        else if (F === 214) G = this.decodeExtension(4, 0)
+        else if (F === 215) G = this.decodeExtension(8, 0)
+        else if (F === 216) G = this.decodeExtension(16, 0)
+        else if (F === 199) {
+          let $ = this.lookU8()
+          G = this.decodeExtension($, 1)
+        } else if (F === 200) {
+          let $ = this.lookU16()
+          G = this.decodeExtension($, 2)
+        } else if (F === 201) {
+          let $ = this.lookU32()
+          G = this.decodeExtension($, 4)
+        } else throw new J(`Unrecognized type byte: ${S(F)}`)
+        this.complete()
+        let Z = this.stack
+        while (Z.length > 0) {
+          let $ = Z.top()
+          if ($.type === _)
+            if ((($.array[$.position] = G), $.position++, $.position === $.size))
+              ((G = $.array), Z.release($))
+            else continue F
+          else if ($.type === I) {
+            if (G === '__proto__') throw new J('The key __proto__ is not allowed')
+            ;(($.key = this.mapKeyConverter(G)), ($.type = L))
+            continue F
+          } else if ((($.map[$.key] = G), $.readCount++, $.readCount === $.size))
+            ((G = $.map), Z.release($))
+          else {
+            ;(($.key = null), ($.type = I))
+            continue F
+          }
+        }
+        return G
+      }
+    }
+    readHeadByte() {
+      if (this.headByte === Y) this.headByte = this.readU8()
+      return this.headByte
+    }
+    complete() {
+      this.headByte = Y
+    }
+    readArraySize() {
+      let F = this.readHeadByte()
+      switch (F) {
+        case 220:
+          return this.readU16()
+        case 221:
+          return this.readU32()
+        default:
+          if (F < 160) return F - 144
+          else throw new J(`Unrecognized array type byte: ${S(F)}`)
+      }
+    }
+    pushMapState(F) {
+      if (F > this.maxMapLength)
+        throw new J(
+          `Max length exceeded: map length (${F}) > maxMapLengthLength (${this.maxMapLength})`,
+        )
+      this.stack.pushMapState(F)
+    }
+    pushArrayState(F) {
+      if (F > this.maxArrayLength)
+        throw new J(
+          `Max length exceeded: array length (${F}) > maxArrayLength (${this.maxArrayLength})`,
+        )
+      this.stack.pushArrayState(F)
+    }
+    decodeString(F, G) {
+      if (!this.rawStrings || this.stateIsMapKey()) return this.decodeUtf8String(F, G)
+      return this.decodeBinary(F, G)
+    }
+    decodeUtf8String(F, G) {
+      if (F > this.maxStrLength)
+        throw new J(
+          `Max length exceeded: UTF-8 byte length (${F}) > maxStrLength (${this.maxStrLength})`,
+        )
+      if (this.bytes.byteLength < this.pos + G + F) throw D
+      let Z = this.pos + G,
+        $
+      if (this.stateIsMapKey() && this.keyDecoder?.canBeCached(F))
+        $ = this.keyDecoder.decode(this.bytes, Z, F)
+      else $ = l(this.bytes, Z, F)
+      return ((this.pos += G + F), $)
+    }
+    stateIsMapKey() {
+      if (this.stack.length > 0) return this.stack.top().type === I
+      return !1
+    }
+    decodeBinary(F, G) {
+      if (F > this.maxBinLength)
+        throw new J(`Max length exceeded: bin length (${F}) > maxBinLength (${this.maxBinLength})`)
+      if (!this.hasRemaining(F + G)) throw D
+      let Z = this.pos + G,
+        $ = this.bytes.subarray(Z, Z + F)
+      return ((this.pos += G + F), $)
+    }
+    decodeExtension(F, G) {
+      if (F > this.maxExtLength)
+        throw new J(`Max length exceeded: ext length (${F}) > maxExtLength (${this.maxExtLength})`)
+      let Z = this.view.getInt8(this.pos + G),
+        $ = this.decodeBinary(F, G + 1)
+      return this.extensionCodec.decode($, Z, this.context)
+    }
+    lookU8() {
+      return this.view.getUint8(this.pos)
+    }
+    lookU16() {
+      return this.view.getUint16(this.pos)
+    }
+    lookU32() {
+      return this.view.getUint32(this.pos)
+    }
+    readU8() {
+      let F = this.view.getUint8(this.pos)
+      return (this.pos++, F)
+    }
+    readI8() {
+      let F = this.view.getInt8(this.pos)
+      return (this.pos++, F)
+    }
+    readU16() {
+      let F = this.view.getUint16(this.pos)
+      return ((this.pos += 2), F)
+    }
+    readI16() {
+      let F = this.view.getInt16(this.pos)
+      return ((this.pos += 2), F)
+    }
+    readU32() {
+      let F = this.view.getUint32(this.pos)
+      return ((this.pos += 4), F)
+    }
+    readI32() {
+      let F = this.view.getInt32(this.pos)
+      return ((this.pos += 4), F)
+    }
+    readU64() {
+      let F = T(this.view, this.pos)
+      return ((this.pos += 8), F)
+    }
+    readI64() {
+      let F = R(this.view, this.pos)
+      return ((this.pos += 8), F)
+    }
+    readU64AsBigInt() {
+      let F = this.view.getBigUint64(this.pos)
+      return ((this.pos += 8), F)
+    }
+    readI64AsBigInt() {
+      let F = this.view.getBigInt64(this.pos)
+      return ((this.pos += 8), F)
+    }
+    readF32() {
+      let F = this.view.getFloat32(this.pos)
+      return ((this.pos += 4), F)
+    }
+    readF64() {
+      let F = this.view.getFloat64(this.pos)
+      return ((this.pos += 8), F)
+    }
+  }
+  function O(F, G) {
+    return new U(G).decode(F)
+  }
+  var WF = 1
+  function j(F) {
+    let G = O(F)
+    if (G.version !== WF || !Array.isArray(G.features))
+      throw Error('Ungültiges stats.msgpack (Version oder features fehlen)')
+    return G.features
+  }
+  globalThis.StatsPack = { decodeRegionFeatures: j }
+})()

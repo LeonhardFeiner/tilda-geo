@@ -10,6 +10,20 @@ import {
   type UntergebietValue,
   type ViewScope,
 } from './regionNavigation'
+import {
+  computeSimpleAllowedIds as computeNeighborAllowedIds,
+  type NeighborIndex,
+} from './regionNeighbors'
+
+export {
+  buildNeighborIndex,
+  decodeNeighborsPack,
+  neighborIndexFromPrecomputed,
+  parsePrecomputedNeighborsJson,
+  parsePrecomputedNeighborsJsonText,
+  precomputedNeighborsFileFromJson,
+  type NeighborIndex,
+} from './regionNeighbors'
 
 export type SimpleViewPresetId =
   | 'de_bundeslaender'
@@ -18,9 +32,11 @@ export type SimpleViewPresetId =
   | 'bl_landkreis_kreisfrei'
   | 'bl_gemeinden_kreisfrei'
   | 'lk_gemeinden'
+  | 'neighbors_other'
+  | 'gm_neighbors'
+  | 'lk_neighbors_other'
   | 'lk_neighbors_landkreise'
   | 'lk_neighbors_gemeinden'
-  | 'gm_neighbors'
 
 export type FocusKind = 'deutschland' | 'bundesland' | 'landkreis' | 'gemeinde'
 
@@ -35,6 +51,7 @@ export type FocusContext = {
   gemeindeId: string | null
 }
 
+/** Dropdown order for simple view (broad → narrow, then neighbor variants). */
 export const SIMPLE_VIEW_PRESET_IDS = [
   'de_bundeslaender',
   'de_landkreis_kreisfrei',
@@ -42,10 +59,21 @@ export const SIMPLE_VIEW_PRESET_IDS = [
   'bl_landkreis_kreisfrei',
   'bl_gemeinden_kreisfrei',
   'lk_gemeinden',
+  'neighbors_other',
+  'gm_neighbors',
+  'lk_neighbors_other',
   'lk_neighbors_landkreise',
   'lk_neighbors_gemeinden',
-  'gm_neighbors',
 ] as const satisfies readonly SimpleViewPresetId[]
+
+const HIERARCHY_SIMPLE_PRESETS = new Set<SimpleViewPresetId>([
+  'de_bundeslaender',
+  'de_landkreis_kreisfrei',
+  'bl_regierungsbezirke',
+  'bl_landkreis_kreisfrei',
+  'bl_gemeinden_kreisfrei',
+  'lk_gemeinden',
+])
 
 function regionDisplayName(id: string, index: RegionIndex) {
   const f = index.byId.get(id)
@@ -178,46 +206,215 @@ function gebietFromAncestors(id: string, index: RegionIndex, level: string) {
   return null
 }
 
-function deutschlandSimplePresets() {
-  return ['de_bundeslaender', 'de_landkreis_kreisfrei'] satisfies SimpleViewPresetId[]
+function isRegularLandkreis(id: string, index: RegionIndex) {
+  const f = index.byId.get(id)
+  return !!f && regionLevel(f) === '6' && !index.kreisfreieIds.has(id)
 }
 
-function bundeslandSimplePresets(ctx: FocusContext, index: RegionIndex) {
-  const out: SimpleViewPresetId[] = []
-  if (listRegierungsbezirkeInGebiet(ctx.gebiet, index).length > 0) {
-    out.push('bl_regierungsbezirke')
+function filterRegularLandkreisNeighborIds(allowed: Set<string>, index: RegionIndex) {
+  const out = new Set<string>()
+  for (const id of allowed) {
+    if (isRegularLandkreis(id, index)) out.add(id)
   }
-  out.push('bl_landkreis_kreisfrei')
-  out.push('bl_gemeinden_kreisfrei')
   return out
 }
 
-function landkreisSimplePresets() {
-  return ['lk_gemeinden', 'lk_neighbors_landkreise'] satisfies SimpleViewPresetId[]
+function filterGemeindeNeighborIds(allowed: Set<string>, index: RegionIndex) {
+  const out = new Set<string>()
+  for (const id of allowed) {
+    const f = index.byId.get(id)
+    if (f && regionLevel(f) === '8') out.add(id)
+  }
+  return out
 }
 
-function gemeindeSimplePresets() {
-  return ['gm_neighbors'] satisfies SimpleViewPresetId[]
+function gemeindenLevel8InLandkreise(landkreisIds: Iterable<string>, index: RegionIndex) {
+  return gemeindeUnitIdsInLandkreise(landkreisIds, index).filter((id) => {
+    const f = index.byId.get(id)
+    return !!f && regionLevel(f) === '8'
+  })
 }
 
-export function listSimplePresetsForFocus(ctx: FocusContext, index: RegionIndex) {
+function landkreisUnitsInAllowedIds(allowed: Set<string>, index: RegionIndex) {
+  const out = new Set<string>()
+  for (const id of allowed) {
+    const f = index.byId.get(id)
+    if (!f) continue
+    if (isStadtstaatFeature(f) || regionLevel(f) === '6') out.add(id)
+  }
+  return out
+}
+
+function hasNeighborBeyondFocus(allowed: Set<string>, focusId: string) {
+  return [...allowed].some((id) => id !== focusId)
+}
+
+function isNonGemeindeNeighborUnit(id: string, index: RegionIndex) {
+  const f = index.byId.get(id)
+  if (!f) return false
+  if (isStadtstaatFeature(f)) return true
+  const level = regionLevel(f)
+  if (level === '6') return true
+  return level !== '8'
+}
+
+function featureIdsForSimplePreset(
+  preset: SimpleViewPresetId,
+  ctx: FocusContext,
+  index: RegionIndex,
+  features: StatsFeature[],
+  neighbors: NeighborIndex | null,
+) {
+  const scope = simplePresetToViewScope(preset, ctx)
+  if (scope) {
+    return new Set(
+      filterFeaturesForView(features, scope, index)
+        .map(regionId)
+        .filter((id) => id.length > 0),
+    )
+  }
+  const allowed = computeSimpleAllowedIds(preset, ctx, index, neighbors)
+  return new Set(
+    filterFeaturesForSimpleView(features, preset, ctx, index, allowed)
+      .map(regionId)
+      .filter((id) => id.length > 0),
+  )
+}
+
+function presetContentSetsEqual(a: Set<string>, b: Set<string>) {
+  if (a.size !== b.size) return false
+  for (const id of a) if (!b.has(id)) return false
+  return true
+}
+
+const SAME_TYPE_NEIGHBOR_PRESETS = new Set<SimpleViewPresetId>([
+  'lk_neighbors_landkreise',
+  'lk_neighbors_gemeinden',
+  'gm_neighbors',
+])
+
+function dedupePresetsByDistinctContent(
+  presets: SimpleViewPresetId[],
+  ctx: FocusContext,
+  index: RegionIndex,
+  features: StatsFeature[],
+  neighbors: NeighborIndex | null,
+) {
   const out: SimpleViewPresetId[] = []
-  const add = (ids: SimpleViewPresetId[]) => {
-    for (const id of ids) {
-      if (!out.includes(id)) out.push(id)
+  const neighborSeen: Set<string>[] = []
+  for (const preset of presets) {
+    if (HIERARCHY_SIMPLE_PRESETS.has(preset)) {
+      out.push(preset)
+      continue
     }
-  }
-  add(deutschlandSimplePresets())
-  if (ctx.kind !== 'deutschland') {
-    add(bundeslandSimplePresets(ctx, index))
-  }
-  if (ctx.landkreisId) {
-    add(landkreisSimplePresets())
-  }
-  if (ctx.gemeindeId) {
-    add(gemeindeSimplePresets())
+    const ids = featureIdsForSimplePreset(preset, ctx, index, features, neighbors)
+    if (SAME_TYPE_NEIGHBOR_PRESETS.has(preset)) {
+      out.push(preset)
+      neighborSeen.push(ids)
+      continue
+    }
+    if (preset === 'neighbors_other' || preset === 'lk_neighbors_other') {
+      if (neighborSeen.some((prev) => presetContentSetsEqual(prev, ids))) continue
+      out.push(preset)
+      neighborSeen.push(ids)
+      continue
+    }
+    out.push(preset)
   }
   return out
+}
+
+function shouldOfferGemeindeAllNeighborsPreset(
+  ctx: FocusContext,
+  index: RegionIndex,
+  neighbors: NeighborIndex | null,
+) {
+  if (!neighbors) return false
+  if (ctx.kind !== 'gemeinde' || !ctx.gemeindeId || !ctx.landkreisId) return false
+  if (!isRegularLandkreis(ctx.landkreisId, index)) return false
+  const all = computeSimpleAllowedIds('neighbors_other', ctx, index, neighbors)
+  if (!all || !hasNeighborBeyondFocus(all, ctx.gemeindeId)) return false
+  return [...all].some((id) => id !== ctx.gemeindeId && isNonGemeindeNeighborUnit(id, index))
+}
+
+function shouldOfferLandkreisAllNeighborsPreset(
+  ctx: FocusContext,
+  index: RegionIndex,
+  neighbors: NeighborIndex | null,
+  preset: 'neighbors_other' | 'lk_neighbors_other',
+) {
+  if (!neighbors) return false
+  const landkreisId =
+    preset === 'lk_neighbors_other' && ctx.kind === 'gemeinde'
+      ? ctx.landkreisId
+      : ctx.kind === 'landkreis'
+        ? ctx.landkreisId
+        : null
+  if (!landkreisId || !isRegularLandkreis(landkreisId, index)) return false
+  const all = computeSimpleAllowedIds(preset, ctx, index, neighbors)
+  if (!all || !hasNeighborBeyondFocus(all, landkreisId)) return false
+  const sameType = computeSimpleAllowedIds('lk_neighbors_landkreise', ctx, index, neighbors)
+  if (sameType && presetContentSetsEqual(all, sameType)) return false
+  return true
+}
+
+function isSimplePresetApplicable(
+  preset: SimpleViewPresetId,
+  ctx: FocusContext,
+  index: RegionIndex,
+  neighbors: NeighborIndex | null,
+) {
+  switch (preset) {
+    case 'de_bundeslaender':
+    case 'de_landkreis_kreisfrei':
+      return true
+    case 'bl_regierungsbezirke':
+      return (
+        ctx.kind !== 'deutschland' && listRegierungsbezirkeInGebiet(ctx.gebiet, index).length > 0
+      )
+    case 'bl_landkreis_kreisfrei':
+    case 'bl_gemeinden_kreisfrei':
+      return ctx.kind !== 'deutschland'
+    case 'lk_gemeinden':
+      return !!ctx.landkreisId && isRegularLandkreis(ctx.landkreisId, index)
+    case 'neighbors_other':
+      if (ctx.kind === 'gemeinde') {
+        return shouldOfferGemeindeAllNeighborsPreset(ctx, index, neighbors)
+      }
+      if (ctx.kind === 'landkreis') {
+        return shouldOfferLandkreisAllNeighborsPreset(ctx, index, neighbors, 'neighbors_other')
+      }
+      return false
+    case 'gm_neighbors':
+      return !!ctx.gemeindeId
+    case 'lk_neighbors_other':
+      return (
+        ctx.kind === 'gemeinde' &&
+        shouldOfferLandkreisAllNeighborsPreset(ctx, index, neighbors, 'lk_neighbors_other')
+      )
+    case 'lk_neighbors_landkreise':
+    case 'lk_neighbors_gemeinden':
+      return (
+        !!ctx.landkreisId &&
+        isRegularLandkreis(ctx.landkreisId, index) &&
+        (ctx.kind === 'landkreis' || ctx.kind === 'gemeinde')
+      )
+    default:
+      return false
+  }
+}
+
+export function listSimplePresetsForFocus(
+  ctx: FocusContext,
+  index: RegionIndex,
+  options?: { features?: StatsFeature[]; neighbors?: NeighborIndex | null },
+) {
+  const features = options?.features ?? [...index.byId.values()]
+  const neighbors = options?.neighbors ?? null
+  const candidates = SIMPLE_VIEW_PRESET_IDS.filter((preset) =>
+    isSimplePresetApplicable(preset, ctx, index, neighbors),
+  )
+  return dedupePresetsByDistinctContent(candidates, ctx, index, features, neighbors)
 }
 
 export function defaultSimplePresetForFocus(ctx: FocusContext, index: RegionIndex) {
@@ -246,33 +443,58 @@ export function simplePresetLabel(id: SimpleViewPresetId, ctx: FocusContext, ind
       return 'Gemeinden in ' + bundeslandDisplayName(ctx, index)
     case 'lk_gemeinden':
       return 'Gemeinden in ' + landkreisDisplayName(ctx, index)
-    case 'lk_neighbors_landkreise':
-    case 'lk_neighbors_gemeinden':
-      return 'Nachbarn von ' + landkreisDisplayName(ctx, index)
-    case 'gm_neighbors':
+    case 'neighbors_other':
       return 'Nachbarn von ' + ctx.focusName
+    case 'gm_neighbors':
+      return 'Nachbargemeinden von ' + ctx.focusName
+    case 'lk_neighbors_other':
+      return 'Nachbarn von ' + landkreisDisplayName(ctx, index)
+    case 'lk_neighbors_landkreise':
+      return 'Nachbarlandkreise von ' + landkreisDisplayName(ctx, index)
+    case 'lk_neighbors_gemeinden':
+      return 'Nachbargemeinden von ' + landkreisDisplayName(ctx, index)
     default:
       return id
   }
 }
 
-export function presetUsesNeighborFilter(preset: SimpleViewPresetId) {
+export type NeighborFilterPreset = Extract<
+  SimpleViewPresetId,
+  | 'lk_neighbors_landkreise'
+  | 'lk_neighbors_gemeinden'
+  | 'lk_neighbors_other'
+  | 'neighbors_other'
+  | 'gm_neighbors'
+>
+
+export function presetUsesNeighborFilter(
+  preset: SimpleViewPresetId,
+): preset is NeighborFilterPreset {
   return (
     preset === 'lk_neighbors_landkreise' ||
     preset === 'lk_neighbors_gemeinden' ||
+    preset === 'lk_neighbors_other' ||
+    preset === 'neighbors_other' ||
     preset === 'gm_neighbors'
   )
 }
 
-export function simplePresetDarstellung(preset: SimpleViewPresetId): DisplayPresetId {
+export function simplePresetDarstellung(
+  preset: SimpleViewPresetId,
+  ctx?: FocusContext | null,
+): DisplayPresetId {
   switch (preset) {
     case 'de_bundeslaender':
       return 'bundeslaender'
     case 'de_landkreis_kreisfrei':
     case 'bl_landkreis_kreisfrei':
     case 'lk_neighbors_landkreise':
-    case 'lk_neighbors_gemeinden':
+    case 'lk_neighbors_other':
       return 'landkreis_kreisfrei'
+    case 'neighbors_other':
+      return ctx?.kind === 'gemeinde' ? 'gemeinden_kreisfrei' : 'landkreis_kreisfrei'
+    case 'lk_neighbors_gemeinden':
+      return 'gemeinden'
     case 'bl_regierungsbezirke':
       return 'regierungsbezirke'
     case 'bl_gemeinden_kreisfrei':
@@ -348,7 +570,12 @@ export function neighborCandidateIds(
   ctx: FocusContext,
   index: RegionIndex,
 ) {
-  if (preset === 'lk_neighbors_landkreise' || preset === 'lk_neighbors_gemeinden') {
+  if (
+    preset === 'lk_neighbors_landkreise' ||
+    preset === 'lk_neighbors_gemeinden' ||
+    preset === 'lk_neighbors_other' ||
+    preset === 'neighbors_other'
+  ) {
     if (!ctx.landkreisId) return []
     return landkreisIdsInBundesland(ctx.bundeslandId, index)
   }
@@ -362,10 +589,25 @@ function matchesLandkreisNeighborFeature(
 ) {
   const id = regionId(f)
   if (!id || !allowedIds.has(id)) return false
-  const level = regionLevel(f)
-  if (level === '6') return true
-  if (isStadtstaatFeature(f)) return true
-  return false
+  return isRegularLandkreis(id, index)
+}
+
+function matchesGemeindeNeighborFeature(f: StatsFeature, allowedIds: Set<string>) {
+  const id = regionId(f)
+  if (!id || !allowedIds.has(id)) return false
+  return regionLevel(f) === '8'
+}
+
+function matchesAllNeighborsFeature(
+  f: StatsFeature,
+  allowedIds: Set<string>,
+  index: RegionIndex,
+  ctx: FocusContext,
+) {
+  const id = regionId(f)
+  if (!id || !allowedIds.has(id)) return false
+  if (ctx.kind === 'gemeinde') return matchesGemeindeUnitFeature(f, allowedIds, index)
+  return isStadtstaatFeature(f) || regionLevel(f) === '6'
 }
 
 function matchesGemeindeUnitFeature(f: StatsFeature, allowedIds: Set<string>, index: RegionIndex) {
@@ -378,6 +620,61 @@ function matchesGemeindeUnitFeature(f: StatsFeature, allowedIds: Set<string>, in
   return false
 }
 
+function neighborAllowedIdsWithoutIndex(
+  preset: NeighborFilterPreset,
+  ctx: FocusContext,
+  index: RegionIndex,
+) {
+  if (
+    (preset === 'lk_neighbors_landkreise' ||
+      preset === 'lk_neighbors_gemeinden' ||
+      preset === 'lk_neighbors_other' ||
+      (preset === 'neighbors_other' && ctx.kind === 'landkreis')) &&
+    ctx.landkreisId
+  ) {
+    if (preset === 'lk_neighbors_gemeinden') {
+      return new Set(gemeindenLevel8InLandkreise([ctx.landkreisId], index))
+    }
+    return new Set([ctx.landkreisId])
+  }
+  if (
+    (preset === 'gm_neighbors' || (preset === 'neighbors_other' && ctx.kind === 'gemeinde')) &&
+    ctx.gemeindeId
+  ) {
+    return new Set([ctx.gemeindeId])
+  }
+  return new Set([ctx.focusId])
+}
+
+export function computeSimpleAllowedIds(
+  preset: SimpleViewPresetId,
+  ctx: FocusContext,
+  index: RegionIndex,
+  neighbors: NeighborIndex | null,
+) {
+  if (!presetUsesNeighborFilter(preset)) return null
+  if (!neighbors) return neighborAllowedIdsWithoutIndex(preset, ctx, index)
+  const allowed = computeNeighborAllowedIds(preset, ctx, index, neighbors)
+  if (preset === 'lk_neighbors_landkreise' && ctx.landkreisId) {
+    return filterRegularLandkreisNeighborIds(allowed, index)
+  }
+  if (preset === 'lk_neighbors_gemeinden' && ctx.landkreisId) {
+    const lkIds = filterRegularLandkreisNeighborIds(allowed, index)
+    return new Set(gemeindenLevel8InLandkreise(lkIds, index))
+  }
+  if (
+    (preset === 'neighbors_other' && ctx.kind === 'landkreis') ||
+    preset === 'lk_neighbors_other'
+  ) {
+    if (!ctx.landkreisId) return allowed
+    return landkreisUnitsInAllowedIds(allowed, index)
+  }
+  if (preset === 'gm_neighbors') {
+    return filterGemeindeNeighborIds(allowed, index)
+  }
+  return allowed
+}
+
 export function filterFeaturesForSimpleView(
   features: StatsFeature[],
   preset: SimpleViewPresetId,
@@ -385,7 +682,6 @@ export function filterFeaturesForSimpleView(
   index: RegionIndex,
   allowedIds: Set<string> | null,
 ) {
-  const darstellung = simplePresetDarstellung(preset)
   const scope = simplePresetToViewScope(preset, ctx)
   if (scope) {
     return filterFeaturesForView(features, scope, index)
@@ -395,13 +691,24 @@ export function filterFeaturesForSimpleView(
   return features.filter((f) => {
     const id = regionId(f)
     if (!id || !allowedIds.has(id)) return false
-    if (preset === 'lk_neighbors_landkreise' || preset === 'lk_neighbors_gemeinden') {
+    if (preset === 'lk_neighbors_landkreise') {
       return matchesLandkreisNeighborFeature(f, allowedIds, index)
     }
-    if (preset === 'gm_neighbors') {
-      return matchesGemeindeUnitFeature(f, allowedIds, index)
+    if (preset === 'lk_neighbors_gemeinden') {
+      return matchesGemeindeNeighborFeature(f, allowedIds)
     }
-    return matchesDarstellungLevel(f, darstellung, index, ctx)
+    if (preset === 'neighbors_other') {
+      return matchesAllNeighborsFeature(f, allowedIds, index, ctx)
+    }
+    if (preset === 'lk_neighbors_other') {
+      const id = regionId(f)
+      if (!id || !allowedIds.has(id)) return false
+      return isStadtstaatFeature(f) || regionLevel(f) === '6'
+    }
+    if (preset === 'gm_neighbors') {
+      return matchesGemeindeNeighborFeature(f, allowedIds)
+    }
+    return false
   })
 }
 

@@ -1,128 +1,134 @@
 ;(() => {
-  var A = Object.defineProperty
-  var k = (p) => p
-  function _(p, n) {
-    this[p] = k.bind(null, n)
+  var v = Object.defineProperty
+  var i = (p) => p
+  function l(p, n) {
+    this[p] = i.bind(null, n)
   }
-  var l = (p, n) => {
-    for (var t in n) A(p, t, { get: n[t], enumerable: !0, configurable: !0, set: _.bind(n, t) })
+  var g = (p, n) => {
+    for (var x in n) v(p, x, { get: n[x], enumerable: !0, configurable: !0, set: l.bind(n, x) })
   }
-  var X = {}
-  l(X, {
-    roadClassForKey: () => J,
-    maplibrePropertyInFilter: () => qp,
-    listFilteredRoadClassLengths: () => tp,
-    listFilteredHighwayTagLengths: () => Mp,
-    listFilteredBikelaneTagLengths: () => op,
-    listFilteredBikelaneClassLengths: () => cp,
-    isLowRoadNetworkForScale: () => Y,
-    highwayClassDefinition: () => q,
-    getRoadSums: () => m,
-    getBikelaneSums: () => T,
-    formatStatPctUi: () => pp,
-    formatStatPct: () => y,
-    formatStatKm: () => s,
-    enabledRoadHighwayTags: () => bp,
-    enabledResidentialRoadHighwayTags: () => Up,
-    enabledMajorRoadHighwayTags: () => Hp,
-    enabledBikelaneCategoryTags: () => Np,
-    computeFilteredLengths: () => np,
-    computeChoroplethScaleRange: () => B,
-    bikelaneCategoryTags: () => E,
-    STAT_PCT_UI_DECIMALS: () => Z,
-    STAT_PCT_MAX_DECIMALS: () => u,
-    STAT_KM_ROAD_UI_DECIMALS: () => a,
-    STAT_KM_MAX_DECIMALS: () => L,
-    STAT_KM_BIKE_UI_DECIMALS: () => g,
-    ROAD_CLASS_ORDER: () => $,
-    ROAD_CLASS_LABELS: () => e,
-    RADINFRA_DEFAULT_FILTER: () => v,
-    DEFAULT_PERCENTILE_HIGH: () => r,
-    DEFAULT_MIN_ROAD_KM_FOR_SCALE: () => h,
-    DEFAULT_IQR_MULTIPLIER: () => R,
-    BIKELANE_CLASS_ORDER: () => Q,
-    BIKELANE_CLASS_LABELS: () => C,
+  var t = {}
+  g(t, {
+    roadClassForKey: () => Y,
+    maplibreRoadOverlayFiltersForHighwayTag: () => jp,
+    maplibreRoadOverlayFiltersForClass: () => Vp,
+    maplibrePropertyInFilter: () => E,
+    maplibreBikelaneOverlayFilterForTag: () => Wp,
+    maplibreBikelaneOverlayFilterForClass: () => zp,
+    listFilteredRoadClassLengths: () => cp,
+    listFilteredHighwayTagLengths: () => Np,
+    listFilteredBikelaneTagLengths: () => qp,
+    listFilteredBikelaneClassLengths: () => Hp,
+    isLowRoadNetworkForScale: () => I,
+    highwayTagsForRoadClass: () => k,
+    highwayClassDefinition: () => F,
+    getRoadSums: () => K,
+    getBikelaneSums: () => o,
+    formatStatPctUi: () => xp,
+    formatStatPct: () => A,
+    formatStatKm: () => np,
+    enabledRoadHighwayTags: () => Pp,
+    enabledResidentialRoadHighwayTags: () => Ep,
+    enabledMajorRoadHighwayTags: () => Qp,
+    enabledBikelaneCategoryTags: () => Fp,
+    computeFilteredLengths: () => Mp,
+    computeChoroplethScaleRange: () => d,
+    combineMaplibreFilters: () => Yp,
+    bikelaneCategoryTags: () => V,
+    STAT_PCT_UI_DECIMALS: () => O,
+    STAT_PCT_MAX_DECIMALS: () => C,
+    STAT_KM_ROAD_UI_DECIMALS: () => pp,
+    STAT_KM_MAX_DECIMALS: () => w,
+    STAT_KM_BIKE_UI_DECIMALS: () => s,
+    ROAD_CLASS_ORDER: () => T,
+    ROAD_CLASS_LABELS: () => D,
+    RADINFRA_DEFAULT_FILTER: () => a,
+    DEFAULT_PERCENTILE_HIGH: () => h,
+    DEFAULT_MIN_ROAD_KM_FOR_SCALE: () => R,
+    DEFAULT_IQR_MULTIPLIER: () => f,
+    BIKELANE_CLASS_ORDER: () => W,
+    BIKELANE_CLASS_LABELS: () => S,
   })
-  var h = 5,
-    r = 0.95,
-    R = 1.5
-  function Y(p, n = 5) {
+  var R = 5,
+    h = 0.95,
+    f = 1.5
+  function I(p, n = 5) {
     return !(Number.isFinite(p) && p >= n)
   }
-  function W(p, n) {
+  function X(p, n) {
     if (!p.length) return Number.NaN
     if (p.length === 1) return p[0]
-    let t = n * (p.length - 1),
-      x = Math.floor(t),
-      c = Math.ceil(t),
-      M = t - x
-    return p[x] * (1 - M) + p[c] * M
+    let x = n * (p.length - 1),
+      c = Math.floor(x),
+      M = Math.ceil(x),
+      H = x - c
+    return p[c] * (1 - H) + p[M] * H
   }
-  function B(p, n = {}) {
-    let t = n.minRoadKmForScale ?? 5,
-      x = n.robustEnabled ?? !0,
-      c = n.percentileHigh ?? 0.95,
-      M = n.iqrMultiplier ?? 1.5,
-      P = n.manualCapEnabled ?? !1,
-      F = n.manualCapPct ?? 50,
-      G = p.filter((o) => Number.isFinite(o.bikeSharePct))
-    if (!G.length)
+  function d(p, n = {}) {
+    let x = n.minRoadKmForScale ?? 5,
+      c = n.robustEnabled ?? !0,
+      M = n.percentileHigh ?? 0.95,
+      H = n.iqrMultiplier ?? 1.5,
+      q = n.manualCapEnabled ?? !1,
+      P = n.manualCapPct ?? 50,
+      j = p.filter((U) => Number.isFinite(U.bikeSharePct))
+    if (!j.length)
       return {
         min: 0,
         max: 20,
         dataMin: 0,
         dataMax: 20,
         scaleCapped: !1,
-        capPct: F,
+        capPct: P,
         representativeMax: 20,
         outlierCount: 0,
         excludedLowRoadCount: 0,
         robustApplied: !1,
       }
-    let f = G.map((o) => o.bikeSharePct),
-      D = Math.min(...f),
-      V = Math.max(...f),
-      O = G.filter((o) => !Y(o.roadSumKm, t)),
-      w = G.length - O.length,
-      H = O.map((o) => o.bikeSharePct).sort((o, I) => o - I),
-      U = V,
-      d = 0,
-      K = !1
-    if (x && H.length > 0) {
-      if (((K = !0), (U = W(H, c)), H.length >= 4)) {
-        let o = W(H, 0.25),
-          I = W(H, 0.75),
-          i = I + M * (I - o)
-        U = Math.min(U, i)
+    let m = j.map((U) => U.bikeSharePct),
+      _ = Math.min(...m),
+      Z = Math.max(...m),
+      B = j.filter((U) => !I(U.roadSumKm, x)),
+      y = j.length - B.length,
+      b = B.map((U) => U.bikeSharePct).sort((U, z) => U - z),
+      G = Z,
+      L = 0,
+      u = !1
+    if (c && b.length > 0) {
+      if (((u = !0), (G = X(b, M)), b.length >= 4)) {
+        let U = X(b, 0.25),
+          z = X(b, 0.75),
+          e = z + H * (z - U)
+        G = Math.min(G, e)
       }
-      d = H.filter((o) => o > U + 0.000000001).length
-    } else if (H.length > 0) U = H[H.length - 1]
-    let j = U,
-      z = !1,
-      S = x && V > U + 0.01
-    if (P && j > F) ((j = F), (z = !0))
-    else if (S) z = !0
+      L = b.filter((U) => U > G + 0.000000001).length
+    } else if (b.length > 0) G = b[b.length - 1]
+    let $ = G,
+      J = !1,
+      r = c && Z > G + 0.01
+    if (q && $ > P) (($ = P), (J = !0))
+    else if (r) J = !0
     return {
       min: 0,
-      max: j,
-      dataMin: D,
-      dataMax: V,
-      scaleCapped: z,
-      capPct: P ? F : U,
-      representativeMax: U,
-      outlierCount: d,
-      excludedLowRoadCount: w,
-      robustApplied: K,
+      max: $,
+      dataMin: _,
+      dataMax: Z,
+      scaleCapped: J,
+      capPct: q ? P : G,
+      representativeMax: G,
+      outlierCount: L,
+      excludedLowRoadCount: y,
+      robustApplied: u,
     }
   }
-  var $ = ['motorway_like', 'primary_like', 'secondary_like', 'residential_like'],
-    e = {
+  var T = ['motorway_like', 'primary_like', 'secondary_like', 'residential_like'],
+    D = {
       motorway_like: 'Autobahn & Kraftfahrstraßen',
       primary_like: 'Bundes- und Landesstraßen',
       secondary_like: 'Kreis- und Nebenstraßen',
       residential_like: 'Wohn- und Erschließungsstraßen',
     },
-    q = {
+    F = {
       motorway: 'motorway_like',
       motorway_link: 'motorway_like',
       trunk: 'primary_like',
@@ -146,7 +152,7 @@
       pedestrian: 'residential_like',
       unspecified_road: 'residential_like',
     },
-    Q = [
+    W = [
       'needsClarification',
       'bike_with_foot_traffic',
       'bike_with_car_traffic',
@@ -154,7 +160,7 @@
       'bike_next_to_car_traffic',
       'separate_bike_traffic',
     ],
-    C = {
+    S = {
       needsClarification: 'Klärung nötig',
       bike_with_foot_traffic: 'Rad mit Fußverkehr',
       bike_with_car_traffic: 'Rad mit Kfz-Verkehr',
@@ -162,7 +168,7 @@
       bike_next_to_car_traffic: 'Rad neben Kfz-Verkehr',
       separate_bike_traffic: 'Getrennter Radverkehr',
     },
-    E = {
+    V = {
       needsClarification: ['needsClarification'],
       bike_with_foot_traffic: [
         'footwayBicycleYes_isolated',
@@ -200,7 +206,7 @@
         'cyclewayOnHighwayProtected',
       ],
     },
-    v = {
+    a = {
       road: { motorway_like: !0, primary_like: !0, secondary_like: !0, residential_like: !0 },
       bikelane: {
         needsClarification: !0,
@@ -211,163 +217,193 @@
         separate_bike_traffic: !0,
       },
     },
-    L = 3,
-    u = 3,
-    Z = 1,
-    g = 1,
-    a = 0
-  function s(p, n = L) {
+    w = 3,
+    C = 3,
+    O = 1,
+    s = 1,
+    pp = 0
+  function np(p, n = w) {
     if (!Number.isFinite(p)) return '–'
     return p.toLocaleString('de-DE', { maximumFractionDigits: n })
   }
-  function y(p, n = u, t = 0) {
+  function A(p, n = C, x = 0) {
     if (!Number.isFinite(p)) return '–'
-    return p.toLocaleString('de-DE', { minimumFractionDigits: t, maximumFractionDigits: n })
+    return p.toLocaleString('de-DE', { minimumFractionDigits: x, maximumFractionDigits: n })
   }
-  function pp(p) {
-    return y(p, Z, Z)
-  }
-  function b(p) {
-    let n = 0
-    for (let t of p) if (typeof t === 'number' && Number.isFinite(t)) n += t
-    return n
+  function xp(p) {
+    return A(p, O, O)
   }
   function N(p) {
+    let n = 0
+    for (let x of p) if (typeof x === 'number' && Number.isFinite(x)) n += x
+    return n
+  }
+  function Q(p) {
     if (p == null) return {}
     if (typeof p === 'string')
       try {
-        return N(JSON.parse(p))
+        return Q(JSON.parse(p))
       } catch {
         return {}
       }
     if (typeof p !== 'object' || Array.isArray(p)) return {}
     let n = {}
-    for (let [t, x] of Object.entries(p)) {
-      let c = typeof x === 'number' ? x : Number(x)
-      if (Number.isFinite(c)) n[t] = c
+    for (let [x, c] of Object.entries(p)) {
+      let M = typeof c === 'number' ? c : Number(c)
+      if (Number.isFinite(M)) n[x] = M
     }
     return n
   }
-  function J(p) {
-    return q[p] ?? 'secondary_like'
+  function Y(p) {
+    return F[p] ?? 'secondary_like'
   }
-  function m(p) {
-    let n = (t) =>
+  function K(p) {
+    let n = (x) =>
       Object.entries(p)
-        .map(([x, c]) => (J(x) === t ? c : void 0))
-        .filter((x) => typeof x === 'number' && Number.isFinite(x))
+        .map(([c, M]) => (Y(c) === x ? M : void 0))
+        .filter((c) => typeof c === 'number' && Number.isFinite(c))
     return {
-      sum: b(Object.values(p)),
-      motorway_like: b(n('motorway_like')),
-      primary_like: b(n('primary_like')),
-      secondary_like: b(n('secondary_like')),
-      residential_like: b(n('residential_like')),
+      sum: N(Object.values(p)),
+      motorway_like: N(n('motorway_like')),
+      primary_like: N(n('primary_like')),
+      secondary_like: N(n('secondary_like')),
+      residential_like: N(n('residential_like')),
     }
   }
-  function T(p) {
+  function o(p) {
     let n = p ?? {},
-      t = (x) =>
+      x = (c) =>
         Object.entries(n)
-          .map(([c, M]) => {
-            return (E[x] ?? []).includes(c) ? M : void 0
+          .map(([M, H]) => {
+            return (V[c] ?? []).includes(M) ? H : void 0
           })
-          .filter((c) => typeof c === 'number' && Number.isFinite(c))
+          .filter((M) => typeof M === 'number' && Number.isFinite(M))
     return {
-      sum: b(Object.values(n)),
-      needsClarification: b(t('needsClarification')),
-      bike_with_foot_traffic: b(t('bike_with_foot_traffic')),
-      bike_with_car_traffic: b(t('bike_with_car_traffic')),
-      bike_next_to_foot_traffic: b(t('bike_next_to_foot_traffic')),
-      bike_next_to_car_traffic: b(t('bike_next_to_car_traffic')),
-      separate_bike_traffic: b(t('separate_bike_traffic')),
+      sum: N(Object.values(n)),
+      needsClarification: N(x('needsClarification')),
+      bike_with_foot_traffic: N(x('bike_with_foot_traffic')),
+      bike_with_car_traffic: N(x('bike_with_car_traffic')),
+      bike_next_to_foot_traffic: N(x('bike_next_to_foot_traffic')),
+      bike_next_to_car_traffic: N(x('bike_next_to_car_traffic')),
+      separate_bike_traffic: N(x('separate_bike_traffic')),
     }
   }
-  function np(p, n, t) {
-    let x = m(N(p)),
-      c = T(N(n)),
-      M = 0
-    for (let F of $) if (t.road[F]) M += x[F]
-    let P = 0
-    for (let F of Q) if (t.bikelane[F]) P += c[F]
-    return { roadKm: M, bikeKm: P }
-  }
-  function tp(p, n) {
-    let t = m(N(p)),
-      x = []
-    for (let c of $) {
-      if (!n.road[c]) continue
-      let M = t[c]
-      if (M > 0) x.push({ id: c, label: e[c], km: M })
-    }
-    return x
+  function Mp(p, n, x) {
+    let c = K(Q(p)),
+      M = o(Q(n)),
+      H = 0
+    for (let P of T) if (x.road[P]) H += c[P]
+    let q = 0
+    for (let P of W) if (x.bikelane[P]) q += M[P]
+    return { roadKm: H, bikeKm: q }
   }
   function cp(p, n) {
-    let t = T(N(p)),
-      x = []
-    for (let c of Q) {
-      if (!n.bikelane[c]) continue
-      let M = t[c]
-      if (M > 0) x.push({ id: c, label: C[c], km: M })
+    let x = K(Q(p)),
+      c = []
+    for (let M of T) {
+      if (!n.road[M]) continue
+      let H = x[M]
+      if (H > 0) c.push({ id: M, label: D[M], km: H })
     }
-    return x
+    return c
   }
-  var xp = new Map(Object.entries(E).flatMap(([p, n]) => n.map((t) => [t, p])))
-  function Mp(p, n) {
-    let t = N(p),
-      x = []
-    for (let [c, M] of Object.entries(t)) {
-      if (!(M > 0)) continue
-      let P = J(c)
-      if (!n.road[P]) continue
-      x.push({ id: c, label: c, km: M })
+  function Hp(p, n) {
+    let x = o(Q(p)),
+      c = []
+    for (let M of W) {
+      if (!n.bikelane[M]) continue
+      let H = x[M]
+      if (H > 0) c.push({ id: M, label: S[M], km: H })
     }
-    return (x.sort((c, M) => M.km - c.km), x)
+    return c
   }
-  function op(p, n) {
-    let t = N(p),
-      x = []
-    for (let [c, M] of Object.entries(t)) {
-      if (!(M > 0)) continue
-      let P = xp.get(c)
-      if (!P || !n.bikelane[P]) continue
-      x.push({ id: c, label: c, km: M })
+  var Up = new Map(Object.entries(V).flatMap(([p, n]) => n.map((x) => [x, p])))
+  function Np(p, n) {
+    let x = Q(p),
+      c = []
+    for (let [M, H] of Object.entries(x)) {
+      if (!(H > 0)) continue
+      let q = Y(M)
+      if (!n.road[q]) continue
+      c.push({ id: M, label: M, km: H })
     }
-    return (x.sort((c, M) => M.km - c.km), x)
-  }
-  function bp(p) {
-    let n = []
-    for (let [t, x] of Object.entries(q)) if (p.road[x]) n.push(t)
-    return n
-  }
-  var Pp = ['motorway_like', 'primary_like', 'secondary_like'],
-    Fp = ['residential_like']
-  function Hp(p) {
-    let n = []
-    for (let t of Pp) {
-      if (!p.road[t]) continue
-      for (let [x, c] of Object.entries(q)) if (c === t) n.push(x)
-    }
-    return n
-  }
-  function Up(p) {
-    let n = []
-    for (let t of Fp) {
-      if (!p.road[t]) continue
-      for (let [x, c] of Object.entries(q)) if (c === t) n.push(x)
-    }
-    return n
-  }
-  function Np(p) {
-    let n = []
-    for (let t of Q) {
-      if (!p.bikelane[t]) continue
-      n.push(...E[t])
-    }
-    return n
+    return (c.sort((M, H) => H.km - M.km), c)
   }
   function qp(p, n) {
+    let x = Q(p),
+      c = []
+    for (let [M, H] of Object.entries(x)) {
+      if (!(H > 0)) continue
+      let q = Up.get(M)
+      if (!q || !n.bikelane[q]) continue
+      c.push({ id: M, label: M, km: H })
+    }
+    return (c.sort((M, H) => H.km - M.km), c)
+  }
+  function Pp(p) {
+    let n = []
+    for (let [x, c] of Object.entries(F)) if (p.road[c]) n.push(x)
+    return n
+  }
+  var bp = ['motorway_like', 'primary_like', 'secondary_like'],
+    Gp = ['residential_like']
+  function Qp(p) {
+    let n = []
+    for (let x of bp) {
+      if (!p.road[x]) continue
+      for (let [c, M] of Object.entries(F)) if (M === x) n.push(c)
+    }
+    return n
+  }
+  function Ep(p) {
+    let n = []
+    for (let x of Gp) {
+      if (!p.road[x]) continue
+      for (let [c, M] of Object.entries(F)) if (M === x) n.push(c)
+    }
+    return n
+  }
+  function Fp(p) {
+    let n = []
+    for (let x of W) {
+      if (!p.bikelane[x]) continue
+      n.push(...V[x])
+    }
+    return n
+  }
+  function E(p, n) {
     if (!n.length) return ['literal', !1]
     return ['match', ['get', p], n, !0, !1]
   }
-  globalThis.TildaStats = X
+  function k(p) {
+    let n = []
+    for (let [x, c] of Object.entries(F)) if (c === p) n.push(x)
+    return n
+  }
+  function Vp(p) {
+    let n = k(p),
+      x = p === 'residential_like'
+    return { major: E('road', x ? [] : n), residential: E('road', x ? n : []) }
+  }
+  function jp(p) {
+    let x = Y(p) === 'residential_like'
+    return { major: E('road', x ? [] : [p]), residential: E('road', x ? [p] : []) }
+  }
+  function zp(p) {
+    return E('category', [...V[p]])
+  }
+  function Wp(p) {
+    return E('category', [p])
+  }
+  function Yp(...p) {
+    let n = p.filter((x) => {
+      if (!x) return !1
+      if (Array.isArray(x) && x[0] === 'literal' && x[1] === !1) return !1
+      return !0
+    })
+    if (!n.length) return ['literal', !1]
+    if (n.length === 1) return n[0]
+    return ['all', ...n]
+  }
+  globalThis.TildaStats = t
 })()

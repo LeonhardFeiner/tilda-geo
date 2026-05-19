@@ -110,6 +110,7 @@ export type RegionIndex = {
   kreisfreieIds: Set<string>
   parentById: Map<string, string>
   byId: Map<string, StatsFeature>
+  idsByLevel: Map<string, string[]>
   bundeslaender: RegionRef[]
   flaechenlaender: RegionRef[]
   stadtstaaten: RegionRef[]
@@ -131,6 +132,7 @@ function regionId(f: StatsFeature) {
 
 export function buildRegionIndex(features: StatsFeature[]): RegionIndex {
   const byId = new Map<string, StatsFeature>()
+  const idsByLevel = new Map<string, string[]>()
   const parentById = new Map<string, string>()
   const childrenByParent = new Map<string, StatsFeature[]>()
 
@@ -138,6 +140,12 @@ export function buildRegionIndex(features: StatsFeature[]): RegionIndex {
     const id = regionId(f)
     if (!id) continue
     byId.set(id, f)
+    const level = regionLevel(f)
+    if (level) {
+      const levelIds = idsByLevel.get(level) ?? []
+      levelIds.push(id)
+      idsByLevel.set(level, levelIds)
+    }
     const parent = f.properties?.parent_id
     if (parent) {
       parentById.set(id, parent)
@@ -147,14 +155,18 @@ export function buildRegionIndex(features: StatsFeature[]): RegionIndex {
     }
   }
 
+  const landkreisWithGemeinden = new Set<string>()
+  for (const f of features) {
+    if (regionLevel(f) !== '8') continue
+    const lk = f.properties?.landkreis_id
+    if (lk) landkreisWithGemeinden.add(lk)
+  }
+
   const kreisfreieIds = new Set<string>()
   for (const f of features) {
     if (regionLevel(f) !== '6') continue
     const id = regionId(f)
-    const hasGemeinden = features.some(
-      (g) => regionLevel(g) === '8' && g.properties?.landkreis_id === id,
-    )
-    if (!hasGemeinden) kreisfreieIds.add(id)
+    if (!landkreisWithGemeinden.has(id)) kreisfreieIds.add(id)
   }
 
   let deutschlandId: string | null = null
@@ -182,6 +194,7 @@ export function buildRegionIndex(features: StatsFeature[]): RegionIndex {
     kreisfreieIds,
     parentById,
     byId,
+    idsByLevel,
     bundeslaender,
     flaechenlaender,
     stadtstaaten,
@@ -587,6 +600,25 @@ function comparePresetsForDarstellungList(
   return a.label.localeCompare(b.label, 'de')
 }
 
+export function hasFeaturesForDarstellungPreset(
+  features: StatsFeature[],
+  view: ViewScope,
+  preset: DisplayPresetId,
+  index: RegionIndex,
+) {
+  const scopeLevel = scopeLevelFor(view.gebiet, view.untergebiet)
+  const scopeId = scopeIdFor(view.gebiet, view.untergebiet)
+  const pool = darstellungCandidateFeatures(features, { ...view, darstellung: preset }, index)
+
+  for (const f of pool) {
+    if (!matchesDisplayPreset(f, preset, index, view.gebiet, view.untergebiet)) continue
+    if (!featureWithinScope(f, view.gebiet, view.untergebiet, index)) continue
+    if (scopeId && regionId(f) === scopeId && presetMinLevel(preset) <= scopeLevel) continue
+    return true
+  }
+  return false
+}
+
 export function listDarstellungPresetsForScope(
   view: ViewScope,
   index: RegionIndex,
@@ -597,7 +629,7 @@ export function listDarstellungPresetsForScope(
     if (!isPresetAllowedForScope(preset.id, scopeLevel, index, view.gebiet, view.untergebiet)) {
       return false
     }
-    return filterFeaturesForView(features, { ...view, darstellung: preset.id }, index).length > 0
+    return hasFeaturesForDarstellungPreset(features, view, preset.id, index)
   })
 
   return available.sort((a, b) =>
@@ -716,6 +748,52 @@ function featuresCountAtLevel(
   return n
 }
 
+function darstellungCandidateFeatures(
+  features: StatsFeature[],
+  view: ViewScope,
+  index: RegionIndex,
+) {
+  const deutschland = isDeutschlandScope(view.gebiet, view.untergebiet)
+  const levelsForPreset = (preset: DisplayPresetId) => {
+    switch (preset) {
+      case 'bundeslaender':
+        return ['4']
+      case 'regierungsbezirke':
+        return ['5']
+      case 'landkreise':
+      case 'kreisfreie':
+        return ['6']
+      case 'landkreis_kreisfrei':
+        return deutschland ? ['4', '6'] : ['6']
+      case 'gemeinden':
+        return ['8']
+      case 'gemeinden_kreisfrei':
+        return deutschland ? ['4', '6', '8'] : ['6', '8']
+      case 'stadtbezirke':
+        return ['9']
+      case 'stadtteile':
+        return ['10']
+      default:
+        return null
+    }
+  }
+
+  const levels = levelsForPreset(view.darstellung)
+  if (!levels) return features
+
+  const out: StatsFeature[] = []
+  const seen = new Set<string>()
+  for (const level of levels) {
+    for (const id of index.idsByLevel.get(level) ?? []) {
+      if (seen.has(id)) continue
+      seen.add(id)
+      const f = index.byId.get(id)
+      if (f) out.push(f)
+    }
+  }
+  return out
+}
+
 export function filterFeaturesForView(
   features: StatsFeature[],
   view: ViewScope,
@@ -723,8 +801,9 @@ export function filterFeaturesForView(
 ) {
   const scopeLevel = scopeLevelFor(view.gebiet, view.untergebiet)
   const scopeId = scopeIdFor(view.gebiet, view.untergebiet)
+  const pool = darstellungCandidateFeatures(features, view, index)
 
-  return features.filter((f) => {
+  return pool.filter((f) => {
     if (!matchesDisplayPreset(f, view.darstellung, index, view.gebiet, view.untergebiet)) {
       return false
     }

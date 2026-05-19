@@ -47,8 +47,14 @@ export function isFocusChainInTopOrFlopWindow(
   const n = items.length
   if (n <= windowN * 2) return true
   const visibleIds = new Set<string>()
-  for (let i = 0; i < windowN; i++) visibleIds.add(items[i]!.id)
-  for (let i = n - windowN; i < n; i++) visibleIds.add(items[i]!.id)
+  for (let i = 0; i < windowN; i++) {
+    const id = items[i]?.id
+    if (id) visibleIds.add(id)
+  }
+  for (let i = n - windowN; i < n; i++) {
+    const id = items[i]?.id
+    if (id) visibleIds.add(id)
+  }
   return focusChainIds.some((id) => visibleIds.has(id))
 }
 

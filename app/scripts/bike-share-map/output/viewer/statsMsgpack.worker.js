@@ -1,0 +1,11 @@
+self.onmessage = async (s) => {
+  if (s.data?.type !== 'load') return
+  try {
+    let e = await fetch(s.data.url)
+    if (!e.ok) throw Error(`stats.msgpack HTTP ${e.status}`)
+    let a = new Uint8Array(await e.arrayBuffer())
+    self.postMessage({ type: 'ok', bytes: a }, [a.buffer])
+  } catch (e) {
+    self.postMessage({ type: 'error', message: e instanceof Error ? e.message : String(e) })
+  }
+}

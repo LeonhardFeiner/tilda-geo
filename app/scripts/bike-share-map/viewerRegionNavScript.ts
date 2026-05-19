@@ -2,6 +2,7 @@
 export function viewerRegionNavScript() {
   return `
     let regionIndex = null;
+    let neighborIndex = null;
     let currentViewScope = {
       gebiet: RegionNav.DEUTSCHLAND_GEBIET,
       untergebiet: '',
@@ -10,6 +11,7 @@ export function viewerRegionNavScript() {
     let simpleFocusContext = null;
     let simpleViewPreset = 'de_landkreis_kreisfrei';
     let savedExpertViewScope = null;
+    let simpleViewSelectSyncing = false;
 
     const gebietSelect = document.getElementById('gebiet-select');
     const untergebietSelect = document.getElementById('untergebiet-select');
@@ -35,6 +37,11 @@ export function viewerRegionNavScript() {
       return m === '1' || m === 'true' || m === 'yes';
     }
 
+    function isSimpleUiFromUrl() {
+      const p = new URLSearchParams(location.search);
+      return p.get('ui') === 'simple' || p.get('view') === 'simple';
+    }
+
     function uiMode() {
       if (isUiMinimal()) return 'minimal';
       const p = new URLSearchParams(location.search);
@@ -58,6 +65,7 @@ export function viewerRegionNavScript() {
         mapLegendSection.open = simple ? true : mapLegendSection.open;
         mapLegendToggleLocked = simple;
       }
+      if (typeof syncCsvExportVisibility === 'function') syncCsvExportVisibility();
     }
 
     applyUiModeClass();
@@ -70,103 +78,75 @@ export function viewerRegionNavScript() {
 
     function rebuildRegionIndex() {
       regionIndex = RegionNav.buildRegionIndex(allFeatures);
+      if (!neighborIndex?.precomputed) neighborIndex = null;
     }
 
-    function touchingRegionIds(focusId, candidateIds) {
-      const focus = regionIndex.byId.get(focusId);
-      if (!focus?.geometry) return new Set([focusId]);
-      const out = new Set([focusId]);
-      for (const id of candidateIds) {
-        if (id === focusId) continue;
-        const f = regionIndex.byId.get(id);
-        if (!f?.geometry) continue;
-        try {
-          if (turf.booleanTouches(focus, f) || turf.booleanIntersects(focus, f)) out.add(id);
-        } catch {
-          /* skip invalid geometry */
-        }
-      }
-      return out;
-    }
-
-    function touchingLandkreiseForFocus(ctx) {
-      const lkCandidates = SimpleView.neighborCandidateIds(
-        'lk_neighbors_landkreise',
-        ctx,
-        regionIndex,
-      );
-      return touchingRegionIds(ctx.landkreisId, lkCandidates);
-    }
-
-    function gemeindeUnitsInLandkreise(landkreisIds) {
-      return SimpleView.gemeindeUnitIdsInLandkreise(landkreisIds, regionIndex);
-    }
-
-    function touchingStadtstaatenForFeature(featureId) {
-      const candidates = SimpleView.stadtstaatCandidateIds(regionIndex);
-      return touchingRegionIds(featureId, candidates);
-    }
-
-    function computeSimpleAllowedIds(preset, ctx) {
-      if (!SimpleView.presetUsesNeighborFilter(preset)) return null;
-
-      if (preset === 'gm_neighbors' && ctx.gemeindeId && ctx.landkreisId) {
-        const touchingLk = touchingLandkreiseForFocus(ctx);
-        const unitCandidates = [
-          ...gemeindeUnitsInLandkreise(touchingLk),
-          ...touchingStadtstaatenForFeature(ctx.gemeindeId),
-        ];
-        return touchingRegionIds(ctx.gemeindeId, unitCandidates);
-      }
-
-      if (
-        (preset === 'lk_neighbors_landkreise' || preset === 'lk_neighbors_gemeinden') &&
-        ctx.landkreisId
-      ) {
-        const touchingLk = touchingLandkreiseForFocus(ctx);
-        return new Set([
-          ...touchingLk,
-          ...touchingStadtstaatenForFeature(ctx.landkreisId),
-        ]);
-      }
-
-      const candidates = SimpleView.neighborCandidateIds(preset, ctx, regionIndex);
-      if (!ctx.landkreisId) return new Set([ctx.focusId]);
-      const touchingLk = touchingRegionIds(ctx.landkreisId, candidates);
-      return touchingLk;
+    function ensureNeighborIndex() {
+      return neighborIndex;
     }
 
     function filteredFeaturesForCurrentView() {
       if (uiMode() === 'simple' && simpleFocusContext) {
-        const allowed = computeSimpleAllowedIds(simpleViewPreset, simpleFocusContext);
-        return SimpleView.filterFeaturesForSimpleView(
+        const neighbors = ensureNeighborIndex();
+        const allowed = SimpleView.computeSimpleAllowedIds(
+          simpleViewPreset,
+          simpleFocusContext,
+          regionIndex,
+          neighbors,
+        );
+        const filtered = SimpleView.filterFeaturesForSimpleView(
           allFeatures,
           simpleViewPreset,
           simpleFocusContext,
           regionIndex,
           allowed,
         );
+        if (!filtered.length && SimpleView.presetUsesNeighborFilter(simpleViewPreset)) {
+          const fallbackPreset = 'lk_gemeinden';
+          const fallback = SimpleView.filterFeaturesForSimpleView(
+            allFeatures,
+            fallbackPreset,
+            simpleFocusContext,
+            regionIndex,
+            null,
+          );
+          if (fallback.length) {
+            simpleViewPreset = fallbackPreset;
+            if (simpleViewSelect) simpleViewSelect.value = fallbackPreset;
+            return fallback;
+          }
+        }
+        return filtered;
       }
       return RegionNav.filterFeaturesForView(allFeatures, currentViewScope, regionIndex);
     }
 
     function populateSimpleViewSelect() {
       if (!simpleViewSelect || !simpleFocusContext) return;
-      simpleViewSelect.replaceChildren();
-      const presets = SimpleView.listSimplePresetsForFocus(simpleFocusContext, regionIndex);
-      for (const id of presets) {
-        const el = document.createElement('option');
-        el.value = id;
-        el.textContent = SimpleView.simplePresetLabel(id, simpleFocusContext, regionIndex);
-        simpleViewSelect.appendChild(el);
-      }
+      const presets = SimpleView.listSimplePresetsForFocus(simpleFocusContext, regionIndex, {
+        features: allFeatures,
+        neighbors: neighborIndex,
+      });
+      const defaultPreset = SimpleView.defaultSimplePresetForFocus(simpleFocusContext, regionIndex);
       const preferred = presets.includes(simpleViewPreset)
         ? simpleViewPreset
-        : presets.includes(simpleViewSelect.value)
-          ? simpleViewSelect.value
+        : presets.includes(defaultPreset)
+          ? defaultPreset
           : presets[0];
-      if (presets.length) simpleViewSelect.value = preferred;
-      simpleViewPreset = simpleViewSelect.value;
+      simpleViewSelectSyncing = true;
+      try {
+        simpleViewSelect.replaceChildren();
+        for (const id of presets) {
+          const el = document.createElement('option');
+          el.value = id;
+          el.textContent = SimpleView.simplePresetLabel(id, simpleFocusContext, regionIndex);
+          simpleViewSelect.appendChild(el);
+        }
+        if (presets.length) simpleViewSelect.value = preferred;
+        simpleViewPreset = simpleViewSelect.value;
+      } finally {
+        simpleViewSelectSyncing = false;
+      }
     }
 
     function resolveSimpleViewFromUrl() {
@@ -178,9 +158,17 @@ export function viewerRegionNavScript() {
         RegionNav.DEUTSCHLAND_GEBIET;
       const ctx = SimpleView.resolveFocusContext(focusParam, regionIndex);
       if (!ctx) return null;
-      const allowed = SimpleView.listSimplePresetsForFocus(ctx, regionIndex);
+      const allowed = SimpleView.listSimplePresetsForFocus(ctx, regionIndex, {
+        features: allFeatures,
+        neighbors: neighborIndex,
+      });
       let preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
-      if (preset === 'lk_neighbors_gemeinden') preset = 'lk_neighbors_landkreise';
+      if (
+        preset === 'lk_neighbors_kreisfrei' ||
+        preset === 'lk_neighbors_stadtstaat'
+      ) {
+        preset = 'neighbors_other';
+      }
       if (!preset || !allowed.includes(preset)) {
         preset = SimpleView.defaultSimplePresetForFocus(ctx, regionIndex);
       }
@@ -203,8 +191,16 @@ export function viewerRegionNavScript() {
       if (legacyView === 'simple') return null;
       const gebiet = RegionNav.parseGebietParam(params.get('gebiet') ?? legacyView, regionIndex);
       const untergebiet = RegionNav.parseUntergebietParam(params.get('untergebiet'));
+      const parsedDarstellung = RegionNav.parseDarstellungParam(params.get('darstellung'));
+      if (uiMode() === 'simple') {
+        return {
+          gebiet,
+          untergebiet,
+          darstellung: parsedDarstellung || 'landkreis_kreisfrei',
+        };
+      }
       let darstellung =
-        RegionNav.parseDarstellungParam(params.get('darstellung')) ||
+        parsedDarstellung ||
         RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
       if (
@@ -254,6 +250,18 @@ export function viewerRegionNavScript() {
         gebiet: gebietSelect.value,
         untergebiet: untergebietSelect.value || '',
         darstellung: darstellungSelect.value,
+      };
+    }
+
+    function applyExpertScopeValuesOnly(scope) {
+      if (!scope) return;
+      gebietSelect.value = scope.gebiet;
+      untergebietSelect.value = scope.untergebiet || '';
+      if (scope.darstellung) darstellungSelect.value = scope.darstellung;
+      currentViewScope = {
+        gebiet: scope.gebiet,
+        untergebiet: scope.untergebiet || '',
+        darstellung: scope.darstellung || darstellungSelect.value || 'bundeslaender',
       };
     }
 
@@ -405,16 +413,19 @@ export function viewerRegionNavScript() {
 
     function syncViewScopeFromUi() {
       if (uiMode() === 'simple') {
-        simpleViewPreset = simpleViewSelect?.value || simpleViewPreset;
+        if (!simpleViewSelectSyncing) {
+          simpleViewPreset = simpleViewSelect?.value || simpleViewPreset;
+        }
         return;
       }
       currentViewScope = readViewScopeFromUi();
     }
 
     function onSimpleViewChange() {
+      if (simpleViewSelectSyncing) return;
       simpleViewPreset = simpleViewSelect.value;
       updateScaleCapDefaultForView();
-      applyCurrentView();
+      void applyCurrentView();
     }
 
     function onGebietChange() {
@@ -424,7 +435,7 @@ export function viewerRegionNavScript() {
       syncViewScopeFromUi();
       currentViewScope.darstellung = darstellungSelect.value;
       updateScaleCapDefaultForView();
-      applyCurrentView();
+      void applyCurrentView();
     }
 
     function onUntergebietChange() {
@@ -432,13 +443,13 @@ export function viewerRegionNavScript() {
       syncViewScopeFromUi();
       currentViewScope.darstellung = darstellungSelect.value;
       updateScaleCapDefaultForView();
-      applyCurrentView();
+      void applyCurrentView();
     }
 
     function onDarstellungChange() {
       syncViewScopeFromUi();
       updateScaleCapDefaultForView();
-      applyCurrentView();
+      void applyCurrentView();
     }
 
     function labelMinZoomForView() {
@@ -452,8 +463,10 @@ export function viewerRegionNavScript() {
         if (
           simpleViewPreset === 'de_landkreis_kreisfrei' ||
           simpleViewPreset === 'bl_landkreis_kreisfrei' ||
+          simpleViewPreset === 'lk_neighbors_other' ||
           simpleViewPreset === 'lk_neighbors_landkreise' ||
-          simpleViewPreset === 'lk_neighbors_gemeinden'
+          simpleViewPreset === 'lk_neighbors_gemeinden' ||
+          (simpleViewPreset === 'neighbors_other' && simpleFocusContext?.kind === 'landkreis')
         ) {
           return 8;
         }
@@ -479,7 +492,10 @@ export function viewerRegionNavScript() {
 
     function viewShowsGemeindenLevelForCurrentView() {
       if (uiMode() === 'simple') {
-        const darstellung = SimpleView.simplePresetDarstellung(simpleViewPreset);
+        const darstellung = SimpleView.simplePresetDarstellung(
+          simpleViewPreset,
+          simpleFocusContext,
+        );
         return darstellung === 'gemeinden' || darstellung === 'gemeinden_kreisfrei';
       }
       return RegionNav.viewShowsGemeindenLevel(currentViewScope);
@@ -490,7 +506,8 @@ export function viewerRegionNavScript() {
         return (
           simpleViewPreset === 'bl_gemeinden_kreisfrei' ||
           simpleViewPreset === 'lk_gemeinden' ||
-          simpleViewPreset === 'gm_neighbors'
+          simpleViewPreset === 'gm_neighbors' ||
+          (simpleViewPreset === 'neighbors_other' && simpleFocusContext?.kind === 'gemeinde')
         );
       }
       return RegionNav.viewShowsManyGemeinden(currentViewScope);
@@ -550,7 +567,7 @@ export function viewerRegionNavScript() {
           simpleFocusContext = resolved.ctx;
           simpleViewPreset = resolved.preset;
         }
-        applyExpertScopeToUi(savedExpertViewScope ?? scope);
+        applyExpertScopeValuesOnly(savedExpertViewScope ?? scope);
         populateSimpleViewSelect();
         if (typeof syncSimpleCountingNotice === 'function') syncSimpleCountingNotice();
         return;

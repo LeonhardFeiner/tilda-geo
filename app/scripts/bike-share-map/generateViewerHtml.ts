@@ -51,7 +51,10 @@ export function generateViewerHtml(generatedAt: string) {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
+    statsMsgpackUrl: './stats.msgpack',
     statsUrl: './stats.geojson',
+    neighborsMsgpackUrl: './neighbors.msgpack',
+    neighborsUrl: './neighbors.json',
     manifestUrl: './manifest.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
@@ -246,6 +249,24 @@ export function generateViewerHtml(generatedAt: string) {
       margin: 3px 0;
       padding: 0;
     }
+    .ranking-list li.ranking-row-clickable {
+      cursor: pointer;
+      border-radius: 4px;
+      padding: 2px 4px;
+      margin-left: -4px;
+      margin-right: -4px;
+    }
+    .ranking-list li.ranking-row-clickable:hover { background: #f5f5f5; }
+    .ranking-list li.ranking-row-selected {
+      background: #e3f2fd;
+    }
+    .ranking-list li.ranking-row-selected .ranking-name {
+      font-weight: 600;
+      color: #1565c0;
+    }
+    .ranking-list li.ranking-row-focus {
+      background: #ececec;
+    }
     .ranking-rank { color: #666; font-variant-numeric: tabular-nums; font-size: 10px; }
     .ranking-name {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -284,10 +305,18 @@ export function generateViewerHtml(generatedAt: string) {
     .view-csv-btn {
       font-size: 11px; padding: 3px 8px;
     }
-    .ranking-toolbar .view-csv-btn {
+    .ranking-csv-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
       margin-left: auto;
-      border: 1px solid #ccc; border-radius: 4px; background: #fff;
-      color: #1565c0; cursor: pointer;
+    }
+    .ranking-toolbar .view-csv-btn {
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: #fff;
+      color: #1565c0;
+      cursor: pointer;
     }
     .view-csv-btn:hover { background: #f5f9ff; }
     .view-csv-btn:disabled { opacity: 0.45; cursor: not-allowed; }
@@ -351,6 +380,11 @@ export function generateViewerHtml(generatedAt: string) {
       display: flex; justify-content: space-between; gap: 8px;
       padding: 2px 0; border-bottom: 1px solid #f0f0f0;
     }
+    .region-detail-rows li.region-detail-row-clickable {
+      cursor: pointer; margin: 0 -4px; padding: 2px 4px; border-radius: 4px;
+    }
+    .region-detail-rows li.region-detail-row-clickable:hover { background: #f5f5f5; }
+    .region-detail-rows li.region-detail-row-active { background: #e3f2fd; }
     .region-detail-rows li:last-child { border-bottom: none; }
     .region-detail-rows .km {
       font-variant-numeric: tabular-nums; color: #444; white-space: nowrap;
@@ -363,6 +397,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-tags[open] summary { margin-bottom: 4px; }
     #load-error { color: #b71c1c; font-size: 13px; display: none; }
+    #load-status { color: #555; font-size: 13px; margin: 0 0 8px; display: none; }
     body.ui-minimal #panel-main { display: none !important; }
     body.view-simple #count-classes-details,
     body.view-simple #color-options-details { display: none !important; }
@@ -414,6 +449,7 @@ export function generateViewerHtml(generatedAt: string) {
       <span class="panel-summary-preview" id="panel-summary-preview"></span>
     </summary>
     <div class="panel-body">
+    <p id="load-status">Lade Gebietsdaten…</p>
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
     <details class="panel-section region-scope-block" id="region-scope-block" open>
@@ -455,6 +491,7 @@ export function generateViewerHtml(generatedAt: string) {
       <p class="hint" id="basemap-hint"></p>
       <label for="color-scale-select">Farbskala (Flächen)</label>
       <select id="color-scale-select"></select>
+      <p class="hint" id="color-scale-hint"></p>
       <div class="scale-cap-controls">
         <label><input type="checkbox" id="scale-robust-enabled" checked /> Ausreißer bei Skalenende ignorieren</label>
         <label><input type="checkbox" id="scale-cap-enabled" /> Farbskala kappen</label>
@@ -546,15 +583,27 @@ export function generateViewerHtml(generatedAt: string) {
             <button type="button" class="ranking-mode-btn" data-ranking-mode="topflop" aria-pressed="true">Top &amp; Flop</button>
             <button type="button" class="ranking-mode-btn" data-ranking-mode="all" aria-pressed="false">Alle</button>
           </div>
-          <button
-            type="button"
-            class="view-csv-btn"
-            id="view-csv-btn-toolbar"
-            disabled
-            title="Gebietsdaten der aktuellen Ansicht (Rang, Summen, Klassen) als CSV"
-          >
-            CSV
-          </button>
+          <div class="ranking-csv-actions" id="ranking-csv-actions">
+            <button
+              type="button"
+              class="view-csv-btn"
+              id="view-csv-btn-toolbar"
+              disabled
+              title="Gebietsdaten der aktuellen Ansicht (Rang, Summen, Klassen) als CSV"
+            >
+              CSV
+            </button>
+            <button
+              type="button"
+              class="view-csv-btn"
+              id="view-csv-btn-full"
+              hidden
+              disabled
+              title="Alle Gebietsdaten (alle Verwaltungsebenen, Rang, Summen, Klassen) als CSV"
+            >
+              CSV gesamt
+            </button>
+          </div>
         </div>
         <div class="ranking-scroll" id="ranking-scroll">
           <ol class="ranking-list" id="ranking-list"></ol>
@@ -563,19 +612,8 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="view-mode-links" id="view-mode-links-expert-panel" hidden>
       <a href="#" id="switch-to-expert-link">Expertenansicht</a>
     </p>
-    <div class="view-csv-row" id="view-csv-row" hidden>
-      <button
-        type="button"
-        class="view-csv-btn"
-        id="view-csv-btn"
-        disabled
-        title="Gebietsdaten der aktuellen Ansicht (Rang, Summen, Klassen) als CSV"
-      >
-        CSV
-      </button>
-    </div>
     <div class="panel-actions">
-      <div class="share-toolbar" role="group" aria-label="Ansicht teilen">
+      <div class="share-toolbar" role="group" aria-label="Ansicht teilen und exportieren">
         <button type="button" id="copy-view-link" class="share-btn" disabled title="Link kopieren" aria-label="Link kopieren">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
         </button>
@@ -630,6 +668,7 @@ export function generateViewerHtml(generatedAt: string) {
   </div>
   <script src="./statsClassSums.js"></script>
   <script src="./regionNavigation.js"></script>
+  <script src="./statsMsgpack.js"></script>
   <script src="./simpleView.js"></script>
   <script src="./rankingDisplay.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
@@ -640,7 +679,22 @@ export function generateViewerHtml(generatedAt: string) {
     let allFeatures = [];
     let manifest = {};
     let rawLoaded = false;
+    // Start before MapLibre (tile requests can starve this fetch on HTTP/1).
+    const statsDataPromise = fetch(CONFIG.statsMsgpackUrl).then(async (res) => {
+      if (res.ok) return { type: 'msgpack', bytes: await res.arrayBuffer() };
+      const geoRes = await fetch(CONFIG.statsUrl);
+      if (!geoRes.ok) {
+        throw new Error('stats.msgpack fehlt – bun run bike-share-map:export-stats-geojson');
+      }
+      return { type: 'geojson', data: await geoRes.json() };
+    });
     let overlaysBound = false;
+    let overlayLineHighlight = null;
+    let overlayLineHighlightTimer = null;
+    let overlayLineHighlightBlinkTimer = null;
+    let overlayHighlightBlinkOn = false;
+    const OVERLAY_HIGHLIGHT_PULSE_MS = 3200;
+    const OVERLAY_HIGHLIGHT_BLINK_MS = 350;
 
     ${viewerRegionNavScript()}
     const basemapSelect = document.getElementById('basemap-select');
@@ -648,14 +702,35 @@ export function generateViewerHtml(generatedAt: string) {
     const toggleBikelanes = document.getElementById('toggle-bikelanes');
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
+    const loadStatus = document.getElementById('load-status');
+
+    const statsReadyPromise = statsDataPromise
+      .then((data) => {
+        if (data.type === 'msgpack') {
+          allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
+        } else {
+          allFeatures = data.data.features || [];
+        }
+        rebuildRegionIndex();
+        rawLoaded = true;
+        if (loadStatus) loadStatus.textContent = '';
+      })
+      .catch((e) => {
+        if (loadError) {
+          loadError.style.display = 'block';
+          loadError.textContent = String(e.message || e);
+        }
+        throw e;
+      });
+
     const rankingDetails = document.getElementById('ranking-details');
     const rankingScroll = document.getElementById('ranking-scroll');
     const rankingToolbar = document.getElementById('ranking-toolbar');
-    const viewCsvRow = document.getElementById('view-csv-row');
     const viewCsvBtnToolbar = document.getElementById('view-csv-btn-toolbar');
-    const viewCsvBtn = document.getElementById('view-csv-btn');
+    const viewCsvBtnFull = document.getElementById('view-csv-btn-full');
     const rankingModeButtons = [...document.querySelectorAll('.ranking-mode-btn')];
     const colorScaleSelect = document.getElementById('color-scale-select');
+    const colorScaleHint = document.getElementById('color-scale-hint');
     const legendBar = document.getElementById('legend-bar');
     const bikelaneSwatch = document.getElementById('bikelane-swatch');
     const roadSwatch = document.getElementById('road-swatch');
@@ -677,9 +752,9 @@ export function generateViewerHtml(generatedAt: string) {
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
     const panelMobileMq = window.matchMedia('(max-width: 768px)');
-    scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
-    scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
-    scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
+    if (scaleCapPctInput) scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
+    if (scaleCapEnabledCb) scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
+    if (scaleRobustEnabledCb) scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
     let lastScaleCapViewAllowed = false;
     let lastRankingViewAvailable = false;
     let lastPctRange = { min: 0, max: 20, scaleCapped: false, dataMax: 20 };
@@ -691,6 +766,7 @@ export function generateViewerHtml(generatedAt: string) {
     const DEFAULT_RANKING_TOP_N = 11;
     const rankByFeatureId = new Map();
     let selectedFeatureId = null;
+    let selectedFeatureOverride = null;
     let regionClickBound = false;
     const regionDetailEl = document.getElementById('region-detail');
     const regionDetailTitle = document.getElementById('region-detail-title');
@@ -735,17 +811,21 @@ export function generateViewerHtml(generatedAt: string) {
 
     function onLengthClassFilterChange() {
       lengthClassFilter = readLengthClassFilterFromUi();
+      clearOverlayLineHighlight();
       updateOverlayLayerFilters();
       if (rawLoaded) repaintRegionsFromCounting();
       syncSimpleCountingNotice();
+      applyOverlayLineColors();
     }
 
     function applyRadinfraDefaultCounting() {
       lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
       applyLengthClassFilterToUi(lengthClassFilter);
+      clearOverlayLineHighlight();
       updateOverlayLayerFilters();
       if (rawLoaded) repaintRegionsFromCounting();
       syncSimpleCountingNotice();
+      applyOverlayLineColors();
     }
 
     function listExcludedCountingClasses(filter) {
@@ -785,6 +865,7 @@ export function generateViewerHtml(generatedAt: string) {
     function initCountClassFilters() {
       const roadRoot = document.getElementById('road-class-filters');
       const bikeRoot = document.getElementById('bikelane-class-filters');
+      if (!roadRoot || !bikeRoot) return;
       for (const opt of CONFIG.roadClassOptions) {
         const label = document.createElement('label');
         const input = document.createElement('input');
@@ -805,7 +886,7 @@ export function generateViewerHtml(generatedAt: string) {
         label.append(input, document.createTextNode(' ' + opt.label));
         bikeRoot.appendChild(label);
       }
-      document.getElementById('preset-radinfra').addEventListener('click', applyRadinfraDefaultCounting);
+      document.getElementById('preset-radinfra')?.addEventListener('click', applyRadinfraDefaultCounting);
     }
 
     initCountClassFilters();
@@ -999,11 +1080,9 @@ export function generateViewerHtml(generatedAt: string) {
       return filteredFeaturesForCurrentView().map(enrichFeature);
     }
 
-    function downloadCurrentViewData() {
-      if (!rawLoaded) return;
-      const features = currentViewFeaturesForExport();
+    function downloadStatsCsv(features, filename) {
       if (!features.length) {
-        showCopyViewLinkFeedback('Keine Gebiete in dieser Ansicht.', true);
+        showCopyViewLinkFeedback('Keine Gebiete zum Export.', true);
         return;
       }
       const csv = buildStatsCsv(features);
@@ -1011,14 +1090,32 @@ export function generateViewerHtml(generatedAt: string) {
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = downloadFilenameForView();
+      link.download = filename;
       link.click();
       URL.revokeObjectURL(url);
     }
 
+    function downloadCurrentViewData() {
+      if (!rawLoaded) return;
+      downloadStatsCsv(currentViewFeaturesForExport(), downloadFilenameForView());
+    }
+
+    function downloadFullStatsData() {
+      if (!rawLoaded) return;
+      lengthClassFilter = readLengthClassFilterFromUi();
+      downloadStatsCsv(allFeatures.map(enrichFeature), 'radinfra-gesamt.csv');
+    }
+
     function setCsvExportEnabled(enabled) {
-      viewCsvBtnToolbar.disabled = !enabled;
-      viewCsvBtn.disabled = !enabled;
+      const toolbarBtn = document.getElementById('view-csv-btn-toolbar');
+      const fullBtn = document.getElementById('view-csv-btn-full');
+      if (toolbarBtn) toolbarBtn.disabled = !enabled;
+      if (fullBtn) fullBtn.disabled = !enabled;
+    }
+
+    function syncCsvExportVisibility() {
+      const fullBtn = document.getElementById('view-csv-btn-full');
+      if (fullBtn) fullBtn.hidden = uiMode() !== 'expert';
     }
 
     function setPanelActionsEnabled(enabled) {
@@ -1080,7 +1177,7 @@ export function generateViewerHtml(generatedAt: string) {
         updateRegionColors(min, max);
         map.triggerRepaint();
       } else if (rawLoaded) {
-        applyCurrentView();
+        void applyCurrentView();
       }
     }
 
@@ -1131,13 +1228,13 @@ export function generateViewerHtml(generatedAt: string) {
 
     function onScaleCapChange() {
       syncScaleCapInputState();
-      if (rawLoaded) applyCurrentView();
+      if (rawLoaded) void applyCurrentView();
     }
 
-    scaleRobustEnabledCb.addEventListener('change', onScaleCapChange);
-    scaleCapEnabledCb.addEventListener('change', onScaleCapChange);
-    scaleCapPctInput.addEventListener('change', onScaleCapChange);
-    scaleCapPctInput.addEventListener('input', onScaleCapChange);
+    scaleRobustEnabledCb?.addEventListener('change', onScaleCapChange);
+    scaleCapEnabledCb?.addEventListener('change', onScaleCapChange);
+    scaleCapPctInput?.addEventListener('change', onScaleCapChange);
+    scaleCapPctInput?.addEventListener('input', onScaleCapChange);
 
     function colorScaleRange(features) {
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
@@ -1159,7 +1256,6 @@ export function generateViewerHtml(generatedAt: string) {
     function updateRankingVisibility() {
       rankingDetails.hidden = false;
       rankingToolbar.hidden = false;
-      viewCsvRow.hidden = true;
       if (!lastRankingViewAvailable) {
         rankingDetails.open = true;
       }
@@ -1174,7 +1270,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function syncRankingScrollLayout() {
-      rankingScroll.classList.toggle('ranking-scroll--scroll', rankingMode === 'all');
+      rankingScroll?.classList.toggle('ranking-scroll--scroll', rankingMode === 'all');
     }
 
     function setRankingMode(mode) {
@@ -1217,9 +1313,207 @@ export function generateViewerHtml(generatedAt: string) {
       );
     }
 
+    function regionLevelNumber(id) {
+      const f = regionIndex?.byId.get(id);
+      return Number(String(f?.properties?.level ?? '0'));
+    }
+
+    function isDescendantOrEqual(innerId, ancestorId) {
+      if (!innerId || !ancestorId || !regionIndex) return false;
+      if (innerId === ancestorId) return true;
+      let current = innerId;
+      while (current) {
+        if (current === ancestorId) return true;
+        current = regionIndex.parentById.get(current);
+      }
+      const f = regionIndex.byId.get(innerId);
+      if (!f) return false;
+      if (String(f.properties?.landkreis_id ?? '') === ancestorId) return true;
+      if (String(f.properties?.bundesland_id ?? '') === ancestorId) return true;
+      return false;
+    }
+
+    function visibleUnitRelatesToFocus(visibleId, focusId) {
+      if (!visibleId || !focusId) return false;
+      if (visibleId === focusId) return true;
+      if (isDescendantOrEqual(focusId, visibleId)) return true;
+      if (isDescendantOrEqual(visibleId, focusId)) return true;
+      return false;
+    }
+
+    function finestVisibleIdsRelatingToUnit(unitId, visibleFeatures) {
+      if (!unitId || !regionIndex) return [];
+      if (visibleFeatures.some((f) => f.properties?.id === unitId)) return [unitId];
+      const candidates = [];
+      for (const f of visibleFeatures) {
+        const id = String(f.properties?.id ?? '');
+        if (id && isDescendantOrEqual(unitId, id)) candidates.push(id);
+      }
+      if (!candidates.length) return [];
+      let finestLevel = -1;
+      for (const id of candidates) {
+        const level = regionLevelNumber(id);
+        if (level > finestLevel) finestLevel = level;
+      }
+      return candidates.filter((id) => regionLevelNumber(id) === finestLevel);
+    }
+
+    function simpleFocusHighlightIds(visibleFeatures, focusId) {
+      if (!focusId || !regionIndex) return [];
+      // Coarser than Gemeinde: outline the focus unit only, not every visible child (e.g. all Gemeinden in an LK).
+      if (
+        uiMode() === 'simple' &&
+        simpleFocusContext &&
+        simpleFocusContext.kind !== 'gemeinde'
+      ) {
+        return [focusId];
+      }
+      const candidates = [];
+      for (const f of visibleFeatures) {
+        const id = String(f.properties?.id ?? '');
+        if (id && visibleUnitRelatesToFocus(id, focusId)) candidates.push(id);
+      }
+      if (!candidates.length) return [];
+      let finestLevel = -1;
+      for (const id of candidates) {
+        const level = regionLevelNumber(id);
+        if (level > finestLevel) finestLevel = level;
+      }
+      return candidates.filter((id) => regionLevelNumber(id) === finestLevel);
+    }
+
+    function selectionHighlightIds() {
+      if (!selectedFeatureId) return [];
+      return finestVisibleIdsRelatingToUnit(selectedFeatureId, lastRankingFeatures);
+    }
+
+    function syncRankingRowHighlights() {
+      const list = document.getElementById('ranking-list');
+      if (!list) return;
+      const focusIds =
+        uiMode() === 'simple' && simpleFocusContext?.focusId
+          ? new Set(simpleFocusHighlightIds(lastRankingFeatures, simpleFocusContext.focusId))
+          : new Set();
+      for (const li of list.querySelectorAll('li[data-ranking-id]')) {
+        const id = li.dataset.rankingId;
+        li.classList.toggle('ranking-row-selected', id === selectedFeatureId);
+        li.classList.toggle(
+          'ranking-row-focus',
+          focusIds.has(id) && id !== selectedFeatureId,
+        );
+      }
+      const selectedLi = selectedFeatureId
+        ? list.querySelector('li[data-ranking-id="' + selectedFeatureId + '"]')
+        : null;
+      if (selectedLi) selectedLi.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    }
+
+    function highlightGeojsonForIds(ids, visibleFeatures) {
+      const features = [];
+      for (const id of ids) {
+        const f = featureGeometryForHighlight(id, visibleFeatures);
+        if (!f?.geometry) continue;
+        features.push({
+          type: 'Feature',
+          properties: { id, name: f.properties?.name ?? id },
+          geometry: f.geometry,
+        });
+      }
+      return { type: 'FeatureCollection', features };
+    }
+
+    function selectedHighlightGeojson() {
+      return highlightGeojsonForIds(selectionHighlightIds(), lastRankingFeatures);
+    }
+
+    function featureGeometryForHighlight(id, visibleFeatures) {
+      const inView = visibleFeatures.find((f) => f.properties?.id === id);
+      if (inView?.geometry) return inView;
+      return regionIndex?.byId.get(id) ?? null;
+    }
+
+    function simpleFocusHighlightGeojson() {
+      if (uiMode() !== 'simple' || !simpleFocusContext?.focusId || !regionIndex) {
+        return { type: 'FeatureCollection', features: [] };
+      }
+      return highlightGeojsonForIds(
+        simpleFocusHighlightIds(lastRankingFeatures, simpleFocusContext.focusId),
+        lastRankingFeatures,
+      );
+    }
+
+    function highlightLayerBeforeId() {
+      return map.getLayer('regions-labels') ? 'regions-labels' : undefined;
+    }
+
+    function ensureSelectedHighlightLayer() {
+      const beforeId = highlightLayerBeforeId();
+      if (!map.getSource('regions-selected')) {
+        map.addSource('regions-selected', {
+          type: 'geojson',
+          data: selectedHighlightGeojson(),
+        });
+        map.addLayer(
+          {
+            id: 'regions-selected-fill',
+            type: 'fill',
+            source: 'regions-selected',
+            paint: { 'fill-color': '#1565c0', 'fill-opacity': 0.22 },
+          },
+          beforeId,
+        );
+        map.addLayer(
+          {
+            id: 'regions-selected-outline',
+            type: 'line',
+            source: 'regions-selected',
+            paint: { 'line-color': '#1565c0', 'line-width': 4 },
+          },
+          beforeId,
+        );
+      } else {
+        map.getSource('regions-selected').setData(selectedHighlightGeojson());
+      }
+    }
+
+    function ensureSimpleFocusHighlightLayer() {
+      const beforeId = highlightLayerBeforeId();
+      const data = simpleFocusHighlightGeojson();
+      if (!map.getSource('regions-simple-focus')) {
+        map.addSource('regions-simple-focus', { type: 'geojson', data });
+        map.addLayer(
+          {
+            id: 'regions-simple-focus-outline',
+            type: 'line',
+            source: 'regions-simple-focus',
+            paint: {
+              'line-color': '#111',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 6, 1.5, 9, 2.8, 11, 4.2, 13, 5.5, 15, 7],
+            },
+          },
+          beforeId,
+        );
+      } else {
+        map.getSource('regions-simple-focus').setData(data);
+      }
+    }
+
+    function updateMapHighlights() {
+      if (!map.getSource('regions')) return;
+      ensureSimpleFocusHighlightLayer();
+      ensureSelectedHighlightLayer();
+    }
+
     function appendRankingRow(list, rank, f, minPct, maxPct, span) {
       const pct = f.properties.bikeSharePct;
       const li = document.createElement('li');
+      const featureId = String(f.properties?.id ?? '');
+      if (featureId) {
+        li.dataset.rankingId = featureId;
+        li.classList.add('ranking-row-clickable');
+        li.title = 'Auf der Karte auswählen';
+        li.addEventListener('click', () => selectRegionById(featureId, null, true));
+      }
       const rankEl = document.createElement('span');
       rankEl.className = 'ranking-rank';
       rankEl.textContent = rank + '.';
@@ -1321,7 +1615,34 @@ export function generateViewerHtml(generatedAt: string) {
       });
     }
 
-    function appendLengthRows(parent, title, rows) {
+    function isOverlayLineHighlightActive(kind, id) {
+      return overlayLineHighlight?.kind === kind && overlayLineHighlight?.id === id;
+    }
+
+    function bindOverlayHighlightRow(li, kind, id) {
+      li.classList.add('region-detail-row-clickable');
+      li.dataset.highlightKind = kind;
+      li.dataset.highlightId = id;
+      li.title = 'Kurz auf der Karte hervorheben';
+      if (isOverlayLineHighlightActive(kind, id)) li.classList.add('region-detail-row-active');
+      li.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pulseOverlayLineHighlight(kind, id);
+      });
+    }
+
+    function syncOverlayHighlightRowStyles() {
+      for (const li of regionDetailBody.querySelectorAll('.region-detail-row-clickable')) {
+        const active =
+          overlayLineHighlight &&
+          li.dataset.highlightKind === overlayLineHighlight.kind &&
+          li.dataset.highlightId === overlayLineHighlight.id;
+        li.classList.toggle('region-detail-row-active', !!active);
+      }
+    }
+
+    function appendLengthRows(parent, title, rows, highlightKind) {
       if (!rows.length) return;
       const section = document.createElement('section');
       section.className = 'region-detail-section';
@@ -1339,13 +1660,14 @@ export function generateViewerHtml(generatedAt: string) {
         km.textContent =
           TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
         li.append(label, km);
+        if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
         ul.appendChild(li);
       }
       section.appendChild(ul);
       parent.appendChild(section);
     }
 
-    function appendTagLengthDetails(parent, title, rows) {
+    function appendTagLengthDetails(parent, title, rows, highlightKind) {
       if (!rows.length) return;
       const details = document.createElement('details');
       details.className = 'region-detail-tags';
@@ -1363,14 +1685,135 @@ export function generateViewerHtml(generatedAt: string) {
         km.textContent =
           TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
         li.append(label, km);
+        if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
         ul.appendChild(li);
       }
       details.appendChild(ul);
       parent.appendChild(details);
     }
 
+    function selectedRegionGeometry() {
+      const feature = lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId);
+      return feature?.geometry ?? null;
+    }
+
+    function overlayHighlightBikelaneFilter(kind, id) {
+      const categoryFilter = TildaStats.maplibrePropertyInFilter(
+        'category',
+        TildaStats.enabledBikelaneCategoryTags(lengthClassFilter),
+      );
+      const typeFilter =
+        kind === 'bikelane-class'
+          ? TildaStats.maplibreBikelaneOverlayFilterForClass(id)
+          : TildaStats.maplibreBikelaneOverlayFilterForTag(id);
+      const geometry = selectedRegionGeometry();
+      const filters = [categoryFilter, typeFilter];
+      if (geometry) filters.push(['within', geometry]);
+      return TildaStats.combineMaplibreFilters(...filters);
+    }
+
+    function clearOverlayLineHighlight() {
+      overlayLineHighlight = null;
+      overlayHighlightBlinkOn = false;
+      if (overlayLineHighlightTimer) clearTimeout(overlayLineHighlightTimer);
+      if (overlayLineHighlightBlinkTimer) clearInterval(overlayLineHighlightBlinkTimer);
+      overlayLineHighlightTimer = null;
+      overlayLineHighlightBlinkTimer = null;
+      syncOverlayHighlightRowStyles();
+      updateOverlayLineHighlightLayers();
+    }
+
+    function updateOverlayLineHighlightLayers() {
+      if (!map.getLayer('bikelanes-highlight-lines')) return;
+      const visible =
+        overlayLineHighlight && toggleBikelanes.checked ? 'visible' : 'none';
+      map.setLayoutProperty('bikelanes-highlight-casing', 'visibility', visible);
+      map.setLayoutProperty('bikelanes-highlight-lines', 'visibility', visible);
+      if (!overlayLineHighlight) return;
+      const { kind, id } = overlayLineHighlight;
+      const filter = overlayHighlightBikelaneFilter(kind, id);
+      map.setFilter('bikelanes-highlight-casing', filter);
+      map.setFilter('bikelanes-highlight-lines', filter);
+      const bikeColor = overlayBikelaneColorInput.value;
+      const lineColor = bikeColor;
+      const casingColor = '#ffffff';
+      const lineWidth = overlayHighlightBlinkOn
+        ? ['interpolate', ['linear'], ['zoom'], 10, 3.2, 14, 5.5]
+        : ['interpolate', ['linear'], ['zoom'], 10, 2.4, 14, 4];
+      const casingWidth = overlayHighlightBlinkOn
+        ? ['interpolate', ['linear'], ['zoom'], 10, 5, 14, 8]
+        : ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5];
+      const lineOpacity = overlayHighlightBlinkOn ? 1 : 0.45;
+      map.setPaintProperty('bikelanes-highlight-lines', 'line-color', lineColor);
+      map.setPaintProperty('bikelanes-highlight-casing', 'line-color', casingColor);
+      map.setPaintProperty('bikelanes-highlight-lines', 'line-width', lineWidth);
+      map.setPaintProperty('bikelanes-highlight-casing', 'line-width', casingWidth);
+      map.setPaintProperty('bikelanes-highlight-lines', 'line-opacity', lineOpacity);
+      map.setPaintProperty('bikelanes-highlight-casing', 'line-opacity', lineOpacity);
+      map.triggerRepaint();
+    }
+
+    function ensureBikelaneHighlightLayers() {
+      if (!map.getSource('bikelanes') || map.getLayer('bikelanes-highlight-lines')) return;
+      const overlayMinZoom = overlayMinZoomFromInputs();
+      const layerMinZoom = CONFIG.overlayMinZoomLimits.min;
+      const bikeOpacity = overlayMinZoomOpacityExpr(overlayMinZoom.bikelane);
+      map.addLayer({
+        id: 'bikelanes-highlight-casing',
+        type: 'line',
+        source: 'bikelanes',
+        'source-layer': 'bikelanes',
+        minzoom: layerMinZoom,
+        layout: { visibility: 'none' },
+        filter: ['literal', false],
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5],
+          'line-opacity': bikeOpacity,
+        },
+      });
+      map.addLayer({
+        id: 'bikelanes-highlight-lines',
+        type: 'line',
+        source: 'bikelanes',
+        'source-layer': 'bikelanes',
+        minzoom: layerMinZoom,
+        layout: { visibility: 'none' },
+        filter: ['literal', false],
+        paint: {
+          'line-color': overlayBikelaneColorInput.value,
+          'line-width': ['interpolate', ['linear'], ['zoom'], 10, 2.4, 14, 4],
+          'line-opacity': bikeOpacity,
+        },
+      });
+    }
+
+    function pulseOverlayLineHighlight(kind, id) {
+      clearOverlayLineHighlight();
+      overlayLineHighlight = { kind, id };
+      toggleBikelanes.checked = true;
+      updateOverlayVisibility();
+      ensureBikelaneHighlightLayers();
+      syncOverlayHighlightRowStyles();
+      updateOverlayLineHighlightLayers();
+      overlayHighlightBlinkOn = true;
+      let blinkTicks = 0;
+      overlayLineHighlightBlinkTimer = setInterval(() => {
+        overlayHighlightBlinkOn = !overlayHighlightBlinkOn;
+        updateOverlayLineHighlightLayers();
+        blinkTicks += 1;
+        if (blinkTicks >= 8) {
+          clearInterval(overlayLineHighlightBlinkTimer);
+          overlayLineHighlightBlinkTimer = null;
+        }
+      }, OVERLAY_HIGHLIGHT_BLINK_MS);
+      overlayLineHighlightTimer = setTimeout(clearOverlayLineHighlight, OVERLAY_HIGHLIGHT_PULSE_MS);
+    }
+
     function showRegionDetail(feature) {
       const p = feature.properties || {};
+      const detailId = String(p.id ?? '');
+      if (detailId) setSelectedFeatureId(detailId, feature);
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
       const rankText = rankInfo
@@ -1396,28 +1839,35 @@ export function generateViewerHtml(generatedAt: string) {
         'Straßen nach Klasse',
         TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
       );
-      appendTagLengthDetails(
-        regionDetailBody,
-        'Einzelne Straßentypen',
-        TildaStats.listFilteredHighwayTagLengths(p.road_length, filter),
-      );
+      if (uiMode() !== 'simple') {
+        appendTagLengthDetails(
+          regionDetailBody,
+          'Einzelne Straßentypen',
+          TildaStats.listFilteredHighwayTagLengths(p.road_length, filter),
+        );
+      }
       appendLengthRows(
         regionDetailBody,
         'Radinfrastruktur nach Klasse',
         TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
+        'bikelane-class',
       );
-      appendTagLengthDetails(
-        regionDetailBody,
-        'Einzelne Radweg-Typen',
-        TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
-      );
+      if (uiMode() !== 'simple') {
+        appendTagLengthDetails(
+          regionDetailBody,
+          'Einzelne Radweg-Typen',
+          TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
+          'bikelane-tag',
+        );
+      }
       if (uiMode() !== 'simple') {
         const viewLink = document.createElement('p');
         viewLink.className = 'region-detail-view-link';
         const link = document.createElement('a');
-        link.href = '#';
         link.textContent = 'Vereinfachte Ansicht für dieses Gebiet';
+        link.href = buildSimpleViewUrl(p.id, null);
         link.addEventListener('click', (e) => {
+          if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           e.preventDefault();
           navigateToViewMode('simple', p.id);
         });
@@ -1427,28 +1877,63 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailEl.hidden = false;
     }
 
-    function setSelectedFeatureId(id) {
-      if (selectedFeatureId && map.getSource('regions')) {
-        try {
-          map.removeFeatureState({ source: 'regions', id: selectedFeatureId }, 'selected');
-        } catch {
-          /* feature may have left the current source */
-        }
-      }
+    function setSelectedFeatureId(id, feature) {
       selectedFeatureId = id;
-      if (id && map.getSource('regions')) {
-        map.setFeatureState({ source: 'regions', id }, { selected: true });
-      }
+      selectedFeatureOverride =
+        id && feature?.geometry && feature.properties?.id === id ? feature : null;
+      updateMapHighlights();
+      syncRankingRowHighlights();
     }
 
-    function selectRegionById(id) {
-      const feature = lastRankingFeatures.find((f) => f.properties?.id === id);
+    function featureBboxInMapView(bbox) {
+      if (!bbox.every(Number.isFinite)) return true;
+      const bounds = map.getBounds();
+      return (
+        bounds.getWest() <= bbox[0] &&
+        bounds.getSouth() <= bbox[1] &&
+        bounds.getEast() >= bbox[2] &&
+        bounds.getNorth() >= bbox[3]
+      );
+    }
+
+    function fitMapToFeature(feature) {
+      if (!feature?.geometry) return;
+      const bbox = turf.bbox(feature);
+      if (!bbox.every(Number.isFinite) || featureBboxInMapView(bbox)) return;
+      map.fitBounds(
+        [
+          [bbox[0], bbox[1]],
+          [bbox[2], bbox[3]],
+        ],
+        { padding: 72, duration: 400, maxZoom: map.getZoom() },
+      );
+    }
+
+    function selectRegionById(id, mapFeature, panToMap) {
+      if (selectedFeatureId) {
+        const highlightIds = selectionHighlightIds();
+        if (selectedFeatureId === id || highlightIds.includes(id)) {
+          clearRegionSelection();
+          return;
+        }
+      }
+      const feature =
+        lastRankingFeatures.find((f) => f.properties?.id === id) ||
+        (mapFeature?.geometry
+          ? {
+              type: 'Feature',
+              properties: { ...(mapFeature.properties || {}), id },
+              geometry: mapFeature.geometry,
+            }
+          : null);
       if (!feature) return;
-      setSelectedFeatureId(id);
+      clearOverlayLineHighlight();
       showRegionDetail(feature);
+      if (panToMap) fitMapToFeature(feature);
     }
 
     function clearRegionSelection() {
+      clearOverlayLineHighlight();
       setSelectedFeatureId(null);
       regionDetailEl.hidden = true;
     }
@@ -1457,7 +1942,6 @@ export function generateViewerHtml(generatedAt: string) {
       if (!selectedFeatureId) return;
       const feature = lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId);
       if (feature) {
-        setSelectedFeatureId(selectedFeatureId);
         showRegionDetail(feature);
       } else {
         clearRegionSelection();
@@ -1471,7 +1955,7 @@ export function generateViewerHtml(generatedAt: string) {
       map.on('click', 'regions-fill', (e) => {
         const f = e.features?.[0];
         if (!f?.properties?.id) return;
-        selectRegionById(f.properties.id);
+        selectRegionById(f.properties.id, f);
       });
       map.on('click', (e) => {
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
@@ -1518,6 +2002,7 @@ export function generateViewerHtml(generatedAt: string) {
         note.textContent = withoutPct + ' ohne Straßendaten';
         list.appendChild(note);
       }
+      syncRankingRowHighlights();
     }
 
     const map = new maplibregl.Map({
@@ -2307,6 +2792,10 @@ export function generateViewerHtml(generatedAt: string) {
         map.setPaintProperty('bikelanes-lines', 'line-opacity', bikeOpacity);
         map.setPaintProperty('bikelanes-casing', 'line-opacity', bikeOpacity);
       }
+      if (map.getLayer('bikelanes-highlight-lines')) {
+        map.setPaintProperty('bikelanes-highlight-lines', 'line-opacity', bikeOpacity);
+        map.setPaintProperty('bikelanes-highlight-casing', 'line-opacity', bikeOpacity);
+      }
       if (map.getLayer('roads-lines-major')) {
         map.setPaintProperty('roads-lines-major', 'line-opacity', majorOpacity);
       }
@@ -2319,11 +2808,12 @@ export function generateViewerHtml(generatedAt: string) {
     function applyOverlayLineColors() {
       const bikeColor = overlayBikelaneColorInput.value;
       const roadColor = overlayRoadColorInput.value;
-      bikelaneSwatch.style.borderColor = bikeColor;
-      roadSwatch.style.borderColor = roadColor;
+      bikelaneSwatch.style.borderColor = overlayBikelaneColorInput.value;
+      roadSwatch.style.borderColor = overlayRoadColorInput.value;
       if (map.getLayer('bikelanes-lines')) {
         map.setPaintProperty('bikelanes-lines', 'line-color', bikeColor);
       }
+      if (overlayLineHighlight) updateOverlayLineHighlightLayers();
       if (map.getLayer('roads-lines-major')) {
         map.setPaintProperty('roads-lines-major', 'line-color', roadColor);
       }
@@ -2457,6 +2947,7 @@ export function generateViewerHtml(generatedAt: string) {
 
       updateBasemapHint();
       updateLegendBar(colorScaleSelect.value);
+      updateColorScaleHint();
       applyOverlayLineColors();
       applyOverlayMinZoom();
     }
@@ -2474,15 +2965,15 @@ export function generateViewerHtml(generatedAt: string) {
       ) {
         return;
       }
-      const roadMajorFilter = TildaStats.maplibrePropertyInFilter(
+      let roadMajorFilter = TildaStats.maplibrePropertyInFilter(
         'road',
         TildaStats.enabledMajorRoadHighwayTags(lengthClassFilter),
       );
-      const roadResidentialFilter = TildaStats.maplibrePropertyInFilter(
+      let roadResidentialFilter = TildaStats.maplibrePropertyInFilter(
         'road',
         TildaStats.enabledResidentialRoadHighwayTags(lengthClassFilter),
       );
-      const bikeFilter = TildaStats.maplibrePropertyInFilter(
+      let bikeFilter = TildaStats.maplibrePropertyInFilter(
         'category',
         TildaStats.enabledBikelaneCategoryTags(lengthClassFilter),
       );
@@ -2492,6 +2983,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       if (map.getLayer('bikelanes-lines')) map.setFilter('bikelanes-lines', bikeFilter);
       if (map.getLayer('bikelanes-casing')) map.setFilter('bikelanes-casing', bikeFilter);
+      updateOverlayLineHighlightLayers();
     }
 
     function updateOverlayVisibility() {
@@ -2573,6 +3065,7 @@ export function generateViewerHtml(generatedAt: string) {
         },
       });
       updateOverlayLayerFilters();
+      ensureBikelaneHighlightLayers();
     }
 
     function colorScaleById(id) {
@@ -2603,6 +3096,16 @@ export function generateViewerHtml(generatedAt: string) {
       legendBar.style.background = scale.legendGradient;
     }
 
+    function updateColorScaleHint() {
+      if (!colorScaleHint) return;
+      if (colorScaleSelect.value === 'colorblind') {
+        colorScaleHint.textContent =
+          'Niedrig → hoch als Orange, Gelb und Blau (ohne Rot–Grün-Verlauf).';
+      } else {
+        colorScaleHint.textContent = '';
+      }
+    }
+
     function updateRegionColors(minPct, maxPct) {
       if (!map.getLayer('regions-fill')) return;
       map.setPaintProperty(
@@ -2621,6 +3124,7 @@ export function generateViewerHtml(generatedAt: string) {
         updateRegionColors(minPct, maxPct);
         applyOverlayMinZoom();
         map.triggerRepaint();
+        updateMapHighlights();
       } else {
         map.addSource('regions', { type: 'geojson', data: geojson, promoteId: 'id' });
         map.addLayer({
@@ -2638,18 +3142,8 @@ export function generateViewerHtml(generatedAt: string) {
           type: 'line',
           source: 'regions',
           paint: {
-            'line-color': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false],
-              '#1565c0',
-              '#263238',
-            ],
-            'line-width': [
-              'case',
-              ['boolean', ['feature-state', 'selected'], false],
-              3,
-              ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 1.2],
-            ],
+            'line-color': '#263238',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 6, 0.5, 12, 1.2],
           },
         });
         map.addLayer({
@@ -2676,12 +3170,14 @@ export function generateViewerHtml(generatedAt: string) {
           tooltip.style.display = 'none';
         });
         bindRegionMapInteraction();
+        updateMapHighlights();
       }
       updateOverlayVisibility();
     }
 
-    function applyCurrentView() {
+    async function applyCurrentView() {
       syncViewScopeFromUi();
+      syncViewModeLinks();
       const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
@@ -2701,8 +3197,27 @@ export function generateViewerHtml(generatedAt: string) {
         addRegionLayers(geojson, min, max, labelMinZoom);
         fitMapToCurrentView();
       };
-      if (map.isStyleLoaded()) run();
-      else map.once('load', run);
+      if (map.isStyleLoaded()) {
+        run();
+        return;
+      }
+      await new Promise((resolve) => {
+        const done = () => {
+          map.off('load', done);
+          map.off('error', onError);
+          run();
+          resolve();
+        };
+        const onError = () => {
+          map.off('load', done);
+          map.off('error', onError);
+          run();
+          resolve();
+        };
+        map.once('load', done);
+        map.once('error', onError);
+        setTimeout(done, 2500);
+      });
     }
 
     function setBasemap(id) {
@@ -2712,15 +3227,16 @@ export function generateViewerHtml(generatedAt: string) {
       map.once('idle', () => {
         map.jumpTo({ center, zoom });
         overlaysBound = false;
-        applyCurrentView();
+        void applyCurrentView();
       });
       const meta = CONFIG.basemapOptions.find((b) => b.id === id);
       basemapHint.textContent = meta?.description || '';
     }
 
-    basemapSelect.addEventListener('change', () => setBasemap(basemapSelect.value));
-    colorScaleSelect.addEventListener('change', () => {
+    basemapSelect?.addEventListener('change', () => setBasemap(basemapSelect.value));
+    colorScaleSelect?.addEventListener('change', () => {
       updateLegendBar(colorScaleSelect.value);
+      updateColorScaleHint();
       syncOverlayColorInputsFromScale(colorScaleSelect.value);
       applyOverlayLineColors();
       updateRegionColors(lastPctRange.min, lastPctRange.max);
@@ -2728,65 +3244,270 @@ export function generateViewerHtml(generatedAt: string) {
         updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
       }
     });
-    gebietSelect.addEventListener('change', onGebietChange);
-    untergebietSelect.addEventListener('change', onUntergebietChange);
-    darstellungSelect.addEventListener('change', onDarstellungChange);
+    gebietSelect?.addEventListener('change', onGebietChange);
+    untergebietSelect?.addEventListener('change', onUntergebietChange);
+    darstellungSelect?.addEventListener('change', onDarstellungChange);
     if (simpleViewSelect) simpleViewSelect.addEventListener('change', onSimpleViewChange);
     const switchToExpertLink = document.getElementById('switch-to-expert-link');
     if (switchToExpertLink) {
       switchToExpertLink.addEventListener('click', (e) => {
+        if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
         const focusId = simpleFocusContext?.focusId || regionIndex?.deutschlandId;
         navigateToViewMode('expert', focusId);
       });
     }
-    toggleBikelanes.addEventListener('change', updateOverlayVisibility);
-    toggleRoads.addEventListener('change', updateOverlayVisibility);
-    overlayBikelaneColorInput.addEventListener('input', applyOverlayLineColors);
-    overlayRoadColorInput.addEventListener('input', applyOverlayLineColors);
+    toggleBikelanes?.addEventListener('change', updateOverlayVisibility);
+    toggleRoads?.addEventListener('change', updateOverlayVisibility);
+    overlayBikelaneColorInput?.addEventListener('input', applyOverlayLineColors);
+    overlayRoadColorInput?.addEventListener('input', applyOverlayLineColors);
     for (const input of [
       overlayBikelaneMinzoomInput,
       overlayRoadMinzoomMajorInput,
       overlayRoadMinzoomFullInput,
-    ]) {
+    ].filter(Boolean)) {
       input.addEventListener('input', applyOverlayMinZoom);
       input.addEventListener('change', applyOverlayMinZoom);
     }
-    viewCsvBtnToolbar.addEventListener('click', downloadCurrentViewData);
-    viewCsvBtn.addEventListener('click', downloadCurrentViewData);
+    if (viewCsvBtnToolbar) viewCsvBtnToolbar.addEventListener('click', downloadCurrentViewData);
+    if (viewCsvBtnFull) viewCsvBtnFull.addEventListener('click', downloadFullStatsData);
+    syncCsvExportVisibility();
     for (const btn of rankingModeButtons) {
       btn.addEventListener('click', () => setRankingMode(btn.dataset.rankingMode));
     }
     syncRankingModeButtons();
     syncRankingScrollLayout();
-    if (typeof navigator.share === 'function') {
+    if (typeof navigator.share === 'function' && shareNativeBtn) {
       shareNativeBtn.hidden = false;
     }
-    copyViewLinkBtn.addEventListener('click', copyShareLink);
-    shareMapImageBtn.addEventListener('click', downloadMapImage);
-    shareRankingImageBtn.addEventListener('click', downloadRankingImage);
-    shareNativeBtn.addEventListener('click', nativeShareLink);
-    for (const btn of shareToolbar.querySelectorAll('[data-share]')) {
+    copyViewLinkBtn?.addEventListener('click', copyShareLink);
+    shareMapImageBtn?.addEventListener('click', downloadMapImage);
+    shareRankingImageBtn?.addEventListener('click', downloadRankingImage);
+    shareNativeBtn?.addEventListener('click', nativeShareLink);
+    for (const btn of shareToolbar?.querySelectorAll('[data-share]') ?? []) {
       btn.addEventListener('click', () => shareViewWithScreenshots(btn.dataset.share));
     }
     function updateBasemapHint() {
-      const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
+      if (!basemapHint) return;
+      const basemapId = basemapSelect?.value || CONFIG.basemap;
+      const meta = CONFIG.basemapOptions.find((b) => b.id === basemapId);
       basemapHint.textContent = meta?.description || '';
     }
-    updateBasemapHint();
+    try {
+      updateBasemapHint();
+    } catch (bindUiErr) {
+      console.error(bindUiErr);
+    }
+
+    function yieldToMain() {
+      return new Promise((resolve) => setTimeout(resolve, 0));
+    }
+
+    let neighborsFetchStarted = false;
+    let neighborsBuildStarted = false;
+
+    function neighborIndexFromFile(file) {
+      return SimpleView.neighborIndexFromPrecomputed(file);
+    }
+
+    function refreshViewAfterNeighborsLoaded() {
+      if (!rawLoaded) return;
+      if (uiMode() === 'simple' && simpleFocusContext) {
+        populateSimpleViewSelect();
+        void applyCurrentView();
+        return;
+      }
+      if (
+        uiMode() === 'simple' &&
+        simpleFocusContext &&
+        SimpleView.presetUsesNeighborFilter(simpleViewPreset)
+      ) {
+        void applyCurrentView();
+      }
+    }
+
+    function onNeighborsFileLoaded(file) {
+      neighborIndex = neighborIndexFromFile(file);
+      setLoadStatus('');
+      refreshViewAfterNeighborsLoaded();
+    }
+
+    function buildNeighborsInWorker() {
+      if (neighborsBuildStarted || neighborIndex?.precomputed || !regionIndex || !allFeatures.length) {
+        return;
+      }
+      if (typeof Worker === 'undefined') {
+        neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+        refreshViewAfterNeighborsLoaded();
+        return;
+      }
+      neighborsBuildStarted = true;
+      setLoadStatus('Nachbarn werden berechnet…');
+      const worker = new Worker('./neighborsBuild.worker.js', { type: 'module' });
+      const finish = () => {
+        worker.onmessage = null;
+        worker.onerror = null;
+        worker.terminate();
+      };
+      worker.onmessage = (event) => {
+        const data = event.data;
+        finish();
+        if (data?.type === 'ok' && data.file) {
+          onNeighborsFileLoaded(data.file);
+          return;
+        }
+        setLoadStatus('');
+        if (!neighborIndex && regionIndex) {
+          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          refreshViewAfterNeighborsLoaded();
+        }
+      };
+      worker.onerror = () => {
+        finish();
+        setLoadStatus('');
+        if (!neighborIndex && regionIndex) {
+          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          refreshViewAfterNeighborsLoaded();
+        }
+      };
+      worker.postMessage({ type: 'build', features: allFeatures });
+    }
+
+    function onNeighborsLoadFailed() {
+      if (rawLoaded && regionIndex && allFeatures.length) buildNeighborsInWorker();
+    }
+
+    function ensureNeighborsLoaded() {
+      if (!rawLoaded || !regionIndex || !allFeatures.length || neighborIndex) return;
+      if (!neighborsFetchStarted) startNeighborsBackgroundLoad();
+      else if (!neighborsBuildStarted) buildNeighborsInWorker();
+    }
+
+    async function loadPrecomputedNeighborsOnMain() {
+      try {
+        const msgpackRes = await fetch(CONFIG.neighborsMsgpackUrl);
+        if (msgpackRes.ok) {
+          const bytes = new Uint8Array(await msgpackRes.arrayBuffer());
+          onNeighborsFileLoaded(SimpleView.decodeNeighborsPack(bytes));
+          return;
+        }
+        const res = await fetch(CONFIG.neighborsUrl);
+        if (!res.ok) {
+          onNeighborsLoadFailed();
+          return;
+        }
+        const file = SimpleView.precomputedNeighborsFileFromJson(await res.json());
+        if (file) onNeighborsFileLoaded(file);
+        else onNeighborsLoadFailed();
+      } catch {
+        onNeighborsLoadFailed();
+      }
+    }
+
+    function startNeighborsBackgroundLoad() {
+      if (neighborsFetchStarted) return;
+      neighborsFetchStarted = true;
+      if (typeof Worker === 'undefined') {
+        void loadPrecomputedNeighborsOnMain();
+        return;
+      }
+      const worker = new Worker('./neighbors.worker.js', { type: 'module' });
+      const finish = () => {
+        worker.onmessage = null;
+        worker.onerror = null;
+        worker.terminate();
+      };
+      worker.onmessage = (event) => {
+        const data = event.data;
+        finish();
+        if (data?.type === 'ok' && data.file) {
+          onNeighborsFileLoaded(data.file);
+          return;
+        }
+        void loadPrecomputedNeighborsOnMain();
+      };
+      worker.onerror = () => {
+        finish();
+        void loadPrecomputedNeighborsOnMain();
+      };
+      worker.postMessage({
+        type: 'load',
+        msgpackUrl: CONFIG.neighborsMsgpackUrl,
+        jsonUrl: CONFIG.neighborsUrl,
+      });
+    }
+
+    function syncViewModeLinks() {
+      const expertLink = document.getElementById('switch-to-expert-link');
+      if (expertLink && simpleFocusContext?.focusId && regionIndex) {
+        expertLink.href = buildExpertViewUrl(simpleFocusContext.focusId);
+      }
+    }
+
+    function setLoadStatus(text) {
+      if (!loadStatus) return;
+      if (text) {
+        loadStatus.textContent = text;
+        loadStatus.style.display = 'block';
+      } else {
+        loadStatus.style.display = 'none';
+      }
+    }
+
+    const STATS_MSGPACK_LOAD_TIMEOUT_MS = 120_000;
+
+    function loadRegionFeaturesInWorker(url) {
+      return new Promise((resolve, reject) => {
+        if (typeof Worker === 'undefined') {
+          reject(new Error('Web Worker nicht verfügbar'));
+          return;
+        }
+        const worker = new Worker('./statsMsgpack.worker.js', { type: 'module' });
+        let settled = false;
+        const finish = (fn) => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timeoutId);
+          worker.onmessage = null;
+          worker.onerror = null;
+          worker.terminate();
+          fn();
+        };
+        const timeoutId = setTimeout(() => {
+          finish(() => reject(new Error('Timeout beim Laden der Gebietsdaten')));
+        }, STATS_MSGPACK_LOAD_TIMEOUT_MS);
+        worker.onmessage = (event) => {
+          const data = event.data;
+          if (data?.type === 'ok' && data.bytes) {
+            finish(() => resolve(StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes))));
+            return;
+          }
+          if (data?.type === 'error') {
+            finish(() => reject(new Error(data.message || 'Worker-Fehler')));
+          }
+        };
+        worker.onerror = () => {
+          finish(() => reject(new Error('Worker-Fehler beim Laden')));
+        };
+        worker.postMessage({ type: 'load', url });
+      });
+    }
+
+    async function loadAllRegionFeaturesSync() {
+      const data = await statsDataPromise;
+      if (data.type === 'msgpack') {
+        return StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
+      }
+      return data.data.features || [];
+    }
 
     async function init() {
       try {
-        const [statsRes, manifestRes] = await Promise.all([
-          fetch(CONFIG.statsUrl),
-          fetch(CONFIG.manifestUrl).catch(() => ({ ok: true, json: async () => ({}) })),
-        ]);
-        if (!statsRes.ok) throw new Error('stats.geojson fehlt – zuerst export-stats-geojson ausführen');
-        const stats = await statsRes.json();
-        manifest = manifestRes.ok ? await manifestRes.json() : {};
-        allFeatures = stats.features || [];
-        rebuildRegionIndex();
-        rawLoaded = true;
+        await statsReadyPromise;
+        const manifestPromise = fetch(CONFIG.manifestUrl)
+          .catch(() => ({ ok: false }))
+          .then(async (res) => (res.ok ? res.json() : {}));
+        manifest = await manifestPromise;
         setPanelActionsEnabled(true);
         colorScaleSelect.innerHTML = '';
         for (const scale of CONFIG.colorScales) {
@@ -2797,18 +3518,37 @@ export function generateViewerHtml(generatedAt: string) {
           colorScaleSelect.appendChild(el);
         }
         populateGebietSelect();
-        populateUntergebietSelect();
-        populateDarstellungSelect();
+        if (!isSimpleUiFromUrl()) {
+          populateUntergebietSelect();
+          await yieldToMain();
+          populateDarstellungSelect();
+        }
         initOverlayColorInputs();
         applyUrlOptions();
-        applyCurrentView();
+        await applyCurrentView();
+        if (isSimpleUiFromUrl()) {
+          void populateUntergebietSelect();
+        }
+        const loadNeighborsAfterPageReady = () => ensureNeighborsLoaded();
+        if (document.readyState === 'complete') loadNeighborsAfterPageReady();
+        else window.addEventListener('load', loadNeighborsAfterPageReady, { once: true });
       } catch (e) {
         loadError.style.display = 'block';
         loadError.textContent = String(e.message || e);
       }
     }
 
-    init();
+    void (async () => {
+      try {
+        await statsReadyPromise;
+        await init();
+      } catch (e) {
+        if (loadError) {
+          loadError.style.display = 'block';
+          loadError.textContent = String(e.message || e);
+        }
+      }
+    })();
   </script>
 </body>
 </html>

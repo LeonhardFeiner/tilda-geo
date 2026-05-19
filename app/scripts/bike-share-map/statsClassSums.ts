@@ -352,6 +352,51 @@ export function maplibrePropertyInFilter(property: string, values: string[]) {
   return ['match', ['get', property], values, true, false]
 }
 
+export function highwayTagsForRoadClass(roadClass: RoadClass) {
+  const tags: string[] = []
+  for (const [highway, cls] of Object.entries(highwayClassDefinition)) {
+    if (cls === roadClass) tags.push(highway)
+  }
+  return tags
+}
+
+export function maplibreRoadOverlayFiltersForClass(roadClass: RoadClass) {
+  const tags = highwayTagsForRoadClass(roadClass)
+  const isResidential = roadClass === 'residential_like'
+  return {
+    major: maplibrePropertyInFilter('road', isResidential ? [] : tags),
+    residential: maplibrePropertyInFilter('road', isResidential ? tags : []),
+  }
+}
+
+export function maplibreRoadOverlayFiltersForHighwayTag(tag: string) {
+  const roadClass = roadClassForKey(tag)
+  const isResidential = roadClass === 'residential_like'
+  return {
+    major: maplibrePropertyInFilter('road', isResidential ? [] : [tag]),
+    residential: maplibrePropertyInFilter('road', isResidential ? [tag] : []),
+  }
+}
+
+export function maplibreBikelaneOverlayFilterForClass(cls: BikelaneClass) {
+  return maplibrePropertyInFilter('category', [...bikelaneCategoryTags[cls]])
+}
+
+export function maplibreBikelaneOverlayFilterForTag(tag: string) {
+  return maplibrePropertyInFilter('category', [tag])
+}
+
+export function combineMaplibreFilters(...filters: unknown[]) {
+  const active = filters.filter((f) => {
+    if (!f) return false
+    if (Array.isArray(f) && f[0] === 'literal' && f[1] === false) return false
+    return true
+  })
+  if (!active.length) return ['literal', false]
+  if (active.length === 1) return active[0]
+  return ['all', ...active]
+}
+
 export {
   computeChoroplethScaleRange,
   DEFAULT_IQR_MULTIPLIER,

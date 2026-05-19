@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /**
- * Dump /api/stats-equivalent GeoJSON from public.aggregated_lengths (needs local Postgres).
- * Geometries are simplified in Web Mercator (~150 m) so Landkreis borders stay recognizable.
+ * Dump /api/stats-equivalent region stats from public.aggregated_lengths (needs local Postgres).
+ * Primary viewer format: single binary stats.msgpack (MessagePack). Optional stats.geojson for build.ts.
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -9,9 +9,21 @@ import { feature, featureCollection } from '@turf/helpers'
 import type { Geometry } from 'geojson'
 import { geoDataClient } from '@/server/prisma-client.server'
 import { fetchAggregatedLengthRows } from '../stats-export/aggregatedLengthsExport'
+import { fetchPrecomputedRegionNeighbors } from '../stats-export/regionNeighborsExport'
+import { encodeStatsRegionPack } from '../stats-export/statsRegionPack'
+import { buildRegionIndex } from './regionNavigation'
+import { encodeNeighborsPack } from './regionNeighbors'
 
 const outDir = join(import.meta.dir, 'output')
-const outPath = join(outDir, 'stats.geojson')
+const msgpackPath = join(outDir, 'stats.msgpack')
+const geojsonPath = join(outDir, 'stats.geojson')
+const neighborsMsgpackPath = join(outDir, 'neighbors.msgpack')
+const neighborsJsonPath = join(outDir, 'neighbors.json')
+const manifestPath = join(outDir, 'manifest.json')
+
+const writeGeojson = process.argv.includes('--geojson')
+const skipNeighbors = process.argv.includes('--skip-neighbors')
+const skipNeighborsJson = process.argv.includes('--skip-neighbors-json')
 
 /** Simplification tolerance in metres (EPSG:3857). */
 const SIMPLIFY_METRES = 150
@@ -60,6 +72,54 @@ const features = rows
   .filter((f) => f != null)
 
 mkdirSync(outDir, { recursive: true })
-writeFileSync(outPath, `${JSON.stringify(featureCollection(features))}\n`, 'utf8')
-process.stdout.write(`${outPath} (${features.length} features)\n`)
+
+const msgpackBytes = encodeStatsRegionPack(features)
+writeFileSync(msgpackPath, msgpackBytes)
+
+const index = buildRegionIndex(features)
+writeFileSync(
+  manifestPath,
+  `${JSON.stringify(
+    {
+      version: 2,
+      deutschlandId: index.deutschlandId,
+      kreisfreieStaedteIds: [...index.kreisfreieIds],
+      stadtstaatIds: [...index.stadtstaaten.map((s) => s.id)],
+      featureCount: features.length,
+    },
+    null,
+    2,
+  )}\n`,
+)
+let neighborCounts: { lk: number; gm: number } | null = null
+if (!skipNeighbors) {
+  process.stdout.write('Nachbarn aus DB (nach stats.msgpack)…\n')
+  const neighbors = await fetchPrecomputedRegionNeighbors()
+  neighborCounts = {
+    lk: Object.keys(neighbors.landkreis).length,
+    gm: Object.keys(neighbors.gemeinde).length,
+  }
+  writeFileSync(neighborsMsgpackPath, Buffer.from(encodeNeighborsPack(neighbors)))
+  if (!skipNeighborsJson) {
+    writeFileSync(neighborsJsonPath, `${JSON.stringify(neighbors)}\n`)
+  }
+}
+
+if (writeGeojson) {
+  writeFileSync(geojsonPath, `${JSON.stringify(featureCollection(features))}\n`)
+}
+
+const msgpackMb = (msgpackBytes.byteLength / 1024 / 1024).toFixed(1)
+process.stdout.write(`${msgpackPath} (${features.length} features, ${msgpackMb} MiB)\n`)
+process.stdout.write(`${manifestPath}\n`)
+if (neighborCounts) {
+  process.stdout.write(
+    `${neighborsMsgpackPath} (LK ${neighborCounts.lk}, GM ${neighborCounts.gm})\n`,
+  )
+}
+if (writeGeojson) {
+  process.stdout.write(`${geojsonPath} (legacy GeoJSON, optional)\n`)
+} else {
+  process.stdout.write(`Tip: pass --geojson to also write ${geojsonPath} for build.ts\n`)
+}
 await geoDataClient.$disconnect()

@@ -1,6 +1,6 @@
 import { BIKE_SHARE_COLOR_CAP_PCT } from './constants'
 
-export type ColorScaleId = 'green' | 'traffic'
+export type ColorScaleId = 'green' | 'traffic' | 'colorblind'
 
 export type ColorScaleDef = {
   id: ColorScaleId
@@ -32,6 +32,15 @@ export const COLOR_SCALES = [
     mid: '#ffeb3b',
     high: '#2e7d32',
     bikelaneColor: '#1565c0',
+  },
+  {
+    id: 'colorblind',
+    label: 'Blau–Gelb–Orange (farbenblind)',
+    legendGradient: 'linear-gradient(to right, #e69f00, #f0e442, #3274a1)',
+    low: '#e69f00',
+    mid: '#f0e442',
+    high: '#3274a1',
+    bikelaneColor: '#882255',
   },
 ] satisfies ColorScaleDef[]
 
