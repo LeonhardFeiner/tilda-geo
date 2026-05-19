@@ -568,17 +568,21 @@ function comparePresetsForDarstellungList(
   const covB = presetCoverageForScope(b.id, scopeLevel, gebiet, untergebiet, index)
   if (covA !== covB) return covA === 'full' ? -1 : 1
 
-  if (covA === 'partial') {
-    const gapA = partialGapRankForScope(a.id, scopeLevel, gebiet, untergebiet, index)
-    const gapB = partialGapRankForScope(b.id, scopeLevel, gebiet, untergebiet, index)
-    if (gapA !== gapB) return gapA - gapB
-  }
+  // Primary map unit (coarse → fine), e.g. Regierungsbezirk before Landkreis before Gemeinde.
+  if (a.sortLevel !== b.sortLevel) return a.sortLevel - b.sortLevel
 
   const hierarchy = comparePresetUnitLevelHierarchy(
     presetUnitLevels(a.id, gebiet, untergebiet),
     presetUnitLevels(b.id, gebiet, untergebiet),
   )
   if (hierarchy !== 0) return hierarchy
+
+  // Same unit mix: denser partial tiling first.
+  if (covA === 'partial') {
+    const gapA = partialGapRankForScope(a.id, scopeLevel, gebiet, untergebiet, index)
+    const gapB = partialGapRankForScope(b.id, scopeLevel, gebiet, untergebiet, index)
+    if (gapA !== gapB) return gapA - gapB
+  }
 
   return a.label.localeCompare(b.label, 'de')
 }
@@ -611,6 +615,17 @@ export function listDarstellungPresetGroupsForScope(
   return presets.length ? [{ coverage: 'full' as const, label: '', presets }] : []
 }
 
+export function preferredDarstellungPresetForScope(
+  gebiet: GebietValue,
+  untergebiet: UntergebietValue,
+) {
+  if (isDeutschlandScope(gebiet, untergebiet)) return 'landkreis_kreisfrei'
+  if (untergebiet.startsWith('lk:')) return 'gemeinden'
+  if (untergebiet.startsWith('rb:')) return 'landkreis_kreisfrei'
+  if (gebiet !== DEUTSCHLAND_GEBIET && !untergebiet) return 'landkreis_kreisfrei'
+  return null
+}
+
 export function defaultDarstellungPresetForScope(
   gebiet: GebietValue,
   untergebiet: UntergebietValue,
@@ -622,11 +637,9 @@ export function defaultDarstellungPresetForScope(
     index,
     features,
   )
-  const scopeLevel = scopeLevelFor(gebiet, untergebiet)
-  const full = presets.find(
-    (p) => presetCoverageForScope(p.id, scopeLevel, gebiet, untergebiet, index) === 'full',
-  )
-  if (full) return full.id
+  const allowed = new Set(presets.map((p) => p.id))
+  const preferred = preferredDarstellungPresetForScope(gebiet, untergebiet)
+  if (preferred && allowed.has(preferred)) return preferred
   if (presets[0]) return presets[0].id
   return 'bundeslaender'
 }

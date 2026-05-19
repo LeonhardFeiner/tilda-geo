@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
   buildRegionIndex,
   comparePresetUnitLevelHierarchy,
+  defaultDarstellungPresetForScope,
   DEUTSCHLAND_GEBIET,
   filterFeaturesForView,
   isPresetAllowedForScope,
@@ -9,6 +10,7 @@ import {
   listAllBundeslaender,
   listDarstellungPresetsForScope,
   parseDarstellungParam,
+  preferredDarstellungPresetForScope,
   presetCoverageForScope,
   presetIncludesStadtstaatenUnits,
   presetLabelForScope,
@@ -313,5 +315,58 @@ describe('regionNavigation', () => {
     expect(ids.indexOf(fullIds[0]!)).toBeLessThan(ids.indexOf(partialIds[0]!))
     expect(fullIds.indexOf('regierungsbezirke')).toBeLessThan(fullIds.indexOf('gemeinden'))
     expect(ids).not.toContain('landkreise_und_stadtstaaten')
+  })
+
+  test('darstellung order: partial presets follow sortLevel coarse to fine', () => {
+    const presets = listDarstellungPresetsForScope(
+      { gebiet: 'deutschland', untergebiet: '', darstellung: 'bundeslaender' },
+      index,
+      features,
+    )
+    const ids = presets.map((p) => p.id)
+    const scopeLevel = scopeLevelFor('deutschland', '')
+    const partialIds = ids.filter(
+      (id) => presetCoverageForScope(id, scopeLevel, 'deutschland', '', index) === 'partial',
+    )
+    const sortLevels = partialIds.map(
+      (id) => DISPLAY_PRESETS.find((p) => p.id === id)?.sortLevel ?? 99,
+    )
+    for (let i = 1; i < sortLevels.length; i++) {
+      expect(sortLevels[i]).toBeGreaterThanOrEqual(sortLevels[i - 1]!)
+    }
+    expect(partialIds.indexOf('regierungsbezirke')).toBeLessThan(partialIds.indexOf('landkreise'))
+  })
+
+  test('default darstellung by scope', () => {
+    expect(preferredDarstellungPresetForScope(DEUTSCHLAND_GEBIET, '')).toBe('landkreis_kreisfrei')
+    expect(preferredDarstellungPresetForScope('relation/BY', '')).toBe('landkreis_kreisfrei')
+    expect(preferredDarstellungPresetForScope('relation/BY', 'rb:relation/RB')).toBe(
+      'landkreis_kreisfrei',
+    )
+    expect(preferredDarstellungPresetForScope('relation/BY', 'lk:relation/LK')).toBe('gemeinden')
+
+    expect(defaultDarstellungPresetForScope(DEUTSCHLAND_GEBIET, '', index, features)).toBe(
+      'landkreis_kreisfrei',
+    )
+    expect(defaultDarstellungPresetForScope('relation/BY', '', index, features)).toBe(
+      'landkreis_kreisfrei',
+    )
+    expect(defaultDarstellungPresetForScope('relation/BY', 'rb:relation/RB', index, features)).toBe(
+      'landkreis_kreisfrei',
+    )
+    expect(defaultDarstellungPresetForScope('relation/BY', 'lk:relation/LK', index, features)).toBe(
+      'gemeinden',
+    )
+  })
+
+  test('darstellung order: regierungsbezirk scope landkreis before gemeinde', () => {
+    const presets = listDarstellungPresetsForScope(
+      { gebiet: 'relation/BY', untergebiet: 'rb:relation/RB', darstellung: 'landkreise' },
+      index,
+      features,
+    )
+    const ids = presets.map((p) => p.id)
+    expect(ids.indexOf('landkreise')).toBeLessThan(ids.indexOf('gemeindeverbaende'))
+    expect(ids.indexOf('gemeindeverbaende')).toBeLessThan(ids.indexOf('gemeinden'))
   })
 })

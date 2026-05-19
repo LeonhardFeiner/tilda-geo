@@ -122,22 +122,32 @@
         color: #666;
         margin-top: 4px;
       }
-      .count-classes,
-      .color-options {
-        margin-top: 8px;
+      .panel-section {
+        border-top: 1px solid #e8e8e8;
+        margin: 0;
       }
-      .count-classes > summary,
-      .color-options > summary {
+      .panel-section > summary {
+        display: list-item;
+        list-style-position: inside;
         cursor: pointer;
         font-size: 13px;
         font-weight: 600;
         color: #333;
         user-select: none;
-        list-style-position: outside;
+        padding: 8px 0;
+        margin: 0;
       }
-      .count-classes[open] > summary,
-      .color-options[open] > summary {
+      .panel-section[open] > summary {
         margin-bottom: 8px;
+      }
+      .panel-section > summary::-webkit-details-marker {
+        color: #666;
+      }
+      .panel-section[open] > :not(summary) {
+        padding-bottom: 8px;
+      }
+      .map-legend-section .map-legend {
+        padding-bottom: 0;
       }
       .class-filters {
         margin: 8px 0;
@@ -285,7 +295,7 @@
         margin: 2px 0 0;
       }
       .choropleth-legend {
-        margin-top: 8px;
+        margin: 0;
       }
       .choropleth-legend-title {
         font-size: 12px;
@@ -307,14 +317,18 @@
       }
       .map-legend {
         display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin-top: 0;
+        padding-top: 8px;
+      }
+      .map-legend-toggles {
+        display: flex;
         flex-wrap: wrap;
         gap: 12px 18px;
         align-items: center;
-        margin-top: 10px;
-        padding-top: 8px;
-        border-top: 1px solid #ddd;
       }
-      .map-legend label {
+      .map-legend-toggles label {
         display: flex;
         align-items: center;
         gap: 6px;
@@ -331,22 +345,7 @@
         flex-shrink: 0;
       }
       .ranking {
-        margin-top: 10px;
-        border-top: 1px solid #e8e8e8;
-        padding-top: 8px;
-      }
-      .ranking summary {
-        cursor: pointer;
-        font-size: 13px;
-        font-weight: 600;
-        color: #333;
-        user-select: none;
-      }
-      .ranking summary::-webkit-details-marker {
-        color: #666;
-      }
-      .ranking[open] summary {
-        margin-bottom: 6px;
+        padding-top: 0;
       }
       .ranking-hint {
         font-weight: normal;
@@ -363,7 +362,7 @@
       }
       .ranking-list li {
         display: grid;
-        grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 3em;
+        grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 4.75em;
         gap: 2px 6px;
         align-items: center;
         margin: 3px 0;
@@ -396,6 +395,7 @@
         font-variant-numeric: tabular-nums;
         font-size: 10px;
         color: #444;
+        white-space: nowrap;
       }
       .ranking-list .ranking-more,
       .ranking-list .ranking-divider {
@@ -463,15 +463,18 @@
         cursor: not-allowed;
       }
       .ranking-scroll {
-        max-height: min(40vh, 320px);
-        overflow-y: auto;
         overflow-x: hidden;
         padding-right: 2px;
+      }
+      .ranking-scroll--scroll {
+        max-height: min(40vh, 320px);
+        overflow-y: auto;
       }
       .view-meta {
         font-size: 11px;
         color: #666;
-        margin-top: 8px;
+        margin: 0;
+        line-height: 1.45;
       }
       .footer {
         font-size: 11px;
@@ -610,6 +613,10 @@
       .region-nav[hidden] {
         display: none !important;
       }
+      .panel-options {
+        display: flex;
+        flex-direction: column;
+      }
     </style>
   </head>
   <body>
@@ -622,25 +629,20 @@
       <div class="panel-body">
         <p id="load-error"></p>
         <div class="panel-options" id="panel-options">
-          <div class="region-nav" id="region-nav">
-            <label for="gebiet-select">Gebiet</label>
-            <select id="gebiet-select"></select>
-            <p class="region-nav" id="untergebiet-wrap">
-              <label for="untergebiet-select">Untergebiet</label>
-              <select id="untergebiet-select"></select>
-            </p>
-            <label for="darstellung-select">Karte zeigt</label>
-            <select id="darstellung-select"></select>
-          </div>
-          <p class="view-meta" id="view-meta"></p>
-          <div class="choropleth-legend">
-            <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
-            <div class="legend-bar" id="legend-bar"></div>
-            <div class="legend-labels">
-              <span id="legend-min"></span><span id="legend-max"></span>
+          <details class="panel-section region-scope-block" id="region-scope-block" open>
+            <summary>Gebiet &amp; Darstellung</summary>
+            <div class="region-nav" id="region-nav">
+              <label for="gebiet-select">Gebiet</label>
+              <select id="gebiet-select"></select>
+              <p class="region-nav" id="untergebiet-wrap">
+                <label for="untergebiet-select">Untergebiet</label>
+                <select id="untergebiet-select"></select>
+              </p>
+              <label for="darstellung-select">Karte zeigt</label>
+              <select id="darstellung-select"></select>
             </div>
-          </div>
-          <details class="count-classes" id="count-classes-details">
+          </details>
+          <details class="panel-section count-classes" id="count-classes-details">
             <summary>Zählung: Straßen- & Radinfra-Klassen</summary>
             <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen.</p>
             <button type="button" id="preset-radinfra">Radinfra.de-Standard</button>
@@ -651,7 +653,7 @@
               <strong>Radinfrastruktur</strong>
             </div>
           </details>
-          <details class="color-options" id="color-options-details">
+          <details class="panel-section color-options" id="color-options-details">
             <summary>Farben & Darstellung</summary>
             <label for="basemap-select">Hintergrundkarte</label>
             <select id="basemap-select"></select>
@@ -729,21 +731,34 @@
               </div>
             </div>
           </details>
-          <div class="map-legend">
-            <label>
-              <input type="checkbox" id="toggle-bikelanes" checked />
-              <span class="swatch" id="bikelane-swatch"></span>
-              Radwege
-            </label>
-            <label>
-              <input type="checkbox" id="toggle-roads" />
-              <span class="swatch" id="road-swatch"></span>
-              Straßen
-            </label>
-          </div>
-          <details class="ranking" id="ranking-details">
+          <details class="panel-section map-legend-section" id="map-legend-section" open>
+            <summary>Legende</summary>
+            <div class="map-legend">
+              <div class="choropleth-legend">
+                <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
+                <div class="legend-bar" id="legend-bar"></div>
+                <div class="legend-labels">
+                  <span id="legend-min"></span><span id="legend-max"></span>
+                </div>
+              </div>
+              <p class="view-meta" id="view-meta"></p>
+              <div class="map-legend-toggles">
+                <label>
+                  <input type="checkbox" id="toggle-bikelanes" checked />
+                  <span class="swatch" id="bikelane-swatch"></span>
+                  Radwege
+                </label>
+                <label>
+                  <input type="checkbox" id="toggle-roads" />
+                  <span class="swatch" id="road-swatch"></span>
+                  Straßen
+                </label>
+              </div>
+            </div>
+          </details>
+          <details class="panel-section ranking" id="ranking-details" open>
             <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
-            <div class="ranking-toolbar" id="ranking-toolbar" hidden>
+            <div class="ranking-toolbar" id="ranking-toolbar">
               <div class="ranking-mode" role="group" aria-label="Ranglisten-Ansicht">
                 <button
                   type="button"
@@ -840,7 +855,7 @@
     <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
     <script>
       const CONFIG = {
-        generatedAt: '2026-05-18T22:28:13.888Z',
+        generatedAt: '2026-05-19T07:13:23.316Z',
         basemap: 'light',
         basemapStyles: {
           blank: {
@@ -1157,7 +1172,13 @@
         if (allowed.includes(prev)) {
           darstellungSelect.value = prev
         } else if (allowed.length) {
-          darstellungSelect.value = allowed[0]
+          const def = RegionNav.defaultDarstellungForScope(
+            scope.gebiet,
+            scope.untergebiet,
+            regionIndex,
+            allFeatures,
+          )
+          darstellungSelect.value = allowed.includes(def) ? def : allowed[0]
         }
       }
 
@@ -1273,6 +1294,7 @@
       const toggleRoads = document.getElementById('toggle-roads')
       const loadError = document.getElementById('load-error')
       const rankingDetails = document.getElementById('ranking-details')
+      const rankingScroll = document.getElementById('ranking-scroll')
       const rankingToolbar = document.getElementById('ranking-toolbar')
       const viewCsvRow = document.getElementById('view-csv-row')
       const viewCsvBtnToolbar = document.getElementById('view-csv-btn-toolbar')
@@ -1307,7 +1329,7 @@
       let lastRankingMinPct = 0
       let lastRankingMaxPct = 20
       let rankingMode = 'topflop'
-      const RANKING_TOP_N = 15
+      const RANKING_TOP_N = 10
       const rankByFeatureId = new Map()
       let selectedFeatureId = null
       let regionClickBound = false
@@ -1638,8 +1660,7 @@
         lastPctRange = { min, max, scaleCapped: range.scaleCapped, dataMax: range.dataMax }
         updateLegendRange(min, max)
         lastRankingFeatures = filtered
-        if (!rankingDetails.hidden) updateRanking(filtered, min, max)
-        else rebuildRankIndex(filtered)
+        updateRanking(filtered, min, max)
         updateViewMetaText(filtered, range)
         refreshSelectedRegionIfNeeded()
         const geojson = buildRegionGeojson(filtered)
@@ -1726,18 +1747,13 @@
       updateScaleCapDefaultForView()
 
       function updateRankingVisibility() {
-        const available = !RegionNav.viewShowsManyGemeinden(currentViewScope)
-        rankingDetails.hidden = !available
-        rankingToolbar.hidden = !available
-        viewCsvRow.hidden = available
-        if (!available) {
-          rankingDetails.open = false
-          document.getElementById('ranking-list').replaceChildren()
-          document.getElementById('ranking-summary').textContent = ''
-        } else if (available && !lastRankingViewAvailable) {
+        rankingDetails.hidden = false
+        rankingToolbar.hidden = false
+        viewCsvRow.hidden = true
+        if (!lastRankingViewAvailable) {
           rankingDetails.open = true
         }
-        lastRankingViewAvailable = available
+        lastRankingViewAvailable = true
       }
 
       function syncRankingModeButtons() {
@@ -1747,10 +1763,15 @@
         }
       }
 
+      function syncRankingScrollLayout() {
+        rankingScroll.classList.toggle('ranking-scroll--scroll', rankingMode === 'all')
+      }
+
       function setRankingMode(mode) {
         if (mode !== 'topflop' && mode !== 'all') return
         rankingMode = mode
         syncRankingModeButtons()
+        syncRankingScrollLayout()
         if (lastRankingSorted.length) {
           updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct)
         }
@@ -1871,9 +1892,11 @@
         return lerpColor(scale.mid, scale.high, (t - 0.5) * 2)
       }
 
-      function rebuildRankIndex(sorted) {
+      function rebuildRankIndex(features) {
         rankByFeatureId.clear()
-        const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        const withPct = [...features]
+          .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+          .sort(compareByBikeShare)
         withPct.forEach((f, i) => {
           const id = f.properties?.id
           if (id) rankByFeatureId.set(id, { rank: i + 1, total: withPct.length })
@@ -1895,7 +1918,8 @@
           label.textContent = row.label
           const km = document.createElement('span')
           km.className = 'km'
-          km.textContent = TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km'
+          km.textContent =
+            TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km'
           li.append(label, km)
           ul.appendChild(li)
         }
@@ -1918,7 +1942,8 @@
           label.textContent = row.label
           const km = document.createElement('span')
           km.className = 'km'
-          km.textContent = TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km'
+          km.textContent =
+            TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km'
           li.append(label, km)
           ul.appendChild(li)
         }
@@ -2180,8 +2205,8 @@
         if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value)
         if (!toggleBikelanes.checked) params.set('radwege', '0')
         if (toggleRoads.checked) params.set('strassen', '1')
-        if (rankingDetails.open && !rankingDetails.hidden) params.set('ranking', 'open')
-        if (rankingMode !== 'topflop' && !rankingDetails.hidden) {
+        if (rankingDetails.open) params.set('ranking', 'open')
+        if (rankingMode !== 'topflop') {
           params.set('rankingMode', rankingMode)
         }
         if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
@@ -2378,19 +2403,17 @@
         }
 
         const ranking = params.get('ranking')
-        if (!RegionNav.viewShowsManyGemeinden(currentViewScope)) {
-          if (ranking != null && ranking !== '') {
-            rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open'
-          } else {
-            rankingDetails.open = true
-          }
-          const rankingModeParam = params.get('rankingMode')
-          if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
-            rankingMode = rankingModeParam
-            syncRankingModeButtons()
-          }
-          lastRankingViewAvailable = true
+        if (ranking != null && ranking !== '') {
+          rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open'
+        } else {
+          rankingDetails.open = true
         }
+        const rankingModeParam = params.get('rankingMode')
+        if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
+          rankingMode = rankingModeParam
+          syncRankingModeButtons()
+        }
+        lastRankingViewAvailable = true
 
         const colors = params.get('colors') ?? params.get('palette') ?? params.get('farbskala')
         let scaleFromUrl = null
@@ -2699,8 +2722,7 @@
         lastRankingFeatures = filtered
         updateRankingVisibility()
         updateScaleCapHint()
-        if (!rankingDetails.hidden) updateRanking(filtered, min, max)
-        else rebuildRankIndex(filtered)
+        updateRanking(filtered, min, max)
         updateViewMetaText(filtered, range)
         updatePanelSummaryPreview()
         refreshSelectedRegionIfNeeded()
@@ -2754,7 +2776,7 @@
         syncOverlayColorInputsFromScale(colorScaleSelect.value)
         applyOverlayLineColors()
         updateRegionColors(lastPctRange.min, lastPctRange.max)
-        if (lastRankingFeatures.length && !rankingDetails.hidden) {
+        if (lastRankingFeatures.length) {
           updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max)
         }
       })
@@ -2779,6 +2801,7 @@
         btn.addEventListener('click', () => setRankingMode(btn.dataset.rankingMode))
       }
       syncRankingModeButtons()
+      syncRankingScrollLayout()
       copyViewLinkBtn.addEventListener('click', copyShareLink)
       function updateBasemapHint() {
         const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value)

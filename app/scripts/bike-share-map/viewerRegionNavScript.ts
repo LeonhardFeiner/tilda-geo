@@ -148,7 +148,13 @@ export function viewerRegionNavScript() {
       if (allowed.includes(prev)) {
         darstellungSelect.value = prev;
       } else if (allowed.length) {
-        darstellungSelect.value = allowed[0];
+        const def = RegionNav.defaultDarstellungForScope(
+          scope.gebiet,
+          scope.untergebiet,
+          regionIndex,
+          allFeatures,
+        );
+        darstellungSelect.value = allowed.includes(def) ? def : allowed[0];
       }
     }
 

@@ -1,56 +1,57 @@
 ;(() => {
   var a = Object.defineProperty
-  var x = (N) => N
-  function p(N, R) {
-    this[N] = x.bind(null, R)
+  var p = (N) => N
+  function u(N, R) {
+    this[N] = p.bind(null, R)
   }
-  var u = (N, R) => {
-    for (var T in R) a(N, T, { get: R[T], enumerable: !0, configurable: !0, set: p.bind(R, T) })
+  var g = (N, R) => {
+    for (var j in R) a(N, j, { get: R[j], enumerable: !0, configurable: !0, set: u.bind(R, j) })
   }
   var k = {}
-  u(k, {
-    viewShowsManyGemeinden: () => l,
-    viewShowsGemeindenLevel: () => JN,
-    viewScopeFromLegacyViewId: () => VN,
-    viewLabel: () => EN,
-    scopeLevelFor: () => Y,
+  g(k, {
+    viewShowsManyGemeinden: () => x,
+    viewShowsGemeindenLevel: () => MN,
+    viewScopeFromLegacyViewId: () => WN,
+    viewLabel: () => JN,
+    scopeLevelFor: () => _,
     scopeIdFor: () => D,
-    scopeBoundsFeatures: () => WN,
+    scopeBoundsFeatures: () => XN,
     presetUnitLevels: () => S,
     presetMinLevel: () => K,
     presetLabelForScope: () => B,
-    presetIncludesStadtstaatenUnits: () => n,
-    presetCoverageForScope: () => $,
+    presetIncludesStadtstaatenUnits: () => t,
+    presetCoverageForScope: () => F,
+    preferredDarstellungPresetForScope: () => o,
     partialGapRankForScope: () => H,
-    parseUntergebietParam: () => MN,
-    parseGebietParam: () => ON,
-    parseDarstellungParam: () => QN,
-    listStadtbezirkeInGebiet: () => CN,
-    listRegierungsbezirkeInGebiet: () => jN,
-    listLandkreiseInGebiet: () => qN,
-    listKreisfreieInGebiet: () => zN,
+    parseUntergebietParam: () => ON,
+    parseGebietParam: () => QN,
+    parseDarstellungParam: () => VN,
+    listStadtbezirkeInGebiet: () => EN,
+    listRegierungsbezirkeInGebiet: () => qN,
+    listLandkreiseInGebiet: () => zN,
+    listKreisfreieInGebiet: () => CN,
     listDarstellungPresetsForScope: () => P,
-    listDarstellungPresetGroupsForScope: () => NN,
-    listAllBundeslaender: () => d,
+    listDarstellungPresetGroupsForScope: () => RN,
+    listAllBundeslaender: () => n,
     isStandaloneGemeinde: () => h,
-    isStadtstaatGebiet: () => r,
+    isStadtstaatGebiet: () => d,
     isStadtstaatFeature: () => G,
-    isPresetAllowedForScope: () => c,
-    isKreisfrei: () => s,
-    isDeutschlandScope: () => F,
-    filterFeaturesForView: () => w,
+    isPresetAllowedForScope: () => w,
+    isKreisfrei: () => r,
+    isDeutschlandScope: () => U,
+    filterFeaturesForView: () => l,
     featureWithinScope: () => V,
-    defaultDarstellungPresetForScope: () => o,
+    defaultDarstellungPresetForScope: () => c,
     defaultDarstellungForScope: () => f,
     comparePresetUnitLevelHierarchy: () => I,
     buildRegionIndex: () => b,
-    STADTSTAAT_IDS: () => _,
-    DISPLAY_PRESETS: () => U,
-    DEUTSCHLAND_GEBIET: () => g,
+    STADTSTAAT_IDS: () => Z,
+    DISPLAY_PRESETS: () => $,
+    DEUTSCHLAND_GEBIET: () => v,
   })
-  var g = 'deutschland',
-    _ = new Set(['relation/62422', 'relation/62782', 'relation/62772']),
-    U = [
+  var v = 'deutschland',
+    Z = new Set(['relation/62422', 'relation/62782', 'relation/62772']),
+    $ = [
       { id: 'bundeslaender', label: 'Bundesländer', minLevel: 4, sortLevel: 4 },
       { id: 'regierungsbezirke', label: 'Regierungsbezirke', minLevel: 5, sortLevel: 5 },
       {
@@ -83,7 +84,7 @@
       { id: 'stadtbezirke', label: 'Stadtbezirke', minLevel: 9, sortLevel: 9 },
       { id: 'stadtteile', label: 'Stadtteile', minLevel: 10, sortLevel: 10 },
     ],
-    v = {
+    s = {
       regierungsbezirke_und_stadtstaaten: 'regierungsbezirke',
       landkreise_und_stadtstaaten: 'landkreis_kreisfrei',
       gemeindeverbaende_und_stadtstaaten: 'gemeindeverbaende_kreisfrei',
@@ -97,7 +98,7 @@
   }
   function b(N) {
     let R = new Map(),
-      T = new Map(),
+      j = new Map(),
       q = new Map()
     for (let E of N) {
       let Q = M(E)
@@ -105,16 +106,16 @@
       R.set(Q, E)
       let X = E.properties?.parent_id
       if (X) {
-        T.set(Q, X)
-        let Z = q.get(X) ?? []
-        ;(Z.push(E), q.set(X, Z))
+        j.set(Q, X)
+        let Y = q.get(X) ?? []
+        ;(Y.push(E), q.set(X, Y))
       }
     }
-    let j = new Set()
+    let T = new Set()
     for (let E of N) {
       if (J(E) !== '6') continue
       let Q = M(E)
-      if (!N.some((Z) => J(Z) === '8' && Z.properties?.landkreis_id === Q)) j.add(Q)
+      if (!N.some((Y) => J(Y) === '8' && Y.properties?.landkreis_id === Q)) T.add(Q)
     }
     let z = null,
       C = []
@@ -130,49 +131,49 @@
         z = M(E)
         break
       }
-    let O = C.filter((E) => !_.has(E.id)),
-      W = C.filter((E) => _.has(E.id))
+    let O = C.filter((E) => !Z.has(E.id)),
+      W = C.filter((E) => Z.has(E.id))
     return {
       deutschlandId: z,
-      kreisfreieIds: j,
-      parentById: T,
+      kreisfreieIds: T,
+      parentById: j,
       byId: R,
       bundeslaender: C,
       flaechenlaender: O,
       stadtstaaten: W,
     }
   }
-  function s(N, R) {
+  function r(N, R) {
     return R.kreisfreieIds.has(N)
   }
-  function r(N) {
-    return N !== 'deutschland' && _.has(N)
+  function d(N) {
+    return N !== 'deutschland' && Z.has(N)
   }
   function G(N) {
-    return J(N) === '4' && _.has(M(N))
-  }
-  function d(N) {
-    return [...N.bundeslaender]
+    return J(N) === '4' && Z.has(M(N))
   }
   function n(N) {
+    return [...N.bundeslaender]
+  }
+  function t(N) {
     return (
       N === 'landkreis_kreisfrei' ||
       N === 'gemeindeverbaende_kreisfrei' ||
       N === 'gemeinden_kreisfrei'
     )
   }
-  function B(N, R, T) {
-    if (!F(R, T)) return N.label
+  function B(N, R, j) {
+    if (!U(R, j)) return N.label
     if (N.id === 'landkreis_kreisfrei') return 'Landkreise, kreisfreie Städte und Stadtstaaten'
     if (N.id === 'gemeindeverbaende_kreisfrei')
       return 'Gemeindeverbände, Einzelgemeinden, kreisfreie Städte und Stadtstaaten'
     if (N.id === 'gemeinden_kreisfrei') return 'Gemeinden, kreisfreie Städte und Stadtstaaten'
     return N.label
   }
-  function F(N, R) {
+  function U(N, R) {
     return N === 'deutschland' && !R
   }
-  function Y(N, R) {
+  function _(N, R) {
     if (N === 'deutschland') return 2
     if (!R) return 4
     if (R.startsWith('rb:')) return 5
@@ -188,58 +189,58 @@
     return N
   }
   function m(N, R) {
-    let T = [],
+    let j = [],
       q = N,
-      j = new Set()
-    while (q && !j.has(q)) {
-      j.add(q)
+      T = new Set()
+    while (q && !T.has(q)) {
+      T.add(q)
       let z = R.parentById.get(q)
       if (!z) break
-      ;(T.push(z), (q = z))
+      ;(j.push(z), (q = z))
     }
-    return T
+    return j
   }
   function h(N, R) {
     if (J(N) !== '8') return !1
-    let T = M(N)
-    for (let j of m(T, R)) {
-      let z = R.byId.get(j)
+    let j = M(N)
+    for (let T of m(j, R)) {
+      let z = R.byId.get(T)
       if (z && J(z) === '7') return !1
     }
-    let q = R.parentById.get(T)
+    let q = R.parentById.get(j)
     if (q) {
-      let j = R.byId.get(q)
-      if (j && J(j) === '7') return !1
+      let T = R.byId.get(q)
+      if (T && J(T) === '7') return !1
     }
     return !0
   }
-  function y(N, R, T) {
+  function y(N, R, j) {
     let q = J(N),
-      j = M(N)
+      T = M(N)
     if (q === '7') return !0
-    if (h(N, T)) return !0
-    if (R === 'gemeindeverbaende_kreisfrei' && q === '6' && T.kreisfreieIds.has(j)) return !0
+    if (h(N, j)) return !0
+    if (R === 'gemeindeverbaende_kreisfrei' && q === '6' && j.kreisfreieIds.has(T)) return !0
     return !1
   }
-  function V(N, R, T, q) {
-    let j = M(N)
-    if (!j || !N.geometry) return !1
-    let z = D(R, T)
-    if (R === 'deutschland' && !T) return !0
+  function V(N, R, j, q) {
+    let T = M(N)
+    if (!T || !N.geometry) return !1
+    let z = D(R, j)
+    if (R === 'deutschland' && !j) return !0
     if (!z) return !1
-    if (j === z) return !0
-    if (m(j, q).includes(z)) return !0
+    if (T === z) return !0
+    if (m(T, q).includes(z)) return !0
     let C = J(N),
       O = N.properties ?? {}
-    if (Y(R, T) === 4 && C > '4' && O.bundesland_id === z) return !0
-    if (Y(R, T) === 6 && C > '6' && O.landkreis_id === z) return !0
+    if (_(R, j) === 4 && C > '4' && O.bundesland_id === z) return !0
+    if (_(R, j) === 6 && C > '6' && O.landkreis_id === z) return !0
     return !1
   }
-  function t(N, R, T, q, j) {
+  function i(N, R, j, q, T) {
     let z = J(N),
       C = M(N),
-      O = T.kreisfreieIds.has(C),
-      W = F(q, j)
+      O = j.kreisfreieIds.has(C),
+      W = U(q, T)
     switch (R) {
       case 'bundeslaender':
         return z === '4'
@@ -252,9 +253,9 @@
       case 'landkreis_kreisfrei':
         return z === '6' || (W && G(N))
       case 'gemeindeverbaende':
-        return y(N, 'gemeindeverbaende', T)
+        return y(N, 'gemeindeverbaende', j)
       case 'gemeindeverbaende_kreisfrei':
-        return y(N, 'gemeindeverbaende_kreisfrei', T) || (W && G(N))
+        return y(N, 'gemeindeverbaende_kreisfrei', j) || (W && G(N))
       case 'gemeinden':
         return z === '8'
       case 'gemeinden_kreisfrei':
@@ -268,31 +269,31 @@
     }
   }
   function K(N) {
-    return U.find((T) => T.id === N)?.minLevel ?? 99
+    return $.find((j) => j.id === N)?.minLevel ?? 99
   }
-  function L(N, R, T) {
-    for (let q of T.byId.values()) {
+  function L(N, R, j) {
+    for (let q of j.byId.values()) {
       if (J(q) !== '6') continue
-      if (!T.kreisfreieIds.has(M(q))) continue
-      if (V(q, N, R, T)) return !0
+      if (!j.kreisfreieIds.has(M(q))) continue
+      if (V(q, N, R, j)) return !0
     }
     return !1
   }
-  function i(N, R, T) {
+  function e(N, R, j) {
     if (R) return !1
     if (N === 'deutschland') return !1
     let q = 0
-    for (let j of T.byId.values()) {
-      if (J(j) !== '5') continue
-      if (j.properties?.bundesland_id !== N) continue
-      if (!V(j, N, '', T)) continue
+    for (let T of j.byId.values()) {
+      if (J(T) !== '5') continue
+      if (T.properties?.bundesland_id !== N) continue
+      if (!V(T, N, '', j)) continue
       q++
     }
     return q > 0
   }
-  function $(N, R, T, q, j) {
-    let z = L(T, q, j),
-      C = i(T, q, j)
+  function F(N, R, j, q, T) {
+    let z = L(j, q, T),
+      C = e(j, q, T)
     if (q.startsWith('kreisfrei:')) {
       if (N === 'kreisfreie' || N === 'gemeinden_kreisfrei') return 'full'
       if (N === 'gemeinden' || N === 'stadtbezirke' || N === 'stadtteile') return 'full'
@@ -329,9 +330,9 @@
         return 'partial'
     }
   }
-  function H(N, R, T, q, j) {
-    if ($(N, R, T, q, j) === 'full') return 0
-    let z = L(T, q, j)
+  function H(N, R, j, q, T) {
+    if (F(N, R, j, q, T) === 'full') return 0
+    let z = L(j, q, T)
     switch (N) {
       case 'regierungsbezirke':
         return R <= 2 ? 50 : 10
@@ -349,8 +350,8 @@
         return 60
     }
   }
-  function S(N, R, T) {
-    let j = F(R, T) ? [4] : [],
+  function S(N, R, j) {
+    let T = U(R, j) ? [4] : [],
       z = [6]
     switch (N) {
       case 'bundeslaender':
@@ -361,15 +362,15 @@
       case 'kreisfreie':
         return [6]
       case 'landkreis_kreisfrei':
-        return [...j, 6]
+        return [...T, 6]
       case 'gemeindeverbaende':
         return [7, 8]
       case 'gemeindeverbaende_kreisfrei':
-        return [...j, ...z, 7, 8]
+        return [...T, ...z, 7, 8]
       case 'gemeinden':
         return [8]
       case 'gemeinden_kreisfrei':
-        return [...j, ...z, 8]
+        return [...T, ...z, 8]
       case 'stadtbezirke':
         return [9]
       case 'stadtteile':
@@ -379,166 +380,174 @@
     }
   }
   function I(N, R) {
-    let T = Math.max(N.length, R.length)
-    for (let q = 0; q < T; q++) {
-      let j = N[q],
+    let j = Math.max(N.length, R.length)
+    for (let q = 0; q < j; q++) {
+      let T = N[q],
         z = R[q]
-      if (j === void 0 && z === void 0) continue
-      if (j === void 0) return -1
+      if (T === void 0 && z === void 0) continue
+      if (T === void 0) return -1
       if (z === void 0) return 1
-      if (j !== z) return j - z
+      if (T !== z) return T - z
     }
     return 0
   }
-  function e(N, R, T, q, j, z) {
-    let C = $(N.id, T, q, j, z),
-      O = $(R.id, T, q, j, z)
+  function NN(N, R, j, q, T, z) {
+    let C = F(N.id, j, q, T, z),
+      O = F(R.id, j, q, T, z)
     if (C !== O) return C === 'full' ? -1 : 1
+    if (N.sortLevel !== R.sortLevel) return N.sortLevel - R.sortLevel
+    let W = I(S(N.id, q, T), S(R.id, q, T))
+    if (W !== 0) return W
     if (C === 'partial') {
-      let E = H(N.id, T, q, j, z),
-        Q = H(R.id, T, q, j, z)
+      let E = H(N.id, j, q, T, z),
+        Q = H(R.id, j, q, T, z)
       if (E !== Q) return E - Q
     }
-    let W = I(S(N.id, q, j), S(R.id, q, j))
-    if (W !== 0) return W
     return N.label.localeCompare(R.label, 'de')
   }
-  function P(N, R, T) {
-    let q = Y(N.gebiet, N.untergebiet)
-    return U.filter((z) => {
-      if (!c(z.id, q, R, N.gebiet, N.untergebiet)) return !1
-      return w(T, { ...N, darstellung: z.id }, R).length > 0
-    }).sort((z, C) => e(z, C, q, N.gebiet, N.untergebiet, R))
+  function P(N, R, j) {
+    let q = _(N.gebiet, N.untergebiet)
+    return $.filter((z) => {
+      if (!w(z.id, q, R, N.gebiet, N.untergebiet)) return !1
+      return l(j, { ...N, darstellung: z.id }, R).length > 0
+    }).sort((z, C) => NN(z, C, q, N.gebiet, N.untergebiet, R))
   }
-  function NN(N, R, T) {
-    let q = P(N, R, T)
+  function RN(N, R, j) {
+    let q = P(N, R, j)
     return q.length ? [{ coverage: 'full', label: '', presets: q }] : []
   }
-  function o(N, R, T, q) {
-    let j = P({ gebiet: N, untergebiet: R, darstellung: 'bundeslaender' }, T, q),
-      z = Y(N, R),
-      C = j.find((O) => $(O.id, z, N, R, T) === 'full')
-    if (C) return C.id
-    if (j[0]) return j[0].id
+  function o(N, R) {
+    if (U(N, R)) return 'landkreis_kreisfrei'
+    if (R.startsWith('lk:')) return 'gemeinden'
+    if (R.startsWith('rb:')) return 'landkreis_kreisfrei'
+    if (N !== 'deutschland' && !R) return 'landkreis_kreisfrei'
+    return null
+  }
+  function c(N, R, j, q) {
+    let T = P({ gebiet: N, untergebiet: R, darstellung: 'bundeslaender' }, j, q),
+      z = new Set(T.map((O) => O.id)),
+      C = o(N, R)
+    if (C && z.has(C)) return C
+    if (T[0]) return T[0].id
     return 'bundeslaender'
   }
-  function c(N, R, T, q, j) {
+  function w(N, R, j, q, T) {
     if (K(N) <= R) return !1
-    let C = D(q, j)
-    if (q === 'deutschland' && !j) {
-      if (N === 'regierungsbezirke') return TN(T, '5', 'deutschland', '', T) > 0
+    let C = D(q, T)
+    if (q === 'deutschland' && !T) {
+      if (N === 'regierungsbezirke') return jN(j, '5', 'deutschland', '', j) > 0
       return !0
     }
     if (!C) return !1
-    if (N === 'regierungsbezirke') return RN(C, '5', T) > 0
-    if (N === 'stadtbezirke') return A(C, '9', T) > 0
-    if (N === 'stadtteile') return A(C, '10', T) > 0
+    if (N === 'regierungsbezirke') return TN(C, '5', j) > 0
+    if (N === 'stadtbezirke') return A(C, '9', j) > 0
+    if (N === 'stadtteile') return A(C, '10', j) > 0
     return !0
   }
-  function RN(N, R, T) {
+  function TN(N, R, j) {
     let q = 0
-    for (let j of T.byId.values()) {
-      if (J(j) !== R) continue
-      if (j.properties?.parent_id === N) q++
+    for (let T of j.byId.values()) {
+      if (J(T) !== R) continue
+      if (T.properties?.parent_id === N) q++
     }
     return q
   }
-  function A(N, R, T) {
+  function A(N, R, j) {
     let q = 0
-    for (let j of T.byId.values()) {
-      if (J(j) !== R) continue
-      let z = M(j)
+    for (let T of j.byId.values()) {
+      if (J(T) !== R) continue
+      let z = M(T)
       if (z === N) continue
-      if (m(z, T).includes(N)) q++
-      else if (j.properties?.bundesland_id === N) q++
-      else if (j.properties?.landkreis_id === N) q++
+      if (m(z, j).includes(N)) q++
+      else if (T.properties?.bundesland_id === N) q++
+      else if (T.properties?.landkreis_id === N) q++
     }
     return q
   }
-  function TN(N, R, T, q, j) {
+  function jN(N, R, j, q, T) {
     let z = 0
     for (let C of N.byId.values()) {
       if (J(C) !== R) continue
-      if (V(C, T, q, N)) z++
+      if (V(C, j, q, N)) z++
     }
     return z
   }
-  function w(N, R, T) {
-    let q = Y(R.gebiet, R.untergebiet),
-      j = D(R.gebiet, R.untergebiet)
+  function l(N, R, j) {
+    let q = _(R.gebiet, R.untergebiet),
+      T = D(R.gebiet, R.untergebiet)
     return N.filter((z) => {
-      if (!t(z, R.darstellung, T, R.gebiet, R.untergebiet)) return !1
-      if (!V(z, R.gebiet, R.untergebiet, T)) return !1
-      if (j && M(z) === j && K(R.darstellung) <= q) return !1
+      if (!i(z, R.darstellung, j, R.gebiet, R.untergebiet)) return !1
+      if (!V(z, R.gebiet, R.untergebiet, j)) return !1
+      if (T && M(z) === T && K(R.darstellung) <= q) return !1
       return !0
     })
   }
-  function jN(N, R) {
-    let T = []
+  function qN(N, R) {
+    let j = []
     for (let q of R.byId.values()) {
       if (J(q) !== '5') continue
       if (N !== 'deutschland' && q.properties?.bundesland_id !== N) continue
       if (!V(q, N, '', R)) continue
-      T.push({ id: M(q), name: String(q.properties?.name ?? M(q)), level: '5' })
+      j.push({ id: M(q), name: String(q.properties?.name ?? M(q)), level: '5' })
     }
-    return (T.sort((q, j) => q.name.localeCompare(j.name, 'de')), T)
+    return (j.sort((q, T) => q.name.localeCompare(T.name, 'de')), j)
   }
-  function qN(N, R, T) {
+  function zN(N, R, j) {
     let q = []
-    for (let j of T.byId.values()) {
-      if (J(j) !== '6') continue
-      if (T.kreisfreieIds.has(M(j))) continue
-      if (!V(j, N, R, T)) continue
-      q.push({ id: M(j), name: String(j.properties?.name ?? M(j)), level: '6' })
+    for (let T of j.byId.values()) {
+      if (J(T) !== '6') continue
+      if (j.kreisfreieIds.has(M(T))) continue
+      if (!V(T, N, R, j)) continue
+      q.push({ id: M(T), name: String(T.properties?.name ?? M(T)), level: '6' })
     }
-    return (q.sort((j, z) => j.name.localeCompare(z.name, 'de')), q)
+    return (q.sort((T, z) => T.name.localeCompare(z.name, 'de')), q)
   }
-  function zN(N, R, T) {
+  function CN(N, R, j) {
     let q = []
-    for (let j of T.byId.values()) {
-      if (J(j) !== '6') continue
-      if (!T.kreisfreieIds.has(M(j))) continue
-      if (!V(j, N, R, T)) continue
-      q.push({ id: M(j), name: String(j.properties?.name ?? M(j)), level: '6' })
+    for (let T of j.byId.values()) {
+      if (J(T) !== '6') continue
+      if (!j.kreisfreieIds.has(M(T))) continue
+      if (!V(T, N, R, j)) continue
+      q.push({ id: M(T), name: String(T.properties?.name ?? M(T)), level: '6' })
     }
-    return (q.sort((j, z) => j.name.localeCompare(z.name, 'de')), q)
+    return (q.sort((T, z) => T.name.localeCompare(z.name, 'de')), q)
   }
-  function CN(N, R, T) {
+  function EN(N, R, j) {
     let q = []
-    for (let j of T.byId.values()) {
-      if (J(j) !== '9') continue
-      if (!V(j, N, R, T)) continue
-      q.push({ id: M(j), name: String(j.properties?.name ?? M(j)), level: '9' })
+    for (let T of j.byId.values()) {
+      if (J(T) !== '9') continue
+      if (!V(T, N, R, j)) continue
+      q.push({ id: M(T), name: String(T.properties?.name ?? M(T)), level: '9' })
     }
-    return (q.sort((j, z) => j.name.localeCompare(z.name, 'de')), q)
+    return (q.sort((T, z) => T.name.localeCompare(z.name, 'de')), q)
   }
-  function f(N, R, T, q = [...T.byId.values()]) {
-    return o(N, R, T, q)
+  function f(N, R, j, q = [...j.byId.values()]) {
+    return c(N, R, j, q)
   }
-  function EN(N, R) {
-    let T = []
-    if (N.gebiet === 'deutschland') T.push('Deutschland')
+  function JN(N, R) {
+    let j = []
+    if (N.gebiet === 'deutschland') j.push('Deutschland')
     else {
-      let j = R.byId.get(N.gebiet)
-      T.push(String(j?.properties?.name ?? N.gebiet))
+      let T = R.byId.get(N.gebiet)
+      j.push(String(T?.properties?.name ?? N.gebiet))
     }
     if (N.untergebiet.startsWith('rb:')) {
-      let j = N.untergebiet.slice(3)
-      T.push(String(R.byId.get(j)?.properties?.name ?? j))
+      let T = N.untergebiet.slice(3)
+      j.push(String(R.byId.get(T)?.properties?.name ?? T))
     } else if (N.untergebiet.startsWith('lk:')) {
-      let j = N.untergebiet.slice(3)
-      T.push(String(R.byId.get(j)?.properties?.name ?? j))
+      let T = N.untergebiet.slice(3)
+      j.push(String(R.byId.get(T)?.properties?.name ?? T))
     } else if (N.untergebiet.startsWith('kreisfrei:')) {
-      let j = N.untergebiet.slice(9)
-      T.push(String(R.byId.get(j)?.properties?.name ?? j))
+      let T = N.untergebiet.slice(9)
+      j.push(String(R.byId.get(T)?.properties?.name ?? T))
     } else if (N.untergebiet.startsWith('stadt:')) {
-      let j = N.untergebiet.slice(6)
-      T.push(String(R.byId.get(j)?.properties?.name ?? j))
+      let T = N.untergebiet.slice(6)
+      j.push(String(R.byId.get(T)?.properties?.name ?? T))
     }
-    let q = U.find((j) => j.id === N.darstellung)
-    return (T.push(q ? B(q, N.gebiet, N.untergebiet) : N.darstellung), T.join(' · '))
+    let q = $.find((T) => T.id === N.darstellung)
+    return (j.push(q ? B(q, N.gebiet, N.untergebiet) : N.darstellung), j.join(' · '))
   }
-  function l(N) {
+  function x(N) {
     return (
       N.darstellung === 'gemeinden' ||
       N.darstellung === 'gemeinden_kreisfrei' ||
@@ -548,10 +557,10 @@
       N.darstellung === 'stadtteile'
     )
   }
-  function JN(N) {
-    return l(N)
-  }
   function MN(N) {
+    return x(N)
+  }
+  function ON(N) {
     if (!N) return ''
     let R = decodeURIComponent(N)
     if (
@@ -563,19 +572,19 @@
       return R
     return ''
   }
-  function ON(N, R) {
+  function QN(N, R) {
     if (!N || N === 'deutschland' || N === 'de') return 'deutschland'
-    let T = decodeURIComponent(N)
-    if (R.byId.has(T)) return T
+    let j = decodeURIComponent(N)
+    if (R.byId.has(j)) return j
     return 'deutschland'
   }
-  function QN(N) {
+  function VN(N) {
     if (!N) return null
     let R = decodeURIComponent(N),
-      T = v[R] ?? R
-    return U.some((q) => q.id === T) ? T : null
+      j = s[R] ?? R
+    return $.some((q) => q.id === j) ? j : null
   }
-  function VN(N, R) {
+  function WN(N, R) {
     if (N === 'bayern-landkreise-kreisfreie' || N === 'bayern-landkreise')
       return {
         gebiet: 'relation/2145268',
@@ -604,15 +613,15 @@
         darstellung: 'gemeinden_kreisfrei',
       }
     if (R.byId.has(N)) {
-      let T = R.byId.get(N)
-      if (J(T) === '4') return { gebiet: N, untergebiet: '', darstellung: f(N, '', R) }
+      let j = R.byId.get(N)
+      if (J(j) === '4') return { gebiet: N, untergebiet: '', darstellung: f(N, '', R) }
     }
     return null
   }
-  function WN(N, R, T, q) {
-    let j = D(R, T)
-    if (j) {
-      let C = q.byId.get(j)
+  function XN(N, R, j, q) {
+    let T = D(R, j)
+    if (T) {
+      let C = q.byId.get(T)
       if (C?.geometry) return [C]
     }
     if (R === 'deutschland') {

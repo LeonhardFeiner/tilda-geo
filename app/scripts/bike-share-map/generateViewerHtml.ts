@@ -128,12 +128,25 @@ export function generateViewerHtml(generatedAt: string) {
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
     .hint { font-size: 11px; color: #666; margin-top: 4px; }
-    .count-classes, .color-options { margin-top: 8px; }
-    .count-classes > summary, .color-options > summary {
-      cursor: pointer; font-size: 13px; font-weight: 600; color: #333;
-      user-select: none; list-style-position: outside;
+    .panel-section {
+      border-top: 1px solid #e8e8e8;
+      margin: 0;
     }
-    .count-classes[open] > summary, .color-options[open] > summary { margin-bottom: 8px; }
+    .panel-section > summary {
+      display: list-item;
+      list-style-position: inside;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+      user-select: none;
+      padding: 8px 0;
+      margin: 0;
+    }
+    .panel-section[open] > summary { margin-bottom: 8px; }
+    .panel-section > summary::-webkit-details-marker { color: #666; }
+    .panel-section[open] > :not(summary) { padding-bottom: 8px; }
+    .map-legend-section .map-legend { padding-bottom: 0; }
     .class-filters { margin: 8px 0; }
     .class-filters strong { display: block; font-size: 12px; margin-bottom: 4px; }
     .class-filters label {
@@ -195,26 +208,23 @@ export function generateViewerHtml(generatedAt: string) {
       width: 4em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
     }
     .overlay-layer-hint { margin: 2px 0 0; }
-    .choropleth-legend { margin-top: 8px; }
+    .choropleth-legend { margin: 0; }
     .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
     .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0; }
     .legend-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
     .map-legend {
-      display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
-      margin-top: 10px; padding-top: 8px; border-top: 1px solid #ddd;
+      display: flex; flex-direction: column; gap: 8px;
+      margin-top: 0; padding-top: 8px;
     }
-    .map-legend label {
+    .map-legend-toggles {
+      display: flex; flex-wrap: wrap; gap: 12px 18px; align-items: center;
+    }
+    .map-legend-toggles label {
       display: flex; align-items: center; gap: 6px;
       font-size: 12px; font-weight: normal; margin: 0; cursor: pointer;
     }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
-    .ranking { margin-top: 10px; border-top: 1px solid #e8e8e8; padding-top: 8px; }
-    .ranking summary {
-      cursor: pointer; font-size: 13px; font-weight: 600; color: #333;
-      user-select: none;
-    }
-    .ranking summary::-webkit-details-marker { color: #666; }
-    .ranking[open] summary { margin-bottom: 6px; }
+    .ranking { padding-top: 0; }
     .ranking-hint { font-weight: normal; font-size: 11px; color: #888; }
     .ranking-list {
       margin: 0; padding: 0;
@@ -223,7 +233,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .ranking-list li {
       display: grid;
-      grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 3em;
+      grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 4.75em;
       gap: 2px 6px;
       align-items: center;
       margin: 3px 0;
@@ -240,6 +250,7 @@ export function generateViewerHtml(generatedAt: string) {
     .ranking-bar-fill { height: 100%; border-radius: 2px; min-width: 2px; }
     .ranking-pct {
       text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: #444;
+      white-space: nowrap;
     }
     .ranking-list .ranking-more,
     .ranking-list .ranking-divider {
@@ -274,12 +285,16 @@ export function generateViewerHtml(generatedAt: string) {
     .view-csv-btn:hover { background: #f5f9ff; }
     .view-csv-btn:disabled { opacity: 0.45; cursor: not-allowed; }
     .ranking-scroll {
-      max-height: min(40vh, 320px);
-      overflow-y: auto;
       overflow-x: hidden;
       padding-right: 2px;
     }
-    .view-meta { font-size: 11px; color: #666; margin-top: 8px; }
+    .ranking-scroll--scroll {
+      max-height: min(40vh, 320px);
+      overflow-y: auto;
+    }
+    .view-meta {
+      font-size: 11px; color: #666; margin: 0; line-height: 1.45;
+    }
     .footer {
       font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
       border-top: 1px solid #eee; line-height: 1.55;
@@ -344,6 +359,7 @@ export function generateViewerHtml(generatedAt: string) {
     body.ui-minimal #panel-main { display: none !important; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
+    .panel-options { display: flex; flex-direction: column; }
   </style>
 </head>
 <body>
@@ -356,23 +372,20 @@ export function generateViewerHtml(generatedAt: string) {
     <div class="panel-body">
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
-    <div class="region-nav" id="region-nav">
-    <label for="gebiet-select">Gebiet</label>
-    <select id="gebiet-select"></select>
-    <p class="region-nav" id="untergebiet-wrap">
-      <label for="untergebiet-select">Untergebiet</label>
-      <select id="untergebiet-select"></select>
-    </p>
-    <label for="darstellung-select">Karte zeigt</label>
-    <select id="darstellung-select"></select>
-    </div>
-    <p class="view-meta" id="view-meta"></p>
-    <div class="choropleth-legend">
-      <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
-      <div class="legend-bar" id="legend-bar"></div>
-      <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
-    </div>
-    <details class="count-classes" id="count-classes-details">
+    <details class="panel-section region-scope-block" id="region-scope-block" open>
+      <summary>Gebiet &amp; Darstellung</summary>
+      <div class="region-nav" id="region-nav">
+        <label for="gebiet-select">Gebiet</label>
+        <select id="gebiet-select"></select>
+        <p class="region-nav" id="untergebiet-wrap">
+          <label for="untergebiet-select">Untergebiet</label>
+          <select id="untergebiet-select"></select>
+        </p>
+        <label for="darstellung-select">Karte zeigt</label>
+        <select id="darstellung-select"></select>
+      </div>
+    </details>
+    <details class="panel-section count-classes" id="count-classes-details">
           <summary>Zählung: Straßen- & Radinfra-Klassen</summary>
           <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen.</p>
           <button type="button" id="preset-radinfra">Radinfra.de-Standard</button>
@@ -383,7 +396,7 @@ export function generateViewerHtml(generatedAt: string) {
             <strong>Radinfrastruktur</strong>
           </div>
     </details>
-    <details class="color-options" id="color-options-details">
+    <details class="panel-section color-options" id="color-options-details">
       <summary>Farben & Darstellung</summary>
       <label for="basemap-select">Hintergrundkarte</label>
       <select id="basemap-select"></select>
@@ -451,21 +464,32 @@ export function generateViewerHtml(generatedAt: string) {
         </div>
       </div>
     </details>
-    <div class="map-legend">
-      <label>
-        <input type="checkbox" id="toggle-bikelanes" checked />
-        <span class="swatch" id="bikelane-swatch"></span>
-        Radwege
-      </label>
-      <label>
-        <input type="checkbox" id="toggle-roads" />
-        <span class="swatch" id="road-swatch"></span>
-        Straßen
-      </label>
-    </div>
-    <details class="ranking" id="ranking-details">
+    <details class="panel-section map-legend-section" id="map-legend-section" open>
+      <summary>Legende</summary>
+      <div class="map-legend">
+        <div class="choropleth-legend">
+          <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
+          <div class="legend-bar" id="legend-bar"></div>
+          <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
+        </div>
+        <p class="view-meta" id="view-meta"></p>
+        <div class="map-legend-toggles">
+          <label>
+            <input type="checkbox" id="toggle-bikelanes" checked />
+            <span class="swatch" id="bikelane-swatch"></span>
+            Radwege
+          </label>
+          <label>
+            <input type="checkbox" id="toggle-roads" />
+            <span class="swatch" id="road-swatch"></span>
+            Straßen
+          </label>
+        </div>
+      </div>
+    </details>
+    <details class="panel-section ranking" id="ranking-details" open>
         <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
-        <div class="ranking-toolbar" id="ranking-toolbar" hidden>
+        <div class="ranking-toolbar" id="ranking-toolbar">
           <div class="ranking-mode" role="group" aria-label="Ranglisten-Ansicht">
             <button type="button" class="ranking-mode-btn" data-ranking-mode="topflop" aria-pressed="true">Top &amp; Flop</button>
             <button type="button" class="ranking-mode-btn" data-ranking-mode="all" aria-pressed="false">Alle</button>
@@ -537,6 +561,7 @@ export function generateViewerHtml(generatedAt: string) {
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
     const rankingDetails = document.getElementById('ranking-details');
+    const rankingScroll = document.getElementById('ranking-scroll');
     const rankingToolbar = document.getElementById('ranking-toolbar');
     const viewCsvRow = document.getElementById('view-csv-row');
     const viewCsvBtnToolbar = document.getElementById('view-csv-btn-toolbar');
@@ -571,7 +596,7 @@ export function generateViewerHtml(generatedAt: string) {
     let lastRankingMinPct = 0;
     let lastRankingMaxPct = 20;
     let rankingMode = 'topflop';
-    const RANKING_TOP_N = 15;
+    const RANKING_TOP_N = 10;
     const rankByFeatureId = new Map();
     let selectedFeatureId = null;
     let regionClickBound = false;
@@ -906,8 +931,7 @@ export function generateViewerHtml(generatedAt: string) {
       lastPctRange = { min, max, scaleCapped: range.scaleCapped, dataMax: range.dataMax };
       updateLegendRange(min, max);
       lastRankingFeatures = filtered;
-      if (!rankingDetails.hidden) updateRanking(filtered, min, max);
-      else rebuildRankIndex(filtered);
+      updateRanking(filtered, min, max);
       updateViewMetaText(filtered, range);
       refreshSelectedRegionIfNeeded();
       const geojson = buildRegionGeojson(filtered);
@@ -994,18 +1018,13 @@ export function generateViewerHtml(generatedAt: string) {
     updateScaleCapDefaultForView();
 
     function updateRankingVisibility() {
-      const available = !RegionNav.viewShowsManyGemeinden(currentViewScope);
-      rankingDetails.hidden = !available;
-      rankingToolbar.hidden = !available;
-      viewCsvRow.hidden = available;
-      if (!available) {
-        rankingDetails.open = false;
-        document.getElementById('ranking-list').replaceChildren();
-        document.getElementById('ranking-summary').textContent = '';
-      } else if (available && !lastRankingViewAvailable) {
+      rankingDetails.hidden = false;
+      rankingToolbar.hidden = false;
+      viewCsvRow.hidden = true;
+      if (!lastRankingViewAvailable) {
         rankingDetails.open = true;
       }
-      lastRankingViewAvailable = available;
+      lastRankingViewAvailable = true;
     }
 
     function syncRankingModeButtons() {
@@ -1015,10 +1034,15 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
+    function syncRankingScrollLayout() {
+      rankingScroll.classList.toggle('ranking-scroll--scroll', rankingMode === 'all');
+    }
+
     function setRankingMode(mode) {
       if (mode !== 'topflop' && mode !== 'all') return;
       rankingMode = mode;
       syncRankingModeButtons();
+      syncRankingScrollLayout();
       if (lastRankingSorted.length) {
         updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct);
       }
@@ -1133,9 +1157,11 @@ export function generateViewerHtml(generatedAt: string) {
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
-    function rebuildRankIndex(sorted) {
+    function rebuildRankIndex(features) {
       rankByFeatureId.clear();
-      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const withPct = [...features]
+        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .sort(compareByBikeShare);
       withPct.forEach((f, i) => {
         const id = f.properties?.id;
         if (id) rankByFeatureId.set(id, { rank: i + 1, total: withPct.length });
@@ -1158,7 +1184,7 @@ export function generateViewerHtml(generatedAt: string) {
         const km = document.createElement('span');
         km.className = 'km';
         km.textContent =
-          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km';
+          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
         li.append(label, km);
         ul.appendChild(li);
       }
@@ -1182,7 +1208,7 @@ export function generateViewerHtml(generatedAt: string) {
         const km = document.createElement('span');
         km.className = 'km';
         km.textContent =
-          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_MAX_DECIMALS) + ' km';
+          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
         li.append(label, km);
         ul.appendChild(li);
       }
@@ -1434,8 +1460,8 @@ export function generateViewerHtml(generatedAt: string) {
       if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
       if (!toggleBikelanes.checked) params.set('radwege', '0');
       if (toggleRoads.checked) params.set('strassen', '1');
-      if (rankingDetails.open && !rankingDetails.hidden) params.set('ranking', 'open');
-      if (rankingMode !== 'topflop' && !rankingDetails.hidden) {
+      if (rankingDetails.open) params.set('ranking', 'open');
+      if (rankingMode !== 'topflop') {
         params.set('rankingMode', rankingMode);
       }
       if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
@@ -1632,19 +1658,17 @@ export function generateViewerHtml(generatedAt: string) {
       }
 
       const ranking = params.get('ranking');
-      if (!RegionNav.viewShowsManyGemeinden(currentViewScope)) {
-        if (ranking != null && ranking !== '') {
-          rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open';
-        } else {
-          rankingDetails.open = true;
-        }
-        const rankingModeParam = params.get('rankingMode');
-        if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
-          rankingMode = rankingModeParam;
-          syncRankingModeButtons();
-        }
-        lastRankingViewAvailable = true;
+      if (ranking != null && ranking !== '') {
+        rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open';
+      } else {
+        rankingDetails.open = true;
       }
+      const rankingModeParam = params.get('rankingMode');
+      if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
+        rankingMode = rankingModeParam;
+        syncRankingModeButtons();
+      }
+      lastRankingViewAvailable = true;
 
       const colors = params.get('colors') ?? params.get('palette') ?? params.get('farbskala');
       let scaleFromUrl = null;
@@ -1954,8 +1978,7 @@ export function generateViewerHtml(generatedAt: string) {
       lastRankingFeatures = filtered;
       updateRankingVisibility();
       updateScaleCapHint();
-      if (!rankingDetails.hidden) updateRanking(filtered, min, max);
-      else rebuildRankIndex(filtered);
+      updateRanking(filtered, min, max);
       updateViewMetaText(filtered, range);
       updatePanelSummaryPreview();
       refreshSelectedRegionIfNeeded();
@@ -2003,7 +2026,7 @@ export function generateViewerHtml(generatedAt: string) {
       syncOverlayColorInputsFromScale(colorScaleSelect.value);
       applyOverlayLineColors();
       updateRegionColors(lastPctRange.min, lastPctRange.max);
-      if (lastRankingFeatures.length && !rankingDetails.hidden) {
+      if (lastRankingFeatures.length) {
         updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
       }
     });
@@ -2028,6 +2051,7 @@ export function generateViewerHtml(generatedAt: string) {
       btn.addEventListener('click', () => setRankingMode(btn.dataset.rankingMode));
     }
     syncRankingModeButtons();
+    syncRankingScrollLayout();
     copyViewLinkBtn.addEventListener('click', copyShareLink);
     function updateBasemapHint() {
       const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
