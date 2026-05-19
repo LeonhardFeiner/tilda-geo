@@ -184,7 +184,10 @@ export function writeSplitRegionStats(
   writeFileSync(join(outDir, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`)
 
   if (options?.writeMonolithic !== false) {
-    writeFileSync(join(outDir, 'stats.geojson'), `${JSON.stringify(statsFeatureCollection(features))}\n`)
+    writeFileSync(
+      join(outDir, 'stats.geojson'),
+      `${JSON.stringify(statsFeatureCollection(features))}\n`,
+    )
   }
 
   return {

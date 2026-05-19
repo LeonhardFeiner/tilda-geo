@@ -148,7 +148,7 @@ export function resolveFocusContext(focusId: string | null | undefined, index: R
   if (level === '5') {
     const bl = String(f.properties?.bundesland_id ?? '')
     if (!bl) return null
-    const blFeature = index.byId.get(bl)
+    const _blFeature = index.byId.get(bl)
     return {
       focusId: id,
       focusName: name,
@@ -436,23 +436,23 @@ export function simplePresetLabel(id: SimpleViewPresetId, ctx: FocusContext, ind
     case 'de_landkreis_kreisfrei':
       return 'Landkreise in Deutschland'
     case 'bl_regierungsbezirke':
-      return 'Regierungsbezirke in ' + bundeslandDisplayName(ctx, index)
+      return `Regierungsbezirke in ${bundeslandDisplayName(ctx, index)}`
     case 'bl_landkreis_kreisfrei':
-      return 'Landkreise in ' + bundeslandDisplayName(ctx, index)
+      return `Landkreise in ${bundeslandDisplayName(ctx, index)}`
     case 'bl_gemeinden_kreisfrei':
-      return 'Gemeinden in ' + bundeslandDisplayName(ctx, index)
+      return `Gemeinden in ${bundeslandDisplayName(ctx, index)}`
     case 'lk_gemeinden':
-      return 'Gemeinden in ' + landkreisDisplayName(ctx, index)
+      return `Gemeinden in ${landkreisDisplayName(ctx, index)}`
     case 'neighbors_other':
-      return 'Nachbarn von ' + ctx.focusName
+      return `Nachbarn von ${ctx.focusName}`
     case 'gm_neighbors':
-      return 'Nachbargemeinden von ' + ctx.focusName
+      return `Nachbargemeinden von ${ctx.focusName}`
     case 'lk_neighbors_other':
-      return 'Nachbarn von ' + landkreisDisplayName(ctx, index)
+      return `Nachbarn von ${landkreisDisplayName(ctx, index)}`
     case 'lk_neighbors_landkreise':
-      return 'Nachbarlandkreise von ' + landkreisDisplayName(ctx, index)
+      return `Nachbarlandkreise von ${landkreisDisplayName(ctx, index)}`
     case 'lk_neighbors_gemeinden':
-      return 'Nachbargemeinden von ' + landkreisDisplayName(ctx, index)
+      return `Nachbargemeinden von ${landkreisDisplayName(ctx, index)}`
     default:
       return id
   }
@@ -712,7 +712,7 @@ export function filterFeaturesForSimpleView(
   })
 }
 
-function matchesDarstellungLevel(
+function _matchesDarstellungLevel(
   f: StatsFeature,
   darstellung: DisplayPresetId,
   index: RegionIndex,
