@@ -3052,23 +3052,23 @@
       case 'de_landkreis_kreisfrei':
         return 'Landkreise in Deutschland'
       case 'bl_regierungsbezirke':
-        return 'Regierungsbezirke in ' + g0(Z, q)
+        return `Regierungsbezirke in ${g0(Z, q)}`
       case 'bl_landkreis_kreisfrei':
-        return 'Landkreise in ' + g0(Z, q)
+        return `Landkreise in ${g0(Z, q)}`
       case 'bl_gemeinden_kreisfrei':
-        return 'Gemeinden in ' + g0(Z, q)
+        return `Gemeinden in ${g0(Z, q)}`
       case 'lk_gemeinden':
-        return 'Gemeinden in ' + T0(Z, q)
+        return `Gemeinden in ${T0(Z, q)}`
       case 'neighbors_other':
-        return 'Nachbarn von ' + Z.focusName
+        return `Nachbarn von ${Z.focusName}`
       case 'gm_neighbors':
-        return 'Nachbargemeinden von ' + Z.focusName
+        return `Nachbargemeinden von ${Z.focusName}`
       case 'lk_neighbors_other':
-        return 'Nachbarn von ' + T0(Z, q)
+        return `Nachbarn von ${T0(Z, q)}`
       case 'lk_neighbors_landkreise':
-        return 'Nachbarlandkreise von ' + T0(Z, q)
+        return `Nachbarlandkreise von ${T0(Z, q)}`
       case 'lk_neighbors_gemeinden':
-        return 'Nachbargemeinden von ' + T0(Z, q)
+        return `Nachbargemeinden von ${T0(Z, q)}`
       default:
         return $
     }

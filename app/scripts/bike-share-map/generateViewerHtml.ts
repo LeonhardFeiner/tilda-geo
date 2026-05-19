@@ -161,17 +161,22 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .panel-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
     .share-toolbar {
-      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+      display: flex; flex-wrap: nowrap; gap: clamp(3px, 1.2vw, 6px);
+      align-items: center; width: 100%; min-width: 0;
     }
     .share-btn {
       display: inline-flex; align-items: center; justify-content: center;
-      width: 2.25rem; height: 2.25rem; padding: 0;
+      flex: 1 1 0; min-width: 0; width: auto; aspect-ratio: 1;
+      max-width: 2.25rem; max-height: 2.25rem; padding: 0;
       border: 1px solid #ccc; border-radius: 6px; background: #fafafa;
       cursor: pointer; color: #444;
     }
     .share-btn:hover:not(:disabled) { background: #f0f0f0; }
     .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .share-btn svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
+    .share-btn svg {
+      width: 62%; height: 62%; max-width: 1.15rem; max-height: 1.15rem;
+      fill: currentColor;
+    }
     #share-native[hidden] { display: none !important; }
     #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; font-size: 11px; }
     #copy-view-link-feedback.is-error { color: #b71c1c; }
@@ -369,7 +374,7 @@ export function generateViewerHtml(generatedAt: string) {
       color: #666; cursor: pointer; padding: 2px 6px;
     }
     .region-detail-close:hover { color: #111; }
-    .region-detail-meta { margin: 0 0 8px; color: #555; line-height: 1.45; }
+    .region-detail-meta { margin: 0 0 8px; color: #555; line-height: 1.45; white-space: pre-line; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -1825,7 +1830,7 @@ export function generateViewerHtml(generatedAt: string) {
           : '–';
       regionDetailMeta.textContent =
         rankText +
-        ' · ' +
+        '\n' +
         pct +
         ' · ' +
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
@@ -2266,12 +2271,20 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     async function tryNativeShareWithFiles(files, text, url, title) {
-      const attempts = [
-        { files, title, text, url },
-        { files, title, text },
-        { files, text },
-        { files },
-      ];
+      const attempts = isLikelyMobileShareDevice()
+        ? [
+            { files, title, text },
+            { files, text },
+            { files, title },
+            { files },
+            { files, title, text, url },
+          ]
+        : [
+            { files, title, text, url },
+            { files, title, text },
+            { files, text },
+            { files },
+          ];
       for (const data of attempts) {
         if (!canShareData(data)) continue;
         try {
@@ -2284,16 +2297,17 @@ export function generateViewerHtml(generatedAt: string) {
       return false;
     }
 
+    function shareFilesForDevice(files, combinedFile) {
+      if (combinedFile) return [combinedFile];
+      return files.length ? files : [];
+    }
+
     function isLikelyMobileShareDevice() {
       return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
-    function downloadShareFiles(files) {
-      for (const file of files) {
-        const objectUrl = URL.createObjectURL(file);
-        triggerImageDownload(objectUrl, file.name);
-        setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
-      }
+    function mapPolygonHoverEnabled() {
+      return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
     }
 
     async function copyShareMessageToClipboard(text, url) {
@@ -2311,7 +2325,7 @@ export function generateViewerHtml(generatedAt: string) {
 
     async function shareViewWithScreenshots(fallbackApp) {
       const { url, title, text } = sharePayload();
-      const shareLine = text + '\\n\\n' + url;
+      const mobile = isLikelyMobileShareDevice();
       showCopyViewLinkFeedback('Screenshots werden vorbereitet …');
       let files = [];
       let combinedFile = null;
@@ -2321,15 +2335,15 @@ export function generateViewerHtml(generatedAt: string) {
         combinedFile = assets.combinedFile;
       } catch {
         showCopyViewLinkFeedback('Screenshots konnten nicht erstellt werden.', true);
-        if (fallbackApp) shareViaApp(fallbackApp);
+        if (fallbackApp && !mobile) shareViaApp(fallbackApp);
         return;
       }
 
-      const shareFiles =
-        !isLikelyMobileShareDevice() && combinedFile ? [combinedFile] : files.length ? files : combinedFile ? [combinedFile] : [];
+      const shareFiles = shareFilesForDevice(files, combinedFile);
+      const hadImages = shareFiles.length > 0;
 
       try {
-        if (shareFiles.length && (await tryNativeShareWithFiles(shareFiles, text, url, title))) {
+        if (hadImages && (await tryNativeShareWithFiles(shareFiles, text, url, title))) {
           showCopyViewLinkFeedback('Geteilt.');
           return;
         }
@@ -2337,22 +2351,15 @@ export function generateViewerHtml(generatedAt: string) {
         if (err?.name === 'AbortError') return;
       }
 
-      const downloadFiles =
-        combinedFile && !isLikelyMobileShareDevice() ? [combinedFile] : shareFiles;
-      if (downloadFiles.length) downloadShareFiles(downloadFiles);
       await copyShareMessageToClipboard(text, url);
 
-      if (fallbackApp) {
+      if (fallbackApp && !mobile) {
         shareViaApp(fallbackApp);
-        if (downloadFiles.length) {
-          showCopyViewLinkFeedback(
-            isLikelyMobileShareDevice()
-              ? 'Text kopiert. Bilder gespeichert – bitte anhängen.'
-              : 'Am PC: kombiniertes Bild gespeichert und Text kopiert – bitte Bild in der App anhängen (WhatsApp Web o. Ä. unterstützt kein automatisches Anhängen).',
-          );
-        } else {
-          showCopyViewLinkFeedback('Text kopiert.');
-        }
+        showCopyViewLinkFeedback(
+          hadImages
+            ? 'Text kopiert. Bilder über die Karten-/Ranglisten-Buttons speichern oder erneut „Teilen“ nutzen.'
+            : 'Text kopiert.',
+        );
         return;
       }
 
@@ -2360,8 +2367,10 @@ export function generateViewerHtml(generatedAt: string) {
         try {
           await navigator.share({ title, text, url });
           showCopyViewLinkFeedback(
-            downloadFiles.length
-              ? 'Geteilt. Bild gespeichert – am PC bitte manuell anhängen.'
+            hadImages
+              ? mobile
+                ? 'Link geteilt. Für Bilder erneut tippen – System-Teilen-Dialog nutzen.'
+                : 'Link geteilt. Bilder über die Speichern-Buttons exportieren.'
               : 'Geteilt.',
           );
           return;
@@ -2370,13 +2379,12 @@ export function generateViewerHtml(generatedAt: string) {
         }
       }
 
-      if (downloadFiles.length) {
-        showCopyViewLinkFeedback(
-          'Bild gespeichert und Text kopiert – bitte in der Ziel-App einfügen und Bild anhängen.',
-        );
-        return;
-      }
-      showCopyViewLinkFeedback('Teilen nicht verfügbar.', true);
+      showCopyViewLinkFeedback(
+        hadImages
+          ? 'Teilen mit Bildern nicht verfügbar. Text wurde kopiert.'
+          : 'Teilen nicht verfügbar. Text wurde kopiert.',
+        true,
+      );
     }
 
     function drawRankingExportCanvas() {
@@ -3156,19 +3164,28 @@ export function generateViewerHtml(generatedAt: string) {
         });
         overlaysBound = true;
         const tooltip = document.getElementById('tooltip');
-        map.on('mousemove', 'regions-fill', (e) => {
-          const f = e.features?.[0];
-          if (!f) return;
-          map.getCanvas().style.cursor = 'pointer';
-          tooltip.style.display = 'block';
-          tooltip.textContent = f.properties.label;
-          tooltip.style.left = e.point.x + 12 + 'px';
-          tooltip.style.top = e.point.y + 12 + 'px';
-        });
-        map.on('mouseleave', 'regions-fill', () => {
-          map.getCanvas().style.cursor = '';
-          tooltip.style.display = 'none';
-        });
+        if (mapPolygonHoverEnabled()) {
+          map.on('mousemove', 'regions-fill', (e) => {
+            const f = e.features?.[0];
+            if (!f) return;
+            map.getCanvas().style.cursor = 'pointer';
+            tooltip.style.display = 'block';
+            tooltip.textContent = f.properties.label;
+            tooltip.style.left = e.point.x + 12 + 'px';
+            tooltip.style.top = e.point.y + 12 + 'px';
+          });
+          map.on('mouseleave', 'regions-fill', () => {
+            map.getCanvas().style.cursor = '';
+            tooltip.style.display = 'none';
+          });
+        } else {
+          map.on('mouseenter', 'regions-fill', () => {
+            map.getCanvas().style.cursor = 'pointer';
+          });
+          map.on('mouseleave', 'regions-fill', () => {
+            map.getCanvas().style.cursor = '';
+          });
+        }
         bindRegionMapInteraction();
         updateMapHighlights();
       }

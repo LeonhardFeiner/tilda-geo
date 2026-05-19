@@ -7,8 +7,8 @@
   var x = (n, t) => {
     for (var e in t) y(n, e, { get: t[e], enumerable: !0, configurable: !0, set: m.bind(t, e) })
   }
-  var c = {}
-  x(c, {
+  var d = {}
+  x(d, {
     rankingShowsAsAlle: () => h,
     mergeFocusChains: () => w,
     isFocusChainInTopOrFlopWindow: () => I,
@@ -48,8 +48,14 @@
     let r = n.length
     if (r <= e * 2) return !0
     let i = new Set()
-    for (let o = 0; o < e; o++) i.add(n[o].id)
-    for (let o = r - e; o < r; o++) i.add(n[o].id)
+    for (let o = 0; o < e; o++) {
+      let a = n[o]?.id
+      if (a) i.add(a)
+    }
+    for (let o = r - e; o < r; o++) {
+      let a = n[o]?.id
+      if (a) i.add(a)
+    }
     return t.some((o) => i.has(o))
   }
   function R(n, t) {
@@ -80,27 +86,27 @@
   }
   function _(n, t, e) {
     let r = n.length
-    if (r <= t * 2) return n.map((s, p) => ({ type: 'row', index: p, rank: p + 1 }))
+    if (r <= t * 2) return n.map((s, f) => ({ type: 'row', index: f, rank: f + 1 }))
     let i = [...Array(t).keys()],
       o = [...Array(t).keys()].map((s) => r - t + s),
-      d = new Set(i),
+      a = new Set(i),
       g = new Set(o),
-      u = R(n, e),
-      l = []
-    for (let s of i) l.push({ type: 'row', index: s, rank: s + 1 })
-    if (u >= 0 && !d.has(u) && !g.has(u)) {
-      let s = Math.max(0, u - 2),
-        p = Math.min(r - 1, u + 2),
-        f = []
-      for (let a = s; a <= p; a++) if (!d.has(a) && !g.has(a)) f.push(a)
-      if (f.length) {
-        l.push({ type: 'divider' })
-        for (let a of f) l.push({ type: 'row', index: a, rank: a + 1 })
+      p = R(n, e),
+      u = []
+    for (let s of i) u.push({ type: 'row', index: s, rank: s + 1 })
+    if (p >= 0 && !a.has(p) && !g.has(p)) {
+      let s = Math.max(0, p - 2),
+        f = Math.min(r - 1, p + 2),
+        c = []
+      for (let l = s; l <= f; l++) if (!a.has(l) && !g.has(l)) c.push(l)
+      if (c.length) {
+        u.push({ type: 'divider' })
+        for (let l of c) u.push({ type: 'row', index: l, rank: l + 1 })
       }
     }
-    l.push({ type: 'divider' })
-    for (let s of o) l.push({ type: 'row', index: s, rank: s + 1 })
-    return l
+    u.push({ type: 'divider' })
+    for (let s of o) u.push({ type: 'row', index: s, rank: s + 1 })
+    return u
   }
-  globalThis.RankingDisplay = c
+  globalThis.RankingDisplay = d
 })()

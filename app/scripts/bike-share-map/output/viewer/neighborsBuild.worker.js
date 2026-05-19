@@ -9,7 +9,7 @@ function D0(_) {
   let $ = new Map(),
     X = new Map(),
     Z = new Map(),
-    K = new Map()
+    H = new Map()
   for (let D of _) {
     let N = r(D)
     if (!N) continue
@@ -22,8 +22,8 @@ function D0(_) {
     let G = D.properties?.parent_id
     if (G) {
       Z.set(N, G)
-      let R = K.get(G) ?? []
-      ;(R.push(D), K.set(G, R))
+      let R = H.get(G) ?? []
+      ;(R.push(D), H.set(G, R))
     }
   }
   let M = new Set()
@@ -52,7 +52,7 @@ function D0(_) {
       q = r(D)
       break
     }
-  let H = Y.filter((D) => !M0.has(D.id)),
+  let K = Y.filter((D) => !M0.has(D.id)),
     U = Y.filter((D) => M0.has(D.id))
   return {
     deutschlandId: q,
@@ -61,7 +61,7 @@ function D0(_) {
     byId: $,
     idsByLevel: X,
     bundeslaender: Y,
-    flaechenlaender: H,
+    flaechenlaender: K,
     stadtstaaten: U,
   }
 }
@@ -115,12 +115,12 @@ function H0(_) {
 function Z0(_, $, X) {
   if (_ === null) return
   var Z,
-    K,
+    H,
     M,
     J,
     q,
     Y,
-    H,
+    K,
     U = 0,
     D = 0,
     N,
@@ -129,13 +129,13 @@ function Z0(_, $, X) {
     R = A === 'Feature',
     V = G ? _.features.length : 1
   for (var z = 0; z < V; z++) {
-    ;((H = G ? _.features[z].geometry : R ? _.geometry : _),
-      (N = H ? H.type === 'GeometryCollection' : !1),
-      (q = N ? H.geometries.length : 1))
+    ;((K = G ? _.features[z].geometry : R ? _.geometry : _),
+      (N = K ? K.type === 'GeometryCollection' : !1),
+      (q = N ? K.geometries.length : 1))
     for (var Q = 0; Q < q; Q++) {
       var B = 0,
         C = 0
-      if (((J = N ? H.geometries[Q] : H), J === null)) continue
+      if (((J = N ? K.geometries[Q] : K), J === null)) continue
       Y = J.coordinates
       var k = J.type
       switch (((U = X && (k === 'Polygon' || k === 'MultiPolygon') ? 1 : 0), k)) {
@@ -156,8 +156,8 @@ function Z0(_, $, X) {
         case 'Polygon':
         case 'MultiLineString':
           for (Z = 0; Z < Y.length; Z++) {
-            for (K = 0; K < Y[Z].length - U; K++) {
-              if ($(Y[Z][K], D, z, B, C) === !1) return !1
+            for (H = 0; H < Y[Z].length - U; H++) {
+              if ($(Y[Z][H], D, z, B, C) === !1) return !1
               D++
             }
             if (k === 'MultiLineString') B++
@@ -168,9 +168,9 @@ function Z0(_, $, X) {
         case 'MultiPolygon':
           for (Z = 0; Z < Y.length; Z++) {
             C = 0
-            for (K = 0; K < Y[Z].length; K++) {
-              for (M = 0; M < Y[Z][K].length - U; M++) {
-                if ($(Y[Z][K][M], D, z, B, C) === !1) return !1
+            for (H = 0; H < Y[Z].length; H++) {
+              for (M = 0; M < Y[Z][H].length - U; M++) {
+                if ($(Y[Z][H][M], D, z, B, C) === !1) return !1
                 D++
               }
               C++
@@ -190,12 +190,12 @@ function Z0(_, $, X) {
 function m0(_, $) {
   var X,
     Z,
-    K,
+    H,
     M,
     J,
     q,
     Y,
-    H,
+    K,
     U,
     D,
     N = 0,
@@ -204,14 +204,14 @@ function m0(_, $) {
     R = A ? _.features.length : 1
   for (X = 0; X < R; X++) {
     ;((q = A ? _.features[X].geometry : G ? _.geometry : _),
-      (H = A ? _.features[X].properties : G ? _.properties : {}),
+      (K = A ? _.features[X].properties : G ? _.properties : {}),
       (U = A ? _.features[X].bbox : G ? _.bbox : void 0),
       (D = A ? _.features[X].id : G ? _.id : void 0),
       (Y = q ? q.type === 'GeometryCollection' : !1),
       (J = Y ? q.geometries.length : 1))
-    for (K = 0; K < J; K++) {
-      if (((M = Y ? q.geometries[K] : q), M === null)) {
-        if ($(null, N, H, U, D) === !1) return !1
+    for (H = 0; H < J; H++) {
+      if (((M = Y ? q.geometries[H] : q), M === null)) {
+        if ($(null, N, K, U, D) === !1) return !1
         continue
       }
       switch (M.type) {
@@ -221,12 +221,12 @@ function m0(_, $) {
         case 'Polygon':
         case 'MultiLineString':
         case 'MultiPolygon': {
-          if ($(M, N, H, U, D) === !1) return !1
+          if ($(M, N, K, U, D) === !1) return !1
           break
         }
         case 'GeometryCollection': {
           for (Z = 0; Z < M.geometries.length; Z++)
-            if ($(M.geometries[Z], N, H, U, D) === !1) return !1
+            if ($(M.geometries[Z], N, K, U, D) === !1) return !1
           break
         }
         default:
@@ -237,14 +237,14 @@ function m0(_, $) {
   }
 }
 function x(_, $) {
-  m0(_, function (X, Z, K, M, J) {
+  m0(_, function (X, Z, H, M, J) {
     var q = X === null ? null : X.type
     switch (q) {
       case null:
       case 'Point':
       case 'LineString':
       case 'Polygon':
-        if ($(f(X, K, { bbox: M, id: J }), Z, 0) === !1) return !1
+        if ($(f(X, H, { bbox: M, id: J }), Z, 0) === !1) return !1
         return
     }
     var Y
@@ -259,10 +259,10 @@ function x(_, $) {
         Y = 'Polygon'
         break
     }
-    for (var H = 0; H < X.coordinates.length; H++) {
-      var U = X.coordinates[H],
+    for (var K = 0; K < X.coordinates.length; K++) {
+      var U = X.coordinates[K],
         D = { type: Y, coordinates: U }
-      if ($(f(D, K), Z, H) === !1) return !1
+      if ($(f(D, H), Z, K) === !1) return !1
     }
   })
 }
@@ -283,35 +283,35 @@ var W0 = p0
 var E = 0.00000000000000011102230246251565,
   T = 134217729,
   g = 0.00000000000000033306690738754706
-function p(_, $, X, Z, K) {
+function p(_, $, X, Z, H) {
   let M,
     J,
     q,
     Y,
-    H = $[0],
+    K = $[0],
     U = Z[0],
     D = 0,
     N = 0
-  if (U > H === U > -H) ((M = H), (H = $[++D]))
+  if (U > K === U > -K) ((M = K), (K = $[++D]))
   else ((M = U), (U = Z[++N]))
   let A = 0
   if (D < _ && N < X) {
-    if (U > H === U > -H) ((J = H + M), (q = M - (J - H)), (H = $[++D]))
+    if (U > K === U > -K) ((J = K + M), (q = M - (J - K)), (K = $[++D]))
     else ((J = U + M), (q = M - (J - U)), (U = Z[++N]))
-    if (((M = J), q !== 0)) K[A++] = q
+    if (((M = J), q !== 0)) H[A++] = q
     while (D < _ && N < X) {
-      if (U > H === U > -H) ((J = M + H), (Y = J - M), (q = M - (J - Y) + (H - Y)), (H = $[++D]))
+      if (U > K === U > -K) ((J = M + K), (Y = J - M), (q = M - (J - Y) + (K - Y)), (K = $[++D]))
       else ((J = M + U), (Y = J - M), (q = M - (J - Y) + (U - Y)), (U = Z[++N]))
-      if (((M = J), q !== 0)) K[A++] = q
+      if (((M = J), q !== 0)) H[A++] = q
     }
   }
   while (D < _)
-    if (((J = M + H), (Y = J - M), (q = M - (J - Y) + (H - Y)), (H = $[++D]), (M = J), q !== 0))
-      K[A++] = q
+    if (((J = M + K), (Y = J - M), (q = M - (J - Y) + (K - Y)), (K = $[++D]), (M = J), q !== 0))
+      H[A++] = q
   while (N < X)
     if (((J = M + U), (Y = J - M), (q = M - (J - Y) + (U - Y)), (U = Z[++N]), (M = J), q !== 0))
-      K[A++] = q
-  if (M !== 0 || A === 0) K[A++] = M
+      H[A++] = q
+  if (M !== 0 || A === 0) H[A++] = M
   return A
 }
 function d(_, $) {
@@ -330,10 +330,10 @@ var x0 = (3 + 16 * E) * E,
   N0 = W(12),
   A0 = W(16),
   P = W(4)
-function u0(_, $, X, Z, K, M, J) {
+function u0(_, $, X, Z, H, M, J) {
   let q,
     Y,
-    H,
+    K,
     U,
     D,
     N,
@@ -349,8 +349,8 @@ function u0(_, $, X, Z, K, M, J) {
     L,
     h,
     S,
-    v = _ - K,
-    c = X - K,
+    v = _ - H,
+    c = X - H,
     y = $ - M,
     b = Z - M
   ;((C = v * b),
@@ -387,17 +387,17 @@ function u0(_, $, X, Z, K, M, J) {
   if (I >= s || -I >= s) return I
   if (
     ((D = _ - v),
-    (q = _ - (v + D) + (D - K)),
+    (q = _ - (v + D) + (D - H)),
     (D = X - c),
-    (H = X - (c + D) + (D - K)),
+    (K = X - (c + D) + (D - H)),
     (D = $ - y),
     (Y = $ - (y + D) + (D - M)),
     (D = Z - b),
     (U = Z - (b + D) + (D - M)),
-    q === 0 && Y === 0 && H === 0 && U === 0)
+    q === 0 && Y === 0 && K === 0 && U === 0)
   )
     return I
-  if (((s = s0 * J + g * Math.abs(I)), (I += v * U + b * q - (y * H + c * Y)), I >= s || -I >= s))
+  if (((s = s0 * J + g * Math.abs(I)), (I += v * U + b * q - (y * K + c * Y)), I >= s || -I >= s))
     return I
   ;((C = q * b),
     (N = T * q),
@@ -437,13 +437,13 @@ function u0(_, $, X, Z, K, M, J) {
     (R = N - (N - U)),
     (V = U - R),
     (k = G * V - (C - A * R - G * R - A * V)),
-    (L = y * H),
+    (L = y * K),
     (N = T * y),
     (A = N - (N - y)),
     (G = y - A),
-    (N = T * H),
-    (R = N - (N - H)),
-    (V = H - R),
+    (N = T * K),
+    (R = N - (N - K)),
+    (V = K - R),
     (h = G * V - (L - A * R - G * R - A * V)),
     (z = k - h),
     (D = k - z),
@@ -467,13 +467,13 @@ function u0(_, $, X, Z, K, M, J) {
     (R = N - (N - U)),
     (V = U - R),
     (k = G * V - (C - A * R - G * R - A * V)),
-    (L = Y * H),
+    (L = Y * K),
     (N = T * Y),
     (A = N - (N - Y)),
     (G = Y - A),
-    (N = T * H),
-    (R = N - (N - H)),
-    (V = H - R),
+    (N = T * K),
+    (R = N - (N - K)),
+    (V = K - R),
     (h = G * V - (L - A * R - G * R - A * V)),
     (z = k - h),
     (D = k - z),
@@ -491,13 +491,13 @@ function u0(_, $, X, Z, K, M, J) {
   let f0 = p(I0, N0, 4, P, A0)
   return A0[f0 - 1]
 }
-function $0(_, $, X, Z, K, M) {
-  let J = ($ - M) * (X - K),
-    q = (_ - K) * (Z - M),
+function $0(_, $, X, Z, H, M) {
+  let J = ($ - M) * (X - H),
+    q = (_ - H) * (Z - M),
     Y = J - q,
-    H = Math.abs(J + q)
-  if (Math.abs(Y) >= x0 * H) return Y
-  return -u0(_, $, X, Z, K, M, H)
+    K = Math.abs(J + q)
+  if (Math.abs(Y) >= x0 * K) return Y
+  return -u0(_, $, X, Z, H, M, K)
 }
 var j1 = (7 + 56 * E) * E,
   P1 = (3 + 28 * E) * E,
@@ -606,12 +606,12 @@ var T8 = W(96),
 function R0(_, $) {
   var X,
     Z,
-    K = 0,
+    H = 0,
     M,
     J,
     q,
     Y,
-    H,
+    K,
     U,
     D,
     N = _[0],
@@ -625,16 +625,16 @@ function R0(_, $) {
       throw Error('First and last coordinates in a ring must be the same')
     ;((J = U[0] - N), (q = U[1] - A))
     for (Z; Z < V; Z++) {
-      if (((D = R[Z + 1]), (Y = D[0] - N), (H = D[1] - A), q === 0 && H === 0)) {
+      if (((D = R[Z + 1]), (Y = D[0] - N), (K = D[1] - A), q === 0 && K === 0)) {
         if ((Y <= 0 && J >= 0) || (J <= 0 && Y >= 0)) return 0
-      } else if ((H >= 0 && q <= 0) || (H <= 0 && q >= 0)) {
-        if (((M = $0(J, Y, q, H, 0, 0)), M === 0)) return 0
-        if ((M > 0 && H > 0 && q <= 0) || (M < 0 && H <= 0 && q > 0)) K++
+      } else if ((K >= 0 && q <= 0) || (K <= 0 && q >= 0)) {
+        if (((M = $0(J, Y, q, K, 0, 0)), M === 0)) return 0
+        if ((M > 0 && K > 0 && q <= 0) || (M < 0 && K <= 0 && q > 0)) H++
       }
-      ;((U = D), (q = H), (J = Y))
+      ;((U = D), (q = K), (J = Y))
     }
   }
-  if (K % 2 === 0) return !1
+  if (H % 2 === 0) return !1
   return !0
 }
 function t(_) {
@@ -663,15 +663,15 @@ function F(_, $, X = {}) {
   if (!_) throw Error('point is required')
   if (!$) throw Error('polygon is required')
   let Z = t(_),
-    K = m($),
-    M = K.type,
+    H = m($),
+    M = H.type,
     J = $.bbox,
-    q = K.coordinates
+    q = H.coordinates
   if (J && g0(Z, J) === !1) return !1
   if (M === 'Polygon') q = [q]
   let Y = !1
-  for (var H = 0; H < q.length; ++H) {
-    let U = R0(Z, q[H])
+  for (var K = 0; K < q.length; ++K) {
+    let U = R0(Z, q[K])
     if (U === 0) return X.ignoreBoundary ? !1 : !0
     else if (U) Y = !0
   }
@@ -702,26 +702,26 @@ class J0 {
     let { data: $, compare: X } = this,
       Z = $[_]
     while (_ > 0) {
-      let K = (_ - 1) >> 1,
-        M = $[K]
+      let H = (_ - 1) >> 1,
+        M = $[H]
       if (X(Z, M) >= 0) break
-      ;(($[_] = M), (_ = K))
+      ;(($[_] = M), (_ = H))
     }
     $[_] = Z
   }
   _down(_) {
     let { data: $, compare: X } = this,
       Z = this.length >> 1,
-      K = $[_]
+      H = $[_]
     while (_ < Z) {
       let M = (_ << 1) + 1,
         J = $[M],
         q = M + 1
       if (q < this.length && X($[q], J) < 0) ((M = q), (J = $[q]))
-      if (X(J, K) >= 0) break
+      if (X(J, H) >= 0) break
       ;(($[_] = J), (_ = M))
     }
-    $[_] = K
+    $[_] = H
   }
 }
 function d0(_, $) {
@@ -767,19 +767,19 @@ function V0(_, $) {
     Z = X.coordinates
   if (X.type === 'Polygon' || X.type === 'MultiLineString') Z = [Z]
   if (X.type === 'LineString') Z = [[Z]]
-  for (let K = 0; K < Z.length; K++)
-    for (let M = 0; M < Z[K].length; M++) {
-      let J = Z[K][M][0],
+  for (let H = 0; H < Z.length; H++)
+    for (let M = 0; M < Z[H].length; M++) {
+      let J = Z[H][M][0],
         q = null
       o = o + 1
-      for (let Y = 0; Y < Z[K][M].length - 1; Y++) {
-        q = Z[K][M][Y + 1]
-        let H = new q0(J, n, o, i),
+      for (let Y = 0; Y < Z[H][M].length - 1; Y++) {
+        q = Z[H][M][Y + 1]
+        let K = new q0(J, n, o, i),
           U = new q0(q, n, o, i + 1)
-        if (((H.otherEvent = U), (U.otherEvent = H), E0(H, U) > 0))
-          ((U.isLeftEndpoint = !0), (H.isLeftEndpoint = !1))
-        else ((H.isLeftEndpoint = !0), (U.isLeftEndpoint = !1))
-        ;($.push(H), $.push(U), (J = q), (i = i + 1))
+        if (((K.otherEvent = U), (U.otherEvent = K), E0(K, U) > 0))
+          ((U.isLeftEndpoint = !0), (K.isLeftEndpoint = !1))
+        else ((K.isLeftEndpoint = !0), (U.isLeftEndpoint = !1))
+        ;($.push(K), $.push(U), (J = q), (i = i + 1))
       }
     }
   n = n + 1
@@ -802,15 +802,15 @@ function n0(_, $) {
     return !1
   let X = _.leftSweepEvent.p.x,
     Z = _.leftSweepEvent.p.y,
-    K = _.rightSweepEvent.p.x,
+    H = _.rightSweepEvent.p.x,
     M = _.rightSweepEvent.p.y,
     J = $.leftSweepEvent.p.x,
     q = $.leftSweepEvent.p.y,
     Y = $.rightSweepEvent.p.x,
-    H = $.rightSweepEvent.p.y,
-    U = (H - q) * (K - X) - (Y - J) * (M - Z),
-    D = (Y - J) * (Z - q) - (H - q) * (X - J),
-    N = (K - X) * (Z - q) - (M - Z) * (X - J)
+    K = $.rightSweepEvent.p.y,
+    U = (K - q) * (H - X) - (Y - J) * (M - Z),
+    D = (Y - J) * (Z - q) - (K - q) * (X - J),
+    N = (H - X) * (Z - q) - (M - Z) * (X - J)
   if (U === 0) {
     if (D === 0 && N === 0) return !1
     return !1
@@ -818,7 +818,7 @@ function n0(_, $) {
   let A = D / U,
     G = N / U
   if (A >= 0 && A <= 1 && G >= 0 && G <= 1) {
-    let R = X + A * (K - X),
+    let R = X + A * (H - X),
       V = Z + A * (M - Z)
     return [R, V]
   }
@@ -829,19 +829,19 @@ function o0(_, $) {
   let X = [],
     Z = new J0([], r0)
   while (_.length) {
-    let K = _.pop()
-    if (K.isLeftEndpoint) {
-      let M = new O0(K)
+    let H = _.pop()
+    if (H.isLeftEndpoint) {
+      let M = new O0(H)
       for (let J = 0; J < Z.data.length; J++) {
         let q = Z.data[J]
         if ($) {
-          if (q.leftSweepEvent.featureId === K.featureId) continue
+          if (q.leftSweepEvent.featureId === H.featureId) continue
         }
         let Y = n0(M, q)
         if (Y !== !1) X.push(Y)
       }
       Z.push(M)
-    } else if (K.isLeftEndpoint === !1) Z.pop()
+    } else if (H.isLeftEndpoint === !1) Z.pop()
   }
   return X
 }
@@ -852,7 +852,7 @@ function i0(_, $) {
 var Q0 = i0
 var e0 = Q0
 function e(_, $, X = {}) {
-  let { removeDuplicates: Z = !0, ignoreSelfIntersections: K = !0 } = X,
+  let { removeDuplicates: Z = !0, ignoreSelfIntersections: H = !0 } = X,
     M = []
   if (_.type === 'FeatureCollection') M = M.concat(_.features)
   else if (_.type === 'Feature') M.push(_)
@@ -872,13 +872,13 @@ function e(_, $, X = {}) {
     $.type === 'MultiPolygon'
   )
     M.push(f($))
-  let J = e0(a(M), K),
+  let J = e0(a(M), H),
     q = []
   if (Z) {
     let Y = {}
-    J.forEach((H) => {
-      let U = H.join(',')
-      if (!Y[U]) ((Y[U] = !0), q.push(H))
+    J.forEach((K) => {
+      let U = K.join(',')
+      if (!Y[U]) ((Y[U] = !0), q.push(K))
     })
   } else q = J
   return a(q.map((Y) => X0(Y)))
@@ -897,16 +897,16 @@ function _0(_, $ = {}) {
 }
 function _1(_, $ = {}) {
   let Z = m(_).coordinates,
-    K = $.properties ? $.properties : _.type === 'Feature' ? _.properties : {}
-  return C0(Z, K)
+    H = $.properties ? $.properties : _.type === 'Feature' ? _.properties : {}
+  return C0(Z, H)
 }
 function X1(_, $ = {}) {
   let Z = m(_).coordinates,
-    K = $.properties ? $.properties : _.type === 'Feature' ? _.properties : {},
+    H = $.properties ? $.properties : _.type === 'Feature' ? _.properties : {},
     M = []
   return (
     Z.forEach((J) => {
-      M.push(C0(J, K))
+      M.push(C0(J, H))
     }),
     a(M)
   )
@@ -918,10 +918,10 @@ function C0(_, $) {
 function F0(_, $, { ignoreSelfIntersections: X = !0 } = { ignoreSelfIntersections: !0 }) {
   let Z = !0
   return (
-    x(_, (K) => {
+    x(_, (H) => {
       x($, (M) => {
         if (Z === !1) return !1
-        Z = Y1(K.geometry, M.geometry, X)
+        Z = Y1(H.geometry, M.geometry, X)
       })
     }),
     Z
@@ -971,22 +971,22 @@ function Z1(_, $, X) {
   return !1
 }
 function k0(_, $, X) {
-  for (let K of $.coordinates) if (F(K, _)) return !0
+  for (let H of $.coordinates) if (F(H, _)) return !0
   if (e($, _0(_), { ignoreSelfIntersections: X }).features.length > 0) return !0
   return !1
 }
 function $1(_, $, X) {
-  for (let K of _.coordinates[0]) if (F(K, $)) return !0
-  for (let K of $.coordinates[0]) if (F(K, _)) return !0
+  for (let H of _.coordinates[0]) if (F(H, $)) return !0
+  for (let H of $.coordinates[0]) if (F(H, _)) return !0
   if (e(_0(_), _0($), { ignoreSelfIntersections: X }).features.length > 0) return !0
   return !1
 }
 function q1(_, $, X) {
   let Z = X[0] - _[0],
-    K = X[1] - _[1],
+    H = X[1] - _[1],
     M = $[0] - _[0],
     J = $[1] - _[1]
-  if (Z * J - K * M !== 0) return !1
+  if (Z * J - H * M !== 0) return !1
   if (Math.abs(M) >= Math.abs(J))
     if (M > 0) return _[0] <= X[0] && X[0] <= $[0]
     else return $[0] <= X[0] && X[0] <= _[0]
@@ -999,10 +999,10 @@ function J1(_, $) {
 function M1(_, $, { ignoreSelfIntersections: X = !0 } = {}) {
   let Z = !1
   return (
-    x(_, (K) => {
+    x(_, (H) => {
       x($, (M) => {
         if (Z === !0) return !0
-        Z = !F0(K.geometry, M.geometry, { ignoreSelfIntersections: X })
+        Z = !F0(H.geometry, M.geometry, { ignoreSelfIntersections: X })
       })
     }),
     Z
@@ -1011,32 +1011,32 @@ function M1(_, $, { ignoreSelfIntersections: X = !0 } = {}) {
 var T0 = M1
 function O(_, $, X = {}) {
   let Z = t(_),
-    K = z0($)
-  for (let M = 0; M < K.length - 1; M++) {
+    H = z0($)
+  for (let M = 0; M < H.length - 1; M++) {
     let J = !1
     if (X.ignoreEndVertices) {
       if (M === 0) J = 'start'
-      if (M === K.length - 2) J = 'end'
-      if (M === 0 && M + 1 === K.length - 1) J = 'both'
+      if (M === H.length - 2) J = 'end'
+      if (M === 0 && M + 1 === H.length - 1) J = 'both'
     }
-    if (D1(K[M], K[M + 1], Z, J, typeof X.epsilon > 'u' ? null : X.epsilon)) return !0
+    if (D1(H[M], H[M + 1], Z, J, typeof X.epsilon > 'u' ? null : X.epsilon)) return !0
   }
   return !1
 }
-function D1(_, $, X, Z, K) {
+function D1(_, $, X, Z, H) {
   let M = X[0],
     J = X[1],
     q = _[0],
     Y = _[1],
-    H = $[0],
+    K = $[0],
     U = $[1],
     D = X[0] - q,
     N = X[1] - Y,
-    A = H - q,
+    A = K - q,
     G = U - Y,
     R = D * G - N * A
-  if (K !== null) {
-    if (Math.abs(R) > K) return !1
+  if (H !== null) {
+    if (Math.abs(R) > H) return !1
   } else if (R !== 0) return !1
   if (Math.abs(A) === Math.abs(G) && Math.abs(A) === 0) {
     if (Z) return !1
@@ -1044,16 +1044,16 @@ function D1(_, $, X, Z, K) {
     else return !1
   }
   if (!Z) {
-    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q <= M && M <= H : H <= M && M <= q
+    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q <= M && M <= K : K <= M && M <= q
     return G > 0 ? Y <= J && J <= U : U <= J && J <= Y
   } else if (Z === 'start') {
-    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q < M && M <= H : H <= M && M < q
+    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q < M && M <= K : K <= M && M < q
     return G > 0 ? Y < J && J <= U : U <= J && J < Y
   } else if (Z === 'end') {
-    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q <= M && M < H : H < M && M <= q
+    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q <= M && M < K : K < M && M <= q
     return G > 0 ? Y <= J && J < U : U < J && J <= Y
   } else if (Z === 'both') {
-    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q < M && M < H : H < M && M < q
+    if (Math.abs(A) >= Math.abs(G)) return A > 0 ? q < M && M < K : K < M && M < q
     return G > 0 ? Y < J && J < U : U < J && J < Y
   }
   return !1
@@ -1061,9 +1061,9 @@ function D1(_, $, X, Z, K) {
 function H1(_, $) {
   var X = m(_),
     Z = m($),
-    K = X.type,
+    H = X.type,
     M = Z.type
-  switch (K) {
+  switch (H) {
     case 'Point':
       switch (M) {
         case 'LineString':
@@ -1177,16 +1177,16 @@ function H1(_, $) {
           }
           return J
         case 'LineString':
-          var H = !1
-          if (j({ type: 'Point', coordinates: X.coordinates[0] }, Z)) H = !0
-          if (j({ type: 'Point', coordinates: X.coordinates[X.coordinates.length - 1] }, Z)) H = !0
-          if (H === !1) return !1
+          var K = !1
+          if (j({ type: 'Point', coordinates: X.coordinates[0] }, Z)) K = !0
+          if (j({ type: 'Point', coordinates: X.coordinates[X.coordinates.length - 1] }, Z)) K = !0
+          if (K === !1) return !1
           for (var Y = 0; Y < X.coordinates.length; Y++)
             if (O({ type: 'Point', coordinates: X.coordinates[Y] }, Z, { ignoreEndVertices: !0 }))
               return !1
-          return H
+          return K
         case 'MultiLineString':
-          var H = !1
+          var K = !1
           for (var Y = 0; Y < Z.coordinates.length; Y++) {
             if (
               j(
@@ -1194,14 +1194,14 @@ function H1(_, $) {
                 { type: 'LineString', coordinates: Z.coordinates[Y] },
               )
             )
-              H = !0
+              K = !0
             if (
               j(
                 { type: 'Point', coordinates: X.coordinates[X.coordinates.length - 1] },
                 { type: 'LineString', coordinates: Z.coordinates[Y] },
               )
             )
-              H = !0
+              K = !0
             for (var q = 0; q < X.coordinates[Y].length; q++)
               if (
                 O(
@@ -1212,7 +1212,7 @@ function H1(_, $) {
               )
                 return !1
           }
-          return H
+          return K
         case 'Polygon':
           var J = !1
           for (var Y = 0; Y < X.coordinates.length; Y++) {
@@ -1279,11 +1279,11 @@ function H1(_, $) {
             }
           return J
         case 'LineString':
-          var H = !1
+          var K = !1
           for (var Y = 0; Y < X.coordinates.length; Y++) {
-            if (j({ type: 'Point', coordinates: X.coordinates[Y][0] }, Z)) H = !0
+            if (j({ type: 'Point', coordinates: X.coordinates[Y][0] }, Z)) K = !0
             if (j({ type: 'Point', coordinates: X.coordinates[Y][X.coordinates[Y].length - 1] }, Z))
-              H = !0
+              K = !0
             for (var q = 0; q < Z.coordinates.length; q++)
               if (
                 O(
@@ -1294,9 +1294,9 @@ function H1(_, $) {
               )
                 return !1
           }
-          return H
+          return K
         case 'MultiLineString':
-          var H = !1
+          var K = !1
           for (var Y = 0; Y < X.coordinates.length; Y++)
             for (var q = 0; q < Z.coordinates.length; q++) {
               if (
@@ -1305,14 +1305,14 @@ function H1(_, $) {
                   { type: 'LineString', coordinates: Z.coordinates[q] },
                 )
               )
-                H = !0
+                K = !0
               if (
                 j(
                   { type: 'Point', coordinates: X.coordinates[Y][X.coordinates[Y].length - 1] },
                   { type: 'LineString', coordinates: Z.coordinates[q] },
                 )
               )
-                H = !0
+                K = !0
               for (var U = 0; U < X.coordinates[Y].length; U++)
                 if (
                   O(
@@ -1323,7 +1323,7 @@ function H1(_, $) {
                 )
                   return !1
             }
-          return H
+          return K
         case 'Polygon':
           var J = !1
           for (var Y = 0; Y < X.coordinates.length; Y++)
@@ -1588,7 +1588,7 @@ function H1(_, $) {
           throw Error('feature2 ' + M + ' geometry not supported')
       }
     default:
-      throw Error('feature1 ' + K + ' geometry not supported')
+      throw Error('feature1 ' + H + ' geometry not supported')
   }
 }
 function j(_, $) {
@@ -1609,15 +1609,16 @@ function P0(_) {
 }
 function w0(_) {
   let $ =
-    _.gemeindeNeighborRecord ??
-    Object.fromEntries([..._.gemeindeNeighbors.entries()].map(([X, Z]) => [X, [...Z]]))
+      _.gemeindeNeighborRecord ??
+      Object.fromEntries([..._.gemeindeNeighbors.entries()].map(([Z, H]) => [Z, [...H]])),
+    X = Object.fromEntries(Object.entries($).map(([Z, H]) => [Z, [...H]]))
   return {
     version: K1,
-    landkreis: Object.fromEntries([..._.landkreisNeighbors.entries()].map(([X, Z]) => [X, [...Z]])),
+    landkreis: Object.fromEntries([..._.landkreisNeighbors.entries()].map(([Z, H]) => [Z, [...H]])),
     landkreisStadtstaat: Object.fromEntries(
-      [..._.landkreisStadtstaatNeighbors.entries()].map(([X, Z]) => [X, [...Z]]),
+      [..._.landkreisStadtstaatNeighbors.entries()].map(([Z, H]) => [Z, [...H]]),
     ),
-    gemeinde: $,
+    gemeinde: X,
   }
 }
 function h0(_) {
@@ -1642,8 +1643,8 @@ function W1(_, $, X) {
   if ($ === X) return
   let Z = _.get($) ?? new Set()
   ;(Z.add(X), _.set($, Z))
-  let K = _.get(X) ?? new Set()
-  ;(K.add($), _.set(X, K))
+  let H = _.get(X) ?? new Set()
+  ;(H.add($), _.set(X, H))
 }
 function U1(_) {
   let $ = new Map()
@@ -1655,10 +1656,10 @@ function N1(_) {
   for (let X of _.byId.values()) {
     if (j0(X) !== '6') continue
     let Z = P0(X),
-      K = String(X.properties?.bundesland_id ?? '')
-    if (!K) continue
-    let M = $.get(K) ?? []
-    ;(M.push(Z), $.set(K, M))
+      H = String(X.properties?.bundesland_id ?? '')
+    if (!H) continue
+    let M = $.get(H) ?? []
+    ;(M.push(Z), $.set(H, M))
   }
   return $
 }
@@ -1667,22 +1668,22 @@ function A1(_) {
   for (let X of _.byId.values()) {
     if (j0(X) !== '6') continue
     let Z = P0(X),
-      K = h0(X)
-    if (Z && K) $.set(Z, K)
+      H = h0(X)
+    if (Z && H) $.set(Z, H)
   }
   return $
 }
 function G1(_, $) {
   let X = new Map(),
     Z = N1(_)
-  for (let K of Z.values())
-    for (let M = 0; M < K.length; M++) {
-      let J = K[M],
+  for (let H of Z.values())
+    for (let M = 0; M < H.length; M++) {
+      let J = H[M],
         q = _.byId.get(J),
         Y = $.get(J)
       if (!q || !Y) continue
-      for (let H = M + 1; H < K.length; H++) {
-        let U = K[H],
+      for (let K = M + 1; K < H.length; K++) {
+        let U = H[K],
           D = _.byId.get(U),
           N = $.get(U)
         if (!D || !N) continue
@@ -1700,21 +1701,21 @@ function R1(_, $) {
       q = J ? h0(J) : null
     if (q) Z.set(M, q)
   }
-  let K = new Map()
+  let H = new Map()
   for (let [M, J] of $) {
     let q = _.byId.get(M)
     if (!q) continue
     let Y = []
-    for (let H of X) {
-      let U = Z.get(H),
-        D = _.byId.get(H)
+    for (let K of X) {
+      let U = Z.get(K),
+        D = _.byId.get(K)
       if (!U || !D) continue
       if (!v0(J, U)) continue
-      if (c0(q, D)) Y.push(H)
+      if (c0(q, D)) Y.push(K)
     }
-    if (Y.length) K.set(M, Y)
+    if (Y.length) H.set(M, Y)
   }
-  return K
+  return H
 }
 function y0(_) {
   let $ = A1(_)
