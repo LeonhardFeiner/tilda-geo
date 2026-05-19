@@ -1830,7 +1830,7 @@ export function generateViewerHtml(generatedAt: string) {
           : '–';
       regionDetailMeta.textContent =
         rankText +
-        '\n' +
+        '\\n' +
         pct +
         ' · ' +
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
