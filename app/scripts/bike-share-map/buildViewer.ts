@@ -60,6 +60,8 @@ writeFileSync(join(viewerDir, 'manifest.json'), `${JSON.stringify(manifest, null
 const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },
   { entry: 'regionNavigation.bundle.ts', name: 'regionNavigation.js' },
+  { entry: 'simpleView.bundle.ts', name: 'simpleView.js' },
+  { entry: 'rankingDisplay.bundle.ts', name: 'rankingDisplay.js' },
 ] as const
 
 for (const target of bundleTargets) {
@@ -88,6 +90,7 @@ process.stdout.write(`  gebiet           deutschland | relation/… (Bundesland)
 process.stdout.write(`  untergebiet      rb:… | lk:… | kreisfreie:… | stadt:…\n`)
 process.stdout.write(`  darstellung      bundeslaender | landkreis_kreisfrei | gemeinden | …\n`)
 process.stdout.write(`  minimal / ui     minimal=1 or ui=minimal hides the control panel\n`)
+process.stdout.write(`  ui=simple       simplified view (focus= relation id, simple= preset id)\n`)
 process.stdout.write(`  view / gebiet    legacy view ids still supported\n`)
 process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
 process.stdout.write(`  radwege / bikelanes   1 | 0\n`)

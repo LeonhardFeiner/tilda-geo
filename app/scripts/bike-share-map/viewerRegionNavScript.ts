@@ -7,11 +7,17 @@ export function viewerRegionNavScript() {
       untergebiet: '',
       darstellung: 'bundeslaender',
     };
+    let simpleFocusContext = null;
+    let simpleViewPreset = 'de_landkreis_kreisfrei';
+    let savedExpertViewScope = null;
 
     const gebietSelect = document.getElementById('gebiet-select');
     const untergebietSelect = document.getElementById('untergebiet-select');
     const untergebietWrap = document.getElementById('untergebiet-wrap');
     const darstellungSelect = document.getElementById('darstellung-select');
+    const simpleViewSelect = document.getElementById('simple-view-select');
+    const simpleViewBlock = document.getElementById('simple-view-block');
+    const regionScopeBlock = document.getElementById('region-scope-block');
 
     function readViewScopeFromUi() {
       return {
@@ -29,14 +35,253 @@ export function viewerRegionNavScript() {
       return m === '1' || m === 'true' || m === 'yes';
     }
 
-    if (isUiMinimal()) document.body.classList.add('ui-minimal');
+    function uiMode() {
+      if (isUiMinimal()) return 'minimal';
+      const p = new URLSearchParams(location.search);
+      if (p.get('ui') === 'simple' || p.get('view') === 'simple') return 'simple';
+      return 'expert';
+    }
+
+    const mapLegendSection = document.getElementById('map-legend-section');
+    const viewModeLinksExpertPanel = document.getElementById('view-mode-links-expert-panel');
+    let mapLegendToggleLocked = false;
+
+    function applyUiModeClass() {
+      document.body.classList.toggle('ui-minimal', uiMode() === 'minimal');
+      document.body.classList.toggle('view-simple', uiMode() === 'simple');
+      document.body.classList.toggle('view-expert', uiMode() === 'expert');
+      if (simpleViewBlock) simpleViewBlock.hidden = uiMode() !== 'simple';
+      if (regionScopeBlock) regionScopeBlock.hidden = uiMode() !== 'expert';
+      if (viewModeLinksExpertPanel) viewModeLinksExpertPanel.hidden = uiMode() !== 'simple';
+      if (mapLegendSection) {
+        const simple = uiMode() === 'simple';
+        mapLegendSection.open = simple ? true : mapLegendSection.open;
+        mapLegendToggleLocked = simple;
+      }
+    }
+
+    applyUiModeClass();
+
+    if (mapLegendSection) {
+      mapLegendSection.addEventListener('toggle', () => {
+        if (mapLegendToggleLocked) mapLegendSection.open = true;
+      });
+    }
 
     function rebuildRegionIndex() {
       regionIndex = RegionNav.buildRegionIndex(allFeatures);
     }
 
+    function touchingRegionIds(focusId, candidateIds) {
+      const focus = regionIndex.byId.get(focusId);
+      if (!focus?.geometry) return new Set([focusId]);
+      const out = new Set([focusId]);
+      for (const id of candidateIds) {
+        if (id === focusId) continue;
+        const f = regionIndex.byId.get(id);
+        if (!f?.geometry) continue;
+        try {
+          if (turf.booleanTouches(focus, f) || turf.booleanIntersects(focus, f)) out.add(id);
+        } catch {
+          /* skip invalid geometry */
+        }
+      }
+      return out;
+    }
+
+    function touchingLandkreiseForFocus(ctx) {
+      const lkCandidates = SimpleView.neighborCandidateIds(
+        'lk_neighbors_landkreise',
+        ctx,
+        regionIndex,
+      );
+      return touchingRegionIds(ctx.landkreisId, lkCandidates);
+    }
+
+    function gemeindeUnitsInLandkreise(landkreisIds) {
+      return SimpleView.gemeindeUnitIdsInLandkreise(landkreisIds, regionIndex);
+    }
+
+    function touchingStadtstaatenForFeature(featureId) {
+      const candidates = SimpleView.stadtstaatCandidateIds(regionIndex);
+      return touchingRegionIds(featureId, candidates);
+    }
+
+    function computeSimpleAllowedIds(preset, ctx) {
+      if (!SimpleView.presetUsesNeighborFilter(preset)) return null;
+
+      if (preset === 'gm_neighbors' && ctx.gemeindeId && ctx.landkreisId) {
+        const touchingLk = touchingLandkreiseForFocus(ctx);
+        const unitCandidates = [
+          ...gemeindeUnitsInLandkreise(touchingLk),
+          ...touchingStadtstaatenForFeature(ctx.gemeindeId),
+        ];
+        return touchingRegionIds(ctx.gemeindeId, unitCandidates);
+      }
+
+      if (
+        (preset === 'lk_neighbors_landkreise' || preset === 'lk_neighbors_gemeinden') &&
+        ctx.landkreisId
+      ) {
+        const touchingLk = touchingLandkreiseForFocus(ctx);
+        return new Set([
+          ...touchingLk,
+          ...touchingStadtstaatenForFeature(ctx.landkreisId),
+        ]);
+      }
+
+      const candidates = SimpleView.neighborCandidateIds(preset, ctx, regionIndex);
+      if (!ctx.landkreisId) return new Set([ctx.focusId]);
+      const touchingLk = touchingRegionIds(ctx.landkreisId, candidates);
+      return touchingLk;
+    }
+
     function filteredFeaturesForCurrentView() {
+      if (uiMode() === 'simple' && simpleFocusContext) {
+        const allowed = computeSimpleAllowedIds(simpleViewPreset, simpleFocusContext);
+        return SimpleView.filterFeaturesForSimpleView(
+          allFeatures,
+          simpleViewPreset,
+          simpleFocusContext,
+          regionIndex,
+          allowed,
+        );
+      }
       return RegionNav.filterFeaturesForView(allFeatures, currentViewScope, regionIndex);
+    }
+
+    function populateSimpleViewSelect() {
+      if (!simpleViewSelect || !simpleFocusContext) return;
+      simpleViewSelect.replaceChildren();
+      const presets = SimpleView.listSimplePresetsForFocus(simpleFocusContext, regionIndex);
+      for (const id of presets) {
+        const el = document.createElement('option');
+        el.value = id;
+        el.textContent = SimpleView.simplePresetLabel(id, simpleFocusContext, regionIndex);
+        simpleViewSelect.appendChild(el);
+      }
+      const preferred = presets.includes(simpleViewPreset)
+        ? simpleViewPreset
+        : presets.includes(simpleViewSelect.value)
+          ? simpleViewSelect.value
+          : presets[0];
+      if (presets.length) simpleViewSelect.value = preferred;
+      simpleViewPreset = simpleViewSelect.value;
+    }
+
+    function resolveSimpleViewFromUrl() {
+      const params = urlParams();
+      const focusParam =
+        params.get('focus') ||
+        (uiMode() === 'simple' ? params.get('gebiet') : null) ||
+        regionIndex.deutschlandId ||
+        RegionNav.DEUTSCHLAND_GEBIET;
+      const ctx = SimpleView.resolveFocusContext(focusParam, regionIndex);
+      if (!ctx) return null;
+      const allowed = SimpleView.listSimplePresetsForFocus(ctx, regionIndex);
+      let preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
+      if (preset === 'lk_neighbors_gemeinden') preset = 'lk_neighbors_landkreise';
+      if (!preset || !allowed.includes(preset)) {
+        preset = SimpleView.defaultSimplePresetForFocus(ctx, regionIndex);
+      }
+      return { ctx, preset };
+    }
+
+    function buildPageUrl(overrides) {
+      const params = urlParams();
+      for (const [key, value] of Object.entries(overrides)) {
+        if (value == null || value === '') params.delete(key);
+        else params.set(key, value);
+      }
+      const qs = params.toString();
+      return location.pathname + (qs ? '?' + qs : '');
+    }
+
+    function expertViewScopeFromUrlParams(params) {
+      if (!regionIndex) return null;
+      const legacyView = params.get('view') || params.get('gebiet');
+      if (legacyView === 'simple') return null;
+      const gebiet = RegionNav.parseGebietParam(params.get('gebiet') ?? legacyView, regionIndex);
+      const untergebiet = RegionNav.parseUntergebietParam(params.get('untergebiet'));
+      let darstellung =
+        RegionNav.parseDarstellungParam(params.get('darstellung')) ||
+        RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
+      const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
+      if (
+        !RegionNav.isPresetAllowedForScope(darstellung, scopeLevel, regionIndex, gebiet, untergebiet)
+      ) {
+        darstellung = RegionNav.defaultDarstellungForScope(
+          gebiet,
+          untergebiet,
+          regionIndex,
+          allFeatures,
+        );
+      }
+      return { gebiet, untergebiet, darstellung };
+    }
+
+    function writeExpertScopeToUrlParams(params, scope) {
+      if (!scope || !regionIndex) return;
+      const defGebiet = RegionNav.DEUTSCHLAND_GEBIET;
+      const defDarstellung = RegionNav.defaultDarstellungForScope(
+        defGebiet,
+        '',
+        regionIndex,
+        allFeatures,
+      );
+      if (scope.gebiet && scope.gebiet !== defGebiet) params.set('gebiet', scope.gebiet);
+      else params.delete('gebiet');
+      if (scope.untergebiet) params.set('untergebiet', scope.untergebiet);
+      else params.delete('untergebiet');
+      if (scope.darstellung && scope.darstellung !== defDarstellung) {
+        params.set('darstellung', scope.darstellung);
+      } else {
+        params.delete('darstellung');
+      }
+    }
+
+    function applyExpertScopeToUi(scope) {
+      if (!scope) return;
+      gebietSelect.value = scope.gebiet;
+      populateUntergebietSelect();
+      untergebietSelect.value = scope.untergebiet || '';
+      populateDarstellungSelect();
+      const allowed = [...darstellungSelect.options].map((o) => o.value);
+      darstellungSelect.value = allowed.includes(scope.darstellung)
+        ? scope.darstellung
+        : darstellungSelect.value;
+      currentViewScope = {
+        gebiet: gebietSelect.value,
+        untergebiet: untergebietSelect.value || '',
+        darstellung: darstellungSelect.value,
+      };
+    }
+
+    function buildSimpleViewUrl(focusId, preset) {
+      const ctx = SimpleView.resolveFocusContext(focusId, regionIndex);
+      const resolvedPreset =
+        preset ||
+        (ctx ? SimpleView.defaultSimplePresetForFocus(ctx, regionIndex) : 'de_landkreis_kreisfrei');
+      const params = urlParams();
+      params.set('ui', 'simple');
+      params.set('focus', focusId);
+      params.set('simple', resolvedPreset);
+      writeExpertScopeToUrlParams(params, savedExpertViewScope ?? currentViewScope);
+      const qs = params.toString();
+      return location.pathname + (qs ? '?' + qs : '');
+    }
+
+    function buildExpertViewUrl(focusId) {
+      const scope = SimpleView.expertViewScopeFromFocus(focusId, regionIndex);
+      if (!scope) return buildPageUrl({ ui: 'expert', focus: null, simple: null });
+      return buildPageUrl({
+        ui: 'expert',
+        focus: null,
+        simple: null,
+        gebiet: scope.gebiet,
+        untergebiet: scope.untergebiet || null,
+        darstellung: scope.darstellung,
+      });
     }
 
     function populateGebietSelect() {
@@ -159,7 +404,17 @@ export function viewerRegionNavScript() {
     }
 
     function syncViewScopeFromUi() {
+      if (uiMode() === 'simple') {
+        simpleViewPreset = simpleViewSelect?.value || simpleViewPreset;
+        return;
+      }
       currentViewScope = readViewScopeFromUi();
+    }
+
+    function onSimpleViewChange() {
+      simpleViewPreset = simpleViewSelect.value;
+      updateScaleCapDefaultForView();
+      applyCurrentView();
     }
 
     function onGebietChange() {
@@ -187,6 +442,23 @@ export function viewerRegionNavScript() {
     }
 
     function labelMinZoomForView() {
+      if (uiMode() === 'simple') {
+        if (
+          simpleViewPreset === 'de_bundeslaender' ||
+          simpleViewPreset === 'bl_regierungsbezirke'
+        ) {
+          return 6;
+        }
+        if (
+          simpleViewPreset === 'de_landkreis_kreisfrei' ||
+          simpleViewPreset === 'bl_landkreis_kreisfrei' ||
+          simpleViewPreset === 'lk_neighbors_landkreise' ||
+          simpleViewPreset === 'lk_neighbors_gemeinden'
+        ) {
+          return 8;
+        }
+        return 10;
+      }
       const d = currentViewScope.darstellung;
       if (d === 'bundeslaender' || d === 'regierungsbezirke') return 6;
       if (d === 'landkreise' || d === 'landkreis_kreisfrei' || d === 'kreisfreie') return 8;
@@ -194,10 +466,67 @@ export function viewerRegionNavScript() {
       return 9;
     }
 
+    function viewLabelForCurrentMode() {
+      if (uiMode() === 'simple' && simpleFocusContext) {
+        return (
+          simpleFocusContext.focusName +
+          ' · ' +
+          SimpleView.simplePresetLabel(simpleViewPreset, simpleFocusContext, regionIndex)
+        );
+      }
+      return RegionNav.viewLabel(currentViewScope, regionIndex);
+    }
+
+    function viewShowsGemeindenLevelForCurrentView() {
+      if (uiMode() === 'simple') {
+        const darstellung = SimpleView.simplePresetDarstellung(simpleViewPreset);
+        return darstellung === 'gemeinden' || darstellung === 'gemeinden_kreisfrei';
+      }
+      return RegionNav.viewShowsGemeindenLevel(currentViewScope);
+    }
+
+    function viewShowsManyGemeindenForCurrentView() {
+      if (uiMode() === 'simple') {
+        return (
+          simpleViewPreset === 'bl_gemeinden_kreisfrei' ||
+          simpleViewPreset === 'lk_gemeinden' ||
+          simpleViewPreset === 'gm_neighbors'
+        );
+      }
+      return RegionNav.viewShowsManyGemeinden(currentViewScope);
+    }
+
+    function scopeBoundsFeaturesForCurrentView() {
+      if (uiMode() === 'simple' && simpleFocusContext) {
+        const focus = regionIndex.byId.get(simpleFocusContext.focusId);
+        if (focus?.geometry) return [focus];
+      }
+      return RegionNav.scopeBoundsFeatures(
+        allFeatures,
+        currentViewScope.gebiet,
+        currentViewScope.untergebiet,
+        regionIndex,
+      );
+    }
+
     function resolveViewScopeFromUrl() {
+      if (uiMode() === 'simple') {
+        const params = urlParams();
+        const resolved = resolveSimpleViewFromUrl();
+        if (resolved) {
+          simpleFocusContext = resolved.ctx;
+          simpleViewPreset = resolved.preset;
+        }
+        const expertFromUrl = expertViewScopeFromUrlParams(params);
+        if (expertFromUrl) {
+          savedExpertViewScope = expertFromUrl;
+          currentViewScope = expertFromUrl;
+        }
+        return currentViewScope;
+      }
       const params = urlParams();
       const legacyView = params.get('view') || params.get('gebiet');
-      if (legacyView && !params.get('darstellung')) {
+      if (legacyView && legacyView !== 'simple' && !params.get('darstellung')) {
         const legacy = RegionNav.viewScopeFromLegacyViewId(decodeURIComponent(legacyView), regionIndex);
         if (legacy) return legacy;
       }
@@ -214,6 +543,18 @@ export function viewerRegionNavScript() {
     }
 
     function applyViewScopeToUi(scope) {
+      applyUiModeClass();
+      if (uiMode() === 'simple') {
+        const resolved = resolveSimpleViewFromUrl();
+        if (resolved) {
+          simpleFocusContext = resolved.ctx;
+          simpleViewPreset = resolved.preset;
+        }
+        applyExpertScopeToUi(savedExpertViewScope ?? scope);
+        populateSimpleViewSelect();
+        if (typeof syncSimpleCountingNotice === 'function') syncSimpleCountingNotice();
+        return;
+      }
       gebietSelect.value = scope.gebiet;
       populateUntergebietSelect();
       untergebietSelect.value = scope.untergebiet || '';
@@ -229,7 +570,38 @@ export function viewerRegionNavScript() {
       };
     }
 
+    function rankingFocusChainIds() {
+      const chains = [];
+      if (selectedFeatureId) {
+        chains.push(
+          RankingDisplay.focusChainFromParentMap(selectedFeatureId, regionIndex.parentById),
+        );
+      }
+      const simpleFocusId = simpleViewFocusIdForRanking();
+      if (simpleFocusId) {
+        chains.push(
+          RankingDisplay.focusChainFromParentMap(simpleFocusId, regionIndex.parentById),
+        );
+      }
+      return RankingDisplay.mergeFocusChains(chains);
+    }
+
+    function simpleViewFocusIdForRanking() {
+      if (uiMode() !== 'simple' || !simpleFocusContext?.focusId) return null;
+      return simpleFocusContext.focusId;
+    }
+
     function appendViewScopeToUrl(params) {
+      if (uiMode() === 'simple') {
+        params.set('ui', 'simple');
+        if (simpleFocusContext?.focusId) params.set('focus', simpleFocusContext.focusId);
+        if (simpleViewPreset) params.set('simple', simpleViewPreset);
+        writeExpertScopeToUrlParams(params, savedExpertViewScope ?? currentViewScope);
+        return;
+      }
+      params.delete('ui');
+      params.delete('focus');
+      params.delete('simple');
       const defGebiet = RegionNav.DEUTSCHLAND_GEBIET;
       const defDarstellung = RegionNav.defaultDarstellungForScope(defGebiet, '', regionIndex, allFeatures);
       if (currentViewScope.gebiet !== defGebiet) {

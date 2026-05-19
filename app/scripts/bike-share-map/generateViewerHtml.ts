@@ -157,13 +157,20 @@ export function generateViewerHtml(generatedAt: string) {
       margin: 4px 0 8px; font-size: 12px; padding: 4px 8px; cursor: pointer;
     }
     .panel-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-    .panel-actions button {
-      width: 100%; font-size: 12px; padding: 6px 10px; cursor: pointer;
-      border: 1px solid #ccc; border-radius: 4px; background: #fafafa;
+    .share-toolbar {
+      display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
     }
-    .panel-actions button:hover:not(:disabled) { background: #f0f0f0; }
-    .panel-actions button:disabled { opacity: 0.55; cursor: not-allowed; }
-    #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; }
+    .share-btn {
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 2.25rem; height: 2.25rem; padding: 0;
+      border: 1px solid #ccc; border-radius: 6px; background: #fafafa;
+      cursor: pointer; color: #444;
+    }
+    .share-btn:hover:not(:disabled) { background: #f0f0f0; }
+    .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .share-btn svg { width: 1.15rem; height: 1.15rem; fill: currentColor; }
+    #share-native[hidden] { display: none !important; }
+    #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; font-size: 11px; }
     #copy-view-link-feedback.is-error { color: #b71c1c; }
     .scale-cap-controls {
       margin: 10px 0 8px; padding-top: 8px; border-top: 1px solid #e8e8e8;
@@ -307,7 +314,7 @@ export function generateViewerHtml(generatedAt: string) {
       white-space: pre-line;
     }
     .region-detail {
-      position: absolute; z-index: 4; left: 12px; bottom: 12px;
+      position: absolute; z-index: 4; right: 12px; bottom: 12px; left: auto;
       width: min(360px, calc(100vw - 24px));
       max-height: min(52vh, 420px);
       overflow: auto;
@@ -357,9 +364,46 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-tags[open] summary { margin-bottom: 4px; }
     #load-error { color: #b71c1c; font-size: 13px; display: none; }
     body.ui-minimal #panel-main { display: none !important; }
+    body.view-simple #count-classes-details,
+    body.view-simple #color-options-details { display: none !important; }
+    body.view-simple #map-legend-section > summary { display: none; }
+    body.view-simple #map-legend-section { border-top: none; padding-top: 0; }
+    body.view-simple #map-legend-section > :not(summary) { padding-bottom: 8px; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
     .panel-options { display: flex; flex-direction: column; }
+    .simple-view-block {
+      padding: 0 0 8px;
+    }
+    .simple-view-block[hidden] { display: none !important; }
+    .simple-view-block select { margin: 0; }
+    .simple-counting-notice {
+      margin: 0 0 8px; padding: 8px 10px; border-radius: 6px;
+      background: #fff8e1; border: 1px solid #ffe082; font-size: 12px; line-height: 1.45;
+    }
+    .simple-counting-notice[hidden] { display: none !important; }
+    .simple-counting-notice p { margin: 0 0 6px; }
+    .simple-counting-notice ul {
+      margin: 0 0 8px; padding-left: 1.2em; font-size: 12px;
+    }
+    .simple-counting-notice li { margin: 2px 0; }
+    .simple-counting-notice button {
+      font-size: 12px; padding: 4px 10px; border-radius: 4px;
+      border: 1px solid #ccc; background: #fff; cursor: pointer;
+    }
+    .simple-counting-notice button:hover { background: #f5f5f5; }
+    .region-scope-block[hidden] { display: none !important; }
+    .view-mode-links {
+      margin: 4px 0 0; font-size: 11px; line-height: 1.45;
+    }
+    .view-mode-links a { color: #1565c0; text-decoration: none; }
+    .view-mode-links a:hover { text-decoration: underline; }
+    .region-detail-view-link {
+      margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;
+      font-size: 11px;
+    }
+    .region-detail-view-link a { color: #1565c0; text-decoration: none; }
+    .region-detail-view-link a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -385,6 +429,14 @@ export function generateViewerHtml(generatedAt: string) {
         <select id="darstellung-select"></select>
       </div>
     </details>
+    <div class="simple-view-block" id="simple-view-block" hidden>
+      <select id="simple-view-select" aria-label="Karte zeigt"></select>
+      <div id="simple-counting-notice" class="simple-counting-notice" hidden>
+        <p>Aktuell von der Statistik ausgeschlossen:</p>
+        <ul id="simple-counting-excluded-list"></ul>
+        <button type="button" id="simple-preset-radinfra">Zurücksetzen</button>
+      </div>
+    </div>
     <details class="panel-section count-classes" id="count-classes-details">
           <summary>Zählung: Straßen- & Radinfra-Klassen</summary>
           <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen.</p>
@@ -508,6 +560,9 @@ export function generateViewerHtml(generatedAt: string) {
           <ol class="ranking-list" id="ranking-list"></ol>
         </div>
     </details>
+    <p class="view-mode-links" id="view-mode-links-expert-panel" hidden>
+      <a href="#" id="switch-to-expert-link">Expertenansicht</a>
+    </p>
     <div class="view-csv-row" id="view-csv-row" hidden>
       <button
         type="button"
@@ -520,7 +575,38 @@ export function generateViewerHtml(generatedAt: string) {
       </button>
     </div>
     <div class="panel-actions">
-      <button type="button" id="copy-view-link" disabled>Link zur aktuellen Ansicht kopieren</button>
+      <div class="share-toolbar" role="group" aria-label="Ansicht teilen">
+        <button type="button" id="copy-view-link" class="share-btn" disabled title="Link kopieren" aria-label="Link kopieren">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+        </button>
+        <button type="button" id="share-map-image" class="share-btn" disabled title="Karte als Bild speichern" aria-label="Karte als Bild speichern">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </button>
+        <button type="button" id="share-ranking-image" class="share-btn" disabled title="Rangliste als Bild speichern" aria-label="Rangliste als Bild speichern">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 4h7v3h-7v-3z"/></svg>
+        </button>
+        <button type="button" id="share-native" class="share-btn" hidden title="Teilen" aria-label="Teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="email" disabled title="E-Mail" aria-label="Per E-Mail teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5L4 8V6l8 5 8-5v2z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="whatsapp" disabled title="WhatsApp" aria-label="Per WhatsApp teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="telegram" disabled title="Telegram" aria-label="Per Telegram teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="linkedin" disabled title="LinkedIn" aria-label="Per LinkedIn teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="bluesky" disabled title="Bluesky" aria-label="Per Bluesky teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 10.8c-1.087-2.114-4.046-6.053-6.798-7.995C2.566.944 1.561 1.266.902 1.565.139 1.908 0 3.08 0 3.768c0 .69.378 5.65.624 6.479.815 2.736 3.713 3.66 6.383 3.364.136-.02.275-.039.415-.056-.138.022-.276.036-.415.056-3.912.58-7.387 2.005-2.83 7.078 5.013 5.19 6.87-1.113 7.823-4.308.953 3.195 2.05 9.271 7.733 4.308 4.267-4.308 1.172-6.498-2.74-7.078a8.741 8.741 0 0 1-.415-.056c.14.017.279.036.415.056 2.67.297 5.568-.628 6.383-3.364.246-.828.624-5.788.624-6.478 0-.69-.139-1.861-.902-2.206-.659-.298-1.664-.62-4.3 1.24C16.046 4.748 13.087 8.687 12 10.8z"/></svg>
+        </button>
+        <button type="button" class="share-btn" data-share="twitter" disabled title="X / Twitter" aria-label="Per X teilen">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.901 1.153h3.68l-8.04 9.19L24 22.846h-7.406l-5.8-7.584-6.638 7.584H.474l8.6-9.83L0 1.154h7.594l5.243 6.932 6.064-6.933zm-1.291 19.497h2.039L6.486 3.24H4.298l13.312 17.41z"/></svg>
+        </button>
+      </div>
       <span id="copy-view-link-feedback" hidden></span>
     </div>
     </div>
@@ -544,6 +630,8 @@ export function generateViewerHtml(generatedAt: string) {
   </div>
   <script src="./statsClassSums.js"></script>
   <script src="./regionNavigation.js"></script>
+  <script src="./simpleView.js"></script>
+  <script src="./rankingDisplay.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
@@ -581,6 +669,10 @@ export function generateViewerHtml(generatedAt: string) {
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
     const copyViewLinkBtn = document.getElementById('copy-view-link');
+    const shareMapImageBtn = document.getElementById('share-map-image');
+    const shareRankingImageBtn = document.getElementById('share-ranking-image');
+    const shareNativeBtn = document.getElementById('share-native');
+    const shareToolbar = document.querySelector('.share-toolbar');
     const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
@@ -596,7 +688,7 @@ export function generateViewerHtml(generatedAt: string) {
     let lastRankingMinPct = 0;
     let lastRankingMaxPct = 20;
     let rankingMode = 'topflop';
-    const RANKING_TOP_N = 10;
+    const DEFAULT_RANKING_TOP_N = 11;
     const rankByFeatureId = new Map();
     let selectedFeatureId = null;
     let regionClickBound = false;
@@ -645,6 +737,49 @@ export function generateViewerHtml(generatedAt: string) {
       lengthClassFilter = readLengthClassFilterFromUi();
       updateOverlayLayerFilters();
       if (rawLoaded) repaintRegionsFromCounting();
+      syncSimpleCountingNotice();
+    }
+
+    function applyRadinfraDefaultCounting() {
+      lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
+      applyLengthClassFilterToUi(lengthClassFilter);
+      updateOverlayLayerFilters();
+      if (rawLoaded) repaintRegionsFromCounting();
+      syncSimpleCountingNotice();
+    }
+
+    function listExcludedCountingClasses(filter) {
+      const excluded = [];
+      const defaultFilter = CONFIG.radinfraDefaultFilter;
+      for (const opt of CONFIG.roadClassOptions) {
+        if (defaultFilter.road[opt.id] && !filter.road[opt.id]) {
+          excluded.push('Straßen: ' + opt.label);
+        }
+      }
+      for (const opt of CONFIG.bikelaneClassOptions) {
+        if (defaultFilter.bikelane[opt.id] && !filter.bikelane[opt.id]) {
+          excluded.push('Radinfrastruktur: ' + opt.label);
+        }
+      }
+      return excluded;
+    }
+
+    function syncSimpleCountingNotice() {
+      const notice = document.getElementById('simple-counting-notice');
+      const listEl = document.getElementById('simple-counting-excluded-list');
+      if (!notice || !listEl) return;
+      const filter = readLengthClassFilterFromUi();
+      const show =
+        uiMode() === 'simple' &&
+        !lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter);
+      notice.hidden = !show;
+      if (!show) return;
+      listEl.replaceChildren();
+      for (const label of listExcludedCountingClasses(filter)) {
+        const li = document.createElement('li');
+        li.textContent = label;
+        listEl.appendChild(li);
+      }
     }
 
     function initCountClassFilters() {
@@ -670,15 +805,15 @@ export function generateViewerHtml(generatedAt: string) {
         label.append(input, document.createTextNode(' ' + opt.label));
         bikeRoot.appendChild(label);
       }
-      document.getElementById('preset-radinfra').addEventListener('click', () => {
-        lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
-        applyLengthClassFilterToUi(lengthClassFilter);
-        updateOverlayLayerFilters();
-        if (rawLoaded) repaintRegionsFromCounting();
-      });
+      document.getElementById('preset-radinfra').addEventListener('click', applyRadinfraDefaultCounting);
     }
 
     initCountClassFilters();
+
+    const simplePresetRadinfraBtn = document.getElementById('simple-preset-radinfra');
+    if (simplePresetRadinfraBtn) {
+      simplePresetRadinfraBtn.addEventListener('click', applyRadinfraDefaultCounting);
+    }
 
     function enrichFeature(f) {
       const p = f.properties || {};
@@ -888,7 +1023,11 @@ export function generateViewerHtml(generatedAt: string) {
 
     function setPanelActionsEnabled(enabled) {
       setCsvExportEnabled(enabled);
-      copyViewLinkBtn.disabled = !enabled;
+      if (!shareToolbar) return;
+      for (const btn of shareToolbar.querySelectorAll('.share-btn')) {
+        if (btn.id === 'share-native' && btn.hidden) continue;
+        btn.disabled = !enabled;
+      }
     }
 
     function updateLegendRange(min, max) {
@@ -897,7 +1036,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function updateViewMetaText(filtered, range) {
-      let metaText = RegionNav.viewLabel(currentViewScope, regionIndex) + ' · ' + filtered.length + ' Gebiete';
+      let metaText = viewLabelForCurrentMode() + ' · ' + filtered.length + ' Gebiete';
       if (range.scaleCapped) {
         if (range.robustApplied && !getScaleCapSettings().enabled) {
           const parts = ['Skala 0–' + formatUiPct(range.max) + ' %'];
@@ -946,13 +1085,13 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function defaultScaleCapEnabledForView() {
-      return RegionNav.viewShowsManyGemeinden(currentViewScope)
+      return viewShowsManyGemeindenForCurrentView()
         ? CONFIG.defaultColorCapEnabled
         : false;
     }
 
     function defaultRobustScaleEnabledForView() {
-      return RegionNav.viewShowsGemeindenLevel(currentViewScope)
+      return viewShowsGemeindenLevelForCurrentView()
         ? CONFIG.defaultRobustScaleEnabled
         : false;
     }
@@ -970,8 +1109,8 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function updateScaleCapDefaultForView() {
-      const gemeindenLevel = RegionNav.viewShowsGemeindenLevel(currentViewScope);
-      const gemeindenOverview = RegionNav.viewShowsManyGemeinden(currentViewScope);
+      const gemeindenLevel = viewShowsGemeindenLevelForCurrentView();
+      const gemeindenOverview = viewShowsManyGemeindenForCurrentView();
       if (gemeindenLevel && !lastScaleCapViewAllowed) {
         scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
         if (gemeindenOverview) {
@@ -1048,20 +1187,34 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
+    function currentRankingTopN() {
+      const withPct = lastRankingSorted.filter(
+        (f) => typeof f.properties?.bikeSharePct === 'number',
+      );
+      const items = withPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      return RankingDisplay.effectiveRankingTopN({
+        mode: rankingMode,
+        items,
+        focusChainIds: rankingFocusChainIds(),
+      });
+    }
+
     function rankingDisplayRows(sortedWithPct) {
-      const n = sortedWithPct.length;
-      if (rankingMode === 'all' || n <= RANKING_TOP_N * 2) {
+      const topN = currentRankingTopN();
+      if (rankingMode === 'all' || topN == null) {
         return sortedWithPct.map((f, i) => ({ type: 'row', f, rank: i + 1 }));
       }
-      const rows = [];
-      for (let i = 0; i < RANKING_TOP_N; i++) {
-        rows.push({ type: 'row', f: sortedWithPct[i], rank: i + 1 });
-      }
-      rows.push({ type: 'divider' });
-      for (let i = n - RANKING_TOP_N; i < n; i++) {
-        rows.push({ type: 'row', f: sortedWithPct[i], rank: i + 1 });
-      }
-      return rows;
+      const items = sortedWithPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      const built = RankingDisplay.buildTopFlopDisplayRows(
+        items,
+        topN,
+        rankingFocusChainIds(),
+      );
+      return built.map((row) =>
+        row.type === 'divider'
+          ? { type: 'divider' }
+          : { type: 'row', f: sortedWithPct[row.index], rank: row.rank },
+      );
     }
 
     function appendRankingRow(list, rank, f, minPct, maxPct, span) {
@@ -1092,7 +1245,7 @@ export function generateViewerHtml(generatedAt: string) {
 
     function updateScaleCapHint() {
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
-      const gemeindenLevel = RegionNav.viewShowsGemeindenLevel(currentViewScope);
+      const gemeindenLevel = viewShowsGemeindenLevelForCurrentView();
       if (!gemeindenLevel || (!enabled && !robustEnabled)) {
         scaleCapHint.hidden = true;
         scaleCapHint.textContent = '';
@@ -1258,6 +1411,19 @@ export function generateViewerHtml(generatedAt: string) {
         'Einzelne Radweg-Typen',
         TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
       );
+      if (uiMode() !== 'simple') {
+        const viewLink = document.createElement('p');
+        viewLink.className = 'region-detail-view-link';
+        const link = document.createElement('a');
+        link.href = '#';
+        link.textContent = 'Vereinfachte Ansicht für dieses Gebiet';
+        link.addEventListener('click', (e) => {
+          e.preventDefault();
+          navigateToViewMode('simple', p.id);
+        });
+        viewLink.appendChild(link);
+        regionDetailBody.appendChild(viewLink);
+      }
       regionDetailEl.hidden = false;
     }
 
@@ -1324,9 +1490,10 @@ export function generateViewerHtml(generatedAt: string) {
       lastRankingMaxPct = maxPct;
       rebuildRankIndex(sorted);
 
+      const topN = currentRankingTopN() ?? DEFAULT_RANKING_TOP_N;
       const modeHint =
-        rankingMode === 'topflop' && withPct.length > RANKING_TOP_N * 2
-          ? ' · Top & Flop je ' + RANKING_TOP_N
+        rankingMode === 'topflop' && withPct.length > topN * 2
+          ? ' · Top & Flop je ' + topN
           : rankingMode === 'all'
             ? ' · alle ' + withPct.length
             : '';
@@ -1358,12 +1525,466 @@ export function generateViewerHtml(generatedAt: string) {
       style: CONFIG.basemapStyles[CONFIG.basemap],
       center: [11.5, 48.9],
       zoom: 7,
+      preserveDrawingBuffer: true,
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
 
     function updatePanelSummaryPreview() {
       if (!panelSummaryPreview || !regionIndex) return;
-      panelSummaryPreview.textContent = RegionNav.viewLabel(currentViewScope, regionIndex);
+      panelSummaryPreview.textContent = viewLabelForCurrentMode();
+    }
+
+    function navigateToViewMode(mode, focusId) {
+      const params = new URLSearchParams(location.search);
+      if (mode === 'simple') {
+        if (uiMode() === 'expert') {
+          syncViewScopeFromUi();
+          savedExpertViewScope = {
+            gebiet: gebietSelect.value,
+            untergebiet: untergebietSelect.value || '',
+            darstellung: darstellungSelect.value,
+          };
+        }
+        const ctx = SimpleView.resolveFocusContext(focusId, regionIndex);
+        const preset = ctx
+          ? SimpleView.defaultSimplePresetForFocus(ctx, regionIndex)
+          : 'de_landkreis_kreisfrei';
+        params.set('ui', 'simple');
+        params.set('focus', focusId || regionIndex.deutschlandId || RegionNav.DEUTSCHLAND_GEBIET);
+        params.set('simple', preset);
+        writeExpertScopeToUrlParams(params, savedExpertViewScope ?? currentViewScope);
+      } else {
+        const scope =
+          savedExpertViewScope ??
+          (focusId ? SimpleView.expertViewScopeFromFocus(focusId, regionIndex) : null);
+        params.delete('ui');
+        params.delete('focus');
+        params.delete('simple');
+        writeExpertScopeToUrlParams(params, scope);
+      }
+      appendViewerOptionsToUrl(params);
+      const qs = params.toString();
+      location.assign(location.pathname + (qs ? '?' + qs : ''));
+    }
+
+    function imageFilename(suffix) {
+      return downloadFilenameForView().replace(/\\.csv$/i, '') + '-' + suffix + '.png';
+    }
+
+    function triggerImageDownload(dataUrl, filename) {
+      const link = document.createElement('a');
+      link.href = dataUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    async function waitForMapRender() {
+      if (!map.isStyleLoaded()) {
+        await new Promise((resolve) => map.once('load', resolve));
+      }
+      map.triggerRepaint();
+      await new Promise((resolve) => map.once('idle', resolve));
+    }
+
+    function bboxForCurrentView() {
+      const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
+      const boundsFeatures = filtered.length
+        ? { type: 'FeatureCollection', features: filtered }
+        : { type: 'FeatureCollection', features: scopeBoundsFeaturesForCurrentView() };
+      return turf.bbox(boundsFeatures);
+    }
+
+    function fitMapToCurrentView() {
+      const bbox = bboxForCurrentView();
+      if (bbox.every(Number.isFinite)) {
+        map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48, duration: 0 });
+      }
+    }
+
+    const MAP_EXPORT_STYLE_PROPS = [
+      'position',
+      'left',
+      'top',
+      'right',
+      'bottom',
+      'width',
+      'height',
+      'inset',
+      'zIndex',
+    ];
+
+    function saveInlineStyles(el, props) {
+      const saved = {};
+      for (const prop of props) saved[prop] = el.style[prop];
+      return saved;
+    }
+
+    function restoreInlineStyles(el, saved, props) {
+      for (const prop of props) el.style[prop] = saved[prop] || '';
+    }
+
+    function rankingExportRows(sortedWithPct) {
+      const items = sortedWithPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      const built = RankingDisplay.buildRankingExportRows(items, {
+        mode: rankingMode,
+        topN: currentRankingTopN(),
+        focusChainIds: rankingFocusChainIds(),
+      });
+      return built.map((row) =>
+        row.type === 'divider'
+          ? { type: 'divider' }
+          : { type: 'row', f: sortedWithPct[row.index], rank: row.rank },
+      );
+    }
+
+    function wrapCanvasText(ctx, text, x, y, maxWidth, lineHeight) {
+      const words = String(text).split(/\\s+/);
+      let line = '';
+      let cursorY = y;
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxWidth && line) {
+          ctx.fillText(line, x, cursorY);
+          line = word;
+          cursorY += lineHeight;
+        } else {
+          line = test;
+        }
+      }
+      if (line) {
+        ctx.fillText(line, x, cursorY);
+        cursorY += lineHeight;
+      }
+      return cursorY;
+    }
+
+    function truncateCanvasText(ctx, text, maxWidth) {
+      let out = String(text);
+      if (ctx.measureText(out).width <= maxWidth) return out;
+      while (out.length > 1 && ctx.measureText(out + '…').width > maxWidth) {
+        out = out.slice(0, -1);
+      }
+      return out + '…';
+    }
+
+    async function captureMapExportCanvas() {
+      const mapEl = document.getElementById('map');
+      const { width, height } = RankingDisplay.PORTRAIT_EXPORT;
+      const savedMapStyle = saveInlineStyles(mapEl, MAP_EXPORT_STYLE_PROPS);
+      const hiddenControls = [...mapEl.querySelectorAll('.maplibregl-ctrl')].map((el) => [
+        el,
+        el.style.visibility,
+      ]);
+      try {
+        for (const [el] of hiddenControls) el.style.visibility = 'hidden';
+        mapEl.style.position = 'fixed';
+        mapEl.style.left = '-20000px';
+        mapEl.style.top = '0';
+        mapEl.style.right = 'auto';
+        mapEl.style.bottom = 'auto';
+        mapEl.style.inset = 'auto';
+        mapEl.style.width = width + 'px';
+        mapEl.style.height = height + 'px';
+        mapEl.style.zIndex = '-1';
+        map.resize();
+        fitMapToCurrentView();
+        await waitForMapRender();
+        const source = map.getCanvas();
+        if (!source?.width) throw new Error('empty canvas');
+        const copy = document.createElement('canvas');
+        copy.width = source.width;
+        copy.height = source.height;
+        copy.getContext('2d').drawImage(source, 0, 0);
+        return copy;
+      } finally {
+        for (const [el, visibility] of hiddenControls) el.style.visibility = visibility;
+        restoreInlineStyles(mapEl, savedMapStyle, MAP_EXPORT_STYLE_PROPS);
+        map.resize();
+        fitMapToCurrentView();
+        await waitForMapRender();
+      }
+    }
+
+    async function downloadMapImage() {
+      try {
+        const canvas = await captureMapExportCanvas();
+        triggerImageDownload(canvas.toDataURL('image/png'), imageFilename('karte'));
+        showCopyViewLinkFeedback('Kartenbild gespeichert.');
+      } catch {
+        showCopyViewLinkFeedback('Kartenbild konnte nicht erstellt werden.', true);
+      }
+    }
+
+    async function canvasToPngFile(canvas, filename) {
+      const blob = await new Promise((resolve, reject) => {
+        canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('empty blob'))), 'image/png');
+      });
+      return new File([blob], filename, { type: 'image/png' });
+    }
+
+    function combineShareCanvases(canvases) {
+      const list = canvases.filter((c) => c?.width && c?.height);
+      if (!list.length) return null;
+      if (list.length === 1) return list[0];
+      const width = Math.max(...list.map((c) => c.width));
+      const height = list.reduce((sum, c) => sum + c.height, 0);
+      const out = document.createElement('canvas');
+      out.width = width;
+      out.height = height;
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+      let y = 0;
+      for (const canvas of list) {
+        ctx.drawImage(canvas, Math.floor((width - canvas.width) / 2), y);
+        y += canvas.height;
+      }
+      return out;
+    }
+
+    async function buildShareScreenshotAssets() {
+      const canvases = [];
+      try {
+        canvases.push(await captureMapExportCanvas());
+      } catch {
+        /* Karte optional */
+      }
+      try {
+        canvases.push(drawRankingExportCanvas());
+      } catch {
+        /* Rangliste optional */
+      }
+      const files = [];
+      for (const canvas of canvases) {
+        const kind = files.length === 0 ? 'karte' : 'rangliste';
+        files.push(await canvasToPngFile(canvas, imageFilename(kind)));
+      }
+      const combined = combineShareCanvases(canvases);
+      const combinedFile = combined
+        ? await canvasToPngFile(
+            combined,
+            imageFilename('karte').replace(/-karte\\.png$/i, '-ansicht.png'),
+          )
+        : null;
+      return { files, combinedFile, canvases };
+    }
+
+    function canShareData(data) {
+      if (typeof navigator.canShare !== 'function') return false;
+      try {
+        return navigator.canShare(data);
+      } catch {
+        return false;
+      }
+    }
+
+    async function tryNativeShareWithFiles(files, text, url, title) {
+      const attempts = [
+        { files, title, text, url },
+        { files, title, text },
+        { files, text },
+        { files },
+      ];
+      for (const data of attempts) {
+        if (!canShareData(data)) continue;
+        try {
+          await navigator.share(data);
+          return true;
+        } catch (err) {
+          if (err?.name === 'AbortError') throw err;
+        }
+      }
+      return false;
+    }
+
+    function isLikelyMobileShareDevice() {
+      return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    }
+
+    function downloadShareFiles(files) {
+      for (const file of files) {
+        const objectUrl = URL.createObjectURL(file);
+        triggerImageDownload(objectUrl, file.name);
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 4000);
+      }
+    }
+
+    async function copyShareMessageToClipboard(text, url) {
+      const line = text + '\\n\\n' + url;
+      try {
+        if (navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(line);
+          return true;
+        }
+      } catch {
+        /* fallback below */
+      }
+      return copyTextFallback(line);
+    }
+
+    async function shareViewWithScreenshots(fallbackApp) {
+      const { url, title, text } = sharePayload();
+      const shareLine = text + '\\n\\n' + url;
+      showCopyViewLinkFeedback('Screenshots werden vorbereitet …');
+      let files = [];
+      let combinedFile = null;
+      try {
+        const assets = await buildShareScreenshotAssets();
+        files = assets.files;
+        combinedFile = assets.combinedFile;
+      } catch {
+        showCopyViewLinkFeedback('Screenshots konnten nicht erstellt werden.', true);
+        if (fallbackApp) shareViaApp(fallbackApp);
+        return;
+      }
+
+      const shareFiles =
+        !isLikelyMobileShareDevice() && combinedFile ? [combinedFile] : files.length ? files : combinedFile ? [combinedFile] : [];
+
+      try {
+        if (shareFiles.length && (await tryNativeShareWithFiles(shareFiles, text, url, title))) {
+          showCopyViewLinkFeedback('Geteilt.');
+          return;
+        }
+      } catch (err) {
+        if (err?.name === 'AbortError') return;
+      }
+
+      const downloadFiles =
+        combinedFile && !isLikelyMobileShareDevice() ? [combinedFile] : shareFiles;
+      if (downloadFiles.length) downloadShareFiles(downloadFiles);
+      await copyShareMessageToClipboard(text, url);
+
+      if (fallbackApp) {
+        shareViaApp(fallbackApp);
+        if (downloadFiles.length) {
+          showCopyViewLinkFeedback(
+            isLikelyMobileShareDevice()
+              ? 'Text kopiert. Bilder gespeichert – bitte anhängen.'
+              : 'Am PC: kombiniertes Bild gespeichert und Text kopiert – bitte Bild in der App anhängen (WhatsApp Web o. Ä. unterstützt kein automatisches Anhängen).',
+          );
+        } else {
+          showCopyViewLinkFeedback('Text kopiert.');
+        }
+        return;
+      }
+
+      if (typeof navigator.share === 'function') {
+        try {
+          await navigator.share({ title, text, url });
+          showCopyViewLinkFeedback(
+            downloadFiles.length
+              ? 'Geteilt. Bild gespeichert – am PC bitte manuell anhängen.'
+              : 'Geteilt.',
+          );
+          return;
+        } catch (err) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+
+      if (downloadFiles.length) {
+        showCopyViewLinkFeedback(
+          'Bild gespeichert und Text kopiert – bitte in der Ziel-App einfügen und Bild anhängen.',
+        );
+        return;
+      }
+      showCopyViewLinkFeedback('Teilen nicht verfügbar.', true);
+    }
+
+    function drawRankingExportCanvas() {
+      const { width, height, padding } = RankingDisplay.PORTRAIT_EXPORT;
+      const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
+      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const topN = currentRankingTopN();
+      const showsAlle = RankingDisplay.rankingShowsAsAlle(withPct.length, rankingMode, topN);
+      const rows = rankingExportRows(withPct);
+      const minPct = lastRankingMinPct;
+      const maxPct = lastRankingMaxPct;
+      const span = Math.max(maxPct - minPct, 0.001);
+      const focusIds = new Set(rankingFocusChainIds());
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const innerW = width - padding * 2;
+      let y = padding + 8;
+      ctx.fillStyle = '#111111';
+      ctx.font = '700 42px system-ui, sans-serif';
+      y = wrapCanvasText(ctx, viewLabelForCurrentMode(), padding, y, innerW, 48);
+      y += 8;
+      ctx.fillStyle = '#666666';
+      ctx.font = '400 28px system-ui, sans-serif';
+      const summary = showsAlle
+        ? withPct.length + ' Gebiete'
+        : withPct.length +
+          ' Gebiete · Top & Flop je ' +
+          (topN ?? DEFAULT_RANKING_TOP_N);
+      y = wrapCanvasText(ctx, summary, padding, y, innerW, 34);
+      y += 24;
+
+      const rankColW = 72;
+      const pctColW = 120;
+      const barX = padding + rankColW + 280;
+      const barW = width - padding - pctColW - barX - 16;
+      const rowH = 72;
+
+      for (const row of rows) {
+        if (row.type === 'divider') {
+          y += 10;
+          ctx.fillStyle = '#bbbbbb';
+          ctx.font = '400 28px system-ui, sans-serif';
+          ctx.fillText('…', padding + rankColW, y + 24);
+          y += 36;
+          continue;
+        }
+        const f = row.f;
+        const id = String(f.properties?.id ?? '');
+        const pct = f.properties.bikeSharePct;
+        const name = String(f.properties?.name || id || '–');
+        const highlighted = focusIds.has(id);
+        if (highlighted) {
+          ctx.fillStyle = '#e8f4fd';
+          ctx.fillRect(padding - 8, y - 8, innerW + 16, rowH - 8);
+        }
+        ctx.fillStyle = '#666666';
+        ctx.font = '400 26px system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(row.rank + '.', padding + rankColW - 8, y + 34);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = '#222222';
+        ctx.font = highlighted ? '600 30px system-ui, sans-serif' : '400 30px system-ui, sans-serif';
+        ctx.fillText(truncateCanvasText(ctx, name, 268), padding + rankColW, y + 34);
+        ctx.fillStyle = '#eceff1';
+        ctx.fillRect(barX, y + 22, barW, 16);
+        const barFillW = Math.max(4, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * barW);
+        ctx.fillStyle = colorForPct(pct, minPct, maxPct);
+        ctx.fillRect(barX, y + 22, barFillW, 16);
+        ctx.fillStyle = '#444444';
+        ctx.font = '400 26px system-ui, sans-serif';
+        ctx.textAlign = 'right';
+        ctx.fillText(formatUiPct(pct) + ' %', width - padding, y + 34);
+        ctx.textAlign = 'left';
+        y += rowH;
+        if (y > height - padding - rowH) break;
+      }
+
+      return canvas;
+    }
+
+    async function downloadRankingImage() {
+      try {
+        const canvas = drawRankingExportCanvas();
+        triggerImageDownload(canvas.toDataURL('image/png'), imageFilename('rangliste'));
+        showCopyViewLinkFeedback('Ranglistenbild gespeichert.');
+      } catch {
+        showCopyViewLinkFeedback('Ranglistenbild konnte nicht erstellt werden.', true);
+      }
     }
 
     function notifyMapResize() {
@@ -1451,55 +2072,84 @@ export function generateViewerHtml(generatedAt: string) {
       return true;
     }
 
-    function buildShareUrl() {
+    function appendViewerOptionsToUrl(params) {
       const filter = readLengthClassFilterFromUi();
       lengthClassFilter = filter;
-      const params = new URLSearchParams();
-      appendViewScopeToUrl(params);
       if (isUiMinimal()) params.set('minimal', '1');
+      else params.delete('minimal');
       if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
+      else params.delete('basemap');
       if (!toggleBikelanes.checked) params.set('radwege', '0');
+      else params.delete('radwege');
       if (toggleRoads.checked) params.set('strassen', '1');
+      else params.delete('strassen');
       if (rankingDetails.open) params.set('ranking', 'open');
-      if (rankingMode !== 'topflop') {
-        params.set('rankingMode', rankingMode);
-      }
+      else params.delete('ranking');
+      if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
+      else params.delete('rankingMode');
       if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
         params.set('colors', colorScaleSelect.value);
+      } else {
+        params.delete('colors');
       }
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
       const defaultCapEnabled = defaultScaleCapEnabledForView();
       const defaultRobust = defaultRobustScaleEnabledForView();
       if (capPct !== CONFIG.defaultColorCapPct) params.set('cap', String(capPct));
+      else params.delete('cap');
       if (enabled !== defaultCapEnabled) {
         params.set('capEnabled', enabled ? '1' : '0');
+      } else {
+        params.delete('capEnabled');
       }
       if (robustEnabled !== defaultRobust) {
         params.set('robustScale', robustEnabled ? '1' : '0');
+      } else {
+        params.delete('robustScale');
       }
       const scaleBike = bikelaneColorForScale(colorScaleSelect.value).toLowerCase();
       const bikeHex = overlayBikelaneColorInput.value.toLowerCase();
       if (bikeHex !== scaleBike) params.set('radfarbe', hexColorWithoutHash(bikeHex));
+      else params.delete('radfarbe');
       const roadHex = overlayRoadColorInput.value.toLowerCase();
       if (roadHex !== CONFIG.defaultOverlayColors.road.toLowerCase()) {
         params.set('strassenfarbe', hexColorWithoutHash(roadHex));
+      } else {
+        params.delete('strassenfarbe');
       }
       const { bikelane: bikeMinZ, roadMajor, roadFull } = overlayMinZoomFromInputs();
       if (bikeMinZ !== CONFIG.defaultOverlayMinZoom.bikelane) {
         params.set('radwegeMinZoom', String(bikeMinZ));
+      } else {
+        params.delete('radwegeMinZoom');
       }
       if (roadMajor !== CONFIG.defaultOverlayMinZoom.roadMajor) {
         params.set('strassenMinZoomMajor', String(roadMajor));
+      } else {
+        params.delete('strassenMinZoomMajor');
       }
       if (roadFull !== CONFIG.defaultOverlayMinZoom.roadFull) {
         params.set('strassenMinZoomFull', String(roadFull));
+      } else {
+        params.delete('strassenMinZoomFull');
       }
       if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
         const roads = enabledClassIds(filter, 'road');
         const bikes = enabledClassIds(filter, 'bikelane');
         if (roads.length) params.set('roadClasses', roads.join(','));
+        else params.delete('roadClasses');
         if (bikes.length) params.set('bikelaneClasses', bikes.join(','));
+        else params.delete('bikelaneClasses');
+      } else {
+        params.delete('roadClasses');
+        params.delete('bikelaneClasses');
       }
+    }
+
+    function buildShareUrl() {
+      const params = new URLSearchParams();
+      appendViewScopeToUrl(params);
+      appendViewerOptionsToUrl(params);
       const qs = params.toString();
       return location.origin + location.pathname + (qs ? '?' + qs : '');
     }
@@ -1528,6 +2178,67 @@ export function generateViewerHtml(generatedAt: string) {
       const ok = document.execCommand('copy');
       document.body.removeChild(ta);
       return ok;
+    }
+
+    function shareMessageText() {
+      const label = regionIndex ? viewLabelForCurrentMode() : 'diesem Gebiet';
+      return 'So steht „' + label + '“ beim Radwegausbau da:';
+    }
+
+    function sharePayload() {
+      const url = buildShareUrl();
+      return { url, title: 'Radinfra-Karte', text: shareMessageText() };
+    }
+
+    function openShareWindow(url) {
+      window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function shareViaApp(app) {
+      const { url, title, text } = sharePayload();
+      const line = text + '\\n\\n' + url;
+      let target = '';
+      switch (app) {
+        case 'email':
+          target =
+            'mailto:?subject=' +
+            encodeURIComponent(title + ' – ' + text) +
+            '&body=' +
+            encodeURIComponent(line);
+          window.location.href = target;
+          return;
+        case 'whatsapp':
+          target = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
+          break;
+        case 'telegram':
+          target =
+            'https://t.me/share/url?url=' +
+            encodeURIComponent(url) +
+            '&text=' +
+            encodeURIComponent(text);
+          break;
+        case 'linkedin':
+          target =
+            'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url);
+          break;
+        case 'bluesky':
+          target = 'https://bsky.app/intent/compose?text=' + encodeURIComponent(text + ' ' + url);
+          break;
+        case 'twitter':
+          target =
+            'https://twitter.com/intent/tweet?url=' +
+            encodeURIComponent(url) +
+            '&text=' +
+            encodeURIComponent(text);
+          break;
+        default:
+          return;
+      }
+      openShareWindow(target);
+    }
+
+    async function nativeShareLink() {
+      await shareViewWithScreenshots(null);
     }
 
     async function copyShareLink() {
@@ -1688,7 +2399,7 @@ export function generateViewerHtml(generatedAt: string) {
           capEnabled,
           defaultScaleCapEnabledForView(),
         );
-        lastScaleCapViewAllowed = RegionNav.viewShowsGemeindenLevel(currentViewScope);
+        lastScaleCapViewAllowed = viewShowsGemeindenLevelForCurrentView();
       } else {
         updateScaleCapDefaultForView();
       }
@@ -1702,6 +2413,7 @@ export function generateViewerHtml(generatedAt: string) {
       syncScaleCapInputState();
 
       applyLengthClassFilterFromUrl(params);
+      syncSimpleCountingNotice();
 
       const radfarbe =
         params.get('radfarbe') ?? params.get('radwegeFarbe') ?? params.get('bikelaneColor');
@@ -1987,21 +2699,7 @@ export function generateViewerHtml(generatedAt: string) {
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
-        const boundsFeatures = filtered.length
-          ? geojson
-          : {
-              type: 'FeatureCollection',
-              features: RegionNav.scopeBoundsFeatures(
-                allFeatures,
-                currentViewScope.gebiet,
-                currentViewScope.untergebiet,
-                regionIndex,
-              ),
-            };
-        const bbox = turf.bbox(boundsFeatures);
-        if (bbox.every(Number.isFinite)) {
-          map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48, duration: 0 });
-        }
+        fitMapToCurrentView();
       };
       if (map.isStyleLoaded()) run();
       else map.once('load', run);
@@ -2033,6 +2731,15 @@ export function generateViewerHtml(generatedAt: string) {
     gebietSelect.addEventListener('change', onGebietChange);
     untergebietSelect.addEventListener('change', onUntergebietChange);
     darstellungSelect.addEventListener('change', onDarstellungChange);
+    if (simpleViewSelect) simpleViewSelect.addEventListener('change', onSimpleViewChange);
+    const switchToExpertLink = document.getElementById('switch-to-expert-link');
+    if (switchToExpertLink) {
+      switchToExpertLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        const focusId = simpleFocusContext?.focusId || regionIndex?.deutschlandId;
+        navigateToViewMode('expert', focusId);
+      });
+    }
     toggleBikelanes.addEventListener('change', updateOverlayVisibility);
     toggleRoads.addEventListener('change', updateOverlayVisibility);
     overlayBikelaneColorInput.addEventListener('input', applyOverlayLineColors);
@@ -2052,7 +2759,16 @@ export function generateViewerHtml(generatedAt: string) {
     }
     syncRankingModeButtons();
     syncRankingScrollLayout();
+    if (typeof navigator.share === 'function') {
+      shareNativeBtn.hidden = false;
+    }
     copyViewLinkBtn.addEventListener('click', copyShareLink);
+    shareMapImageBtn.addEventListener('click', downloadMapImage);
+    shareRankingImageBtn.addEventListener('click', downloadRankingImage);
+    shareNativeBtn.addEventListener('click', nativeShareLink);
+    for (const btn of shareToolbar.querySelectorAll('[data-share]')) {
+      btn.addEventListener('click', () => shareViewWithScreenshots(btn.dataset.share));
+    }
     function updateBasemapHint() {
       const meta = CONFIG.basemapOptions.find((b) => b.id === basemapSelect.value);
       basemapHint.textContent = meta?.description || '';
