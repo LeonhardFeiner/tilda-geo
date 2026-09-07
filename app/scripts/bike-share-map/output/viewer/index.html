@@ -38,6 +38,8 @@
     .panel-body { margin: 0; }
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
+    /* Floating share button: phone only (see media query); desktop shares via the panel toolbar. */
+    .share-fab { display: none; }
     @media (max-width: 768px) {
       body { --sheet-peek: 4.9rem; }
 
@@ -119,8 +121,33 @@
       }
       body[data-settings-open] .settings-toggle { color: #1565c0; }
 
-      /* With the OS share sheet present, drop the redundant standalone copy-link button. */
-      .share-toolbar.has-native-share #copy-view-link { display: none; }
+      /* Ranking CSV export is a power-user tool — phone shows it only in expert view. */
+      body:not(.view-expert) #ranking-csv-actions { display: none; }
+
+      /* One round share button, top-left over the map. It shares the combined view
+         image + link in a single OS share sheet, so the in-sheet toolbar is dropped. */
+      #share-fab {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; z-index: 5;
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px;
+        width: 42px; height: 42px; padding: 0;
+        border: 1px solid #cfcfcf; border-radius: 50%;
+        background: #fff; color: #1565c0; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+      }
+      #share-fab svg { width: 19px; height: 19px; fill: currentColor; }
+      #share-fab:active { background: #eef4fc; }
+      #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
+      body[data-sheet="full"] #share-fab { display: none; }
+      .panel-actions .share-toolbar { display: none; }
+      .panel-actions { margin-top: 0; }
+      #copy-view-link-feedback {
+        position: fixed; z-index: 6;
+        top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
+        max-width: 74vw; padding: 6px 10px;
+        background: #fff; border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+      }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
@@ -191,6 +218,7 @@
     .share-btn--primary:hover:not(:disabled) { background: #e8f0fb; }
     #share-native[hidden] { display: none !important; }
     #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; font-size: 11px; }
+    #copy-view-link-feedback[hidden] { display: none !important; }
     #copy-view-link-feedback.is-error { color: #b71c1c; }
     .scale-cap-controls {
       margin: 10px 0 8px; padding-top: 8px; border-top: 1px solid #e8e8e8;
@@ -461,6 +489,9 @@
 <body>
   <div id="map"></div>
   <div id="sheet-scrim" aria-hidden="true"></div>
+  <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+  </button>
   <details class="panel" id="panel-main" open>
     <summary>
       <span>Steuerung & Legende</span>
@@ -660,7 +691,7 @@
     </div>
     </div>
     <p class="footer">
-      Erstellt am 07.09.2026 ·
+      Erstellt am 08.09.2026 ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="https://github.com/LeonhardFeiner/tilda-geo" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -685,7 +716,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-07T21:43:16.013Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-07T22:11:36.209Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1781,6 +1812,8 @@
 
     function setPanelActionsEnabled(enabled) {
       setCsvExportEnabled(enabled);
+      const shareFab = document.getElementById('share-fab');
+      if (shareFab) shareFab.disabled = !enabled;
       if (!shareToolbar) return;
       for (const btn of shareToolbar.querySelectorAll('.share-btn')) {
         if (btn.id === 'share-native' && btn.hidden) continue;
@@ -2988,7 +3021,10 @@
     }
 
     async function shareViewWithScreenshots(fallbackApp) {
-      const { url, title, text } = sharePayload();
+      const { url, title, text: baseText } = sharePayload();
+      // Keep the link in the message body itself: many share targets accept files + text
+      // but drop a separate url field, so the link would otherwise be lost.
+      const text = baseText + '\n\n' + url;
       const mobile = isLikelyMobileShareDevice();
       showCopyViewLinkFeedback('Screenshots werden vorbereitet …');
       let files = [];
@@ -3015,7 +3051,7 @@
         if (err?.name === 'AbortError') return;
       }
 
-      await copyShareMessageToClipboard(text, url);
+      await copyShareMessageToClipboard(baseText, url);
 
       if (fallbackApp && !mobile) {
         shareViaApp(fallbackApp);
@@ -3029,7 +3065,7 @@
 
       if (typeof navigator.share === 'function') {
         try {
-          await navigator.share({ title, text, url });
+          await navigator.share({ title, text: baseText, url });
           showCopyViewLinkFeedback(
             hadImages
               ? mobile
@@ -4096,14 +4132,12 @@
     syncRankingScrollLayout();
     if (typeof navigator.share === 'function' && shareNativeBtn) {
       shareNativeBtn.hidden = false;
-      // With the OS share sheet available, the standalone "Link kopieren" button is
-      // redundant on the phone (copy is one of its entries) — CSS hides it there.
-      shareToolbar?.classList.add('has-native-share');
     }
     copyViewLinkBtn?.addEventListener('click', copyShareLink);
     shareMapImageBtn?.addEventListener('click', downloadMapImage);
     shareRankingImageBtn?.addEventListener('click', downloadRankingImage);
     shareNativeBtn?.addEventListener('click', nativeShareLink);
+    document.getElementById('share-fab')?.addEventListener('click', nativeShareLink);
     function updateBasemapHint() {
       if (!basemapHint) return;
       const basemapId = basemapSelect?.value || CONFIG.basemap;

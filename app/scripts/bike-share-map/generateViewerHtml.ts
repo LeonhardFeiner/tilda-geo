@@ -121,6 +121,8 @@ export function generateViewerHtml(generatedAt: string) {
     .panel-body { margin: 0; }
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
+    /* Floating share button: phone only (see media query); desktop shares via the panel toolbar. */
+    .share-fab { display: none; }
     @media (max-width: 768px) {
       body { --sheet-peek: 4.9rem; }
 
@@ -202,8 +204,33 @@ export function generateViewerHtml(generatedAt: string) {
       }
       body[data-settings-open] .settings-toggle { color: #1565c0; }
 
-      /* With the OS share sheet present, drop the redundant standalone copy-link button. */
-      .share-toolbar.has-native-share #copy-view-link { display: none; }
+      /* Ranking CSV export is a power-user tool — phone shows it only in expert view. */
+      body:not(.view-expert) #ranking-csv-actions { display: none; }
+
+      /* One round share button, top-left over the map. It shares the combined view
+         image + link in a single OS share sheet, so the in-sheet toolbar is dropped. */
+      #share-fab {
+        display: flex; align-items: center; justify-content: center;
+        position: fixed; z-index: 5;
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px;
+        width: 42px; height: 42px; padding: 0;
+        border: 1px solid #cfcfcf; border-radius: 50%;
+        background: #fff; color: #1565c0; cursor: pointer;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+      }
+      #share-fab svg { width: 19px; height: 19px; fill: currentColor; }
+      #share-fab:active { background: #eef4fc; }
+      #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
+      body[data-sheet="full"] #share-fab { display: none; }
+      .panel-actions .share-toolbar { display: none; }
+      .panel-actions { margin-top: 0; }
+      #copy-view-link-feedback {
+        position: fixed; z-index: 6;
+        top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
+        max-width: 74vw; padding: 6px 10px;
+        background: #fff; border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
+      }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
@@ -274,6 +301,7 @@ export function generateViewerHtml(generatedAt: string) {
     .share-btn--primary:hover:not(:disabled) { background: #e8f0fb; }
     #share-native[hidden] { display: none !important; }
     #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; font-size: 11px; }
+    #copy-view-link-feedback[hidden] { display: none !important; }
     #copy-view-link-feedback.is-error { color: #b71c1c; }
     .scale-cap-controls {
       margin: 10px 0 8px; padding-top: 8px; border-top: 1px solid #e8e8e8;
@@ -544,6 +572,9 @@ export function generateViewerHtml(generatedAt: string) {
 <body>
   <div id="map"></div>
   <div id="sheet-scrim" aria-hidden="true"></div>
+  <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+  </button>
   <details class="panel" id="panel-main" open>
     <summary>
       <span>Steuerung & Legende</span>
@@ -1233,6 +1264,8 @@ export function generateViewerHtml(generatedAt: string) {
 
     function setPanelActionsEnabled(enabled) {
       setCsvExportEnabled(enabled);
+      const shareFab = document.getElementById('share-fab');
+      if (shareFab) shareFab.disabled = !enabled;
       if (!shareToolbar) return;
       for (const btn of shareToolbar.querySelectorAll('.share-btn')) {
         if (btn.id === 'share-native' && btn.hidden) continue;
@@ -2440,7 +2473,10 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     async function shareViewWithScreenshots(fallbackApp) {
-      const { url, title, text } = sharePayload();
+      const { url, title, text: baseText } = sharePayload();
+      // Keep the link in the message body itself: many share targets accept files + text
+      // but drop a separate url field, so the link would otherwise be lost.
+      const text = baseText + '\\n\\n' + url;
       const mobile = isLikelyMobileShareDevice();
       showCopyViewLinkFeedback('Screenshots werden vorbereitet …');
       let files = [];
@@ -2467,7 +2503,7 @@ export function generateViewerHtml(generatedAt: string) {
         if (err?.name === 'AbortError') return;
       }
 
-      await copyShareMessageToClipboard(text, url);
+      await copyShareMessageToClipboard(baseText, url);
 
       if (fallbackApp && !mobile) {
         shareViaApp(fallbackApp);
@@ -2481,7 +2517,7 @@ export function generateViewerHtml(generatedAt: string) {
 
       if (typeof navigator.share === 'function') {
         try {
-          await navigator.share({ title, text, url });
+          await navigator.share({ title, text: baseText, url });
           showCopyViewLinkFeedback(
             hadImages
               ? mobile
@@ -3548,14 +3584,12 @@ export function generateViewerHtml(generatedAt: string) {
     syncRankingScrollLayout();
     if (typeof navigator.share === 'function' && shareNativeBtn) {
       shareNativeBtn.hidden = false;
-      // With the OS share sheet available, the standalone "Link kopieren" button is
-      // redundant on the phone (copy is one of its entries) — CSS hides it there.
-      shareToolbar?.classList.add('has-native-share');
     }
     copyViewLinkBtn?.addEventListener('click', copyShareLink);
     shareMapImageBtn?.addEventListener('click', downloadMapImage);
     shareRankingImageBtn?.addEventListener('click', downloadRankingImage);
     shareNativeBtn?.addEventListener('click', nativeShareLink);
+    document.getElementById('share-fab')?.addEventListener('click', nativeShareLink);
     function updateBasemapHint() {
       if (!basemapHint) return;
       const basemapId = basemapSelect?.value || CONFIG.basemap;
