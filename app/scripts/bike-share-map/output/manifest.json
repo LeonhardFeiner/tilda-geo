@@ -44,7 +44,7 @@
     "relation/62638",
     "relation/62499",
     "relation/535895",
-    "relation/285864",
+    "relation/62487",
     "relation/62751",
     "relation/62396",
     "relation/62589",
@@ -95,7 +95,7 @@
     "relation/62699",
     "relation/62352",
     "relation/62636",
-    "relation/2793104",
+    "relation/62375",
     "relation/62450",
     "relation/172679",
     "relation/62495",
@@ -109,6 +109,9 @@
     "relation/62464",
     "relation/62719"
   ],
-  "stadtstaatIds": ["relation/62422", "relation/62782"],
-  "featureCount": 22654
+  "stadtstaatIds": [
+    "relation/62422",
+    "relation/62782"
+  ],
+  "featureCount": 23036
 }

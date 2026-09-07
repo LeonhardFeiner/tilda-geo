@@ -7,6 +7,8 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { feature, featureCollection } from '@turf/helpers'
 import type { Geometry } from 'geojson'
+import { Client } from 'pg'
+import { getBaseDatabaseUrl } from '@/server/database-url.server'
 import { geoDataClient } from '@/server/prisma-client.server'
 import { fetchAggregatedLengthRows } from '../stats-export/aggregatedLengthsExport'
 import { fetchPrecomputedRegionNeighbors } from '../stats-export/regionNeighborsExport'
@@ -28,29 +30,50 @@ const skipNeighborsJson = process.argv.includes('--skip-neighbors-json')
 /** Simplification tolerance in metres (EPSG:3857). */
 const SIMPLIFY_METRES = 150
 
-const [rows, geoms] = await Promise.all([
-  fetchAggregatedLengthRows(),
-  geoDataClient.$queryRaw<
-    Array<{
-      id: string
-      geometry: { type: string; coordinates: unknown }
-    }>
-  >`
-    SELECT
-      id,
-      ST_AsGeoJSON(
-        ST_Transform(
-          ST_SimplifyPreserveTopology(
-            ST_Transform(ST_MakeValid(geom), 3857),
-            ${SIMPLIFY_METRES}
-          ),
-          4326
-        ),
-        6
-      )::jsonb AS geometry
-    FROM public.aggregated_lengths
-  `,
-])
+type GeomRow = { id: string; geometry: { type: string; coordinates: unknown } }
+
+/**
+ * Fetch simplified geometries one admin level at a time. MakeValid + double-transform +
+ * topology-preserving simplify over all of Germany (levels 2–9) is far too slow for the
+ * 60s statement_timeout the app puts on the geo connection, so use a dedicated pg client
+ * without that cap and keep each statement to one admin level.
+ */
+async function fetchGeometries() {
+  const client = new Client({ connectionString: getBaseDatabaseUrl() })
+  await client.connect()
+  try {
+    await client.query('SET statement_timeout = 0')
+    const levels = ['2', '3', '4', '5', '6', '7', '8', '9']
+    const out: GeomRow[] = []
+    for (const level of levels) {
+      const { rows: chunk } = await client.query<GeomRow>(
+        `
+        SELECT
+          id,
+          ST_AsGeoJSON(
+            ST_Transform(
+              ST_SimplifyPreserveTopology(
+                ST_Transform(ST_MakeValid(geom), 3857),
+                $1
+              ),
+              4326
+            ),
+            6
+          )::jsonb AS geometry
+        FROM public.aggregated_lengths
+        WHERE level = $2
+      `,
+        [SIMPLIFY_METRES, level],
+      )
+      out.push(...chunk)
+    }
+    return out
+  } finally {
+    await client.end()
+  }
+}
+
+const [rows, geoms] = await Promise.all([fetchAggregatedLengthRows(), fetchGeometries()])
 
 const geometryById = new Map(geoms.map((g) => [g.id, g.geometry]))
 

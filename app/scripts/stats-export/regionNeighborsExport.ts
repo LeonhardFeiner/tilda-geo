@@ -1,4 +1,5 @@
-import { geoDataClient } from '@/server/prisma-client.server'
+import { Client } from 'pg'
+import { getBaseDatabaseUrl } from '@/server/database-url.server'
 import { STADTSTAAT_IDS } from '../bike-share-map/regionNavigation'
 import type { PrecomputedNeighborsFile } from '../bike-share-map/regionNeighbors'
 
@@ -20,9 +21,15 @@ function rowsToRecord(rows: NeighborRow[]) {
 const stadtstaatIdList = [...STADTSTAAT_IDS].map((id) => `'${id}'`).join(', ')
 
 export async function fetchPrecomputedRegionNeighbors() {
-  const [landkreisRows, landkreisStadtstaatRows, gemeindeRows, gemeindeStadtstaatRows] =
-    await Promise.all([
-      geoDataClient.$queryRawUnsafe<NeighborRow[]>(`
+  // Full-resolution spatial self-joins over all German admin areas; too slow for the
+  // 60s statement_timeout the app puts on the geo connection, so use a dedicated client.
+  const client = new Client({ connectionString: getBaseDatabaseUrl() })
+  await client.connect()
+  // One connection, so run the four heavy queries in sequence (pg serializes them anyway).
+  const q = async (sql: string) => (await client.query<NeighborRow>(sql)).rows
+  try {
+    await client.query('SET statement_timeout = 0')
+    const landkreisRows = await q(`
       WITH lk AS (
         SELECT
           a.id,
@@ -54,8 +61,9 @@ export async function fetchPrecomputedRegionNeighbors() {
         AND a.geom && b.geom
         AND ST_DWithin(a.geom, b.geom, ${NEIGHBOR_DWITHIN_METRES})
       GROUP BY a.id
-    `),
-      geoDataClient.$queryRawUnsafe<NeighborRow[]>(`
+    `)
+
+    const landkreisStadtstaatRows = await q(`
       WITH lk AS (
         SELECT
           a.id,
@@ -81,8 +89,9 @@ export async function fetchPrecomputedRegionNeighbors() {
         ON lk.geom && ss.geom
         AND ST_DWithin(lk.geom, ss.geom, ${NEIGHBOR_DWITHIN_METRES})
       GROUP BY lk.id
-    `),
-      geoDataClient.$queryRawUnsafe<NeighborRow[]>(`
+    `)
+
+    const gemeindeRows = await q(`
       WITH kreisfrei AS (
         SELECT
           a.id,
@@ -120,8 +129,9 @@ export async function fetchPrecomputedRegionNeighbors() {
         AND a.geom && b.geom
         AND ST_DWithin(a.geom, b.geom, ${GEMEINDE_DWITHIN_METRES})
       GROUP BY a.id
-    `),
-      geoDataClient.$queryRawUnsafe<NeighborRow[]>(`
+    `)
+
+    const gemeindeStadtstaatRows = await q(`
       WITH units AS (
         SELECT
           a.id,
@@ -147,21 +157,23 @@ export async function fetchPrecomputedRegionNeighbors() {
         ON u.geom && ss.geom
         AND ST_DWithin(u.geom, ss.geom, ${GEMEINDE_DWITHIN_METRES})
       GROUP BY u.id
-    `),
-    ])
+    `)
 
-  const gemeinde = rowsToRecord(gemeindeRows)
-  for (const row of gemeindeStadtstaatRows) {
-    if (!row.neighbors.length) continue
-    const existing = new Set(gemeinde[row.id] ?? [])
-    for (const id of row.neighbors) existing.add(id)
-    gemeinde[row.id] = [...existing].sort()
+    const gemeinde = rowsToRecord(gemeindeRows)
+    for (const row of gemeindeStadtstaatRows) {
+      if (!row.neighbors.length) continue
+      const existing = new Set(gemeinde[row.id] ?? [])
+      for (const id of row.neighbors) existing.add(id)
+      gemeinde[row.id] = [...existing].sort()
+    }
+
+    return {
+      version: 1 as const,
+      landkreis: rowsToRecord(landkreisRows),
+      landkreisStadtstaat: rowsToRecord(landkreisStadtstaatRows),
+      gemeinde,
+    } satisfies PrecomputedNeighborsFile
+  } finally {
+    await client.end()
   }
-
-  return {
-    version: 1 as const,
-    landkreis: rowsToRecord(landkreisRows),
-    landkreisStadtstaat: rowsToRecord(landkreisStadtstaatRows),
-    gemeinde,
-  } satisfies PrecomputedNeighborsFile
 }
