@@ -1,7 +1,8 @@
-import { Disclosure, DisclosureButton, DisclosurePanel, Transition } from '@headlessui/react'
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react'
 import { ChevronDownIcon, ChevronLeftIcon } from '@heroicons/react/20/solid'
 import { twJoin } from 'tailwind-merge'
 import { useDataParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useDataParam'
+import { MotionCollapse } from '@/components/shared/motion/MotionCollapse'
 import type { RegionDataset } from '@/server/uploads/queries/getUploadsForRegion.server'
 import { createSourceKeyStaticDatasets } from '../../utils/sourceKeyUtils/sourceKeyUtilsStaticDataset'
 import { SelectDataset } from './SelectDataset'
@@ -49,7 +50,7 @@ export const SelectDatasets = ({
           <DisclosureButton className="group flex w-full justify-between text-left hover:bg-yellow-50">
             <div
               className={twJoin(
-                'ml-2 flex min-h-12 flex-col items-start text-sm leading-[17px]',
+                'ml-2 flex min-h-12 flex-col items-start text-sm leading-4.25',
                 active ? 'text-gray-900' : 'text-gray-500 group-hover:text-gray-900',
                 hasFallbackTitle ? 'justify-center' : 'justify-start pt-2',
               )}
@@ -76,15 +77,7 @@ export const SelectDatasets = ({
             </div>
           </DisclosureButton>
 
-          <Transition
-            show={open}
-            enter="transition duration-100 ease-out"
-            enterFrom="transform scale-95 opacity-0"
-            enterTo="transform scale-100 opacity-100"
-            leave="transition duration-75 ease-out"
-            leaveFrom="transform scale-100 opacity-100"
-            leaveTo="transform scale-95 opacity-0"
-          >
+          <MotionCollapse open={open}>
             <DisclosurePanel static as="section" className="mt-1 mb-2">
               <div className="mx-1 mt-1 flex items-center justify-end gap-1">
                 {!allCategoryDatasetsInParam && (
@@ -119,7 +112,7 @@ export const SelectDatasets = ({
                 })}
               </ul>
             </DisclosurePanel>
-          </Transition>
+          </MotionCollapse>
         </>
       )}
     </Disclosure>

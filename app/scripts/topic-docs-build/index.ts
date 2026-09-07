@@ -10,15 +10,35 @@ import {
   readGroupsYaml,
   readTopicYamlFiles,
   tableNameFromYamlPath,
-  writeJson,
 } from './io'
 import type { MasterportalTableOutput } from './masterportal'
 import { buildMasterportalMap } from './masterportal'
 import { inputRoot, outputRoot } from './paths'
 import type { CompiledTopicDoc, InspectorDescriptions } from './types'
 
-const sortStringRecordByKey = (map: Record<string, string>) =>
-  Object.fromEntries([...Object.entries(map)].sort(([a], [b]) => a.localeCompare(b, 'en')))
+// These outputs are committed to git, so they must be byte-stable. Sort every emitted record by
+// key — `readdir()` order is runtime/filesystem-dependent (e.g. macOS dev vs CI Linux, and it
+// differed between Bun and Node), which would otherwise reorder the generated files spuriously.
+const sortRecordByKey = <T>(map: Record<string, T>): Record<string, T> =>
+  Object.fromEntries(Object.entries(map).sort(([a], [b]) => a.localeCompare(b, 'en')))
+
+const writeTsModule = async ({
+  filePath,
+  data,
+  typeImport,
+  satisfiesType,
+}: {
+  filePath: string
+  data: unknown
+  typeImport?: string
+  satisfiesType?: string
+}) => {
+  const importLine = typeImport ? `${typeImport}\n\n` : ''
+  const satisfiesClause = satisfiesType ? ` satisfies ${satisfiesType}` : ''
+  const content = `${importLine}const data = ${JSON.stringify(data, null, 2)} as const${satisfiesClause}\n\nexport default data\n`
+  await mkdir(path.dirname(filePath), { recursive: true })
+  await Bun.write(filePath, content)
+}
 
 export const main = async () => {
   const yamlFiles = await readTopicYamlFiles()
@@ -88,33 +108,32 @@ export const main = async () => {
   await rm(outputRoot, { recursive: true, force: true })
   await mkdir(outputRoot, { recursive: true })
 
-  const tableNames = Object.keys(byTableName).sort()
-  for (const tableName of tableNames) {
-    await writeJson(
-      path.resolve(outputRoot, `byTableName/${tableName}.gen.json`),
-      byTableName[tableName],
-    )
-    await writeJson(
-      path.resolve(outputRoot, `masterportal/byTableName/${tableName}.gfiAttributes.gen.json`),
-      masterportalByTableName[tableName],
-    )
-  }
+  await writeTsModule({
+    filePath: path.resolve(outputRoot, 'byTableName.gen.ts'),
+    data: sortRecordByKey(byTableName),
+    typeImport: "import type { TopicDocCompiled } from '../../topicDocs/runtime'",
+    satisfiesType: 'Partial<Record<string, TopicDocCompiled>>',
+  })
+  await writeTsModule({
+    filePath: path.resolve(outputRoot, 'masterportalByTableName.gen.ts'),
+    data: sortRecordByKey(masterportalByTableName),
+    typeImport:
+      "import type { TopicDocMasterportalGfiConfig } from '../../topicDocs/masterportalGfi.types'",
+    satisfiesType: 'Partial<Record<string, TopicDocMasterportalGfiConfig>>',
+  })
+  await writeTsModule({
+    filePath: path.resolve(outputRoot, 'inspectorTranslations.gen.ts'),
+    data: sortRecordByKey(inspectorTranslations),
+    satisfiesType: 'Record<string, string>',
+  })
+  await writeTsModule({
+    filePath: path.resolve(outputRoot, 'inspectorDescriptions.gen.ts'),
+    data: sortRecordByKey(inspectorDescriptions),
+    satisfiesType:
+      'Record<string, { keys: Record<string, string>; values: Record<string, Record<string, string>> }>',
+  })
 
-  await writeJson(path.resolve(outputRoot, 'byTableName/index.gen.json'), byTableName)
-  await writeJson(
-    path.resolve(outputRoot, 'masterportal/byTableName/index.gen.json'),
-    masterportalByTableName,
-  )
-  await writeJson(
-    path.resolve(outputRoot, 'inspector/translations.gen.json'),
-    sortStringRecordByKey(inspectorTranslations),
-  )
-  await writeJson(
-    path.resolve(outputRoot, 'inspector/descriptions.gen.json'),
-    inspectorDescriptions,
-  )
-
-  console.log(`Built topic docs for ${tableNames.length} table(s).`)
+  console.log(`Built topic docs for ${Object.keys(byTableName).length} table(s).`)
 }
 
 if (import.meta.main) {

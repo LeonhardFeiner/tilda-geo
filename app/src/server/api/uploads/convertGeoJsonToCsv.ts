@@ -15,7 +15,7 @@ type CsvRow = {
 }
 
 export function convertGeoJsonToCsv(geojsonData: FeatureCollection) {
-  if (!geojsonData || geojsonData.type !== 'FeatureCollection') {
+  if (geojsonData?.type !== 'FeatureCollection') {
     throw new Error('Invalid GeoJSON: Expected FeatureCollection')
   }
 
@@ -102,6 +102,6 @@ export function convertGeoJsonToCsv(geojsonData: FeatureCollection) {
     console.error('CSV parsing error:', error)
     console.error('Sample row keys:', Object.keys(csvRows[0] || {}))
     console.error('Ordered fields:', orderedFields.slice(0, 10)) // First 10 fields for debugging
-    throw new Error(`CSV parsing failed: ${error.message}`)
+    throw new Error(`CSV parsing failed: ${error instanceof Error ? error.message : String(error)}`)
   }
 }

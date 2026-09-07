@@ -28,7 +28,6 @@ services:
       FORCE_COLOR: 1
     volumes:
       - osmfiles:/data
-      - /var/run/docker.sock:/var/run/docker.sock
       - ./app/src/data/processingTypes:/data/processingTypes
       # See cache_proxy/.README.md
       - ./cache_proxy:/cache_nginx_proxy
@@ -41,7 +40,7 @@ services:
     restart: unless-stopped
     # TanStack Start (Vite + Nitro, Bun). Port 4000 = Nitro server.
     healthcheck:
-      test: ["CMD-SHELL", "curl -f http://127.0.0.1:4000/ || exit 1"]
+      test: ['CMD-SHELL', 'curl -f http://127.0.0.1:4000/ || exit 1']
       interval: 10s
       timeout: 5s
       retries: 3
@@ -68,25 +67,28 @@ services:
       ATLAS_API_KEY:
       MAPROULETTE_API_KEY:
       BREVO_API_KEY:
-      # Bun closes idle HTTP connections after ~10s by default.
-      # Large exports can take >10s before first response bytes are available.
-      NITRO_BUN_IDLE_TIMEOUT: 120
       FORCE_COLOR: 1
     ports:
       - 4000:4000
     labels:
       traefik.enable: true
       traefik.http.services.container.loadbalancer.server.port: 4000
+      # Response compression. Traefik negotiates per the client's `Accept-Encoding`
+      # header; `br` (Brotli) is preferred, `gzip` is the fallback. Upstream responses
+      # that already carry a `Content-Encoding` are left untouched (no double-compression).
+      traefik.http.middlewares.compress.compress: true
+      traefik.http.middlewares.compress.compress.encodings: 'br,gzip'
       # Apex host only (non-www canonical).
       traefik.http.routers.app-apex.rule: Host(`${APP_URL}`)
       traefik.http.routers.app-apex.entrypoints: websecure
       traefik.http.routers.app-apex.tls.certresolver: letsencrypt
       traefik.http.routers.app-apex.tls: true
       traefik.http.routers.app-apex.service: container
+      traefik.http.routers.app-apex.middlewares: compress
       # www → apex 301 at the edge (no app-side redirect).
       traefik.http.middlewares.www-to-apex.redirectregex.regex: "^https://www\\.(.+)$"
-      traefik.http.middlewares.www-to-apex.redirectregex.replacement: "https://$$1"
-      traefik.http.middlewares.www-to-apex.redirectregex.permanent: "true"
+      traefik.http.middlewares.www-to-apex.redirectregex.replacement: 'https://$$1'
+      traefik.http.middlewares.www-to-apex.redirectregex.permanent: 'true'
       traefik.http.routers.app-www.rule: Host(`www.${APP_URL}`)
       traefik.http.routers.app-www.entrypoints: websecure
       traefik.http.routers.app-www.tls.certresolver: letsencrypt
@@ -99,9 +101,9 @@ services:
       tiles:
         condition: service_started
   tiles:
-    image: ghcr.io/maplibre/martin:1.7.0
+    image: ghcr.io/maplibre/martin:1.11.0
     container_name: tiles
-    command: ["--config", "/config.yaml"]
+    command: ['--config', '/config.yaml']
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@${DATABASE_HOST}/${DATABASE_NAME}
@@ -116,7 +118,8 @@ services:
       traefik.http.routers.tiles.tls.certresolver: letsencrypt
       traefik.http.routers.tiles.tls: true
     ports:
-      - 3000:3000
+      # Local DEV_PORT_SLOT only — do not set TILES_PORT in server/deploy environments.
+      - '${TILES_PORT:-3000}:3000'
     configs:
       - source: martin_conf
         target: /config.yaml
@@ -124,6 +127,7 @@ services:
       db:
         condition: service_healthy
   db:
+    # Bumping this major: read data-schema/README.md#postgres-major-versions (dump/restore clients must follow).
     image: ghcr.io/baosystems/postgis:17-3.5
     container_name: db
     shm_size: 2g
@@ -136,7 +140,8 @@ services:
       LC_ALL: en_US.UTF-8
       TZ: Europe/Berlin
     ports:
-      - "5432:5432"
+      # Local DEV_PORT_SLOT only — do not set DATABASE_PORT in server/deploy environments.
+      - '${DATABASE_PORT:-5432}:5432'
     volumes:
       - db_postgres_17:/var/lib/postgresql/data
     configs:
@@ -144,9 +149,9 @@ services:
         target: /postgresql/postgresql.conf
       - source: postgres_init
         target: /docker-entrypoint-initdb.d/11-postgres.sql
-    command: ["-c", "config_file=/postgresql/postgresql.conf"]
+    command: ['-c', 'config_file=/postgresql/postgresql.conf']
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}"]
+      test: ['CMD-SHELL', 'pg_isready -U ${DATABASE_USER} -d ${DATABASE_NAME}']
       interval: 5s
       timeout: 5s
       retries: 5

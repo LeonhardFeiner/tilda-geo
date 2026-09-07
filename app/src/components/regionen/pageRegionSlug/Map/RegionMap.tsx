@@ -11,53 +11,74 @@ import type {
 import { AttributionControl, Map as MapGl, NavigationControl, useMap } from 'react-map-gl/maplibre'
 import {
   useMapActions,
+  useMapCalculatorDrawActive,
   useMapInspectorFeatures,
 } from '@/components/regionen/pageRegionSlug/hooks/mapState/useMapState'
+import { useBg3dParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useBg3dParam'
 import {
   convertToUrlFeature,
   isPersistableFeature,
   useFeaturesParam,
 } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useFeaturesParam/useFeaturesParam'
 import { useMapParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useMapParam'
+import { type MapParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/utils/mapParam'
 import { useRegionDatasetsQuery } from '@/components/regionen/pageRegionSlug/hooks/useRegionDataQueries'
-import { interactivityConfiguration } from '@/components/regionen/pageRegionSlug/mapData/mapDataSources/generalization/interacitvityConfiguartion'
+import {
+  interactivityConfiguration,
+  type InteracitvityConfiguartion,
+} from '@/components/regionen/pageRegionSlug/mapData/mapDataSources/generalization/interacitvityConfiguartion'
 import { createInspectorFeatureKey } from '@/components/regionen/pageRegionSlug/utils/sourceKeyUtils/createInspectorFeatureKey'
+import { useBreakpoint } from '@/components/shared/hooks/viewport/useBreakpoint'
 import { isDev, isProd } from '@/components/shared/utils/isEnv'
-import { firePlaywrightMapLoadedEvent } from '@/components/shared/utils/playwright'
+import {
+  exposeMainMapForDebugging,
+  firePlaywrightMapLoadedEvent,
+} from '@/components/shared/utils/playwright'
 import { MAP_STYLE_URL } from '@/server/api/map-style/mapStyleUrl.const'
 import { SIMPLIFY_MIN_ZOOM } from '@/server/instrumentation/generalization.const'
-import { useStaticRegion } from '../regionUtils/useStaticRegion'
+import { useRegion } from '../regionUtils/useRegion'
 import { Calculator } from './Calculator/Calculator'
+import { Map3dTouchRotation } from './Map3dTouchRotation'
 import { QaZoomNotice } from './QaZoomNotice'
-import { Search } from './Search/Search'
+import { SearchResultLayers } from './Search/SearchResultLayers'
+import { MAPTERHORN_DEM_SOURCE_ID } from './SourcesAndLayers/mapterhornDem'
 import { SourcesLayerRasterBackgrounds } from './SourcesAndLayers/SourcesLayerRasterBackgrounds'
 import { SourcesLayersAtlasGeo } from './SourcesAndLayers/SourcesLayersAtlasGeo'
 import { SourcesLayersInternalNotes } from './SourcesAndLayers/SourcesLayersInternalNotes'
+import { SourcesLayersMap3dBuildings } from './SourcesAndLayers/SourcesLayersMap3dBuildings'
+import { SourcesLayersMap3dDem } from './SourcesAndLayers/SourcesLayersMap3dDem'
 import { SourcesLayersOsmNotes } from './SourcesAndLayers/SourcesLayersOsmNotes'
 import { SourcesLayersQa } from './SourcesAndLayers/SourcesLayersQa'
 import { SourcesLayersStaticDatasets } from './SourcesAndLayers/SourcesLayersStaticDatasets'
 import { SourcesLayersSystemDatasets } from './SourcesAndLayers/SourcesLayersSystemDatasets'
+import { TerrainProfileHoverMarkerLayer } from './SourcesAndLayers/TerrainProfileHoverMarkerLayer'
 import { UpdateFeatureState } from './UpdateFeatureState'
 import { MASK_INTERACTIVE_LAYER_IDS } from './utils/maskLayerUtils'
+import { safeSetFeatureState } from './utils/safeSetFeatureState'
 import { useInteractiveLayers } from './utils/useInteractiveLayers'
 
 // On lower zoom level, our source data is stripped down to only styling data
 // We do not show those features in our Inspector, which would show wrong data
 // However, we do want to show an interaction (Tooltip) to inform our users,
 // which is why the layers stay in `interactiveLayerIds`
-const extractInteractiveFeatures = (mapParam, features: MapGeoJSONFeature[] | undefined) => {
+const extractInteractiveFeatures = (
+  mapParam: MapParam,
+  features: MapGeoJSONFeature[] | undefined,
+) => {
   if (!features) return []
-  return features?.filter(({ sourceLayer }) => {
-    sourceLayer = String(sourceLayer)
-    return (
-      !(sourceLayer in interactivityConfiguration) ||
-      mapParam.zoom >= interactivityConfiguration[sourceLayer].minzoom
-    )
+  return features.filter(({ sourceLayer }) => {
+    const layer = String(sourceLayer) as keyof InteracitvityConfiguartion
+    const config = interactivityConfiguration[layer]
+    return config === undefined || mapParam.zoom >= config.minzoom
   })
 }
 
+// Stable reference so toggling draw mode doesn't churn the <Map> interactiveLayerIds prop.
+const NO_INTERACTIVE_LAYERS: string[] = []
+
 export const RegionMap = () => {
   const { mapParam, setMapParam } = useMapParam()
+  const { is3dActive } = useBg3dParam()
   const { setFeaturesParam } = useFeaturesParam()
   const {
     replaceInspectorFeatures,
@@ -67,13 +88,12 @@ export const RegionMap = () => {
     finishMapDataLoading,
     updateMapBounds,
   } = useMapActions()
-  const region = useStaticRegion()
+  const region = useRegion()
+  const isSmBreakpointOrAbove = useBreakpoint('sm')
   const [cursorStyle, setCursorStyle] = useState('grab')
   const { data: regionDatasets } = useRegionDatasetsQuery()
 
-  // Position the map when URL change is triggered from the outside (eg a Button that changes the URL-state to move the map)
   const { mainMap } = useMap()
-  mainMap?.getMap().touchZoomRotate.disableRotation()
 
   const containMaskFeature = (features: MapLayerMouseEvent['features']) => {
     if (!features) return false
@@ -81,6 +101,7 @@ export const RegionMap = () => {
   }
 
   const inspectorFeatures = useMapInspectorFeatures()
+  const calculatorDrawActive = useMapCalculatorDrawActive()
 
   const handleClick = ({ features, ...event }: MapLayerMouseEvent) => {
     if (containMaskFeature(features)) {
@@ -107,8 +128,8 @@ export const RegionMap = () => {
       // Allow multi select with Control (Windows) / Command (Mac)
       if (event.originalEvent.ctrlKey || event.originalEvent.metaKey) {
         // ctrl/command is down - toggle features
-        const featureInArray = (f0, farr) =>
-          !!farr.find((f1) => f0.properties.id === f1.properties.id)
+        const featureInArray = (f0: MapGeoJSONFeature, farr: MapGeoJSONFeature[]) =>
+          !!farr.find((f1) => f0.properties?.id === f1.properties?.id)
         const keepFeatures = inspectorFeatures.filter((f) => !featureInArray(f, uniqueFeatures))
         const addFeatures = uniqueFeatures.filter((f) => !featureInArray(f, inspectorFeatures))
         newInspectorFeatures = [...keepFeatures, ...addFeatures]
@@ -145,15 +166,22 @@ export const RegionMap = () => {
 
   const hoveredFeatures = useRef<MapGeoJSONFeature[]>([])
   const key = ({ id, layer }: MapGeoJSONFeature) => `${id}>${layer.id}`
+  const sourceExists = (feature: MapGeoJSONFeature) => {
+    const sourceId = feature.source?.toString()
+    if (!sourceId) return false
+    return mainMap?.getMap().getSource(sourceId) != null
+  }
   const updateHover = (features: MapGeoJSONFeature[] | undefined) => {
     if (containMaskFeature(features)) features = []
-    const previous = hoveredFeatures.current
-    const current = features || []
+    const previous = hoveredFeatures.current.filter(sourceExists)
+    const current = (features || []).filter(sourceExists)
     differenceBy(previous, current, key).forEach((f) => {
-      mainMap?.setFeatureState(f, { hover: false })
+      if (!mainMap) return
+      safeSetFeatureState(mainMap, f, { hover: false })
     })
     differenceBy(current, previous, key).forEach((f) => {
-      mainMap?.setFeatureState(f, { hover: true })
+      if (!mainMap) return
+      safeSetFeatureState(mainMap, f, { hover: true })
     })
     hoveredFeatures.current = current
   }
@@ -169,36 +197,58 @@ export const RegionMap = () => {
     updateHover([])
   }
 
-  const handleLoad = (_event: MapLibreEvent<undefined>) => {
+  const handleLoad = (event: MapLibreEvent) => {
     // Only when `loaded` all `Map` feature are actually usable (https://github.com/visgl/react-map-gl/issues/2123)
+    // Rotate/pitch handlers: Map3dTouchRotation (runs once mapLoaded is set).
     markMapLoaded()
-    updateMapBounds(mainMap?.getBounds() || null)
+    updateMapBounds(event.target.getBounds())
 
+    exposeMainMapForDebugging(event.target)
     firePlaywrightMapLoadedEvent()
   }
 
-  // Warn when a sprite image is missing
   useEffect(
-    function warnAboutMissingDevSprites() {
-      if (!mainMap) return
-      if (!isDev) return
-      mainMap.on('styleimagemissing', (e: MapStyleImageMissingEvent) => {
-        const imageId = e.id
-        if (imageId === 'null') return // Conditional images with Fallback images "Fill pattern: none" result in e.id=NULL
+    function subscribeToMissingStyleImages() {
+      if (!mainMap || !isDev) return
+
+      const handleStyleImageMissing = (event: MapStyleImageMissingEvent) => {
+        const imageId = event.id
+        if (imageId === 'null') return // Conditional images with fallback "none" can emit "null"
+
         console.warn('Missing image', imageId)
-      })
+      }
+
+      mainMap.on('styleimagemissing', handleStyleImageMissing)
+
+      return function unsubscribeFromMissingStyleImages() {
+        mainMap.off('styleimagemissing', handleStyleImageMissing)
+      }
     },
     [mainMap],
   )
 
   const handleMoveEnd = (event: ViewStateChangeEvent) => {
     // Note: <SourcesAndLayersOsmNotes> simulates a moveEnd by watching the lat/lng url params
-    const { latitude, longitude, zoom } = event.viewState
-    void setMapParam({ zoom, lat: latitude, lng: longitude }, { history: 'replace' })
+    const { latitude, longitude, zoom, bearing, pitch } = event.viewState
+    const nextMapParam: MapParam = { zoom, lat: latitude, lng: longitude }
+    if (is3dActive) {
+      nextMapParam.bearing = bearing
+      nextMapParam.pitch = pitch
+    }
+    // When 3D is off, omit bearing/pitch from the URL. Do not jumpTo here — that
+    // cancels SelectBackground's resetNorthPitch animation when disabling 3D.
+    void setMapParam(nextMapParam, { history: 'replace' })
     updateMapBounds(mainMap?.getBounds() || null)
   }
 
-  const interactiveLayerIds = useInteractiveLayers()
+  // While the calculator draw tool is active, no layers are interactive: clicking/hovering
+  // the data does nothing and the inspector can't open (queryRenderedFeatures returns none),
+  // so the draw tool owns all map interaction. This replaces a special-case guard in the
+  // click handler with the map's own interactivity mechanism.
+  const computedInteractiveLayerIds = useInteractiveLayers()
+  const interactiveLayerIds = calculatorDrawActive
+    ? NO_INTERACTIVE_LAYERS
+    : computedInteractiveLayerIds
 
   if (!mapParam) {
     return null
@@ -210,13 +260,7 @@ export const RegionMap = () => {
   }
   let mapMaxBoundsSettings: MapMaxBoundsProps | Record<string, never> = {}
   if (region?.bbox) {
-    // [minLon, minLat, maxLon, maxLat] for bboxPolygon
-    const maxBounds: [number, number, number, number] = [
-      region.bbox.min[0],
-      region.bbox.min[1],
-      region.bbox.max[0],
-      region.bbox.max[1],
-    ]
+    const maxBounds = region.bbox
     const buffered = buffer(bboxPolygon(maxBounds), 60, { units: 'kilometers' })
     if (buffered) {
       // turf bbox() returns 4 numbers for 2D; we have no elevation data
@@ -236,6 +280,8 @@ export const RegionMap = () => {
         longitude: mapParam.lng,
         latitude: mapParam.lat,
         zoom: mapParam.zoom,
+        bearing: is3dActive ? (mapParam.bearing ?? 0) : 0,
+        pitch: is3dActive ? (mapParam.pitch ?? 0) : 0,
       }}
       // We prevent users from zooming out too far which puts too much load on our vector tiles db
       {...mapMaxBoundsSettings}
@@ -255,24 +301,36 @@ export const RegionMap = () => {
       onData={startMapDataLoading}
       onIdle={finishMapDataLoading}
       doubleClickZoom={true}
-      dragRotate={false}
+      terrain={is3dActive ? { source: MAPTERHORN_DEM_SOURCE_ID, exaggeration: 1.5 } : undefined}
       minZoom={SIMPLIFY_MIN_ZOOM}
       attributionControl={false}
     >
       {/* Order: First Background Sources, then Vector Tile Sources */}
       <UpdateFeatureState />
       <SourcesLayerRasterBackgrounds />
+      <SourcesLayersMap3dDem />
+      <SourcesLayersMap3dBuildings />
       <SourcesLayersSystemDatasets />
       <SourcesLayersAtlasGeo />
       <SourcesLayersStaticDatasets />
       <SourcesLayersOsmNotes />
       <SourcesLayersInternalNotes />
       <SourcesLayersQa />
+      <SearchResultLayers />
+      {/* Last in tree + moveLayer: stay above remounted highlights. Do not use this layer as beforeId. */}
+      <TerrainProfileHoverMarkerLayer />
       <AttributionControl compact={true} position="bottom-left" />
 
-      <Search />
-
-      <NavigationControl showCompass={false /* TODO: See Story */} visualizePitch={true} />
+      {/* Desktop always gets zoom controls; mobile only when 3D is active (compass reset).
+          key remounts the control: react-map-gl only applies showCompass at create time. */}
+      {(isSmBreakpointOrAbove || is3dActive) && (
+        <NavigationControl
+          key={is3dActive ? 'nav-3d' : 'nav-2d'}
+          showCompass={is3dActive}
+          visualizePitch={true}
+        />
+      )}
+      <Map3dTouchRotation />
       <Calculator />
       {/* <GeolocateControl /> */}
       {/* <ScaleControl /> */}

@@ -1,9 +1,25 @@
 import 'maplibre-gl/dist/maplibre-gl.css'
+import { twJoin } from 'tailwind-merge'
 import { Spinner } from '@/components/shared/Spinner/Spinner'
+import { isProd } from '@/components/shared/utils/isEnv'
+import { mobileControlButtonClassName } from './mobile/mobileControlButton.const'
+import {
+  mobileMapBottomControlsClassName,
+  mobileMapHeaderClassName,
+} from './mobile/mobileMapChrome.const'
 
-const bottomCtrlShellClass = 'maplibregl-ctrl pointer-events-none'
+const pulseButton = twJoin(
+  mobileControlButtonClassName,
+  'pointer-events-none animate-pulse bg-white/80',
+)
 
 export function RegionPagePendingMapShell() {
+  const showDebugPlaceholder = !isProd
+  // The region config isn't resolved at pending time (it now lives in the route loader, not
+  // beforeLoad context), so render the search-button placeholder generically. This skeleton only
+  // appears on slow path/region loads (route pendingMs), so exact parity here is not important.
+  const showSearchPlaceholder = true
+
   return (
     <div className="relative flex h-full w-full flex-row gap-4">
       <div
@@ -11,13 +27,30 @@ export function RegionPagePendingMapShell() {
         aria-hidden="true"
       />
 
+      {/* Desktop sidebar placeholder (mobile uses the floating buttons below) */}
       <section
-        className="absolute top-0 left-0 z-20 max-h-full w-65 bg-white py-px shadow-md"
+        className="absolute top-0 left-0 z-20 hidden max-h-full w-65 bg-white py-px shadow-md sm:block"
         aria-hidden="true"
       />
 
+      {/* Mobile floating-button skeleton, mirroring MobileMapHeader's layout */}
+      <div className={twJoin(mobileMapHeaderClassName, 'sm:hidden')} aria-hidden="true">
+        <div className="flex items-start gap-2">
+          <div className={twJoin(pulseButton, 'h-10 w-12 min-w-10')} />
+          <div className={twJoin(pulseButton, 'size-10')} />
+          <div className={twJoin(pulseButton, 'size-10')} />
+        </div>
+        {(showDebugPlaceholder || showSearchPlaceholder) && (
+          <div className="flex items-start gap-2">
+            {showDebugPlaceholder && <div className={twJoin(pulseButton, 'size-10')} />}
+            {showSearchPlaceholder && <div className={twJoin(pulseButton, 'size-10')} />}
+          </div>
+        )}
+      </div>
+
+      {/* Desktop zoom controls placeholder (hidden on mobile, matching the live map) */}
       <div
-        className="maplibregl-ctrl pointer-events-none absolute top-2 right-2 z-10"
+        className="maplibregl-ctrl pointer-events-none absolute top-2 right-2 z-10 hidden sm:block"
         aria-hidden="true"
       >
         <div className="maplibregl-ctrl-group">
@@ -38,36 +71,29 @@ export function RegionPagePendingMapShell() {
         </div>
       </div>
 
+      {/* Mobile bottom controls skeleton (OsmNotes, InternalNotes, SelectBackground, MobileLayerButton) */}
       <div
-        className="pointer-events-none fixed right-2.5 bottom-4 z-10 mt-2.5 flex max-w-full flex-wrap items-end justify-end gap-1.5"
+        className={twJoin(mobileMapBottomControlsClassName, 'sm:hidden')}
+        data-map-controls="true"
         aria-hidden="true"
       >
-        <div className={bottomCtrlShellClass}>
-          <div className="maplibregl-ctrl-group">
-            <button type="button" disabled tabIndex={-1} aria-hidden="true" />
-          </div>
-        </div>
-        <div className={bottomCtrlShellClass}>
-          <div className="maplibregl-ctrl-group">
-            <button type="button" disabled tabIndex={-1} aria-hidden="true" />
-          </div>
-        </div>
-        <div className={bottomCtrlShellClass}>
-          <div className="maplibregl-ctrl-group">
-            <button type="button" disabled tabIndex={-1} aria-hidden="true" />
-          </div>
-        </div>
-        <div className={bottomCtrlShellClass}>
-          <div className="maplibregl-ctrl-group">
-            <button
-              type="button"
-              disabled
-              tabIndex={-1}
-              className="w-10! min-w-10!"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-13')} />
+      </div>
+
+      {/* Desktop bottom controls skeleton */}
+      <div
+        className={twJoin(mobileMapBottomControlsClassName, 'hidden sm:flex')}
+        data-map-controls="true"
+        aria-hidden="true"
+      >
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
+        <div className={twJoin(pulseButton, 'size-10')} />
       </div>
 
       <div className="pointer-events-none absolute inset-0 z-5 flex flex-col items-center justify-center gap-4">

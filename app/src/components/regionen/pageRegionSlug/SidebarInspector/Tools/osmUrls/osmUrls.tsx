@@ -1,7 +1,6 @@
 import { format, subYears } from 'date-fns'
 import type { Point } from 'geojson'
 import { getOsmUrl } from '@/components/shared/utils/getOsmUrl'
-import { mapillaryKeyUrl } from '@/lib/mapillaryPKeyUrl'
 import type { EditorUrlGeometry } from './editorUrl'
 import { editorUrl } from './editorUrl'
 import { pointFromGeometry } from './pointFromGeometry'
@@ -13,7 +12,8 @@ type OsmTypeId = {
 }
 
 export const osmTypeIdString = (type: string, id: string | number) => {
-  return `${longOsmType[type]}/${id}`
+  const osmType = longOsmType[type as keyof typeof longOsmType]
+  return `${osmType}/${id}`
 }
 
 export const osmOrgUrl = ({ osmType, osmId }: OsmTypeId) => {
@@ -33,8 +33,8 @@ export const osmEditIdUrl = ({ osmType, osmId, comment, hashtags, source }: OsmE
   url.searchParams.append(osmType, String(osmId))
 
   const hashParams = new URLSearchParams()
-  comment && hashParams.append('comment', comment)
-  source && hashParams.append('source', source)
+  if (comment) hashParams.append('comment', comment)
+  if (source) hashParams.append('source', source)
   hashParams.append('hashtags', hashtags || '#TILDA')
 
   return `${url.toString()}#${hashParams.toString()}`
@@ -86,16 +86,14 @@ export const mapillaryUrl = (
   url.searchParams.set('lng', String(lng))
   url.searchParams.set('z', String(opt.zoom))
 
-  opt.trafficSign && url.searchParams.set('trafficSign', String(opt.trafficSign))
-  opt.panos && url.searchParams.set('panos', String(opt.panos))
+  if (opt.trafficSign) url.searchParams.set('trafficSign', String(opt.trafficSign))
+  if (opt.panos) url.searchParams.set('panos', String(opt.panos))
 
   const dateYearsAgo = format(subYears(new Date(), opt.yearsAgo), 'yyyy-MM-dd')
-  opt.yearsAgo && url.searchParams.set('dateFrom', dateYearsAgo)
+  if (opt.yearsAgo) url.searchParams.set('dateFrom', dateYearsAgo)
 
   return url.toString()
 }
-
-export { mapillaryKeyUrl }
 
 export const osmUrlViewport = (zoom?: number, lat?: number, lng?: number) => {
   if (!zoom || !lat || !lng) return

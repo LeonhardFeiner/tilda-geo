@@ -4,11 +4,13 @@ import { IntlProvider } from 'react-intl'
 import type { MapGeoJSONFeature } from 'react-map-gl/maplibre'
 import { useMap } from 'react-map-gl/maplibre'
 import { ObjectDump } from '@/components/admin/ObjectDump'
-import { filterQaDataByStyle } from '@/components/regionen/pageRegionSlug/hooks/mapState/useQaMapState'
+import { filterQaDataByStyle } from '@/components/regionen/pageRegionSlug/hooks/mapState/useQaMapData'
 import { useQaFilterParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useQaFilterParam'
 import { useQaParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useQaParam'
+import { safeSetFeatureState } from '@/components/regionen/pageRegionSlug/Map/utils/safeSetFeatureState'
 import { useRegionSlug } from '@/components/regionen/pageRegionSlug/regionUtils/useRegionSlug'
 import { buttonStylesOnYellow } from '@/components/shared/links/styles'
+import { toastError } from '@/components/shared/toast/toastError'
 import { isDev } from '@/components/shared/utils/isEnv'
 import {
   getQaDecisionDataForAreaFn,
@@ -107,14 +109,14 @@ export const InspectorFeatureQa = ({ feature }: Props) => {
 
     const targetFeature = qaFeatures[0] // Should only be one feature
     if (targetFeature) {
-      mainMap.setFeatureState(targetFeature, {
+      safeSetFeatureState(mainMap, targetFeature, {
         userStatus: USER_STATUS_TO_LETTER[status as keyof typeof USER_STATUS_TO_LETTER],
         // Keep existing system status
         systemStatus: targetFeature.state?.systemStatus || null,
       })
     }
 
-    // Optimistically update the map data cache (same key as useQaMapState)
+    // Optimistically update the map data cache (same key as useQaMapData)
     if (mapDataQueryKey) {
       // Get current map data
       const currentMapData = queryClient.getQueryData<QaMapData[]>(mapDataQueryKey) || []
@@ -149,7 +151,7 @@ export const InspectorFeatureQa = ({ feature }: Props) => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['qaEvaluations'] })
     },
-    onError: () => {
+    onError: (error) => {
       // useOptimistic automatically rolls back UI state, but we need to revert side effects
       // Revert map state and cache on error
       if (baseUserStatus !== null) {
@@ -164,6 +166,7 @@ export const InspectorFeatureQa = ({ feature }: Props) => {
           queryClient.setQueryData(mapDataQueryKey, updatedMapData)
         }
       }
+      toastError(error, 'QA-Bewertung konnte nicht gespeichert werden')
     },
   })
 

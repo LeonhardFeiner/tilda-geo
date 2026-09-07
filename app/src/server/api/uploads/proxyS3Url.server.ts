@@ -13,6 +13,8 @@ export async function proxyS3Url(request: Request, url: string, downloadFilename
   const secretAccessKey = process.env.S3_SECRET
   const region = process.env.S3_REGION
 
+  // Intentionally raw @aws-sdk/client-s3: Better Upload helpers lack IfNoneMatch (304 Not Modified)
+  // and Range streaming support required for PMTiles partial reads.
   const s3Client = new S3Client({
     credentials: { accessKeyId, secretAccessKey },
     region,
@@ -34,11 +36,15 @@ export async function proxyS3Url(request: Request, url: string, downloadFilename
   let response: GetObjectCommandOutput
   try {
     response = await s3Client.send(new GetObjectCommand(sendParams))
-  } catch (e) {
-    const { $metadata, message } = e
+  } catch (e: unknown) {
+    const metadata =
+      e && typeof e === 'object' && '$metadata' in e
+        ? (e as { $metadata: { httpStatusCode?: number } }).$metadata
+        : undefined
+    const message = e instanceof Error ? e.message : String(e)
 
     // Handle 304 Not Modified for conditional requests
-    if ($metadata.httpStatusCode === 304) {
+    if (metadata?.httpStatusCode === 304) {
       return new Response(null, {
         status: 304,
         headers: {
@@ -51,7 +57,7 @@ export async function proxyS3Url(request: Request, url: string, downloadFilename
 
     return Response.json(
       { source: 'S3', statusText: message },
-      { status: $metadata.httpStatusCode },
+      { status: metadata?.httpStatusCode ?? 500 },
     )
   }
 
@@ -83,6 +89,8 @@ export async function proxyS3Url(request: Request, url: string, downloadFilename
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, Accept, Accept-Encoding',
     'Content-Length': String(ContentLength ?? 0),
     'Content-Type': ContentType ?? '',
+    // Prevent MIME sniffing; the served Content-Type is partly upload-controlled (region logos).
+    'X-Content-Type-Options': 'nosniff',
     ETag: ETag ?? '', // S3 ETag for cache validation
     'Cache-Control': 'public, max-age=3600, must-revalidate', // 1 hour cache for both file types
     ...(response.LastModified ? { 'Last-Modified': response.LastModified.toUTCString() } : {}),

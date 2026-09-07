@@ -1,5 +1,4 @@
 import { useQuery } from '@tanstack/react-query'
-import { Fragment } from 'react'
 import { z } from 'zod'
 import { Link } from '@/components/shared/links/Link'
 import { SmallSpinner } from '@/components/shared/Spinner/SmallSpinner'
@@ -93,7 +92,17 @@ export const NoticeMaprouletteTask = ({
 
   // The location of the MR pin is the best we can use, but we can always fall back to the one we use internally elsewhere
   const [centerLng, centerLat] = data?.location?.coordinates || pointFromGeometry(geometry)
-  const rapidCampaignLink = `https://rapideditor.org/edit#map=19.5/${centerLat}/${centerLng}&maproulette=${mapRouletteId}&datasets=&disable_features=points,building_parts,indoor,boundaries,pistes,aerialways,power`
+  const paramsMap = `map=19.5/${centerLat}/${centerLng}`
+  const paramsDisabled =
+    'disable_features=points,building_parts,indoor,boundaries,pistes,aerialways,power'
+  const paramsMaproulette = `maproulette=${mapRouletteId}`
+  const paramsMapillary = projectKey.endsWith('__mapillary') ? 'photo_dates=2024-02-23_' : undefined
+  const campaignParams = [paramsMap, paramsMaproulette, paramsDisabled, paramsMapillary].filter(
+    Boolean,
+  )
+  const rapidCampaignLink = `https://rapideditor.org/edit#${campaignParams.join('&')}`
+  // Experimental MapRoulette-in-iD (https://github.com/tordans/iD/pull/4)
+  const idMaprouletteCampaignLink = `https://deploy-preview-4--tordans-id-experiments.netlify.app/#${campaignParams.join('&')}`
 
   const maprouletteTaskLink = isLoading
     ? undefined
@@ -123,20 +132,19 @@ export const NoticeMaprouletteTask = ({
   const completed = data?.status && maprouletteStatusCompleted.includes(data.status)
 
   return (
-    <Fragment key={projectKey}>
-      <h2>{radinfraCampaign?.title || `${projectKey} (in Arbeit)`}</h2>
+    <>
       {!!mapRouletteId && (
-        <p className="-mt-5 text-right text-xs">
+        <p className="mb-2 text-right text-xs">
           <Link href={maprouletteCampaignLink} title="MapRoulette" className="text-xs" blank>
             MR #{mapRouletteId}
           </Link>
         </p>
       )}
-      <div className="mt-0 mb-5 flex flex-col items-center gap-1.5 rounded-sm bg-white/80 p-3">
+      <div className="mb-4 flex flex-col items-center gap-1.5 rounded-sm bg-white/80 p-3">
         {showMaproulette && (
           <>
-            <Link href={rapidCampaignLink} blank button>
-              Kampagne im Rapid Editor bearbeiten
+            <Link href={idMaprouletteCampaignLink} blank button>
+              Kampagne im iD Editor bearbeiten
             </Link>
             {/* {osmEditIdUrlHref && (
               <Link href={osmEditIdUrlHref} blank button>
@@ -197,8 +205,8 @@ export const NoticeMaprouletteTask = ({
       </div>
       <Markdown
         markdown={text}
-        className="prose-sm mb-10 border-b-4 border-b-white pb-10 marker:text-purple-700 first:mt-5 last:mb-0 last:border-b-0"
+        className="prose-sm marker:text-purple-700 [&>p:first-child]:mt-0"
       />
-    </Fragment>
+    </>
   )
 }

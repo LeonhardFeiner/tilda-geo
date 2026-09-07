@@ -34,8 +34,10 @@ logStartMessage('WFS download update', {
 
 const ignorePatterns = getIgnorePatterns()
 const datasetFileFolderData = getDatasetFolders(folderFilterTerm)
+const downloadedGeojsonPaths: string[] = []
 
 for (const { datasetFolderPath, regionFolder, datasetFolder } of datasetFileFolderData) {
+  const folderStartedAt = performance.now()
   // Get the `downloadConfig.js` data ready
   const downloadConfig = await import_<DownloadConfig>(
     datasetFolderPath,
@@ -62,15 +64,28 @@ for (const { datasetFolderPath, regionFolder, datasetFolder } of datasetFileFold
     await fetchAndStoreGeopackage(wfsUrl, geoPackageFilename)
     await transformGeopackageToGeojson(geoPackageFilename, geojsonFilename)
     const resultFilename = await checkFilesizeAndGzip(geojsonFilename)
+    if (!resultFilename.endsWith('.gz')) {
+      downloadedGeojsonPaths.push(resultFilename)
+    }
 
-    green('  Data saved', resultFilename)
+    const elapsedMs = performance.now() - folderStartedAt
+    green('  Data saved', resultFilename, `(${(elapsedMs / 1000).toFixed(1)}s)`)
   } catch (error) {
-    red('   Error', error, downloadConfig, wfsUrl.toString())
+    const elapsedMs = performance.now() - folderStartedAt
+    red(
+      '   Error',
+      `after ${(elapsedMs / 1000).toFixed(1)}s`,
+      error,
+      downloadConfig,
+      wfsUrl.toString(),
+    )
   }
 }
 
 const appDir = path.resolve(import.meta.dir, '../..')
-console.log('bun run format')
-await $`bun run format`.cwd(appDir)
+if (downloadedGeojsonPaths.length > 0) {
+  console.log('bun run format-static-datasets-geojson', downloadedGeojsonPaths.join(' '))
+  await $`bun run format-static-datasets-geojson -- ${downloadedGeojsonPaths}`.cwd(appDir)
+}
 
 inverse('DONE')

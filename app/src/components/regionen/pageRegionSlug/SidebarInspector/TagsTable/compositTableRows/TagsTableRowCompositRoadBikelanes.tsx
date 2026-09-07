@@ -1,48 +1,60 @@
 import { bikelanesPresenceColors } from '@/components/regionen/pageRegionSlug/mapData/mapDataSubcategories/subcat_bikelanes_plus_presence.const'
-import { TagsTableRow } from '../TagsTableRow'
+import { getDescriptionForInspectorTag } from '@/data/topicDocs/runtime'
+import {
+  tagsTableCompositSubLabelCellClass,
+  tagsTableCompositSubRowHeaderClass,
+  tagsTableCompositSubValueCellClass,
+  tagsTableCompositTableClass,
+} from '../tagsTableLayout'
+import { TagsTableRowFrame } from '../TagsTableRow'
 import { ConditionalFormattedValue } from '../translations/ConditionalFormattedValue'
-import { translations } from '../translations/translations.const'
 import { ValueDisclosure, ValueDisclosureButton, ValueDisclosurePanel } from '../ValueDisclosure'
 import type { CompositTableRow } from './types'
 
-const CompositRoadBikelanesTableValue = ({ tagValue }: { tagValue: string }) => {
+const CompositRoadBikelanesTableValue = ({
+  label,
+  tagKey,
+  tagValue,
+}: {
+  label: string
+  tagKey: 'bikelane_left' | 'bikelane_self' | 'bikelane_right'
+  tagValue: string
+}) => {
   // All other values (that are not in the array above) are the bikelane-category values
   // which are translated in `ALL-category=*`. To access them, we overwrite the `tagKey`.
   const hasPresenceValue = ['not_expected', 'data_no', 'missing', 'assumed_no'].includes(tagValue)
   const hasSpecificInfrastructureValue = !hasPresenceValue
-  const hasDescription = Boolean(
-    translations[`atlas_roads--bikelane_SIDE=${tagValue}--description`],
-  )
+  const description = getDescriptionForInspectorTag('atlas_roads', tagKey, tagValue)
+  const hasDescription = Boolean(description)
   const hasDisclosureBody = hasDescription || hasSpecificInfrastructureValue
 
   return (
     <ValueDisclosure>
-      <ValueDisclosureButton hasBody={hasDisclosureBody}>
-        <div className="flex items-center justify-between gap-2">
-          <ConditionalFormattedValue
-            sourceId="atlas_roads"
-            tagKey="bikelane_SIDE"
-            tagValue={hasSpecificInfrastructureValue ? 'data_present' : tagValue}
-          />
+      <div className={tagsTableCompositSubRowHeaderClass}>
+        <div className={tagsTableCompositSubLabelCellClass}>{label}</div>
+        <div className={tagsTableCompositSubValueCellClass}>
+          <ValueDisclosureButton hasBody={hasDisclosureBody}>
+            <div className="flex items-center justify-between gap-2">
+              <ConditionalFormattedValue
+                sourceId="atlas_roads"
+                tagKey="bikelane_SIDE"
+                tagValue={hasSpecificInfrastructureValue ? 'data_present' : tagValue}
+              />
 
-          <div
-            className="size-4 flex-none rounded-full"
-            style={{
-              backgroundColor: hasSpecificInfrastructureValue
-                ? bikelanesPresenceColors.data_present
-                : bikelanesPresenceColors[tagValue],
-            }}
-          />
+              <div
+                className="size-4 flex-none rounded-full"
+                style={{
+                  backgroundColor: hasSpecificInfrastructureValue
+                    ? bikelanesPresenceColors.data_present
+                    : bikelanesPresenceColors[tagValue as keyof typeof bikelanesPresenceColors],
+                }}
+              />
+            </div>
+          </ValueDisclosureButton>
         </div>
-      </ValueDisclosureButton>
+      </div>
       <ValueDisclosurePanel>
-        {hasDescription && (
-          <ConditionalFormattedValue
-            sourceId="atlas_roads"
-            tagKey="bikelane_SIDE"
-            tagValue={`${tagValue}--description`}
-          />
-        )}
+        {hasDescription && <p>{description}</p>}
         {/* Show the bicycle `category` if the infrastructure is specific */}
         {hasSpecificInfrastructureValue && (
           <ConditionalFormattedValue sourceId="atlas_roads" tagKey="category" tagValue={tagValue} />
@@ -55,7 +67,6 @@ const CompositRoadBikelanesTableValue = ({ tagValue }: { tagValue: string }) => 
 export const tableKeyRoadBikelanes = 'composit_road_bikelanes'
 export const TagsTableRowCompositRoadBikelanes = ({
   sourceId: _hard_coded_atlas_roads,
-  tagKey, // 'composit_bikelane' used to look the key translation
   properties,
 }: CompositTableRow) => {
   // Only show when one of those keys is present
@@ -64,25 +75,34 @@ export const TagsTableRowCompositRoadBikelanes = ({
   }
 
   return (
-    <TagsTableRow key={tagKey} sourceId="atlas_roads" tagKey={tagKey}>
-      <table className="w-full leading-4">
+    <TagsTableRowFrame label="Radinfrastruktur">
+      <table className={tagsTableCompositTableClass}>
         <tbody>
           <tr>
-            <th className="py-1 pr-2 text-left font-medium">Links</th>
-            <td className="w-full py-1">
-              <CompositRoadBikelanesTableValue tagValue={properties.bikelane_left} />
+            <td colSpan={2} className="py-1">
+              <CompositRoadBikelanesTableValue
+                label="Links"
+                tagKey="bikelane_left"
+                tagValue={properties.bikelane_left}
+              />
             </td>
           </tr>
           <tr className="border-t">
-            <th className="py-1 pr-2 text-left font-medium">Fahrbahn</th>
-            <td className="w-full py-1">
-              <CompositRoadBikelanesTableValue tagValue={properties.bikelane_self} />
+            <td colSpan={2} className="py-1">
+              <CompositRoadBikelanesTableValue
+                label="Fahrbahn"
+                tagKey="bikelane_self"
+                tagValue={properties.bikelane_self}
+              />
             </td>
           </tr>
           <tr className="border-t">
-            <th className="py-1 pr-2 text-left font-medium">Rechts</th>
-            <td className="w-full py-1">
-              <CompositRoadBikelanesTableValue tagValue={properties.bikelane_right} />
+            <td colSpan={2} className="py-1">
+              <CompositRoadBikelanesTableValue
+                label="Rechts"
+                tagKey="bikelane_right"
+                tagValue={properties.bikelane_right}
+              />
             </td>
           </tr>
         </tbody>
@@ -90,6 +110,6 @@ export const TagsTableRowCompositRoadBikelanes = ({
       <p className="mt-1 text-xs text-gray-400">
         Angaben in OSM-Linienrichtung. Siehe Doppelpfeil ab Zoom 13.
       </p>
-    </TagsTableRow>
+    </TagsTableRowFrame>
   )
 }

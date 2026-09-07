@@ -1,6 +1,6 @@
 import { geoDataClient } from '@/server/prisma-client.server'
-import type { ProcessingMetaDate } from '@/server/regions/schemas'
-import { ProcessingMetaDates } from '@/server/regions/schemas'
+import type { ProcessingMetaDate } from '@/server/regions/processingMetaDates'
+import { ProcessingMetaDates } from '@/server/regions/processingMetaDates'
 
 export async function getProcessingMeta() {
   const [result] = await geoDataClient.$queryRaw<ProcessingMetaDate[]>`
@@ -10,12 +10,13 @@ export async function getProcessingMeta() {
       processing_started_at,
       processing_completed_at,
       qa_update_started_at,
-      qa_update_completed_at,
-      statistics_started_at,
-      statistics_completed_at
+      qa_update_completed_at
     FROM public.meta
     ORDER BY id DESC
     LIMIT 1
   `
+
+  if (!result) return null
+
   return ProcessingMetaDates.parse(result)
 }

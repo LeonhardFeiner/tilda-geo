@@ -1,6 +1,14 @@
 import { isDev } from '@/components/shared/utils/isEnv'
-import { TagsTableRow } from '../TagsTableRow'
+import {
+  tagsTableCompositSubLabelCellClass,
+  tagsTableCompositSubRowHeaderClass,
+  tagsTableCompositSubValueCellClass,
+  tagsTableCompositTableClass,
+} from '../tagsTableLayout'
+import { TagsTableRowFrame } from '../TagsTableRow'
 import { ConditionalFormattedValue } from '../translations/ConditionalFormattedValue'
+import { renderTranslationHtml } from '../translations/renderTranslationHtml'
+import { TRANSLATION_BREAK_MARKER } from '../translations/translationBreakMarker'
 import { ValueDisclosure, ValueDisclosureButton, ValueDisclosurePanel } from '../ValueDisclosure'
 import { NodataFallbackWrapper } from './NodataFallbackWrapper'
 import type { CompositTableRow } from './types'
@@ -8,29 +16,38 @@ import type { CompositTableRow } from './types'
 export const tableKeySurfaceSmoothness = 'composit_surface_smoothness'
 export const TagsTableRowCompositSurfaceSmoothness = ({
   sourceId,
-  tagKey,
   properties,
 }: CompositTableRow) => {
   if (!(properties.smoothness || properties.surface)) return null
 
   return (
-    <TagsTableRow key={tagKey} sourceId={sourceId} tagKey={tagKey}>
-      <table className="w-full leading-4">
+    <TagsTableRowFrame
+      label={renderTranslationHtml(
+        `Ober${TRANSLATION_BREAK_MARKER}flächen${TRANSLATION_BREAK_MARKER}qualität`,
+      )}
+    >
+      <table className={tagsTableCompositTableClass}>
         <tbody>
           <tr>
-            <th className="py-1 pr-2 text-left font-medium">Belag</th>
-            <td className="w-full py-1">
+            <td colSpan={2} className="py-1">
               <NodataFallbackWrapper fallback={!properties.surface}>
                 <ValueDisclosure>
-                  <ValueDisclosureButton>
-                    <span title={isDev ? `${sourceId}--surface=${properties.surface}` : undefined}>
-                      <ConditionalFormattedValue
-                        sourceId={sourceId}
-                        tagKey={'surface'}
-                        tagValue={properties.surface}
-                      />
-                    </span>
-                  </ValueDisclosureButton>
+                  <div className={tagsTableCompositSubRowHeaderClass}>
+                    <div className={tagsTableCompositSubLabelCellClass}>Belag</div>
+                    <div className={tagsTableCompositSubValueCellClass}>
+                      <ValueDisclosureButton>
+                        <span
+                          title={isDev ? `${sourceId}--surface=${properties.surface}` : undefined}
+                        >
+                          <ConditionalFormattedValue
+                            sourceId={sourceId}
+                            tagKey={'surface'}
+                            tagValue={properties.surface}
+                          />
+                        </span>
+                      </ValueDisclosureButton>
+                    </div>
+                  </div>
                   <ValueDisclosurePanel>
                     <p
                       title={
@@ -64,21 +81,27 @@ export const TagsTableRowCompositSurfaceSmoothness = ({
             </td>
           </tr>
           <tr className="border-t">
-            <th className="py-1 pr-2 text-left font-medium">Zustand</th>
-            <td className="w-full py-1">
+            <td colSpan={2} className="py-1">
               <NodataFallbackWrapper fallback={!properties.smoothness}>
                 <ValueDisclosure>
-                  <ValueDisclosureButton>
-                    <span
-                      title={isDev ? `${sourceId}--smoothness=${properties.smoothness}` : undefined}
-                    >
-                      <ConditionalFormattedValue
-                        sourceId={sourceId}
-                        tagKey={'smoothness'}
-                        tagValue={properties.smoothness}
-                      />
-                    </span>
-                  </ValueDisclosureButton>
+                  <div className={tagsTableCompositSubRowHeaderClass}>
+                    <div className={tagsTableCompositSubLabelCellClass}>Fahrqualität</div>
+                    <div className={tagsTableCompositSubValueCellClass}>
+                      <ValueDisclosureButton>
+                        <span
+                          title={
+                            isDev ? `${sourceId}--smoothness=${properties.smoothness}` : undefined
+                          }
+                        >
+                          <ConditionalFormattedValue
+                            sourceId={sourceId}
+                            tagKey={'smoothness'}
+                            tagValue={properties.smoothness}
+                          />
+                        </span>
+                      </ValueDisclosureButton>
+                    </div>
+                  </div>
                   <ValueDisclosurePanel>
                     <p
                       title={
@@ -104,7 +127,7 @@ export const TagsTableRowCompositSurfaceSmoothness = ({
                       <em>Genauigkeit der Quelle:</em>{' '}
                       <ConditionalFormattedValue
                         sourceId={sourceId}
-                        tagKey={'confidence'}
+                        tagKey={'smoothness_confidence'}
                         tagValue={properties.smoothness_confidence}
                       />
                     </p>
@@ -115,6 +138,6 @@ export const TagsTableRowCompositSurfaceSmoothness = ({
           </tr>
         </tbody>
       </table>
-    </TagsTableRow>
+    </TagsTableRowFrame>
   )
 }

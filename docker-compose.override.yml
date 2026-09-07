@@ -1,10 +1,7 @@
-# Optional `COMPOSE_DEV_CONTAINER_PREFIX` (e.g. `clone2_`) prefixes container names so multiple
-# repo checkouts can run Docker on one machine. Leave unset for default names (`db`, `app`, …).
-# Do not use `COMPOSE_PROJECT_NAME` here — Compose sets it from the project directory, which would
-# change everyone’s default container names. Dev-only — not part of deploy.manifest.json.
+# Dev-only overrides. See docs/docker-local-development.md.
 services:
   processing:
-    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX}processing
+    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX:-}processing
     image: processing:latest
     build:
       context: .
@@ -17,7 +14,7 @@ services:
       - ./processing:/processing
       - /processing/node_modules
       # oxfmt config: must not mount under /processing (nested bind breaks Docker Desktop virtiofs)
-      - ./app/oxfmt.config.ts:/mnt/oxfmt.config.ts:ro
+      - ./app/oxfmt.config.mjs:/mnt/oxfmt.config.mjs:ro
     # INFO: The overwrite of `journald` is needed for mac systems which did not work with `journald`
     logging:
       driver: json-file
@@ -27,13 +24,13 @@ services:
       # since Docker Compose resolves ${DATABASE_HOST} from .env before override applies
       DATABASE_HOST: db
       PGHOST: db
-    # Performance: Allocate resources for processing container
-    # Docker Desktop has 8GB total, so we allocate 4GB max for processing
-    mem_limit: 4g
-    mem_reservation: 2g
-    cpus: "4"
+    # Docker Desktop VM is 8GB (Settings → Resources). db 4g + processing 3g leaves ~1GB for tiles/app.
+    # osm2pgsql runs without --slim (node cache in RAM) with --number-processes=4 by default.
+    mem_limit: 3g
+    mem_reservation: 512m
+    cpus: '4'
   app:
-    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX}app
+    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX:-}app
     image: app:latest
     build:
       context: .
@@ -50,26 +47,25 @@ services:
     profiles:
       - frontend
   tiles:
-    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX}tiles
+    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX:-}tiles
     environment:
       DATABASE_HOST: db
       DATABASE_URL: postgresql://${DATABASE_USER}:${DATABASE_PASSWORD}@db/${DATABASE_NAME}
     logging:
       driver: json-file
   db:
-    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX}db
+    container_name: ${COMPOSE_DEV_CONTAINER_PREFIX:-}db
     # Flags to increase debug levels
     # command: ["-c", "config_file=/postgresql/postgresql.conf", "-c", "log_statement=all", "-c", "log_min_duration_statement=100"]
     logging:
       driver: json-file
     # Performance: Increase shared memory for PostgreSQL (needed for large queries and parallel workers)
-    shm_size: 2g
-    # Performance: Allocate resources for database container
-    # Docker Desktop has 8GB total, allocating 5GB for DB (leaving room for processing/tiles)
-    # PostgreSQL benefits significantly from dedicated CPU and memory
-    mem_limit: 5g
-    mem_reservation: 4g
-    cpus: "4"
+    shm_size: 1g
+    # 4g fits shared_buffers=1GB + maintenance_work_mem + parallel work_mem (configs/postgres.development.conf).
+    # Low reservation so a second worktree stack (DEV_PORT_SLOT) can coexist in the same 8GB VM.
+    mem_limit: 4g
+    mem_reservation: 1g
+    cpus: '4'
 
 configs:
   postgres_conf:

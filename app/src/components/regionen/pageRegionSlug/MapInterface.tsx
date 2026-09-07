@@ -1,47 +1,74 @@
-import maplibregl from 'maplibre-gl'
+import { addProtocol, removeProtocol } from 'maplibre-gl'
 import { Protocol } from 'pmtiles'
 import { useEffect } from 'react'
 import { MapProvider } from 'react-map-gl/maplibre'
 import { BackgroundLegend } from './background/BackgroundLegend'
 import { SelectBackground } from './background/SelectBackground'
-import { DebugMap } from './DebugBoxes/DebugMap'
-import { DebugStateInteraction } from './DebugBoxes/DebugStateInteraction'
-import { DownloadModal } from './DownloadModal/DownloadModal'
+import { DebugButton } from './DebugBoxes/DebugButton'
+import { RegionDataModals } from './DownloadModal/RegionDataModals'
 import { LoadingIndicator } from './LoadingIndicator/LoadingIndicator'
+import './Map/maplibreWorker'
 import { RegionMap } from './Map/RegionMap'
+import { PlaceSearch } from './Map/Search/PlaceSearch'
+import { MobileLayerButton } from './mobile/MobileLayerButton'
+import { mobileMapBottomControlsClassName } from './mobile/mobileMapChrome.const'
+import { MobileMapHeader } from './mobile/MobileMapHeader'
 import { InternalNotes } from './notes/InternalNotes/InternalNotes'
 import { OsmNotes } from './notes/OsmNotes/OsmNotes'
 import { SidebarInspector } from './SidebarInspector/SidebarInspector'
 import { SidebarLayerControls } from './SidebarLayerControls/SidebarLayerControls'
+import { DesktopOnly } from './utils/Breakpoint'
 
 export const MapInterface = () => {
   useEffect(function registerPmtilesProtocolOnMount() {
     const protocol = new Protocol()
-    maplibregl.addProtocol('pmtiles', protocol.tile)
+    addProtocol('pmtiles', protocol.tile)
     return function removePmtilesProtocolOnUnmount() {
-      maplibregl.removeProtocol('pmtiles')
+      removeProtocol('pmtiles')
     }
   }, [])
 
+  // Breakpoint-specific pieces are rendered (not CSS-hidden) so the unused ones stay out of
+  // the DOM. Generic/shared components that also appear on the other breakpoint use the
+  // <DesktopOnly> helper (it owns the breakpoint check, adds no DOM node). Components that are
+  // inherently mobile-only (MobileMapHeader, MobileLayerButton) gate themselves (return null).
   return (
     <MapProvider>
-      <div className="relative flex h-full w-full flex-row gap-4">
-        <RegionMap />
+      {/* Visible chrome box (= main under the header). Inspector/sidebars size to this. */}
+      <div className="relative h-full w-full">
+        {/* Map canvas only. Desktop height is pinned to the visible box (viewport minus header)
+            rather than `h-full`: with the welcome panel closed that is exactly this container, and
+            when the panel opens and shrinks `main` the map keeps its size and gets pushed down /
+            clipped by the parent `overflow-hidden` instead of making MapLibre re-layout every
+            animation frame. Mobile stays `fixed inset-0` for edge-to-edge under browser chrome. */}
+        <div className="fixed inset-0 z-0 sm:absolute sm:inset-x-0 sm:top-0 sm:h-[calc(var(--app-height,100dvh)-var(--app-header-height))] sm:w-full">
+          <RegionMap />
+        </div>
+
+        <MobileMapHeader />
+        {/* Desktop search overlay (top-right, left of the zoom control); mobile uses MobileMapHeader. */}
+        <DesktopOnly>
+          <PlaceSearch className="absolute top-2 right-[calc(var(--inspector-width)+3.5rem)] z-20" />
+        </DesktopOnly>
         <SidebarLayerControls />
         <SidebarInspector />
-        <div
-          className="pointer-events-none fixed right-2.5 bottom-4 z-10 mt-2.5 flex max-w-full flex-wrap items-end justify-end gap-1.5 *:pointer-events-auto"
-          data-map-controls="true"
-        >
+        <div className={mobileMapBottomControlsClassName} data-map-controls="true">
           <LoadingIndicator />
           <OsmNotes />
           <InternalNotes />
-          <DownloadModal />
+          {/* Download + documentation modals live in MobileMapHeader (top-left) on mobile; desktop keeps them here. */}
+          <DesktopOnly>
+            <RegionDataModals />
+          </DesktopOnly>
           <BackgroundLegend />
           <SelectBackground />
+          {/* Primary mobile control: bigger layer button (desktop uses the sidebar). */}
+          <MobileLayerButton />
+          {/* Desktop debug entry point; mobile has its own in MobileMapHeader (left of search). */}
+          <DesktopOnly>
+            <DebugButton />
+          </DesktopOnly>
         </div>
-        <DebugMap />
-        <DebugStateInteraction />
       </div>
     </MapProvider>
   )

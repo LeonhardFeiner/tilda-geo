@@ -11,12 +11,12 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RegionenRouteImport } from './routes/regionen'
 import { Route as PreviewRouteImport } from './routes/preview'
+import { Route as McpRouteImport } from './routes/mcp'
 import { Route as AdminRouteImport } from './routes/admin'
 import { Route as PagesRouteImport } from './routes/_pages'
-import { Route as HomeRouteImport } from './routes/_home'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as RegionenIndexRouteImport } from './routes/regionen/index'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
-import { Route as HomeIndexRouteImport } from './routes/_home/index'
 import { Route as RegionenStatsRouteImport } from './routes/regionen/stats'
 import { Route as RegionenRegionSlugRouteImport } from './routes/regionen/$regionSlug'
 import { Route as PreviewRootFallbackRouteImport } from './routes/preview/root-fallback'
@@ -33,42 +33,56 @@ import { Route as ApiProcessingDatesRouteImport } from './routes/api/processing-
 import { Route as ApiMapStyleRouteImport } from './routes/api/map-style'
 import { Route as ApiCampaignsRouteImport } from './routes/api/campaigns'
 import { Route as ApiBoundaryRouteImport } from './routes/api/boundary'
-import { Route as AdminUploadsRouteImport } from './routes/admin/uploads'
-import { Route as AdminStaticDatasetCategoriesRouteImport } from './routes/admin/static-dataset-categories'
 import { Route as AdminRegionsRouteImport } from './routes/admin/regions'
+import { Route as AdminRegionContractsRouteImport } from './routes/admin/region-contracts'
 import { Route as AdminQaConfigsRouteImport } from './routes/admin/qa-configs'
+import { Route as AdminProcessingRouteImport } from './routes/admin/processing'
 import { Route as AdminMembershipsRouteImport } from './routes/admin/memberships'
+import { Route as AdminMapDatasetUploadsRouteImport } from './routes/admin/map-dataset-uploads'
+import { Route as AdminMapDatasetCategoriesRouteImport } from './routes/admin/map-dataset-categories'
+import { Route as AdminDataSchemaRouteImport } from './routes/admin/data-schema'
+import { Route as AdminAuditLogRouteImport } from './routes/admin/audit-log'
+import { Route as AdminApiTokensRouteImport } from './routes/admin/api-tokens'
 import { Route as PagesOAuthErrorRouteImport } from './routes/_pages/oAuthError'
 import { Route as PagesKontaktRouteImport } from './routes/_pages/kontakt'
 import { Route as PagesDatenschutzRouteImport } from './routes/_pages/datenschutz'
 import { Route as PagesAccessDeniedRouteImport } from './routes/_pages/access-denied'
-import { Route as AdminUploadsIndexRouteImport } from './routes/admin/uploads/index'
-import { Route as AdminStaticDatasetCategoriesIndexRouteImport } from './routes/admin/static-dataset-categories/index'
 import { Route as AdminRegionsIndexRouteImport } from './routes/admin/regions/index'
+import { Route as AdminRegionContractsIndexRouteImport } from './routes/admin/region-contracts/index'
 import { Route as AdminQaConfigsIndexRouteImport } from './routes/admin/qa-configs/index'
+import { Route as AdminProcessingIndexRouteImport } from './routes/admin/processing/index'
 import { Route as AdminMembershipsIndexRouteImport } from './routes/admin/memberships/index'
+import { Route as AdminMapDatasetUploadsIndexRouteImport } from './routes/admin/map-dataset-uploads/index'
+import { Route as AdminMapDatasetCategoriesIndexRouteImport } from './routes/admin/map-dataset-categories/index'
 import { Route as ApiUploadsCreateRouteImport } from './routes/api/uploads.create'
 import { Route as ApiUploadsSlugRouteImport } from './routes/api/uploads.$slug'
 import { Route as ApiSignInOsmRouteImport } from './routes/api/sign-in.osm'
 import { Route as ApiPrivateWarmCacheRouteImport } from './routes/api/private/warm-cache'
 import { Route as ApiPrivateRegisterSqlFunctionsRouteImport } from './routes/api/private/register-sql-functions'
-import { Route as ApiPrivatePostProcessingStatisticsRouteImport } from './routes/api/private/post-processing-statistics'
+import { Route as ApiPrivateRegionsRouteImport } from './routes/api/private/regions'
 import { Route as ApiPrivatePostProcessingQaUpdateRouteImport } from './routes/api/private/post-processing-qa-update'
 import { Route as ApiPrivatePostProcessingHookRouteImport } from './routes/api/private/post-processing-hook'
 import { Route as ApiPrivateGenerateMaprouletteTasksRouteImport } from './routes/api/private/generate-maproulette-tasks'
 import { Route as ApiOsmNotesRssRouteImport } from './routes/api/osm-notes.rss'
 import { Route as ApiNotesRegionSlugRouteImport } from './routes/api/notes.$regionSlug'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth.$'
-import { Route as AdminUploadsSlugRouteImport } from './routes/admin/uploads.$slug'
-import { Route as AdminStaticDatasetCategoriesNewRouteImport } from './routes/admin/static-dataset-categories/new'
-import { Route as AdminStaticDatasetCategoriesCategoryKeyRouteImport } from './routes/admin/static-dataset-categories/$categoryKey'
-import { Route as AdminRegionsNewRouteImport } from './routes/admin/regions.new'
-import { Route as AdminQaConfigsNewRouteImport } from './routes/admin/qa-configs.new'
-import { Route as AdminMembershipsNewRouteImport } from './routes/admin/memberships.new'
+import { Route as ApiAdminRegionsRouteImport } from './routes/api/admin/regions'
+import { Route as ApiAdminRegionUploadsRouteImport } from './routes/api/admin/region-uploads'
+import { Route as ApiAdminProcessingRouteImport } from './routes/api/admin/processing'
+import { Route as ApiAdminAuditLogRouteImport } from './routes/api/admin/audit-log'
+import { Route as AdminRegionsNewRouteImport } from './routes/admin/regions/new'
+import { Route as AdminRegionContractsNewRouteImport } from './routes/admin/region-contracts/new'
+import { Route as AdminQaConfigsNewRouteImport } from './routes/admin/qa-configs/new'
+import { Route as AdminProcessingMetaIdRouteImport } from './routes/admin/processing/$metaId'
+import { Route as AdminMembershipsNewRouteImport } from './routes/admin/memberships/new'
+import { Route as AdminMapDatasetUploadsSlugRouteImport } from './routes/admin/map-dataset-uploads/$slug'
+import { Route as AdminMapDatasetCategoriesNewRouteImport } from './routes/admin/map-dataset-categories/new'
+import { Route as AdminMapDatasetCategoriesCategoryKeyRouteImport } from './routes/admin/map-dataset-categories/$categoryKey'
 import { Route as PagesSettingsUserRouteImport } from './routes/_pages/settings.user'
 import { Route as PagesDocsMapillaryCoverageRouteImport } from './routes/_pages/docs.mapillary-coverage'
 import { Route as PagesDocsTableNameRouteImport } from './routes/_pages/docs.$tableName'
 import { Route as ApiRegionsRegionSlugUploadsCsvRouteImport } from './routes/api/regions.$regionSlug.uploads-csv'
+import { Route as ApiRegionUploadsIdFilenameRouteImport } from './routes/api/region-uploads.$id.$filename'
 import { Route as ApiNotesRegionSlugDownloadRouteImport } from './routes/api/notes.$regionSlug.download'
 import { Route as ApiMaprouletteStatisticProxyChallengeIdRouteImport } from './routes/api/maproulette.statistic-proxy.$challengeId'
 import { Route as ApiMaprouletteDataTest_tag_fix_twoRouteImport } from './routes/api/maproulette.data.test_tag_fix_two'
@@ -77,8 +91,13 @@ import { Route as ApiMaprouletteDataTest_tag_fixRouteImport } from './routes/api
 import { Route as ApiMaprouletteDataProjectKeyRouteImport } from './routes/api/maproulette.data.$projectKey'
 import { Route as ApiExportRegionSlugTableNameRouteImport } from './routes/api/export.$regionSlug.$tableName'
 import { Route as ApiExportOgrRegionSlugTableNameRouteImport } from './routes/api/export-ogr.$regionSlug.$tableName'
-import { Route as AdminRegionsRegionSlugEditRouteImport } from './routes/admin/regions.$regionSlug.edit'
-import { Route as AdminQaConfigsIdEditRouteImport } from './routes/admin/qa-configs.$id.edit'
+import { Route as ApiAdminRegionsSlugRouteImport } from './routes/api/admin/regions.$slug'
+import { Route as ApiAdminRegionUploadsUploadRouteImport } from './routes/api/admin/region-uploads.upload'
+import { Route as ApiAdminProcessingMetaIdRouteImport } from './routes/api/admin/processing.$metaId'
+import { Route as ApiAdminDataSchemaImportRouteImport } from './routes/api/admin/data-schema.import'
+import { Route as AdminRegionsRegionSlugEditRouteImport } from './routes/admin/regions/$regionSlug.edit'
+import { Route as AdminRegionContractsSlugEditRouteImport } from './routes/admin/region-contracts/$slug.edit'
+import { Route as AdminQaConfigsIdEditRouteImport } from './routes/admin/qa-configs/$id.edit'
 import { Route as ApiAdminQaConfigsIdExportCsvRouteImport } from './routes/api/admin.qa-configs.$id.export-csv'
 
 const RegionenRoute = RegionenRouteImport.update({
@@ -91,6 +110,11 @@ const PreviewRoute = PreviewRouteImport.update({
   path: '/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const McpRoute = McpRouteImport.update({
+  id: '/mcp',
+  path: '/mcp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRoute = AdminRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -100,8 +124,9 @@ const PagesRoute = PagesRouteImport.update({
   id: '/_pages',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/_home',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RegionenIndexRoute = RegionenIndexRouteImport.update({
@@ -113,11 +138,6 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRoute,
-} as any)
-const HomeIndexRoute = HomeIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => HomeRoute,
 } as any)
 const RegionenStatsRoute = RegionenStatsRouteImport.update({
   id: '/stats',
@@ -200,20 +220,14 @@ const ApiBoundaryRoute = ApiBoundaryRouteImport.update({
   path: '/api/boundary',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUploadsRoute = AdminUploadsRouteImport.update({
-  id: '/uploads',
-  path: '/uploads',
-  getParentRoute: () => AdminRoute,
-} as any)
-const AdminStaticDatasetCategoriesRoute =
-  AdminStaticDatasetCategoriesRouteImport.update({
-    id: '/static-dataset-categories',
-    path: '/static-dataset-categories',
-    getParentRoute: () => AdminRoute,
-  } as any)
 const AdminRegionsRoute = AdminRegionsRouteImport.update({
   id: '/regions',
   path: '/regions',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminRegionContractsRoute = AdminRegionContractsRouteImport.update({
+  id: '/region-contracts',
+  path: '/region-contracts',
   getParentRoute: () => AdminRoute,
 } as any)
 const AdminQaConfigsRoute = AdminQaConfigsRouteImport.update({
@@ -221,9 +235,40 @@ const AdminQaConfigsRoute = AdminQaConfigsRouteImport.update({
   path: '/qa-configs',
   getParentRoute: () => AdminRoute,
 } as any)
+const AdminProcessingRoute = AdminProcessingRouteImport.update({
+  id: '/processing',
+  path: '/processing',
+  getParentRoute: () => AdminRoute,
+} as any)
 const AdminMembershipsRoute = AdminMembershipsRouteImport.update({
   id: '/memberships',
   path: '/memberships',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMapDatasetUploadsRoute = AdminMapDatasetUploadsRouteImport.update({
+  id: '/map-dataset-uploads',
+  path: '/map-dataset-uploads',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminMapDatasetCategoriesRoute =
+  AdminMapDatasetCategoriesRouteImport.update({
+    id: '/map-dataset-categories',
+    path: '/map-dataset-categories',
+    getParentRoute: () => AdminRoute,
+  } as any)
+const AdminDataSchemaRoute = AdminDataSchemaRouteImport.update({
+  id: '/data-schema',
+  path: '/data-schema',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminAuditLogRoute = AdminAuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
+  getParentRoute: () => AdminRoute,
+} as any)
+const AdminApiTokensRoute = AdminApiTokensRouteImport.update({
+  id: '/api-tokens',
+  path: '/api-tokens',
   getParentRoute: () => AdminRoute,
 } as any)
 const PagesOAuthErrorRoute = PagesOAuthErrorRouteImport.update({
@@ -246,32 +291,44 @@ const PagesAccessDeniedRoute = PagesAccessDeniedRouteImport.update({
   path: '/access-denied',
   getParentRoute: () => PagesRoute,
 } as any)
-const AdminUploadsIndexRoute = AdminUploadsIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AdminUploadsRoute,
-} as any)
-const AdminStaticDatasetCategoriesIndexRoute =
-  AdminStaticDatasetCategoriesIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AdminStaticDatasetCategoriesRoute,
-  } as any)
 const AdminRegionsIndexRoute = AdminRegionsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRegionsRoute,
 } as any)
+const AdminRegionContractsIndexRoute =
+  AdminRegionContractsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminRegionContractsRoute,
+  } as any)
 const AdminQaConfigsIndexRoute = AdminQaConfigsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminQaConfigsRoute,
+} as any)
+const AdminProcessingIndexRoute = AdminProcessingIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminProcessingRoute,
 } as any)
 const AdminMembershipsIndexRoute = AdminMembershipsIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminMembershipsRoute,
 } as any)
+const AdminMapDatasetUploadsIndexRoute =
+  AdminMapDatasetUploadsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminMapDatasetUploadsRoute,
+  } as any)
+const AdminMapDatasetCategoriesIndexRoute =
+  AdminMapDatasetCategoriesIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AdminMapDatasetCategoriesRoute,
+  } as any)
 const ApiUploadsCreateRoute = ApiUploadsCreateRouteImport.update({
   id: '/create',
   path: '/create',
@@ -298,12 +355,11 @@ const ApiPrivateRegisterSqlFunctionsRoute =
     path: '/api/private/register-sql-functions',
     getParentRoute: () => rootRouteImport,
   } as any)
-const ApiPrivatePostProcessingStatisticsRoute =
-  ApiPrivatePostProcessingStatisticsRouteImport.update({
-    id: '/api/private/post-processing-statistics',
-    path: '/api/private/post-processing-statistics',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const ApiPrivateRegionsRoute = ApiPrivateRegionsRouteImport.update({
+  id: '/api/private/regions',
+  path: '/api/private/regions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPrivatePostProcessingQaUpdateRoute =
   ApiPrivatePostProcessingQaUpdateRouteImport.update({
     id: '/api/private/post-processing-qa-update',
@@ -337,38 +393,69 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdminUploadsSlugRoute = AdminUploadsSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => AdminUploadsRoute,
+const ApiAdminRegionsRoute = ApiAdminRegionsRouteImport.update({
+  id: '/api/admin/regions',
+  path: '/api/admin/regions',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AdminStaticDatasetCategoriesNewRoute =
-  AdminStaticDatasetCategoriesNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AdminStaticDatasetCategoriesRoute,
-  } as any)
-const AdminStaticDatasetCategoriesCategoryKeyRoute =
-  AdminStaticDatasetCategoriesCategoryKeyRouteImport.update({
-    id: '/$categoryKey',
-    path: '/$categoryKey',
-    getParentRoute: () => AdminStaticDatasetCategoriesRoute,
-  } as any)
+const ApiAdminRegionUploadsRoute = ApiAdminRegionUploadsRouteImport.update({
+  id: '/api/admin/region-uploads',
+  path: '/api/admin/region-uploads',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminProcessingRoute = ApiAdminProcessingRouteImport.update({
+  id: '/api/admin/processing',
+  path: '/api/admin/processing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminAuditLogRoute = ApiAdminAuditLogRouteImport.update({
+  id: '/api/admin/audit-log',
+  path: '/api/admin/audit-log',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdminRegionsNewRoute = AdminRegionsNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AdminRegionsRoute,
+} as any)
+const AdminRegionContractsNewRoute = AdminRegionContractsNewRouteImport.update({
+  id: '/new',
+  path: '/new',
+  getParentRoute: () => AdminRegionContractsRoute,
 } as any)
 const AdminQaConfigsNewRoute = AdminQaConfigsNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AdminQaConfigsRoute,
 } as any)
+const AdminProcessingMetaIdRoute = AdminProcessingMetaIdRouteImport.update({
+  id: '/$metaId',
+  path: '/$metaId',
+  getParentRoute: () => AdminProcessingRoute,
+} as any)
 const AdminMembershipsNewRoute = AdminMembershipsNewRouteImport.update({
   id: '/new',
   path: '/new',
   getParentRoute: () => AdminMembershipsRoute,
 } as any)
+const AdminMapDatasetUploadsSlugRoute =
+  AdminMapDatasetUploadsSlugRouteImport.update({
+    id: '/$slug',
+    path: '/$slug',
+    getParentRoute: () => AdminMapDatasetUploadsRoute,
+  } as any)
+const AdminMapDatasetCategoriesNewRoute =
+  AdminMapDatasetCategoriesNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AdminMapDatasetCategoriesRoute,
+  } as any)
+const AdminMapDatasetCategoriesCategoryKeyRoute =
+  AdminMapDatasetCategoriesCategoryKeyRouteImport.update({
+    id: '/$categoryKey',
+    path: '/$categoryKey',
+    getParentRoute: () => AdminMapDatasetCategoriesRoute,
+  } as any)
 const PagesSettingsUserRoute = PagesSettingsUserRouteImport.update({
   id: '/settings/user',
   path: '/settings/user',
@@ -390,6 +477,12 @@ const ApiRegionsRegionSlugUploadsCsvRoute =
     id: '/$regionSlug/uploads-csv',
     path: '/$regionSlug/uploads-csv',
     getParentRoute: () => ApiRegionsRoute,
+  } as any)
+const ApiRegionUploadsIdFilenameRoute =
+  ApiRegionUploadsIdFilenameRouteImport.update({
+    id: '/api/region-uploads/$id/$filename',
+    path: '/api/region-uploads/$id/$filename',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiNotesRegionSlugDownloadRoute =
   ApiNotesRegionSlugDownloadRouteImport.update({
@@ -439,11 +532,40 @@ const ApiExportOgrRegionSlugTableNameRoute =
     path: '/api/export-ogr/$regionSlug/$tableName',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiAdminRegionsSlugRoute = ApiAdminRegionsSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ApiAdminRegionsRoute,
+} as any)
+const ApiAdminRegionUploadsUploadRoute =
+  ApiAdminRegionUploadsUploadRouteImport.update({
+    id: '/upload',
+    path: '/upload',
+    getParentRoute: () => ApiAdminRegionUploadsRoute,
+  } as any)
+const ApiAdminProcessingMetaIdRoute =
+  ApiAdminProcessingMetaIdRouteImport.update({
+    id: '/$metaId',
+    path: '/$metaId',
+    getParentRoute: () => ApiAdminProcessingRoute,
+  } as any)
+const ApiAdminDataSchemaImportRoute =
+  ApiAdminDataSchemaImportRouteImport.update({
+    id: '/api/admin/data-schema/import',
+    path: '/api/admin/data-schema/import',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AdminRegionsRegionSlugEditRoute =
   AdminRegionsRegionSlugEditRouteImport.update({
     id: '/$regionSlug/edit',
     path: '/$regionSlug/edit',
     getParentRoute: () => AdminRegionsRoute,
+  } as any)
+const AdminRegionContractsSlugEditRoute =
+  AdminRegionContractsSlugEditRouteImport.update({
+    id: '/$slug/edit',
+    path: '/$slug/edit',
+    getParentRoute: () => AdminRegionContractsRoute,
   } as any)
 const AdminQaConfigsIdEditRoute = AdminQaConfigsIdEditRouteImport.update({
   id: '/$id/edit',
@@ -458,19 +580,25 @@ const ApiAdminQaConfigsIdExportCsvRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof HomeIndexRoute
+  '/': typeof IndexRoute
   '/admin': typeof AdminRouteWithChildren
+  '/mcp': typeof McpRoute
   '/preview': typeof PreviewRouteWithChildren
   '/regionen': typeof RegionenRouteWithChildren
   '/access-denied': typeof PagesAccessDeniedRoute
   '/datenschutz': typeof PagesDatenschutzRoute
   '/kontakt': typeof PagesKontaktRoute
   '/oAuthError': typeof PagesOAuthErrorRoute
+  '/admin/api-tokens': typeof AdminApiTokensRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
+  '/admin/data-schema': typeof AdminDataSchemaRoute
+  '/admin/map-dataset-categories': typeof AdminMapDatasetCategoriesRouteWithChildren
+  '/admin/map-dataset-uploads': typeof AdminMapDatasetUploadsRouteWithChildren
   '/admin/memberships': typeof AdminMembershipsRouteWithChildren
+  '/admin/processing': typeof AdminProcessingRouteWithChildren
   '/admin/qa-configs': typeof AdminQaConfigsRouteWithChildren
+  '/admin/region-contracts': typeof AdminRegionContractsRouteWithChildren
   '/admin/regions': typeof AdminRegionsRouteWithChildren
-  '/admin/static-dataset-categories': typeof AdminStaticDatasetCategoriesRouteWithChildren
-  '/admin/uploads': typeof AdminUploadsRouteWithChildren
   '/api/boundary': typeof ApiBoundaryRoute
   '/api/campaigns': typeof ApiCampaignsRoute
   '/api/map-style': typeof ApiMapStyleRoute
@@ -492,31 +620,44 @@ export interface FileRoutesByFullPath {
   '/docs/$tableName': typeof PagesDocsTableNameRoute
   '/docs/mapillary-coverage': typeof PagesDocsMapillaryCoverageRoute
   '/settings/user': typeof PagesSettingsUserRoute
+  '/admin/map-dataset-categories/$categoryKey': typeof AdminMapDatasetCategoriesCategoryKeyRoute
+  '/admin/map-dataset-categories/new': typeof AdminMapDatasetCategoriesNewRoute
+  '/admin/map-dataset-uploads/$slug': typeof AdminMapDatasetUploadsSlugRoute
   '/admin/memberships/new': typeof AdminMembershipsNewRoute
+  '/admin/processing/$metaId': typeof AdminProcessingMetaIdRoute
   '/admin/qa-configs/new': typeof AdminQaConfigsNewRoute
+  '/admin/region-contracts/new': typeof AdminRegionContractsNewRoute
   '/admin/regions/new': typeof AdminRegionsNewRoute
-  '/admin/static-dataset-categories/$categoryKey': typeof AdminStaticDatasetCategoriesCategoryKeyRoute
-  '/admin/static-dataset-categories/new': typeof AdminStaticDatasetCategoriesNewRoute
-  '/admin/uploads/$slug': typeof AdminUploadsSlugRoute
+  '/api/admin/audit-log': typeof ApiAdminAuditLogRoute
+  '/api/admin/processing': typeof ApiAdminProcessingRouteWithChildren
+  '/api/admin/region-uploads': typeof ApiAdminRegionUploadsRouteWithChildren
+  '/api/admin/regions': typeof ApiAdminRegionsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/notes/$regionSlug': typeof ApiNotesRegionSlugRouteWithChildren
   '/api/osm-notes/rss': typeof ApiOsmNotesRssRoute
   '/api/private/generate-maproulette-tasks': typeof ApiPrivateGenerateMaprouletteTasksRoute
   '/api/private/post-processing-hook': typeof ApiPrivatePostProcessingHookRoute
   '/api/private/post-processing-qa-update': typeof ApiPrivatePostProcessingQaUpdateRoute
-  '/api/private/post-processing-statistics': typeof ApiPrivatePostProcessingStatisticsRoute
+  '/api/private/regions': typeof ApiPrivateRegionsRoute
   '/api/private/register-sql-functions': typeof ApiPrivateRegisterSqlFunctionsRoute
   '/api/private/warm-cache': typeof ApiPrivateWarmCacheRoute
   '/api/sign-in/osm': typeof ApiSignInOsmRoute
   '/api/uploads/$slug': typeof ApiUploadsSlugRoute
   '/api/uploads/create': typeof ApiUploadsCreateRoute
+  '/admin/map-dataset-categories/': typeof AdminMapDatasetCategoriesIndexRoute
+  '/admin/map-dataset-uploads/': typeof AdminMapDatasetUploadsIndexRoute
   '/admin/memberships/': typeof AdminMembershipsIndexRoute
+  '/admin/processing/': typeof AdminProcessingIndexRoute
   '/admin/qa-configs/': typeof AdminQaConfigsIndexRoute
+  '/admin/region-contracts/': typeof AdminRegionContractsIndexRoute
   '/admin/regions/': typeof AdminRegionsIndexRoute
-  '/admin/static-dataset-categories/': typeof AdminStaticDatasetCategoriesIndexRoute
-  '/admin/uploads/': typeof AdminUploadsIndexRoute
   '/admin/qa-configs/$id/edit': typeof AdminQaConfigsIdEditRoute
+  '/admin/region-contracts/$slug/edit': typeof AdminRegionContractsSlugEditRoute
   '/admin/regions/$regionSlug/edit': typeof AdminRegionsRegionSlugEditRoute
+  '/api/admin/data-schema/import': typeof ApiAdminDataSchemaImportRoute
+  '/api/admin/processing/$metaId': typeof ApiAdminProcessingMetaIdRoute
+  '/api/admin/region-uploads/upload': typeof ApiAdminRegionUploadsUploadRoute
+  '/api/admin/regions/$slug': typeof ApiAdminRegionsSlugRoute
   '/api/export-ogr/$regionSlug/$tableName': typeof ApiExportOgrRegionSlugTableNameRoute
   '/api/export/$regionSlug/$tableName': typeof ApiExportRegionSlugTableNameRoute
   '/api/maproulette/data/$projectKey': typeof ApiMaprouletteDataProjectKeyRoute
@@ -525,16 +666,21 @@ export interface FileRoutesByFullPath {
   '/api/maproulette/data/test_tag_fix_two': typeof ApiMaprouletteDataTest_tag_fix_twoRoute
   '/api/maproulette/statistic-proxy/$challengeId': typeof ApiMaprouletteStatisticProxyChallengeIdRoute
   '/api/notes/$regionSlug/download': typeof ApiNotesRegionSlugDownloadRoute
+  '/api/region-uploads/$id/$filename': typeof ApiRegionUploadsIdFilenameRoute
   '/api/regions/$regionSlug/uploads-csv': typeof ApiRegionsRegionSlugUploadsCsvRoute
   '/api/admin/qa-configs/$id/export-csv': typeof ApiAdminQaConfigsIdExportCsvRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof HomeIndexRoute
+  '/': typeof IndexRoute
+  '/mcp': typeof McpRoute
   '/preview': typeof PreviewRouteWithChildren
   '/access-denied': typeof PagesAccessDeniedRoute
   '/datenschutz': typeof PagesDatenschutzRoute
   '/kontakt': typeof PagesKontaktRoute
   '/oAuthError': typeof PagesOAuthErrorRoute
+  '/admin/api-tokens': typeof AdminApiTokensRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
+  '/admin/data-schema': typeof AdminDataSchemaRoute
   '/api/boundary': typeof ApiBoundaryRoute
   '/api/campaigns': typeof ApiCampaignsRoute
   '/api/map-style': typeof ApiMapStyleRoute
@@ -556,31 +702,44 @@ export interface FileRoutesByTo {
   '/docs/$tableName': typeof PagesDocsTableNameRoute
   '/docs/mapillary-coverage': typeof PagesDocsMapillaryCoverageRoute
   '/settings/user': typeof PagesSettingsUserRoute
+  '/admin/map-dataset-categories/$categoryKey': typeof AdminMapDatasetCategoriesCategoryKeyRoute
+  '/admin/map-dataset-categories/new': typeof AdminMapDatasetCategoriesNewRoute
+  '/admin/map-dataset-uploads/$slug': typeof AdminMapDatasetUploadsSlugRoute
   '/admin/memberships/new': typeof AdminMembershipsNewRoute
+  '/admin/processing/$metaId': typeof AdminProcessingMetaIdRoute
   '/admin/qa-configs/new': typeof AdminQaConfigsNewRoute
+  '/admin/region-contracts/new': typeof AdminRegionContractsNewRoute
   '/admin/regions/new': typeof AdminRegionsNewRoute
-  '/admin/static-dataset-categories/$categoryKey': typeof AdminStaticDatasetCategoriesCategoryKeyRoute
-  '/admin/static-dataset-categories/new': typeof AdminStaticDatasetCategoriesNewRoute
-  '/admin/uploads/$slug': typeof AdminUploadsSlugRoute
+  '/api/admin/audit-log': typeof ApiAdminAuditLogRoute
+  '/api/admin/processing': typeof ApiAdminProcessingRouteWithChildren
+  '/api/admin/region-uploads': typeof ApiAdminRegionUploadsRouteWithChildren
+  '/api/admin/regions': typeof ApiAdminRegionsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/notes/$regionSlug': typeof ApiNotesRegionSlugRouteWithChildren
   '/api/osm-notes/rss': typeof ApiOsmNotesRssRoute
   '/api/private/generate-maproulette-tasks': typeof ApiPrivateGenerateMaprouletteTasksRoute
   '/api/private/post-processing-hook': typeof ApiPrivatePostProcessingHookRoute
   '/api/private/post-processing-qa-update': typeof ApiPrivatePostProcessingQaUpdateRoute
-  '/api/private/post-processing-statistics': typeof ApiPrivatePostProcessingStatisticsRoute
+  '/api/private/regions': typeof ApiPrivateRegionsRoute
   '/api/private/register-sql-functions': typeof ApiPrivateRegisterSqlFunctionsRoute
   '/api/private/warm-cache': typeof ApiPrivateWarmCacheRoute
   '/api/sign-in/osm': typeof ApiSignInOsmRoute
   '/api/uploads/$slug': typeof ApiUploadsSlugRoute
   '/api/uploads/create': typeof ApiUploadsCreateRoute
+  '/admin/map-dataset-categories': typeof AdminMapDatasetCategoriesIndexRoute
+  '/admin/map-dataset-uploads': typeof AdminMapDatasetUploadsIndexRoute
   '/admin/memberships': typeof AdminMembershipsIndexRoute
+  '/admin/processing': typeof AdminProcessingIndexRoute
   '/admin/qa-configs': typeof AdminQaConfigsIndexRoute
+  '/admin/region-contracts': typeof AdminRegionContractsIndexRoute
   '/admin/regions': typeof AdminRegionsIndexRoute
-  '/admin/static-dataset-categories': typeof AdminStaticDatasetCategoriesIndexRoute
-  '/admin/uploads': typeof AdminUploadsIndexRoute
   '/admin/qa-configs/$id/edit': typeof AdminQaConfigsIdEditRoute
+  '/admin/region-contracts/$slug/edit': typeof AdminRegionContractsSlugEditRoute
   '/admin/regions/$regionSlug/edit': typeof AdminRegionsRegionSlugEditRoute
+  '/api/admin/data-schema/import': typeof ApiAdminDataSchemaImportRoute
+  '/api/admin/processing/$metaId': typeof ApiAdminProcessingMetaIdRoute
+  '/api/admin/region-uploads/upload': typeof ApiAdminRegionUploadsUploadRoute
+  '/api/admin/regions/$slug': typeof ApiAdminRegionsSlugRoute
   '/api/export-ogr/$regionSlug/$tableName': typeof ApiExportOgrRegionSlugTableNameRoute
   '/api/export/$regionSlug/$tableName': typeof ApiExportRegionSlugTableNameRoute
   '/api/maproulette/data/$projectKey': typeof ApiMaprouletteDataProjectKeyRoute
@@ -589,25 +748,32 @@ export interface FileRoutesByTo {
   '/api/maproulette/data/test_tag_fix_two': typeof ApiMaprouletteDataTest_tag_fix_twoRoute
   '/api/maproulette/statistic-proxy/$challengeId': typeof ApiMaprouletteStatisticProxyChallengeIdRoute
   '/api/notes/$regionSlug/download': typeof ApiNotesRegionSlugDownloadRoute
+  '/api/region-uploads/$id/$filename': typeof ApiRegionUploadsIdFilenameRoute
   '/api/regions/$regionSlug/uploads-csv': typeof ApiRegionsRegionSlugUploadsCsvRoute
   '/api/admin/qa-configs/$id/export-csv': typeof ApiAdminQaConfigsIdExportCsvRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_home': typeof HomeRouteWithChildren
+  '/': typeof IndexRoute
   '/_pages': typeof PagesRouteWithChildren
   '/admin': typeof AdminRouteWithChildren
+  '/mcp': typeof McpRoute
   '/preview': typeof PreviewRouteWithChildren
   '/regionen': typeof RegionenRouteWithChildren
   '/_pages/access-denied': typeof PagesAccessDeniedRoute
   '/_pages/datenschutz': typeof PagesDatenschutzRoute
   '/_pages/kontakt': typeof PagesKontaktRoute
   '/_pages/oAuthError': typeof PagesOAuthErrorRoute
+  '/admin/api-tokens': typeof AdminApiTokensRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
+  '/admin/data-schema': typeof AdminDataSchemaRoute
+  '/admin/map-dataset-categories': typeof AdminMapDatasetCategoriesRouteWithChildren
+  '/admin/map-dataset-uploads': typeof AdminMapDatasetUploadsRouteWithChildren
   '/admin/memberships': typeof AdminMembershipsRouteWithChildren
+  '/admin/processing': typeof AdminProcessingRouteWithChildren
   '/admin/qa-configs': typeof AdminQaConfigsRouteWithChildren
+  '/admin/region-contracts': typeof AdminRegionContractsRouteWithChildren
   '/admin/regions': typeof AdminRegionsRouteWithChildren
-  '/admin/static-dataset-categories': typeof AdminStaticDatasetCategoriesRouteWithChildren
-  '/admin/uploads': typeof AdminUploadsRouteWithChildren
   '/api/boundary': typeof ApiBoundaryRoute
   '/api/campaigns': typeof ApiCampaignsRoute
   '/api/map-style': typeof ApiMapStyleRoute
@@ -624,37 +790,49 @@ export interface FileRoutesById {
   '/preview/root-fallback': typeof PreviewRootFallbackRoute
   '/regionen/$regionSlug': typeof RegionenRegionSlugRoute
   '/regionen/stats': typeof RegionenStatsRoute
-  '/_home/': typeof HomeIndexRoute
   '/admin/': typeof AdminIndexRoute
   '/regionen/': typeof RegionenIndexRoute
   '/_pages/docs/$tableName': typeof PagesDocsTableNameRoute
   '/_pages/docs/mapillary-coverage': typeof PagesDocsMapillaryCoverageRoute
   '/_pages/settings/user': typeof PagesSettingsUserRoute
+  '/admin/map-dataset-categories/$categoryKey': typeof AdminMapDatasetCategoriesCategoryKeyRoute
+  '/admin/map-dataset-categories/new': typeof AdminMapDatasetCategoriesNewRoute
+  '/admin/map-dataset-uploads/$slug': typeof AdminMapDatasetUploadsSlugRoute
   '/admin/memberships/new': typeof AdminMembershipsNewRoute
+  '/admin/processing/$metaId': typeof AdminProcessingMetaIdRoute
   '/admin/qa-configs/new': typeof AdminQaConfigsNewRoute
+  '/admin/region-contracts/new': typeof AdminRegionContractsNewRoute
   '/admin/regions/new': typeof AdminRegionsNewRoute
-  '/admin/static-dataset-categories/$categoryKey': typeof AdminStaticDatasetCategoriesCategoryKeyRoute
-  '/admin/static-dataset-categories/new': typeof AdminStaticDatasetCategoriesNewRoute
-  '/admin/uploads/$slug': typeof AdminUploadsSlugRoute
+  '/api/admin/audit-log': typeof ApiAdminAuditLogRoute
+  '/api/admin/processing': typeof ApiAdminProcessingRouteWithChildren
+  '/api/admin/region-uploads': typeof ApiAdminRegionUploadsRouteWithChildren
+  '/api/admin/regions': typeof ApiAdminRegionsRouteWithChildren
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/notes/$regionSlug': typeof ApiNotesRegionSlugRouteWithChildren
   '/api/osm-notes/rss': typeof ApiOsmNotesRssRoute
   '/api/private/generate-maproulette-tasks': typeof ApiPrivateGenerateMaprouletteTasksRoute
   '/api/private/post-processing-hook': typeof ApiPrivatePostProcessingHookRoute
   '/api/private/post-processing-qa-update': typeof ApiPrivatePostProcessingQaUpdateRoute
-  '/api/private/post-processing-statistics': typeof ApiPrivatePostProcessingStatisticsRoute
+  '/api/private/regions': typeof ApiPrivateRegionsRoute
   '/api/private/register-sql-functions': typeof ApiPrivateRegisterSqlFunctionsRoute
   '/api/private/warm-cache': typeof ApiPrivateWarmCacheRoute
   '/api/sign-in/osm': typeof ApiSignInOsmRoute
   '/api/uploads/$slug': typeof ApiUploadsSlugRoute
   '/api/uploads/create': typeof ApiUploadsCreateRoute
+  '/admin/map-dataset-categories/': typeof AdminMapDatasetCategoriesIndexRoute
+  '/admin/map-dataset-uploads/': typeof AdminMapDatasetUploadsIndexRoute
   '/admin/memberships/': typeof AdminMembershipsIndexRoute
+  '/admin/processing/': typeof AdminProcessingIndexRoute
   '/admin/qa-configs/': typeof AdminQaConfigsIndexRoute
+  '/admin/region-contracts/': typeof AdminRegionContractsIndexRoute
   '/admin/regions/': typeof AdminRegionsIndexRoute
-  '/admin/static-dataset-categories/': typeof AdminStaticDatasetCategoriesIndexRoute
-  '/admin/uploads/': typeof AdminUploadsIndexRoute
   '/admin/qa-configs/$id/edit': typeof AdminQaConfigsIdEditRoute
+  '/admin/region-contracts/$slug/edit': typeof AdminRegionContractsSlugEditRoute
   '/admin/regions/$regionSlug/edit': typeof AdminRegionsRegionSlugEditRoute
+  '/api/admin/data-schema/import': typeof ApiAdminDataSchemaImportRoute
+  '/api/admin/processing/$metaId': typeof ApiAdminProcessingMetaIdRoute
+  '/api/admin/region-uploads/upload': typeof ApiAdminRegionUploadsUploadRoute
+  '/api/admin/regions/$slug': typeof ApiAdminRegionsSlugRoute
   '/api/export-ogr/$regionSlug/$tableName': typeof ApiExportOgrRegionSlugTableNameRoute
   '/api/export/$regionSlug/$tableName': typeof ApiExportRegionSlugTableNameRoute
   '/api/maproulette/data/$projectKey': typeof ApiMaprouletteDataProjectKeyRoute
@@ -663,6 +841,7 @@ export interface FileRoutesById {
   '/api/maproulette/data/test_tag_fix_two': typeof ApiMaprouletteDataTest_tag_fix_twoRoute
   '/api/maproulette/statistic-proxy/$challengeId': typeof ApiMaprouletteStatisticProxyChallengeIdRoute
   '/api/notes/$regionSlug/download': typeof ApiNotesRegionSlugDownloadRoute
+  '/api/region-uploads/$id/$filename': typeof ApiRegionUploadsIdFilenameRoute
   '/api/regions/$regionSlug/uploads-csv': typeof ApiRegionsRegionSlugUploadsCsvRoute
   '/api/admin/qa-configs/$id/export-csv': typeof ApiAdminQaConfigsIdExportCsvRoute
 }
@@ -671,17 +850,23 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/mcp'
     | '/preview'
     | '/regionen'
     | '/access-denied'
     | '/datenschutz'
     | '/kontakt'
     | '/oAuthError'
+    | '/admin/api-tokens'
+    | '/admin/audit-log'
+    | '/admin/data-schema'
+    | '/admin/map-dataset-categories'
+    | '/admin/map-dataset-uploads'
     | '/admin/memberships'
+    | '/admin/processing'
     | '/admin/qa-configs'
+    | '/admin/region-contracts'
     | '/admin/regions'
-    | '/admin/static-dataset-categories'
-    | '/admin/uploads'
     | '/api/boundary'
     | '/api/campaigns'
     | '/api/map-style'
@@ -703,31 +888,44 @@ export interface FileRouteTypes {
     | '/docs/$tableName'
     | '/docs/mapillary-coverage'
     | '/settings/user'
+    | '/admin/map-dataset-categories/$categoryKey'
+    | '/admin/map-dataset-categories/new'
+    | '/admin/map-dataset-uploads/$slug'
     | '/admin/memberships/new'
+    | '/admin/processing/$metaId'
     | '/admin/qa-configs/new'
+    | '/admin/region-contracts/new'
     | '/admin/regions/new'
-    | '/admin/static-dataset-categories/$categoryKey'
-    | '/admin/static-dataset-categories/new'
-    | '/admin/uploads/$slug'
+    | '/api/admin/audit-log'
+    | '/api/admin/processing'
+    | '/api/admin/region-uploads'
+    | '/api/admin/regions'
     | '/api/auth/$'
     | '/api/notes/$regionSlug'
     | '/api/osm-notes/rss'
     | '/api/private/generate-maproulette-tasks'
     | '/api/private/post-processing-hook'
     | '/api/private/post-processing-qa-update'
-    | '/api/private/post-processing-statistics'
+    | '/api/private/regions'
     | '/api/private/register-sql-functions'
     | '/api/private/warm-cache'
     | '/api/sign-in/osm'
     | '/api/uploads/$slug'
     | '/api/uploads/create'
+    | '/admin/map-dataset-categories/'
+    | '/admin/map-dataset-uploads/'
     | '/admin/memberships/'
+    | '/admin/processing/'
     | '/admin/qa-configs/'
+    | '/admin/region-contracts/'
     | '/admin/regions/'
-    | '/admin/static-dataset-categories/'
-    | '/admin/uploads/'
     | '/admin/qa-configs/$id/edit'
+    | '/admin/region-contracts/$slug/edit'
     | '/admin/regions/$regionSlug/edit'
+    | '/api/admin/data-schema/import'
+    | '/api/admin/processing/$metaId'
+    | '/api/admin/region-uploads/upload'
+    | '/api/admin/regions/$slug'
     | '/api/export-ogr/$regionSlug/$tableName'
     | '/api/export/$regionSlug/$tableName'
     | '/api/maproulette/data/$projectKey'
@@ -736,16 +934,21 @@ export interface FileRouteTypes {
     | '/api/maproulette/data/test_tag_fix_two'
     | '/api/maproulette/statistic-proxy/$challengeId'
     | '/api/notes/$regionSlug/download'
+    | '/api/region-uploads/$id/$filename'
     | '/api/regions/$regionSlug/uploads-csv'
     | '/api/admin/qa-configs/$id/export-csv'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/mcp'
     | '/preview'
     | '/access-denied'
     | '/datenschutz'
     | '/kontakt'
     | '/oAuthError'
+    | '/admin/api-tokens'
+    | '/admin/audit-log'
+    | '/admin/data-schema'
     | '/api/boundary'
     | '/api/campaigns'
     | '/api/map-style'
@@ -767,31 +970,44 @@ export interface FileRouteTypes {
     | '/docs/$tableName'
     | '/docs/mapillary-coverage'
     | '/settings/user'
+    | '/admin/map-dataset-categories/$categoryKey'
+    | '/admin/map-dataset-categories/new'
+    | '/admin/map-dataset-uploads/$slug'
     | '/admin/memberships/new'
+    | '/admin/processing/$metaId'
     | '/admin/qa-configs/new'
+    | '/admin/region-contracts/new'
     | '/admin/regions/new'
-    | '/admin/static-dataset-categories/$categoryKey'
-    | '/admin/static-dataset-categories/new'
-    | '/admin/uploads/$slug'
+    | '/api/admin/audit-log'
+    | '/api/admin/processing'
+    | '/api/admin/region-uploads'
+    | '/api/admin/regions'
     | '/api/auth/$'
     | '/api/notes/$regionSlug'
     | '/api/osm-notes/rss'
     | '/api/private/generate-maproulette-tasks'
     | '/api/private/post-processing-hook'
     | '/api/private/post-processing-qa-update'
-    | '/api/private/post-processing-statistics'
+    | '/api/private/regions'
     | '/api/private/register-sql-functions'
     | '/api/private/warm-cache'
     | '/api/sign-in/osm'
     | '/api/uploads/$slug'
     | '/api/uploads/create'
+    | '/admin/map-dataset-categories'
+    | '/admin/map-dataset-uploads'
     | '/admin/memberships'
+    | '/admin/processing'
     | '/admin/qa-configs'
+    | '/admin/region-contracts'
     | '/admin/regions'
-    | '/admin/static-dataset-categories'
-    | '/admin/uploads'
     | '/admin/qa-configs/$id/edit'
+    | '/admin/region-contracts/$slug/edit'
     | '/admin/regions/$regionSlug/edit'
+    | '/api/admin/data-schema/import'
+    | '/api/admin/processing/$metaId'
+    | '/api/admin/region-uploads/upload'
+    | '/api/admin/regions/$slug'
     | '/api/export-ogr/$regionSlug/$tableName'
     | '/api/export/$regionSlug/$tableName'
     | '/api/maproulette/data/$projectKey'
@@ -800,24 +1016,31 @@ export interface FileRouteTypes {
     | '/api/maproulette/data/test_tag_fix_two'
     | '/api/maproulette/statistic-proxy/$challengeId'
     | '/api/notes/$regionSlug/download'
+    | '/api/region-uploads/$id/$filename'
     | '/api/regions/$regionSlug/uploads-csv'
     | '/api/admin/qa-configs/$id/export-csv'
   id:
     | '__root__'
-    | '/_home'
+    | '/'
     | '/_pages'
     | '/admin'
+    | '/mcp'
     | '/preview'
     | '/regionen'
     | '/_pages/access-denied'
     | '/_pages/datenschutz'
     | '/_pages/kontakt'
     | '/_pages/oAuthError'
+    | '/admin/api-tokens'
+    | '/admin/audit-log'
+    | '/admin/data-schema'
+    | '/admin/map-dataset-categories'
+    | '/admin/map-dataset-uploads'
     | '/admin/memberships'
+    | '/admin/processing'
     | '/admin/qa-configs'
+    | '/admin/region-contracts'
     | '/admin/regions'
-    | '/admin/static-dataset-categories'
-    | '/admin/uploads'
     | '/api/boundary'
     | '/api/campaigns'
     | '/api/map-style'
@@ -834,37 +1057,49 @@ export interface FileRouteTypes {
     | '/preview/root-fallback'
     | '/regionen/$regionSlug'
     | '/regionen/stats'
-    | '/_home/'
     | '/admin/'
     | '/regionen/'
     | '/_pages/docs/$tableName'
     | '/_pages/docs/mapillary-coverage'
     | '/_pages/settings/user'
+    | '/admin/map-dataset-categories/$categoryKey'
+    | '/admin/map-dataset-categories/new'
+    | '/admin/map-dataset-uploads/$slug'
     | '/admin/memberships/new'
+    | '/admin/processing/$metaId'
     | '/admin/qa-configs/new'
+    | '/admin/region-contracts/new'
     | '/admin/regions/new'
-    | '/admin/static-dataset-categories/$categoryKey'
-    | '/admin/static-dataset-categories/new'
-    | '/admin/uploads/$slug'
+    | '/api/admin/audit-log'
+    | '/api/admin/processing'
+    | '/api/admin/region-uploads'
+    | '/api/admin/regions'
     | '/api/auth/$'
     | '/api/notes/$regionSlug'
     | '/api/osm-notes/rss'
     | '/api/private/generate-maproulette-tasks'
     | '/api/private/post-processing-hook'
     | '/api/private/post-processing-qa-update'
-    | '/api/private/post-processing-statistics'
+    | '/api/private/regions'
     | '/api/private/register-sql-functions'
     | '/api/private/warm-cache'
     | '/api/sign-in/osm'
     | '/api/uploads/$slug'
     | '/api/uploads/create'
+    | '/admin/map-dataset-categories/'
+    | '/admin/map-dataset-uploads/'
     | '/admin/memberships/'
+    | '/admin/processing/'
     | '/admin/qa-configs/'
+    | '/admin/region-contracts/'
     | '/admin/regions/'
-    | '/admin/static-dataset-categories/'
-    | '/admin/uploads/'
     | '/admin/qa-configs/$id/edit'
+    | '/admin/region-contracts/$slug/edit'
     | '/admin/regions/$regionSlug/edit'
+    | '/api/admin/data-schema/import'
+    | '/api/admin/processing/$metaId'
+    | '/api/admin/region-uploads/upload'
+    | '/api/admin/regions/$slug'
     | '/api/export-ogr/$regionSlug/$tableName'
     | '/api/export/$regionSlug/$tableName'
     | '/api/maproulette/data/$projectKey'
@@ -873,14 +1108,16 @@ export interface FileRouteTypes {
     | '/api/maproulette/data/test_tag_fix_two'
     | '/api/maproulette/statistic-proxy/$challengeId'
     | '/api/notes/$regionSlug/download'
+    | '/api/region-uploads/$id/$filename'
     | '/api/regions/$regionSlug/uploads-csv'
     | '/api/admin/qa-configs/$id/export-csv'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  HomeRoute: typeof HomeRouteWithChildren
+  IndexRoute: typeof IndexRoute
   PagesRoute: typeof PagesRouteWithChildren
   AdminRoute: typeof AdminRouteWithChildren
+  McpRoute: typeof McpRoute
   PreviewRoute: typeof PreviewRouteWithChildren
   RegionenRoute: typeof RegionenRouteWithChildren
   ApiBoundaryRoute: typeof ApiBoundaryRoute
@@ -891,16 +1128,21 @@ export interface RootRouteChildren {
   ApiRegionsRoute: typeof ApiRegionsRouteWithChildren
   ApiStatsRoute: typeof ApiStatsRoute
   ApiUploadsRoute: typeof ApiUploadsRouteWithChildren
+  ApiAdminAuditLogRoute: typeof ApiAdminAuditLogRoute
+  ApiAdminProcessingRoute: typeof ApiAdminProcessingRouteWithChildren
+  ApiAdminRegionUploadsRoute: typeof ApiAdminRegionUploadsRouteWithChildren
+  ApiAdminRegionsRoute: typeof ApiAdminRegionsRouteWithChildren
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiNotesRegionSlugRoute: typeof ApiNotesRegionSlugRouteWithChildren
   ApiOsmNotesRssRoute: typeof ApiOsmNotesRssRoute
   ApiPrivateGenerateMaprouletteTasksRoute: typeof ApiPrivateGenerateMaprouletteTasksRoute
   ApiPrivatePostProcessingHookRoute: typeof ApiPrivatePostProcessingHookRoute
   ApiPrivatePostProcessingQaUpdateRoute: typeof ApiPrivatePostProcessingQaUpdateRoute
-  ApiPrivatePostProcessingStatisticsRoute: typeof ApiPrivatePostProcessingStatisticsRoute
+  ApiPrivateRegionsRoute: typeof ApiPrivateRegionsRoute
   ApiPrivateRegisterSqlFunctionsRoute: typeof ApiPrivateRegisterSqlFunctionsRoute
   ApiPrivateWarmCacheRoute: typeof ApiPrivateWarmCacheRoute
   ApiSignInOsmRoute: typeof ApiSignInOsmRoute
+  ApiAdminDataSchemaImportRoute: typeof ApiAdminDataSchemaImportRoute
   ApiExportOgrRegionSlugTableNameRoute: typeof ApiExportOgrRegionSlugTableNameRoute
   ApiExportRegionSlugTableNameRoute: typeof ApiExportRegionSlugTableNameRoute
   ApiMaprouletteDataProjectKeyRoute: typeof ApiMaprouletteDataProjectKeyRoute
@@ -908,6 +1150,7 @@ export interface RootRouteChildren {
   ApiMaprouletteDataTest_tag_fix_cyclewaySharedRoute: typeof ApiMaprouletteDataTest_tag_fix_cyclewaySharedRoute
   ApiMaprouletteDataTest_tag_fix_twoRoute: typeof ApiMaprouletteDataTest_tag_fix_twoRoute
   ApiMaprouletteStatisticProxyChallengeIdRoute: typeof ApiMaprouletteStatisticProxyChallengeIdRoute
+  ApiRegionUploadsIdFilenameRoute: typeof ApiRegionUploadsIdFilenameRoute
   ApiAdminQaConfigsIdExportCsvRoute: typeof ApiAdminQaConfigsIdExportCsvRoute
 }
 
@@ -927,6 +1170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/mcp': {
+      id: '/mcp'
+      path: '/mcp'
+      fullPath: '/mcp'
+      preLoaderRoute: typeof McpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin': {
       id: '/admin'
       path: '/admin'
@@ -941,11 +1191,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagesRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_home': {
-      id: '/_home'
-      path: ''
+    '/': {
+      id: '/'
+      path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof HomeRouteImport
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/regionen/': {
@@ -961,13 +1211,6 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRoute
-    }
-    '/_home/': {
-      id: '/_home/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof HomeIndexRouteImport
-      parentRoute: typeof HomeRoute
     }
     '/regionen/stats': {
       id: '/regionen/stats'
@@ -1081,25 +1324,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiBoundaryRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/uploads': {
-      id: '/admin/uploads'
-      path: '/uploads'
-      fullPath: '/admin/uploads'
-      preLoaderRoute: typeof AdminUploadsRouteImport
-      parentRoute: typeof AdminRoute
-    }
-    '/admin/static-dataset-categories': {
-      id: '/admin/static-dataset-categories'
-      path: '/static-dataset-categories'
-      fullPath: '/admin/static-dataset-categories'
-      preLoaderRoute: typeof AdminStaticDatasetCategoriesRouteImport
-      parentRoute: typeof AdminRoute
-    }
     '/admin/regions': {
       id: '/admin/regions'
       path: '/regions'
       fullPath: '/admin/regions'
       preLoaderRoute: typeof AdminRegionsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/region-contracts': {
+      id: '/admin/region-contracts'
+      path: '/region-contracts'
+      fullPath: '/admin/region-contracts'
+      preLoaderRoute: typeof AdminRegionContractsRouteImport
       parentRoute: typeof AdminRoute
     }
     '/admin/qa-configs': {
@@ -1109,11 +1345,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQaConfigsRouteImport
       parentRoute: typeof AdminRoute
     }
+    '/admin/processing': {
+      id: '/admin/processing'
+      path: '/processing'
+      fullPath: '/admin/processing'
+      preLoaderRoute: typeof AdminProcessingRouteImport
+      parentRoute: typeof AdminRoute
+    }
     '/admin/memberships': {
       id: '/admin/memberships'
       path: '/memberships'
       fullPath: '/admin/memberships'
       preLoaderRoute: typeof AdminMembershipsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/map-dataset-uploads': {
+      id: '/admin/map-dataset-uploads'
+      path: '/map-dataset-uploads'
+      fullPath: '/admin/map-dataset-uploads'
+      preLoaderRoute: typeof AdminMapDatasetUploadsRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/map-dataset-categories': {
+      id: '/admin/map-dataset-categories'
+      path: '/map-dataset-categories'
+      fullPath: '/admin/map-dataset-categories'
+      preLoaderRoute: typeof AdminMapDatasetCategoriesRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/data-schema': {
+      id: '/admin/data-schema'
+      path: '/data-schema'
+      fullPath: '/admin/data-schema'
+      preLoaderRoute: typeof AdminDataSchemaRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/audit-log': {
+      id: '/admin/audit-log'
+      path: '/audit-log'
+      fullPath: '/admin/audit-log'
+      preLoaderRoute: typeof AdminAuditLogRouteImport
+      parentRoute: typeof AdminRoute
+    }
+    '/admin/api-tokens': {
+      id: '/admin/api-tokens'
+      path: '/api-tokens'
+      fullPath: '/admin/api-tokens'
+      preLoaderRoute: typeof AdminApiTokensRouteImport
       parentRoute: typeof AdminRoute
     }
     '/_pages/oAuthError': {
@@ -1144,26 +1422,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PagesAccessDeniedRouteImport
       parentRoute: typeof PagesRoute
     }
-    '/admin/uploads/': {
-      id: '/admin/uploads/'
-      path: '/'
-      fullPath: '/admin/uploads/'
-      preLoaderRoute: typeof AdminUploadsIndexRouteImport
-      parentRoute: typeof AdminUploadsRoute
-    }
-    '/admin/static-dataset-categories/': {
-      id: '/admin/static-dataset-categories/'
-      path: '/'
-      fullPath: '/admin/static-dataset-categories/'
-      preLoaderRoute: typeof AdminStaticDatasetCategoriesIndexRouteImport
-      parentRoute: typeof AdminStaticDatasetCategoriesRoute
-    }
     '/admin/regions/': {
       id: '/admin/regions/'
       path: '/'
       fullPath: '/admin/regions/'
       preLoaderRoute: typeof AdminRegionsIndexRouteImport
       parentRoute: typeof AdminRegionsRoute
+    }
+    '/admin/region-contracts/': {
+      id: '/admin/region-contracts/'
+      path: '/'
+      fullPath: '/admin/region-contracts/'
+      preLoaderRoute: typeof AdminRegionContractsIndexRouteImport
+      parentRoute: typeof AdminRegionContractsRoute
     }
     '/admin/qa-configs/': {
       id: '/admin/qa-configs/'
@@ -1172,12 +1443,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQaConfigsIndexRouteImport
       parentRoute: typeof AdminQaConfigsRoute
     }
+    '/admin/processing/': {
+      id: '/admin/processing/'
+      path: '/'
+      fullPath: '/admin/processing/'
+      preLoaderRoute: typeof AdminProcessingIndexRouteImport
+      parentRoute: typeof AdminProcessingRoute
+    }
     '/admin/memberships/': {
       id: '/admin/memberships/'
       path: '/'
       fullPath: '/admin/memberships/'
       preLoaderRoute: typeof AdminMembershipsIndexRouteImport
       parentRoute: typeof AdminMembershipsRoute
+    }
+    '/admin/map-dataset-uploads/': {
+      id: '/admin/map-dataset-uploads/'
+      path: '/'
+      fullPath: '/admin/map-dataset-uploads/'
+      preLoaderRoute: typeof AdminMapDatasetUploadsIndexRouteImport
+      parentRoute: typeof AdminMapDatasetUploadsRoute
+    }
+    '/admin/map-dataset-categories/': {
+      id: '/admin/map-dataset-categories/'
+      path: '/'
+      fullPath: '/admin/map-dataset-categories/'
+      preLoaderRoute: typeof AdminMapDatasetCategoriesIndexRouteImport
+      parentRoute: typeof AdminMapDatasetCategoriesRoute
     }
     '/api/uploads/create': {
       id: '/api/uploads/create'
@@ -1214,11 +1506,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPrivateRegisterSqlFunctionsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/private/post-processing-statistics': {
-      id: '/api/private/post-processing-statistics'
-      path: '/api/private/post-processing-statistics'
-      fullPath: '/api/private/post-processing-statistics'
-      preLoaderRoute: typeof ApiPrivatePostProcessingStatisticsRouteImport
+    '/api/private/regions': {
+      id: '/api/private/regions'
+      path: '/api/private/regions'
+      fullPath: '/api/private/regions'
+      preLoaderRoute: typeof ApiPrivateRegionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/private/post-processing-qa-update': {
@@ -1263,26 +1555,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/admin/uploads/$slug': {
-      id: '/admin/uploads/$slug'
-      path: '/$slug'
-      fullPath: '/admin/uploads/$slug'
-      preLoaderRoute: typeof AdminUploadsSlugRouteImport
-      parentRoute: typeof AdminUploadsRoute
+    '/api/admin/regions': {
+      id: '/api/admin/regions'
+      path: '/api/admin/regions'
+      fullPath: '/api/admin/regions'
+      preLoaderRoute: typeof ApiAdminRegionsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/static-dataset-categories/new': {
-      id: '/admin/static-dataset-categories/new'
-      path: '/new'
-      fullPath: '/admin/static-dataset-categories/new'
-      preLoaderRoute: typeof AdminStaticDatasetCategoriesNewRouteImport
-      parentRoute: typeof AdminStaticDatasetCategoriesRoute
+    '/api/admin/region-uploads': {
+      id: '/api/admin/region-uploads'
+      path: '/api/admin/region-uploads'
+      fullPath: '/api/admin/region-uploads'
+      preLoaderRoute: typeof ApiAdminRegionUploadsRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/admin/static-dataset-categories/$categoryKey': {
-      id: '/admin/static-dataset-categories/$categoryKey'
-      path: '/$categoryKey'
-      fullPath: '/admin/static-dataset-categories/$categoryKey'
-      preLoaderRoute: typeof AdminStaticDatasetCategoriesCategoryKeyRouteImport
-      parentRoute: typeof AdminStaticDatasetCategoriesRoute
+    '/api/admin/processing': {
+      id: '/api/admin/processing'
+      path: '/api/admin/processing'
+      fullPath: '/api/admin/processing'
+      preLoaderRoute: typeof ApiAdminProcessingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/audit-log': {
+      id: '/api/admin/audit-log'
+      path: '/api/admin/audit-log'
+      fullPath: '/api/admin/audit-log'
+      preLoaderRoute: typeof ApiAdminAuditLogRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/admin/regions/new': {
       id: '/admin/regions/new'
@@ -1291,6 +1590,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminRegionsNewRouteImport
       parentRoute: typeof AdminRegionsRoute
     }
+    '/admin/region-contracts/new': {
+      id: '/admin/region-contracts/new'
+      path: '/new'
+      fullPath: '/admin/region-contracts/new'
+      preLoaderRoute: typeof AdminRegionContractsNewRouteImport
+      parentRoute: typeof AdminRegionContractsRoute
+    }
     '/admin/qa-configs/new': {
       id: '/admin/qa-configs/new'
       path: '/new'
@@ -1298,12 +1604,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminQaConfigsNewRouteImport
       parentRoute: typeof AdminQaConfigsRoute
     }
+    '/admin/processing/$metaId': {
+      id: '/admin/processing/$metaId'
+      path: '/$metaId'
+      fullPath: '/admin/processing/$metaId'
+      preLoaderRoute: typeof AdminProcessingMetaIdRouteImport
+      parentRoute: typeof AdminProcessingRoute
+    }
     '/admin/memberships/new': {
       id: '/admin/memberships/new'
       path: '/new'
       fullPath: '/admin/memberships/new'
       preLoaderRoute: typeof AdminMembershipsNewRouteImport
       parentRoute: typeof AdminMembershipsRoute
+    }
+    '/admin/map-dataset-uploads/$slug': {
+      id: '/admin/map-dataset-uploads/$slug'
+      path: '/$slug'
+      fullPath: '/admin/map-dataset-uploads/$slug'
+      preLoaderRoute: typeof AdminMapDatasetUploadsSlugRouteImport
+      parentRoute: typeof AdminMapDatasetUploadsRoute
+    }
+    '/admin/map-dataset-categories/new': {
+      id: '/admin/map-dataset-categories/new'
+      path: '/new'
+      fullPath: '/admin/map-dataset-categories/new'
+      preLoaderRoute: typeof AdminMapDatasetCategoriesNewRouteImport
+      parentRoute: typeof AdminMapDatasetCategoriesRoute
+    }
+    '/admin/map-dataset-categories/$categoryKey': {
+      id: '/admin/map-dataset-categories/$categoryKey'
+      path: '/$categoryKey'
+      fullPath: '/admin/map-dataset-categories/$categoryKey'
+      preLoaderRoute: typeof AdminMapDatasetCategoriesCategoryKeyRouteImport
+      parentRoute: typeof AdminMapDatasetCategoriesRoute
     }
     '/_pages/settings/user': {
       id: '/_pages/settings/user'
@@ -1332,6 +1666,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/regions/$regionSlug/uploads-csv'
       preLoaderRoute: typeof ApiRegionsRegionSlugUploadsCsvRouteImport
       parentRoute: typeof ApiRegionsRoute
+    }
+    '/api/region-uploads/$id/$filename': {
+      id: '/api/region-uploads/$id/$filename'
+      path: '/api/region-uploads/$id/$filename'
+      fullPath: '/api/region-uploads/$id/$filename'
+      preLoaderRoute: typeof ApiRegionUploadsIdFilenameRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/notes/$regionSlug/download': {
       id: '/api/notes/$regionSlug/download'
@@ -1389,12 +1730,47 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiExportOgrRegionSlugTableNameRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/admin/regions/$slug': {
+      id: '/api/admin/regions/$slug'
+      path: '/$slug'
+      fullPath: '/api/admin/regions/$slug'
+      preLoaderRoute: typeof ApiAdminRegionsSlugRouteImport
+      parentRoute: typeof ApiAdminRegionsRoute
+    }
+    '/api/admin/region-uploads/upload': {
+      id: '/api/admin/region-uploads/upload'
+      path: '/upload'
+      fullPath: '/api/admin/region-uploads/upload'
+      preLoaderRoute: typeof ApiAdminRegionUploadsUploadRouteImport
+      parentRoute: typeof ApiAdminRegionUploadsRoute
+    }
+    '/api/admin/processing/$metaId': {
+      id: '/api/admin/processing/$metaId'
+      path: '/$metaId'
+      fullPath: '/api/admin/processing/$metaId'
+      preLoaderRoute: typeof ApiAdminProcessingMetaIdRouteImport
+      parentRoute: typeof ApiAdminProcessingRoute
+    }
+    '/api/admin/data-schema/import': {
+      id: '/api/admin/data-schema/import'
+      path: '/api/admin/data-schema/import'
+      fullPath: '/api/admin/data-schema/import'
+      preLoaderRoute: typeof ApiAdminDataSchemaImportRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/admin/regions/$regionSlug/edit': {
       id: '/admin/regions/$regionSlug/edit'
       path: '/$regionSlug/edit'
       fullPath: '/admin/regions/$regionSlug/edit'
       preLoaderRoute: typeof AdminRegionsRegionSlugEditRouteImport
       parentRoute: typeof AdminRegionsRoute
+    }
+    '/admin/region-contracts/$slug/edit': {
+      id: '/admin/region-contracts/$slug/edit'
+      path: '/$slug/edit'
+      fullPath: '/admin/region-contracts/$slug/edit'
+      preLoaderRoute: typeof AdminRegionContractsSlugEditRouteImport
+      parentRoute: typeof AdminRegionContractsRoute
     }
     '/admin/qa-configs/$id/edit': {
       id: '/admin/qa-configs/$id/edit'
@@ -1412,16 +1788,6 @@ declare module '@tanstack/react-router' {
     }
   }
 }
-
-interface HomeRouteChildren {
-  HomeIndexRoute: typeof HomeIndexRoute
-}
-
-const HomeRouteChildren: HomeRouteChildren = {
-  HomeIndexRoute: HomeIndexRoute,
-}
-
-const HomeRouteWithChildren = HomeRoute._addFileChildren(HomeRouteChildren)
 
 interface PagesRouteChildren {
   PagesAccessDeniedRoute: typeof PagesAccessDeniedRoute
@@ -1445,6 +1811,41 @@ const PagesRouteChildren: PagesRouteChildren = {
 
 const PagesRouteWithChildren = PagesRoute._addFileChildren(PagesRouteChildren)
 
+interface AdminMapDatasetCategoriesRouteChildren {
+  AdminMapDatasetCategoriesCategoryKeyRoute: typeof AdminMapDatasetCategoriesCategoryKeyRoute
+  AdminMapDatasetCategoriesNewRoute: typeof AdminMapDatasetCategoriesNewRoute
+  AdminMapDatasetCategoriesIndexRoute: typeof AdminMapDatasetCategoriesIndexRoute
+}
+
+const AdminMapDatasetCategoriesRouteChildren: AdminMapDatasetCategoriesRouteChildren =
+  {
+    AdminMapDatasetCategoriesCategoryKeyRoute:
+      AdminMapDatasetCategoriesCategoryKeyRoute,
+    AdminMapDatasetCategoriesNewRoute: AdminMapDatasetCategoriesNewRoute,
+    AdminMapDatasetCategoriesIndexRoute: AdminMapDatasetCategoriesIndexRoute,
+  }
+
+const AdminMapDatasetCategoriesRouteWithChildren =
+  AdminMapDatasetCategoriesRoute._addFileChildren(
+    AdminMapDatasetCategoriesRouteChildren,
+  )
+
+interface AdminMapDatasetUploadsRouteChildren {
+  AdminMapDatasetUploadsSlugRoute: typeof AdminMapDatasetUploadsSlugRoute
+  AdminMapDatasetUploadsIndexRoute: typeof AdminMapDatasetUploadsIndexRoute
+}
+
+const AdminMapDatasetUploadsRouteChildren: AdminMapDatasetUploadsRouteChildren =
+  {
+    AdminMapDatasetUploadsSlugRoute: AdminMapDatasetUploadsSlugRoute,
+    AdminMapDatasetUploadsIndexRoute: AdminMapDatasetUploadsIndexRoute,
+  }
+
+const AdminMapDatasetUploadsRouteWithChildren =
+  AdminMapDatasetUploadsRoute._addFileChildren(
+    AdminMapDatasetUploadsRouteChildren,
+  )
+
 interface AdminMembershipsRouteChildren {
   AdminMembershipsNewRoute: typeof AdminMembershipsNewRoute
   AdminMembershipsIndexRoute: typeof AdminMembershipsIndexRoute
@@ -1457,6 +1858,20 @@ const AdminMembershipsRouteChildren: AdminMembershipsRouteChildren = {
 
 const AdminMembershipsRouteWithChildren =
   AdminMembershipsRoute._addFileChildren(AdminMembershipsRouteChildren)
+
+interface AdminProcessingRouteChildren {
+  AdminProcessingMetaIdRoute: typeof AdminProcessingMetaIdRoute
+  AdminProcessingIndexRoute: typeof AdminProcessingIndexRoute
+}
+
+const AdminProcessingRouteChildren: AdminProcessingRouteChildren = {
+  AdminProcessingMetaIdRoute: AdminProcessingMetaIdRoute,
+  AdminProcessingIndexRoute: AdminProcessingIndexRoute,
+}
+
+const AdminProcessingRouteWithChildren = AdminProcessingRoute._addFileChildren(
+  AdminProcessingRouteChildren,
+)
 
 interface AdminQaConfigsRouteChildren {
   AdminQaConfigsNewRoute: typeof AdminQaConfigsNewRoute
@@ -1474,6 +1889,21 @@ const AdminQaConfigsRouteWithChildren = AdminQaConfigsRoute._addFileChildren(
   AdminQaConfigsRouteChildren,
 )
 
+interface AdminRegionContractsRouteChildren {
+  AdminRegionContractsNewRoute: typeof AdminRegionContractsNewRoute
+  AdminRegionContractsIndexRoute: typeof AdminRegionContractsIndexRoute
+  AdminRegionContractsSlugEditRoute: typeof AdminRegionContractsSlugEditRoute
+}
+
+const AdminRegionContractsRouteChildren: AdminRegionContractsRouteChildren = {
+  AdminRegionContractsNewRoute: AdminRegionContractsNewRoute,
+  AdminRegionContractsIndexRoute: AdminRegionContractsIndexRoute,
+  AdminRegionContractsSlugEditRoute: AdminRegionContractsSlugEditRoute,
+}
+
+const AdminRegionContractsRouteWithChildren =
+  AdminRegionContractsRoute._addFileChildren(AdminRegionContractsRouteChildren)
+
 interface AdminRegionsRouteChildren {
   AdminRegionsNewRoute: typeof AdminRegionsNewRoute
   AdminRegionsIndexRoute: typeof AdminRegionsIndexRoute
@@ -1490,56 +1920,31 @@ const AdminRegionsRouteWithChildren = AdminRegionsRoute._addFileChildren(
   AdminRegionsRouteChildren,
 )
 
-interface AdminStaticDatasetCategoriesRouteChildren {
-  AdminStaticDatasetCategoriesCategoryKeyRoute: typeof AdminStaticDatasetCategoriesCategoryKeyRoute
-  AdminStaticDatasetCategoriesNewRoute: typeof AdminStaticDatasetCategoriesNewRoute
-  AdminStaticDatasetCategoriesIndexRoute: typeof AdminStaticDatasetCategoriesIndexRoute
-}
-
-const AdminStaticDatasetCategoriesRouteChildren: AdminStaticDatasetCategoriesRouteChildren =
-  {
-    AdminStaticDatasetCategoriesCategoryKeyRoute:
-      AdminStaticDatasetCategoriesCategoryKeyRoute,
-    AdminStaticDatasetCategoriesNewRoute: AdminStaticDatasetCategoriesNewRoute,
-    AdminStaticDatasetCategoriesIndexRoute:
-      AdminStaticDatasetCategoriesIndexRoute,
-  }
-
-const AdminStaticDatasetCategoriesRouteWithChildren =
-  AdminStaticDatasetCategoriesRoute._addFileChildren(
-    AdminStaticDatasetCategoriesRouteChildren,
-  )
-
-interface AdminUploadsRouteChildren {
-  AdminUploadsSlugRoute: typeof AdminUploadsSlugRoute
-  AdminUploadsIndexRoute: typeof AdminUploadsIndexRoute
-}
-
-const AdminUploadsRouteChildren: AdminUploadsRouteChildren = {
-  AdminUploadsSlugRoute: AdminUploadsSlugRoute,
-  AdminUploadsIndexRoute: AdminUploadsIndexRoute,
-}
-
-const AdminUploadsRouteWithChildren = AdminUploadsRoute._addFileChildren(
-  AdminUploadsRouteChildren,
-)
-
 interface AdminRouteChildren {
+  AdminApiTokensRoute: typeof AdminApiTokensRoute
+  AdminAuditLogRoute: typeof AdminAuditLogRoute
+  AdminDataSchemaRoute: typeof AdminDataSchemaRoute
+  AdminMapDatasetCategoriesRoute: typeof AdminMapDatasetCategoriesRouteWithChildren
+  AdminMapDatasetUploadsRoute: typeof AdminMapDatasetUploadsRouteWithChildren
   AdminMembershipsRoute: typeof AdminMembershipsRouteWithChildren
+  AdminProcessingRoute: typeof AdminProcessingRouteWithChildren
   AdminQaConfigsRoute: typeof AdminQaConfigsRouteWithChildren
+  AdminRegionContractsRoute: typeof AdminRegionContractsRouteWithChildren
   AdminRegionsRoute: typeof AdminRegionsRouteWithChildren
-  AdminStaticDatasetCategoriesRoute: typeof AdminStaticDatasetCategoriesRouteWithChildren
-  AdminUploadsRoute: typeof AdminUploadsRouteWithChildren
   AdminIndexRoute: typeof AdminIndexRoute
 }
 
 const AdminRouteChildren: AdminRouteChildren = {
+  AdminApiTokensRoute: AdminApiTokensRoute,
+  AdminAuditLogRoute: AdminAuditLogRoute,
+  AdminDataSchemaRoute: AdminDataSchemaRoute,
+  AdminMapDatasetCategoriesRoute: AdminMapDatasetCategoriesRouteWithChildren,
+  AdminMapDatasetUploadsRoute: AdminMapDatasetUploadsRouteWithChildren,
   AdminMembershipsRoute: AdminMembershipsRouteWithChildren,
+  AdminProcessingRoute: AdminProcessingRouteWithChildren,
   AdminQaConfigsRoute: AdminQaConfigsRouteWithChildren,
+  AdminRegionContractsRoute: AdminRegionContractsRouteWithChildren,
   AdminRegionsRoute: AdminRegionsRouteWithChildren,
-  AdminStaticDatasetCategoriesRoute:
-    AdminStaticDatasetCategoriesRouteWithChildren,
-  AdminUploadsRoute: AdminUploadsRouteWithChildren,
   AdminIndexRoute: AdminIndexRoute,
 }
 
@@ -1608,6 +2013,42 @@ const ApiUploadsRouteWithChildren = ApiUploadsRoute._addFileChildren(
   ApiUploadsRouteChildren,
 )
 
+interface ApiAdminProcessingRouteChildren {
+  ApiAdminProcessingMetaIdRoute: typeof ApiAdminProcessingMetaIdRoute
+}
+
+const ApiAdminProcessingRouteChildren: ApiAdminProcessingRouteChildren = {
+  ApiAdminProcessingMetaIdRoute: ApiAdminProcessingMetaIdRoute,
+}
+
+const ApiAdminProcessingRouteWithChildren =
+  ApiAdminProcessingRoute._addFileChildren(ApiAdminProcessingRouteChildren)
+
+interface ApiAdminRegionUploadsRouteChildren {
+  ApiAdminRegionUploadsUploadRoute: typeof ApiAdminRegionUploadsUploadRoute
+}
+
+const ApiAdminRegionUploadsRouteChildren: ApiAdminRegionUploadsRouteChildren = {
+  ApiAdminRegionUploadsUploadRoute: ApiAdminRegionUploadsUploadRoute,
+}
+
+const ApiAdminRegionUploadsRouteWithChildren =
+  ApiAdminRegionUploadsRoute._addFileChildren(
+    ApiAdminRegionUploadsRouteChildren,
+  )
+
+interface ApiAdminRegionsRouteChildren {
+  ApiAdminRegionsSlugRoute: typeof ApiAdminRegionsSlugRoute
+}
+
+const ApiAdminRegionsRouteChildren: ApiAdminRegionsRouteChildren = {
+  ApiAdminRegionsSlugRoute: ApiAdminRegionsSlugRoute,
+}
+
+const ApiAdminRegionsRouteWithChildren = ApiAdminRegionsRoute._addFileChildren(
+  ApiAdminRegionsRouteChildren,
+)
+
 interface ApiNotesRegionSlugRouteChildren {
   ApiNotesRegionSlugDownloadRoute: typeof ApiNotesRegionSlugDownloadRoute
 }
@@ -1620,9 +2061,10 @@ const ApiNotesRegionSlugRouteWithChildren =
   ApiNotesRegionSlugRoute._addFileChildren(ApiNotesRegionSlugRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
-  HomeRoute: HomeRouteWithChildren,
+  IndexRoute: IndexRoute,
   PagesRoute: PagesRouteWithChildren,
   AdminRoute: AdminRouteWithChildren,
+  McpRoute: McpRoute,
   PreviewRoute: PreviewRouteWithChildren,
   RegionenRoute: RegionenRouteWithChildren,
   ApiBoundaryRoute: ApiBoundaryRoute,
@@ -1633,6 +2075,10 @@ const rootRouteChildren: RootRouteChildren = {
   ApiRegionsRoute: ApiRegionsRouteWithChildren,
   ApiStatsRoute: ApiStatsRoute,
   ApiUploadsRoute: ApiUploadsRouteWithChildren,
+  ApiAdminAuditLogRoute: ApiAdminAuditLogRoute,
+  ApiAdminProcessingRoute: ApiAdminProcessingRouteWithChildren,
+  ApiAdminRegionUploadsRoute: ApiAdminRegionUploadsRouteWithChildren,
+  ApiAdminRegionsRoute: ApiAdminRegionsRouteWithChildren,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiNotesRegionSlugRoute: ApiNotesRegionSlugRouteWithChildren,
   ApiOsmNotesRssRoute: ApiOsmNotesRssRoute,
@@ -1640,11 +2086,11 @@ const rootRouteChildren: RootRouteChildren = {
     ApiPrivateGenerateMaprouletteTasksRoute,
   ApiPrivatePostProcessingHookRoute: ApiPrivatePostProcessingHookRoute,
   ApiPrivatePostProcessingQaUpdateRoute: ApiPrivatePostProcessingQaUpdateRoute,
-  ApiPrivatePostProcessingStatisticsRoute:
-    ApiPrivatePostProcessingStatisticsRoute,
+  ApiPrivateRegionsRoute: ApiPrivateRegionsRoute,
   ApiPrivateRegisterSqlFunctionsRoute: ApiPrivateRegisterSqlFunctionsRoute,
   ApiPrivateWarmCacheRoute: ApiPrivateWarmCacheRoute,
   ApiSignInOsmRoute: ApiSignInOsmRoute,
+  ApiAdminDataSchemaImportRoute: ApiAdminDataSchemaImportRoute,
   ApiExportOgrRegionSlugTableNameRoute: ApiExportOgrRegionSlugTableNameRoute,
   ApiExportRegionSlugTableNameRoute: ApiExportRegionSlugTableNameRoute,
   ApiMaprouletteDataProjectKeyRoute: ApiMaprouletteDataProjectKeyRoute,
@@ -1655,6 +2101,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiMaprouletteDataTest_tag_fix_twoRoute,
   ApiMaprouletteStatisticProxyChallengeIdRoute:
     ApiMaprouletteStatisticProxyChallengeIdRoute,
+  ApiRegionUploadsIdFilenameRoute: ApiRegionUploadsIdFilenameRoute,
   ApiAdminQaConfigsIdExportCsvRoute: ApiAdminQaConfigsIdExportCsvRoute,
 }
 export const routeTree = rootRouteImport

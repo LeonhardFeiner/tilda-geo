@@ -4,6 +4,8 @@ import { z } from 'zod'
 import { getMapillaryCoverageMetadata } from '@/server/api/util/getMapillaryCoverageMetadata.server'
 import { getAppSession } from '@/server/auth/session.server'
 import { checkRegionAuthorization } from '@/server/authorization/checkRegionAuthorization.server'
+import { getRegionHasPermissions } from '@/server/authorization/getRegionHasPermissions.server'
+import db from '@/server/db.server'
 import { getRegion } from '@/server/regions/queries/getRegion.server'
 
 export const getMapillaryCoverageMetadataLoaderFn = createServerFn({ method: 'GET' }).handler(
@@ -15,7 +17,7 @@ const getRegionForDocsInputSchema = z.object({
 })
 
 export const getRegionForDocsLoaderFn = createServerFn({ method: 'GET' })
-  .inputValidator((data: z.input<typeof getRegionForDocsInputSchema>) =>
+  .validator((data: z.input<typeof getRegionForDocsInputSchema>) =>
     getRegionForDocsInputSchema.parse(data),
   )
   .handler(async ({ data }) => {
@@ -25,5 +27,20 @@ export const getRegionForDocsLoaderFn = createServerFn({ method: 'GET' })
     if (!isAuthorized) {
       return null
     }
-    return getRegion({ slug: data.slug })
+
+    const region = await getRegion({ slug: data.slug })
+    const hasDownloadPermissions = await getRegionHasPermissions(appSession, data.slug)
+
+    return { region, hasDownloadPermissions }
   })
+
+/** Distinct export table names referenced by any region — drives the docs "available datasets" filter. */
+export const getRegionExportTableNamesForDocsLoaderFn = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const rows = await db.regionExportAssignment.findMany({
+      distinct: ['exportId'],
+      select: { exportId: true },
+    })
+    return rows.map((row) => row.exportId)
+  },
+)

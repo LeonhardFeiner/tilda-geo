@@ -1,11 +1,11 @@
 ---
 name: add-static-dataset
-description: Add a new static dataset to app/scripts/StaticDatasets/geojson. Infers config from prompt, asks for missing data, uses types to guide required fields.
+description: Add a new static dataset to tilda-static-data geojson and integrate it through tilda-geo. Requires a matching tilda-static-data worktree, relinked geojson symlink, inferred config, missing-data questions, and type-guided meta.ts.
 ---
 
 # Add Static Dataset
 
-Adds a new static dataset folder to `app/scripts/StaticDatasets/geojson`. The `/geojson` folder is a symlink.
+Adds a new static dataset folder to **`tilda-static-data`** and uses the `tilda-geo` upload pipeline to process it. In `tilda-geo`, `app/scripts/StaticDatasets/geojson` is a symlink and must point at the matching `tilda-static-data` worktree before editing data files.
 
 ## When to Use
 
@@ -25,29 +25,101 @@ Extract from user prompt or ask if missing:
 
 ## Process
 
+### 0. Prepare `tilda-static-data` worktree and symlink
+
+Static dataset files live in the sibling repo **`tilda-static-data`**, not in `tilda-geo`.
+
+- If the task only reads existing static data, the regular symlink to `../../../../tilda-static-data/geojson` is enough.
+- If the task adds or edits dataset files, create a matching `tilda-static-data` worktree and relink `geojson` there.
+
+For a branch named `my-branch`:
+
+```bash
+cd ../tilda-static-data
+git worktree add ../tilda-static-data--my-branch my-branch
+
+cd ../tilda-geo--my-branch/app
+rm -f scripts/StaticDatasets/geojson
+ln -s ../../../../tilda-static-data--my-branch/geojson scripts/StaticDatasets/geojson
+```
+
+Do not edit `app/scripts/StaticDatasets/geojson` when it points at the regular shared `../tilda-static-data` checkout.
+
 ### 1. Create Folder Structure
 
 ```bash
 app/scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>/
 ```
 
-**Important**: `/geojson` is a symlink. Create folders in `app/scripts/StaticDatasets/geojson/` path.
+**Important**: `/geojson` is a symlink. Before creating folders, ensure it points at the matching `tilda-static-data--my-branch` worktree.
 
 Create directory if group folder doesn't exist. Ensure sub-folder name follows naming convention (see Required Information above).
 
-### 2. Move GeoJSON File
+### 2. Prepare GeoJSON file
 
-- Move source file to `<SUB_FOLDER>/<FILENAME>.geojson`
-- **Formatting (inactive for now)**: ~~From `app/`, run a formatter on the GeoJSON, e.g. `bunx prettier --write scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>/<FILENAME>.geojson` (Prettier is not in this repo; this mirrors the old workflow.)~~ **Note:** `oxfmt` (behind `bun run format`) does not support JSON/GeoJSON formatting yet, and `.geojson` under `scripts/StaticDatasets/geojson` is in `ignorePatterns` in `app/oxfmt.config.ts` — **leave the `.geojson` file as-is**.
-- **Size check (dataset validation / creation)**: Measure the **uncompressed** `.geojson` file size. If it is **greater than 6 MiB** (6 × 1024² bytes), compress it so the folder ships only the archive (same pattern as other large static datasets):
-  - From the dataset folder (or with absolute paths): `gzip -9 -f <FILENAME>.geojson`
-  - `gzip` replaces the file with `<FILENAME>.geojson.gz` and removes the plain `.geojson`. `-9` is maximum compression; `-f` forces overwrite if a `.gz` already exists.
-  - If size is **≤ 6 MiB**, leave the `.geojson` as-is (no gzip required).
-- `findGeojson` in `updateStaticDatasets` accepts either a single `.geojson` or a single `.geojson.gz` per folder—never leave both.
+Run these **in order** on committed data files. **Never** reproject, round, or pretty-print coordinates in `transform.ts` — use ogr2ogr (2.2–2.3) and oxfmt (2.4) on the files instead. Host GDAL 3.8+ (`brew install gdal`); not required for `bun run dev`.
+
+#### 2.1 Move
+
+Move source file to:
+
+`app/scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>/<FILENAME>.geojson`
+
+This path should resolve into `../tilda-static-data--my-branch/geojson/...`.
+
+#### 2.2 CRS → EPSG:4326
+
+**Check:** Inspect the first coordinate pair after moving. For Germany, expect roughly lon **5–15**, lat **47–55**. Web Mercator (EPSG:3857) uses large meter values (e.g. ~1.5e6).
+
+**Fix (only if not WGS84):** Reproject in place:
+
+```bash
+cd app/scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>
+ogr2ogr -f GeoJSON -t_srs EPSG:4326 -lco COORDINATE_PRECISION=8 \
+  <FILENAME>.geojson.tmp <FILENAME>.geojson \
+  && mv <FILENAME>.geojson.tmp <FILENAME>.geojson
+```
+
+#### 2.3 Coordinate precision (max 8 decimals)
+
+**Check:** Coordinates should have at most **8** decimal places (matches upload pipeline and API exports).
+
+**Fix (only if more than 8):** Round in place (file must already be EPSG:4326):
+
+```bash
+cd app/scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>
+ogr2ogr -f GeoJSON -lco COORDINATE_PRECISION=8 \
+  <FILENAME>.geojson.tmp <FILENAME>.geojson \
+  && mv <FILENAME>.geojson.tmp <FILENAME>.geojson
+```
+
+Upload runs `validateProjection` again on WGS84 bounds.
+
+#### 2.4 Format (oxfmt)
+
+From `app/` (skill / agents only — devs use format-on-save in the editor):
+
+```bash
+bun run format-static-datasets-geojson -- \
+  scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>/*.{json,geojson}
+```
+
+#### 2.5 Gzip (if large)
+
+**Check:** Uncompressed `.geojson` size **after** formatting.
+
+- **> 6 MiB** (6 × 1024² bytes): compress so the folder ships only the archive:
+
+```bash
+cd app/scripts/StaticDatasets/geojson/<GROUP_FOLDER>/<SUB_FOLDER>
+gzip -9 -f <FILENAME>.geojson
+```
+
+`gzip` replaces the file with `<FILENAME>.geojson.gz` and removes the plain `.geojson` (`-9` max compression, `-f` overwrite).
 
 ### 3. Create transform.ts (if needed)
 
-Only if transformation required. Use helpers from `app/scripts/StaticDatasets/geojson/_utils`:
+Only if transformation required (**not** for CRS or coordinate precision — Step 2 only). Use helpers from `app/scripts/StaticDatasets/geojson/_utils`:
 
 - `transformUtils.ts` - property transformations
 - `defaultLayerStyles.ts` - default styling helpers
@@ -56,12 +128,12 @@ Only if transformation required. Use helpers from `app/scripts/StaticDatasets/ge
 Example:
 
 ```typescript
-import { FeatureCollection } from "geojson";
+import { FeatureCollection } from 'geojson'
 
 export const transform = (data: FeatureCollection) => {
   // Use helper functions from _utils when possible
-  return data;
-};
+  return data
+}
 ```
 
 ### 4. Create meta.ts
@@ -85,23 +157,26 @@ export const transform = (data: FeatureCollection) => {
 - `regions`: RegionSlug[] (required)
 - `public`: boolean (required)
 - `dataSourceType`: 'local' (required)
+- `attributionHtml`: string (required)
 - `configs`: Array with at least one config (required)
+
+**Optional on `export const data`**:
+
+- `dataUpdatedNote`: string
+- `dataSourceMarkdown`: string
+- `licence`: License type (see types.ts)
+- `licenceOsmCompatible`: 'licence' | 'waiver' | 'no'
 
 **Config required fields**:
 
 - `name`: string
-- `attributionHtml`: string
 - `inspector`: { enabled: boolean, ... } or { enabled: false }
 - `layers`: Layer[] (required)
 
 **Config optional fields**:
 
 - `category`: string | null — grouping key; titles/order are managed in Admin → Statische Datensatz-Kategorien (DB).
-- `updatedAt`: string
 - `description`: string
-- `dataSourceMarkdown`: string
-- `licence`: License type (see types.ts)
-- `licenceOsmCompatible`: 'licence' | 'waiver' | 'no'
 - `legends`: Legend[]
 
 **Style/Legend**: If not specified, make best guess:
@@ -117,24 +192,24 @@ export const transform = (data: FeatureCollection) => {
 **Example structure**:
 
 ```typescript
-import { MetaData } from "../../../types";
-import { defaultLayerStyles } from "../../_utils/defaultLayerStyles";
+import { MetaData } from '../../../types'
+import { defaultLayerStyles } from '../../_utils/defaultLayerStyles'
 
 export const data: MetaData = {
-  regions: ["infravelo"], // From user or infer from group folder
+  regions: ['infravelo'], // From user or infer from group folder
   public: true,
-  dataSourceType: "local",
+  dataSourceType: 'local',
+  attributionHtml: 'Source Name', // Ask if unclear
+  licence: 'DL-DE/ZERO-2.0', // Infer from similar datasets
   configs: [
     {
-      name: "Dataset Name",
-      category: "berlin/misc", // Infer from similar datasets
-      attributionHtml: "Source Name", // Ask if unclear
-      licence: "DL-DE/ZERO-2.0", // Infer from similar datasets
+      name: 'Dataset Name',
+      categoryKey: 'berlin/misc', // Infer from similar datasets
       inspector: { enabled: false }, // Default unless specified
       layers: defaultLayerStyles(), // Or custom layers
     },
   ],
-};
+}
 ```
 
 ### 5. Verify Command
@@ -167,8 +242,8 @@ This temporarily removes the `geojson` symlink, runs TypeScript type-checking, a
 Before completing:
 
 1. ✅ Folder structure created
-2. ✅ GeoJSON file moved; **if uncompressed `.geojson` > 6 MiB then `gzip -9 -f`** (otherwise plain `.geojson` only; never both); `meta.ts` / `transform.ts` formatted with `bun run format`
-3. ✅ transform.ts created only if needed
+2. ✅ GeoJSON prepared (**Step 2.1–2.5**: moved, EPSG:4326, ≤8 decimals, oxfmt, gzip if >6 MiB)
+3. ✅ `transform.ts` only if needed — **never** for CRS (Step 2); `meta.ts` / `transform.ts` via format-on-save or `format-static-datasets-geojson`
 4. ✅ meta.ts follows type structure (check with TypeScript)
 5. ✅ Similar datasets in group folder reviewed for patterns
 6. ✅ Command verified and provided as one-click action
@@ -176,8 +251,9 @@ Before completing:
 
 ## References
 
+- User-facing request template (DE, GitHub issue style): [ANFRAGE-STATISCHER-DATENSATZ.md](./ANFRAGE-STATISCHER-DATENSATZ.md)
 - Types: `app/scripts/StaticDatasets/types.ts`
 - Examples: `app/scripts/StaticDatasets/geojson/region-berlin/*/meta.ts`
 - Utils: `app/scripts/StaticDatasets/geojson/_utils/`
-- Docs: `docs/Features-Parameter-Deeplinks.md`, `docs/Regional-Masks.md`
+- Docs: `docs/Features-Parameter-Deeplinks.md`
 - Update script: `app/scripts/StaticDatasets/updateStaticDatasets.ts`

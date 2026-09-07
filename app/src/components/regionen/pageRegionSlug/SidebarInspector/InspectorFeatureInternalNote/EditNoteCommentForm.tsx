@@ -4,12 +4,14 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { twMerge } from 'tailwind-merge'
 import { z } from 'zod'
-import { useStaticRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useStaticRegion'
-import { Textarea } from '@/components/shared/form/fields/Textarea'
+import { useRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useRegion'
+import { MarkdownEditorField } from '@/components/shared/form/fields/MarkdownEditorField'
 import { Form } from '@/components/shared/form/Form'
 import { buttonStylesOnYellow, notesButtonStyle } from '@/components/shared/links/styles'
 import { ModalDialog } from '@/components/shared/Modal/ModalDialog'
+import { captureModalOpenOrigin } from '@/components/shared/motion/modalOpenOrigin'
 import { SmallSpinner } from '@/components/shared/Spinner/SmallSpinner'
+import { toastError } from '@/components/shared/toast/toastError'
 import { sanitizeHtml } from '@/components/shared/utils/sanitizeHtml'
 import type {
   DeleteNoteCommentInputType,
@@ -30,7 +32,7 @@ export const EditNoteCommentForm = ({ comment }: Props) => {
   const queryClient = useQueryClient()
   const queryKeyMap = useQueryKey()
   const [open, setOpen] = useState(false)
-  const region = useStaticRegion()
+  const region = useRegion()
 
   const {
     mutateAsync: updateNoteCommentMutation,
@@ -53,7 +55,9 @@ export const EditNoteCommentForm = ({ comment }: Props) => {
         queryKey: ['notes', 'getNoteAndComments', { id: comment.noteId }],
       })
       queryClient.invalidateQueries({ queryKey: queryKeyMap })
+      setOpen(false)
     },
+    onError: (error) => toastError(error, 'Kommentar konnte nicht gelöscht werden'),
   })
 
   const isAuthor = useIsAuthor(comment.author.id)
@@ -63,7 +67,14 @@ export const EditNoteCommentForm = ({ comment }: Props) => {
 
   return (
     <>
-      <button type="button" onClick={() => setOpen(true)} className={notesButtonStyle}>
+      <button
+        type="button"
+        onClick={(e) => {
+          captureModalOpenOrigin(e.currentTarget)
+          setOpen(true)
+        }}
+        className={notesButtonStyle}
+      >
         <PencilSquareIcon className="size-6" />
       </button>
 
@@ -95,13 +106,11 @@ export const EditNoteCommentForm = ({ comment }: Props) => {
         >
           {(form) => (
             <>
-              <Textarea
+              <MarkdownEditorField
                 form={form}
                 name="body"
                 label="Antwort bearbeiten (Markdown)"
                 placeholder="Antwort"
-                className="my-3 min-h-28 border-0 bg-gray-50 py-2 leading-tight text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset"
-                rows={6}
               />
 
               <div className="mt-6 flex items-center justify-between leading-tight">
@@ -127,16 +136,10 @@ export const EditNoteCommentForm = ({ comment }: Props) => {
                     if (
                       window.confirm('Sind Sie sicher, dass Sie diesen Kommentar löschen möchten?')
                     ) {
-                      try {
-                        setOpen(false)
-                        deleteNoteCommentMutation({
-                          regionSlug: region.slug,
-                          commentId: comment.id,
-                        })
-                      } catch (err) {
-                        window.alert(String(err))
-                        console.error(err)
-                      }
+                      deleteNoteCommentMutation({
+                        regionSlug: region.slug,
+                        commentId: comment.id,
+                      })
                     }
                   }}
                   className={twMerge(notesButtonStyle, 'hover:bg-orange-400')}

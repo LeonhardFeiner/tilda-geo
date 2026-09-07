@@ -1,18 +1,14 @@
 import { featureCollection, point } from '@turf/turf'
 import { z } from 'zod'
-import { zodInternalNotesFilterParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesAtlasParams'
 import { getAppSession } from '@/server/auth/session.server'
 import { checkRegionAuthorization } from '@/server/authorization/checkRegionAuthorization.server'
 import db from '@/server/db.server'
+import { zodInternalNotesFilterParam } from '@/shared/regionen/regionSearchZod'
 
 const Schema = z.object({
   regionSlug: z.string(),
   filter: zodInternalNotesFilterParam.nullish(),
 })
-
-export type NotesAndCommentsFeatureCollection = Awaited<
-  ReturnType<typeof getNotesAndCommentsForRegion>
->
 
 export async function getNotesAndCommentsForRegion(
   input: z.infer<typeof Schema>,

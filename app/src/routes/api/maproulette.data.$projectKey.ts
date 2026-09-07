@@ -25,7 +25,7 @@ const maprouletteSearchSchema = z.strictObject({
 })
 
 export const Route = createFileRoute('/api/maproulette/data/$projectKey')({
-  ssr: true,
+  ssr: false,
   params: {
     parse: (rawParams) => maprouletteParamsSchema.parse(rawParams),
   },
@@ -44,7 +44,7 @@ export const Route = createFileRoute('/api/maproulette/data/$projectKey')({
         const { download } = parsedSearch.data
 
         try {
-          const { osm_data_from } = await getProcessingMeta()
+          const osm_data_from = (await getProcessingMeta())?.osm_data_from ?? null
 
           type QueryType = {
             osm_type: string

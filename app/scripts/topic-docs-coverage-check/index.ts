@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
-import { readFileSync } from 'node:fs'
 import { mkdir } from 'node:fs/promises'
 import path from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { parseArgs } from 'node:util'
 import { Client } from 'pg'
 import { z } from 'zod'
+import { topicDocNumericFormatSet } from '../../src/data/topicDocs/schema'
 import { getExportAttributeType } from '../../src/server/api/export/exportAttributeType'
 import { getBaseDatabaseUrl } from '../../src/server/database-url.server'
 import {
@@ -16,12 +16,25 @@ import {
 
 type CompiledValue = {
   value: string
-  children?: Array<CompiledValue>
 }
 
 type CompiledAttribute = {
   key: string
-  type: 'string' | 'number' | 'sanitized_strings' | 'ignore'
+  type:
+    | 'string'
+    | 'number'
+    | 'meter'
+    | 'kilometer'
+    | 'kilometer_per_hour'
+    | 'square_meter'
+    | 'percent'
+    | 'minutes'
+    | 'floors'
+    | 'population_label'
+    | 'date'
+    | 'sanitized_strings'
+    | 'ignore'
+  purpose?: 'experimentation' | 'processing' | 'qa'
   values?: Array<CompiledValue>
 }
 
@@ -37,40 +50,12 @@ type DbPair = {
   value: string
 }
 
-// Static `import x from '…gen.json'` can be cached by Bun across runs, so right after
-// `topic-docs-build` rewrites these files the coverage script could still compare the DB
-// against an older in-memory snapshot. Reading from disk each process start avoids that.
-const loadJson = <T>(relativePath: string) => {
+const loadGeneratedModule = async <T>(relativePath: string) => {
   const absolutePath = path.resolve(import.meta.dir, relativePath)
-  return JSON.parse(readFileSync(absolutePath, 'utf-8')) as T
+  const moduleUrl = `${pathToFileURL(absolutePath).href}?cacheBust=${Date.now()}`
+  const loaded = (await import(moduleUrl)) as { default: T }
+  return loaded.default
 }
-
-const docsByTable = loadJson<Record<string, CompiledTopicDoc>>(
-  '../../src/data/generated/topicDocs/byTableName/index.gen.json',
-)
-const translationMap = loadJson<Record<string, string>>(
-  '../../src/data/generated/topicDocs/inspector/translations.gen.json',
-)
-
-const translationsConstDir = path.resolve(
-  import.meta.dir,
-  '../../src/components/regionen/pageRegionSlug/SidebarInspector/TagsTable/translations',
-)
-
-/**
- * Manual modules checked against topic-docs YAML (same merge order as `translations.const.ts` before
- * generated JSON). Omits `translationsParkingLars` (external), generated JSON, and
- * `translationsAtlasAndAll` (atlas + broad `ALL--` fallbacks — not topic-docs–owned; would false-fail
- * against parking YAML wording).
- */
-const TRANSLATION_CONST_MODULES: Array<{ file: string; exportName: string }> = [
-  { file: 'translationsOneway.const.ts', exportName: 'translationsOneway' },
-  {
-    file: 'translationsSeparationTrafficModeMarking.const.ts',
-    exportName: 'translationsSeparationTrafficModeMarking',
-  },
-  { file: 'translationsWdith.const.ts', exportName: 'translationsWdith' },
-]
 
 const collectTopicDocsSourceIds = (docs: Record<string, CompiledTopicDoc>) => {
   const ids = new Set<string>()
@@ -102,24 +87,6 @@ const sourcePrefixBeforeDoubleDash = (translationKey: string) => {
   return translationKey.slice(0, idx)
 }
 
-const loadManualTranslationMap = async () => {
-  const manual: Record<string, string> = {}
-  for (const { file, exportName } of TRANSLATION_CONST_MODULES) {
-    const fileUrl = pathToFileURL(path.join(translationsConstDir, file)).href
-    const mod = (await import(fileUrl)) as Record<string, unknown>
-    const chunk = mod[exportName]
-    if (!chunk || typeof chunk !== 'object') {
-      throw new Error(`Missing export "${exportName}" in ${file}`)
-    }
-    for (const [key, value] of Object.entries(chunk)) {
-      if (typeof value === 'string') {
-        manual[key] = value
-      }
-    }
-  }
-  return manual
-}
-
 const DETAIL_KEY_LOG_LIMIT = 10
 
 const logIndentedKeySample = (input: {
@@ -139,67 +106,21 @@ const logIndentedKeySample = (input: {
   }
 }
 
-type TranslationConstVsYamlReport = {
-  mismatches: Array<{ key: string; manual: string; yaml: string }>
-  orphansInManual: Array<string>
-  inconsistentAllKeys: Array<{ key: string; labels: Array<string>; yamlKeys: Array<string> }>
+type GeneratedTranslationsReport = {
+  missingTitles: Array<string>
   yamlOnlyKeys: Array<string>
 }
 
-const checkTranslationConstVsYaml = async (input: {
+const checkGeneratedTranslations = (input: {
   expectedFromYaml: Record<string, string>
   topicDocsSourceIds: Set<string>
-}): Promise<{ report: TranslationConstVsYamlReport; failed: boolean }> => {
-  const manualMap = await loadManualTranslationMap()
+}): { report: GeneratedTranslationsReport; failed: boolean } => {
   const { expectedFromYaml, topicDocsSourceIds } = input
 
-  const mismatches: TranslationConstVsYamlReport['mismatches'] = []
-  const orphansInManual: Array<string> = []
-  const inconsistentAllKeys: TranslationConstVsYamlReport['inconsistentAllKeys'] = []
-
-  const keyInScope = (key: string) => {
-    if (key.startsWith('ALL--')) return true
-    const prefix = sourcePrefixBeforeDoubleDash(key)
-    return Boolean(prefix && topicDocsSourceIds.has(prefix))
-  }
-
-  for (const key of Object.keys(manualMap).sort()) {
-    if (!keyInScope(key)) continue
-
-    const manual = manualMap[key] ?? ''
-
-    if (key.startsWith('ALL--')) {
-      const rest = key.slice('ALL--'.length)
-      const labels = new Set<string>()
-      const yamlKeys: Array<string> = []
-      for (const sourceId of topicDocsSourceIds) {
-        const candidate = `${sourceId}--${rest}`
-        const yaml = expectedFromYaml[candidate]
-        if (yaml !== undefined) {
-          labels.add(yaml)
-          yamlKeys.push(candidate)
-        }
-      }
-      if (labels.size === 0) {
-        // Global ALL-- fallbacks (e.g. bike `category` / `highway`) often have no topic-docs counterpart.
-        continue
-      } else if (labels.size > 1) {
-        inconsistentAllKeys.push({
-          key,
-          labels: [...labels].sort(),
-          yamlKeys: [...yamlKeys].sort(),
-        })
-      } else if (manual !== [...labels][0]) {
-        mismatches.push({ key, manual, yaml: [...labels][0] ?? '' })
-      }
-      continue
-    }
-
-    const yaml = expectedFromYaml[key]
-    if (yaml === undefined) {
-      orphansInManual.push(key)
-    } else if (manual !== yaml) {
-      mismatches.push({ key, manual, yaml })
+  const missingTitles: Array<string> = []
+  for (const sourceId of [...topicDocsSourceIds].sort()) {
+    if (!expectedFromYaml[`${sourceId}--title`]) {
+      missingTitles.push(sourceId)
     }
   }
 
@@ -207,59 +128,31 @@ const checkTranslationConstVsYaml = async (input: {
   for (const yamlKey of Object.keys(expectedFromYaml).sort()) {
     const prefix = sourcePrefixBeforeDoubleDash(yamlKey)
     if (!prefix || !topicDocsSourceIds.has(prefix)) continue
-    if (manualMap[yamlKey] === undefined) {
-      yamlOnlyKeys.push(yamlKey)
-    }
+    yamlOnlyKeys.push(yamlKey)
   }
 
-  const failed =
-    mismatches.length > 0 || orphansInManual.length > 0 || inconsistentAllKeys.length > 0
+  const failed = missingTitles.length > 0
 
   return {
-    report: { mismatches, orphansInManual, inconsistentAllKeys, yamlOnlyKeys },
+    report: { missingTitles, yamlOnlyKeys },
     failed,
   }
 }
 
-const logTranslationConstVsYaml = (report: TranslationConstVsYamlReport) => {
-  console.log('\n[translation const vs topic-docs YAML]')
-  console.log(`  mismatches (same key, different string): ${report.mismatches.length}`)
-  console.log(
-    `  orphans (in scoped manual const, not in YAML output): ${report.orphansInManual.length}`,
-  )
-  console.log(
-    `  inconsistent ALL-- (YAML labels differ per sourceId): ${report.inconsistentAllKeys.length}`,
-  )
-  console.log(
-    `  yaml-only keys (in generated YAML output, not in manual const — info): ${report.yamlOnlyKeys.length}`,
-  )
+const logGeneratedTranslations = (report: GeneratedTranslationsReport) => {
+  console.log('\n[generated translations vs topic-docs YAML]')
+  console.log(`  missing source titles: ${report.missingTitles.length}`)
+  console.log(`  yaml-derived translation keys: ${report.yamlOnlyKeys.length}`)
   logIndentedKeySample({
     items: report.yamlOnlyKeys,
     indent: '    ',
     subIndent: '      ',
   })
 
-  const sample = (items: Array<string>, limit: number) =>
-    items.length <= limit ? items : [...items.slice(0, limit), `… +${items.length - limit} more`]
-
-  if (report.mismatches.length > 0) {
-    console.log('\n  Mismatch samples:')
-    for (const row of report.mismatches.slice(0, 20)) {
-      console.log(`    ${row.key}`)
-      console.log(`      manual: ${row.manual}`)
-      console.log(`      yaml:   ${row.yaml}`)
-    }
-    if (report.mismatches.length > 20) {
-      console.log(`    … +${report.mismatches.length - 20} more`)
-    }
-  }
-  if (report.orphansInManual.length > 0) {
-    console.log(`\n  Orphans in manual const: ${sample(report.orphansInManual, 30).join('\n    ')}`)
-  }
-  if (report.inconsistentAllKeys.length > 0) {
-    console.log('\n  Inconsistent ALL-- keys:')
-    for (const row of report.inconsistentAllKeys.slice(0, 10)) {
-      console.log(`    ${row.key} → labels: ${row.labels.join(' | ')}`)
+  if (report.missingTitles.length > 0) {
+    console.log('\n  Missing source titles:')
+    for (const sourceId of report.missingTitles) {
+      console.log(`    ${sourceId}`)
     }
   }
 }
@@ -275,16 +168,11 @@ const { values } = parseArgs({
     'report-dir': { type: 'string' },
     'database-url': { type: 'string' },
     source: { type: 'string' },
+    'suggest-purpose': { type: 'boolean', default: false },
   },
   strict: true,
   allowPositionals: true,
 })
-
-const selectedTables =
-  values.table
-    ?.split(',')
-    .map((tableName) => tableName.trim())
-    .filter(Boolean) ?? Object.keys(docsByTable)
 
 const resolveDatabaseUrl = () => {
   const explicit = values['database-url']?.trim()
@@ -300,14 +188,9 @@ const resolveDatabaseUrl = () => {
 
 const flattenValues = (valuesInput: Array<CompiledValue> | undefined) => {
   const valuesSet = new Set<string>()
-  const visit = (nodes: Array<CompiledValue> | undefined) => {
-    if (!nodes) return
-    for (const node of nodes) {
-      valuesSet.add(node.value)
-      visit(node.children)
-    }
+  for (const node of valuesInput ?? []) {
+    valuesSet.add(node.value)
   }
-  visit(valuesInput)
   return valuesSet
 }
 
@@ -336,10 +219,17 @@ type DbCoverageRow = {
   missingDocValues: Array<string>
   missingInspectorKeys: Array<string>
   missingInspectorValues: Array<string>
+  suggestedPurposes: Array<string>
 }
 
 const markdownBullets = (items: Array<string>) =>
   items.length === 0 ? '_none_\n' : `${items.map((line) => `- ${line}`).join('\n')}\n`
+
+const inferPurposeSuggestion = (key: string) => {
+  if (key.startsWith('osm_')) return 'experimentation'
+  if (key.startsWith('_*')) return 'processing'
+  return null
+}
 
 const writeTableMarkdownReport = async (input: { reportDir: string; row: DbCoverageRow }) => {
   const { reportDir, row } = input
@@ -357,6 +247,10 @@ const writeTableMarkdownReport = async (input: { reportDir: string; row: DbCover
     '',
     markdownBullets(row.missingDocValues),
     '',
+    '### Suggested purpose additions (info only)',
+    '',
+    markdownBullets(row.suggestedPurposes),
+    '',
     '## In docs, not in DB',
     '',
     '### Keys (documented attributes never present in tags)',
@@ -372,16 +266,27 @@ const writeTableMarkdownReport = async (input: { reportDir: string; row: DbCover
 }
 
 const run = async () => {
+  const docsByTable = await loadGeneratedModule<Record<string, CompiledTopicDoc>>(
+    '../../src/data/generated/topicDocs/byTableName.gen.ts',
+  )
+  const translationMap = await loadGeneratedModule<Record<string, string>>(
+    '../../src/data/generated/topicDocs/inspectorTranslations.gen.ts',
+  )
+  const selectedTables =
+    values.table
+      ?.split(',')
+      .map((tableName) => tableName.trim())
+      .filter(Boolean) ?? Object.keys(docsByTable)
   const topicDocsSourceIds = collectTopicDocsSourceIds(docsByTable)
   const expectedFromYaml = buildExpectedFromYaml({
     genTranslations: translationMap,
     docs: docsByTable,
   })
-  const translationSync = await checkTranslationConstVsYaml({
+  const translationSync = checkGeneratedTranslations({
     expectedFromYaml,
     topicDocsSourceIds,
   })
-  logTranslationConstVsYaml(translationSync.report)
+  logGeneratedTranslations(translationSync.report)
 
   if (translationSync.failed) {
     if (values['out-json']) {
@@ -398,9 +303,7 @@ const run = async () => {
       )
     }
     console.error('\nCoverage check failed.')
-    console.error(
-      '  Translation const vs YAML: fix mismatches, orphans, or inconsistent ALL-- keys (see above).',
-    )
+    console.error('  Generated translations: fix missing source titles (see above).')
     process.exit(1)
   }
 
@@ -460,6 +363,7 @@ const run = async () => {
       const missingDocValues: Array<string> = []
       const missingInspectorKeys: Array<string> = []
       const missingInspectorValues: Array<string> = []
+      const suggestedPurposes: Array<string> = []
 
       for (const attribute of compiled.attributes) {
         const key = attribute.key
@@ -473,10 +377,9 @@ const run = async () => {
         const inferredType = getExportAttributeType(key)
         const hasExplicitValues = documentedValues.size > 0
 
-        const exportComparableType =
-          documentedType === 'sanitized_strings' || documentedType === 'ignore'
-            ? 'string'
-            : documentedType
+        const exportComparableType = topicDocNumericFormatSet.has(documentedType)
+          ? 'number'
+          : 'string'
         if (exportComparableType !== inferredType) {
           typeMismatches.push(`${key} (docs:${documentedType}, export:${inferredType})`)
         }
@@ -506,10 +409,8 @@ const run = async () => {
         }
 
         if (documentedType !== 'ignore') {
-          const hasKeyTranslation = compiled.sourceIds.some(
-            (sourceId) =>
-              Boolean(translationMap[`${sourceId}--${key}--key`]) ||
-              Boolean(translationMap[`ALL--${key}--key`]),
+          const hasKeyTranslation = compiled.sourceIds.some((sourceId) =>
+            Boolean(translationMap[`${sourceId}--${key}--key`]),
           )
           if (!hasKeyTranslation) {
             missingInspectorKeys.push(key)
@@ -518,15 +419,20 @@ const run = async () => {
           if (!skipValueChecks) {
             for (const value of valuesSet) {
               if (value === 'null') continue
-              const hasValueTranslation = compiled.sourceIds.some(
-                (sourceId) =>
-                  Boolean(translationMap[`${sourceId}--${key}=${value}`]) ||
-                  Boolean(translationMap[`ALL--${key}=${value}`]),
+              const hasValueTranslation = compiled.sourceIds.some((sourceId) =>
+                Boolean(translationMap[`${sourceId}--${key}=${value}`]),
               )
               if (!hasValueTranslation) {
                 missingInspectorValues.push(`${key}=${value}`)
               }
             }
+          }
+        }
+
+        if (values['suggest-purpose']) {
+          const suggestion = inferPurposeSuggestion(key)
+          if (suggestion && !attribute.purpose) {
+            suggestedPurposes.push(`${key} -> ${suggestion}`)
           }
         }
       }
@@ -540,6 +446,7 @@ const run = async () => {
         missingDocValues: [...new Set(missingDocValues)].sort(),
         missingInspectorKeys: [...new Set(missingInspectorKeys)].sort(),
         missingInspectorValues: [...new Set(missingInspectorValues)].sort(),
+        suggestedPurposes: [...new Set(suggestedPurposes)].sort(),
       })
     }
   } finally {
@@ -583,7 +490,7 @@ const run = async () => {
       values['out-json'],
       `${JSON.stringify(
         {
-          translationConstVsYaml: translationSync.report,
+          generatedTranslations: translationSync.report,
           dbCoverage: report,
         },
         null,
@@ -613,6 +520,12 @@ const run = async () => {
     console.log(`  DB values not in documented enum: ${row.missingDocValues.length}`)
     console.log(`  missing inspector keys: ${row.missingInspectorKeys.length}`)
     console.log(`  missing inspector values: ${row.missingInspectorValues.length}`)
+    console.log(`  suggested purpose additions (info): ${row.suggestedPurposes.length}`)
+    logIndentedKeySample({
+      items: row.suggestedPurposes,
+      indent: '    ',
+      subIndent: '      ',
+    })
   }
 
   const dbFailed =
@@ -624,9 +537,7 @@ const run = async () => {
   if (translationSync.failed || dbFailed) {
     console.error('\nCoverage check failed.')
     if (translationSync.failed) {
-      console.error(
-        '  Translation const vs YAML: fix mismatches, orphans, or inconsistent ALL-- keys (see above).',
-      )
+      console.error('  Generated translations: fix missing source titles (see above).')
     }
     if (dbFailed) {
       console.error('  DB / topic-docs / inspector coverage: see table sections above.')

@@ -6,7 +6,7 @@ import {
   useShowInternalNotesParam,
 } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesAtlasParams'
 import { useAllowInternalNotes } from '@/components/regionen/pageRegionSlug/notes/InternalNotes/utils/useAllowInternalNotes'
-import { useStaticRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useStaticRegion'
+import { useRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useRegion'
 import { internalNotesQueryOptions } from '@/server/regions/regionQueryOptions'
 
 export const internalNotesLayerId = 'internal-notes-layer'
@@ -14,7 +14,7 @@ export const internalNotesSourceId = 'internal-notes-source'
 
 export const SourcesLayersInternalNotes = () => {
   const { showInternalNotesParam } = useShowInternalNotesParam()
-  const region = useStaticRegion()
+  const region = useRegion()
   const allowInternalNotes = useAllowInternalNotes()
   const inspectorFeatures = useMapInspectorFeatures()
 
@@ -42,17 +42,19 @@ export const SourcesLayersInternalNotes = () => {
       />
       {showInternalNotesParam && (
         <>
-          <Layer
-            id={`${internalNotesLayerId}-hover`}
-            key={`${internalNotesLayerId}-hover`}
-            source={internalNotesSourceId}
-            type="circle"
-            paint={{
-              'circle-radius': 12,
-              'circle-color': '#f9a8d4', // pink-300 https://tailwindcss.com/docs/customizing-colors
-            }}
-            filter={['in', 'id', ...selectedFeatureIds]}
-          />
+          {selectedFeatureIds.length > 0 && (
+            <Layer
+              id={`${internalNotesLayerId}-hover`}
+              key={`${internalNotesLayerId}-hover`}
+              source={internalNotesSourceId}
+              type="circle"
+              paint={{
+                'circle-radius': 12,
+                'circle-color': '#f9a8d4', // pink-300 https://tailwindcss.com/docs/customizing-colors
+              }}
+              filter={['in', 'id', ...selectedFeatureIds]}
+            />
+          )}
           <Layer
             id={internalNotesLayerId}
             key={internalNotesLayerId}

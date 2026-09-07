@@ -5,12 +5,14 @@
  */
 import { z } from 'zod'
 import { getAppBaseUrl } from '@/components/shared/utils/getAppBaseUrl'
+import { DEFAULT_TILES_PORT } from './envDefaultPorts'
+import { databaseEnvSchema } from './envSchema.database'
 
 const environmentValues = z.enum(['development', 'staging', 'production'])
 const mapboxToken = z.string().regex(/^pk\./)
 const requiredString = z.string().min(1)
 
-export const envViteSchema = z.object({
+const envViteSchema = z.object({
   VITE_APP_ENV: environmentValues,
   VITE_APP_ORIGIN: z.url(),
   VITE_PLAYWRIGHT_ENABLED: z.string().optional(),
@@ -20,15 +22,13 @@ export type EnvVite = z.infer<typeof envViteSchema>
 
 const envServerSchema = z.object({
   SESSION_SECRET_KEY: requiredString,
-  DATABASE_HOST: requiredString,
-  DATABASE_USER: requiredString,
-  DATABASE_PASSWORD: requiredString,
-  DATABASE_NAME: requiredString,
+  ...databaseEnvSchema.shape,
   OSM_CLIENT_ID: requiredString,
   OSM_CLIENT_SECRET: requiredString,
   S3_KEY: requiredString,
   S3_SECRET: requiredString,
   S3_REGION: z.literal('eu-central-1'),
+  S3_BUCKET: requiredString,
   ATLAS_API_KEY: requiredString,
   MAPROULETTE_API_KEY: requiredString,
   BREVO_API_KEY: z.string().optional(),
@@ -50,7 +50,6 @@ const envScriptOnlySchemaPart = z.object({
     apiRootUrlByEnvironment.staging,
     apiRootUrlByEnvironment.production,
   ]),
-  S3_BUCKET: requiredString,
   S3_UPLOAD_FOLDER: z.enum(['production', 'staging', 'localdev']),
   /** Local `.env` only: `bun run static-datasets-update -- --env=staging` requires this (no fallback to ATLAS_API_KEY). */
   ATLAS_API_KEY_STAGING: z.string().optional(),
@@ -74,6 +73,7 @@ const envProcessingSchema = z.object({
   PROCESS_ONLY_BBOX: z.string().optional(),
   OSM2PGSQL_LOG_LEVEL: z.string().optional(),
   OSM2PGSQL_NUMBER_PROCESSES: z.string().optional(),
+  TILES_PORT: z.string().min(1).default(DEFAULT_TILES_PORT),
 })
 
 /** Validated at app startup (Nitro). Unknown keys are allowed; the plugin logs them as FYI. */

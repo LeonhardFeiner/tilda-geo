@@ -6,10 +6,14 @@ import { Fragment } from 'react'
 import { twJoin } from 'tailwind-merge'
 import type z from 'zod'
 import { useOsmNotesFeatures } from '@/components/regionen/pageRegionSlug/hooks/mapState/userMapNotes'
-import type { zodOsmFilterParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesOsmParams'
 import { useOsmFilterParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesOsmParams'
+import { notesSplitControlSegmentClassName } from '@/components/regionen/pageRegionSlug/mobile/mobileControlButton.const'
 import { currentUserQueryOptions } from '@/server/users/currentUserQueryOptions'
-import { menuItemClasses } from '../../InternalNotes/InternalNotesControls/InternalNotesFilterControl'
+import type { zodOsmFilterParam } from '@/shared/regionen/regionSearchZod'
+import {
+  menuItemClasses,
+  notesFilterMenuItemsClassName,
+} from '../../InternalNotes/InternalNotesControls/InternalNotesFilterControl'
 
 export const OsmNotesFilterControl = () => {
   const { osmNotesFilterParam, setOsmNotesFilterParam } = useOsmFilterParam()
@@ -54,13 +58,13 @@ export const OsmNotesFilterControl = () => {
           <button
             type="button"
             className={twJoin(
-              'z-0 -ml-px inline-flex justify-center border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 shadow-md hover:text-gray-800 focus:relative focus:z-10 focus:ring-2 focus:ring-yellow-500 focus:outline-none',
+              notesSplitControlSegmentClassName,
               active ? 'bg-yellow-100' : 'bg-white hover:bg-yellow-50',
               noFilterActive ? '' : 'bg-yellow-400',
             )}
           >
             <span className="sr-only">Hinweise filtern</span>
-            <FunnelIcon className="-mr-1 size-5" aria-hidden="true" />
+            <FunnelIcon className="size-6" aria-hidden="true" />
           </button>
         )}
       </MenuButton>
@@ -68,7 +72,7 @@ export const OsmNotesFilterControl = () => {
       <MenuItems
         transition
         anchor="top start"
-        className="absolute right-0 z-10 mt-2 w-64 rounded-md bg-white text-sm shadow-lg outline-1 outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+        className={twJoin(notesFilterMenuItemsClassName, 'w-64')}
       >
         <MenuSection className="m-1 overflow-clip rounded-md border">
           <MenuHeading className="bg-gray-100 px-4 py-1 text-xs font-semibold text-gray-600 uppercase">
@@ -175,7 +179,7 @@ export const OsmNotesFilterControl = () => {
               id="query"
               type="text" // type "search" shows an `x` but that does not do anything in chrome, maybe due to the preventDefault…
               placeholder="Suchwort"
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset sm:leading-6"
+              className="block w-full rounded-md border-0 py-1.5 text-base text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset sm:leading-6"
               onClick={(e) => {
                 // Required so the flyout does not close when I click in the input field
                 e.preventDefault()

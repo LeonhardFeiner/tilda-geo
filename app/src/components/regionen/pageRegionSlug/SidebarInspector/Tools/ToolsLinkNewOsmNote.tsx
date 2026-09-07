@@ -6,8 +6,9 @@ import {
   useShowOsmNotesParam,
 } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesOsmParams'
 import type { MapDataOsmIdConfig } from '@/components/regionen/pageRegionSlug/mapData/types'
-import { useStaticRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useStaticRegion'
+import { useRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useRegion'
 import { buttonStyles } from '@/components/shared/links/styles'
+import { captureModalOpenOrigin } from '@/components/shared/motion/modalOpenOrigin'
 import { extractOsmTypeIdByConfig } from './osmUrls/extractOsmTypeIdByConfig'
 import { pointFromGeometry } from './osmUrls/pointFromGeometry'
 
@@ -25,8 +26,8 @@ export const ToolsLinkNewOsmNote = ({ properties, geometry, osmIdConfig }: Props
 
   const { osmType, osmId } = extractOsmTypeIdByConfig(properties, osmIdConfig)
 
-  const region = useStaticRegion()
-  if (!region || region.notes !== 'osmNotes') return null
+  const region = useRegion()
+  if (region?.notes !== 'osmNotes') return null
 
   if (!mainMap || !properties || !geometry || !osmType || !osmId) return null
 
@@ -34,7 +35,8 @@ export const ToolsLinkNewOsmNote = ({ properties, geometry, osmIdConfig }: Props
     <button
       type="button"
       className={buttonStyles}
-      onClick={() => {
+      onClick={(e) => {
+        captureModalOpenOrigin(e.currentTarget)
         setShowOsmNotesParam(true)
         setOsmNewNoteFeature({ geometry, osmType, osmId })
         setNewNoteTildaDeeplink(window.location.href)

@@ -11,10 +11,11 @@ import {
   ensureDataDir,
   getDumpFilePath,
   getRemoteDatabaseUrl,
-  looksLikeConnectionError,
+  looksLikeRemoteAccessError,
   parseCliArgs,
   POSTGRES_CLI_IMAGE,
   printRemoteConnectionGuidance,
+  resolveSchemaArg,
   toDockerNetworkUrl,
 } from './db-helpers'
 
@@ -24,21 +25,21 @@ function printHelp() {
 Pull a schema-scoped SQL dump from a remote source database URL.
 
 Usage:
-  bun scripts/db-pull/pull.ts [--source production|staging] [--schema prisma|data]
+  bun scripts/db-pull/pull.ts [--source production|staging] [--schema ${ALLOWED_SCHEMAS.join('|')}]
 
 Examples:
   bun scripts/db-pull/pull.ts --source production
-  bun scripts/db-pull/pull.ts --source staging --schema data
+  bun scripts/db-pull/pull.ts --source staging
 
 Notes:
   - Allowed sources: ${ALLOWED_SOURCES.join(', ')}
   - Allowed schemas: ${ALLOWED_SCHEMAS.join(', ')}
+  - Schema is prompted only when more than one is allowed.
   - Start SSH tunnel in terminal 1: ssh tilda-production-postgres-tunnel or ssh tilda-staging-postgres-tunnel
   - Run this CLI in terminal 2.
   - Tunnel setup docs: https://github.com/FixMyBerlin/dev-documentation/blob/main/server-management/ionos-tilda.md#use-the-ssh-tunnel
   - If --source is omitted in a TTY, interactive prompt is shown.
   - In non-interactive mode, pass --source explicitly.
-  - Schema defaults to prisma when omitted.
   - Dump output: app/scripts/db-pull/data/<source>.<schema>.sql
   - Uses Dockerized pg_dump (${POSTGRES_CLI_IMAGE}) to avoid local client version issues.
 `)
@@ -51,8 +52,12 @@ async function main() {
     return
   }
 
-  const schema = schemaArg ?? 'prisma'
   let source = sourceArg
+  const schema = await resolveSchemaArg(schemaArg)
+  if (schema === null) {
+    p.cancel('Cancelled.')
+    return
+  }
 
   if (!source) {
     if (!process.stdin.isTTY) {
@@ -92,14 +97,14 @@ async function main() {
       .nothrow()
   if (dumpResult.exitCode !== 0) {
     const stderr = dumpResult.stderr.toString().trim()
-    if (looksLikeConnectionError(stderr)) {
+    if (looksLikeRemoteAccessError(stderr)) {
       printRemoteConnectionGuidance(source, remoteUrl)
     }
     throw new Error(stderr || `pg_dump failed with exit code ${dumpResult.exitCode}`)
   }
 
   assertDumpFilePresent(dumpPath)
-  process.stdout.write(`Created ${dumpPath}\n`)
+  p.log.success(`Created ${dumpPath}`)
 }
 
 function printFatalError(error: unknown) {

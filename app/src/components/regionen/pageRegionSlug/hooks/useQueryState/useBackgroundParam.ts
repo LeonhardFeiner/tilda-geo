@@ -1,13 +1,19 @@
-import { parseAsString, useQueryState } from 'nuqs'
-import { searchParamsRegistry } from './searchParamsRegistry'
-
-export const defaultBackgroundParam = 'default'
+import { searchParamsRegistry } from '@/shared/regionen/searchParamsRegistry'
+import { defaultBackgroundParam } from './backgroundParam.const'
+import { useRegionSearchNavigation } from './useRegionSearchNavigation'
 
 export const useBackgroundParam = () => {
-  const [backgroundParam, setBackgroundParam] = useQueryState(
-    searchParamsRegistry.bg,
-    parseAsString.withDefault(defaultBackgroundParam),
-  )
+  const { search, updateSearch } = useRegionSearchNavigation()
+  const backgroundParam = search[searchParamsRegistry.bg]
+
+  const setBackgroundParam = (value: typeof backgroundParam) => {
+    // replace (switching background should not push history) + drop the default from the URL
+    // (clearOnDefault parity with the old nuqs parser).
+    updateSearch(
+      { [searchParamsRegistry.bg]: value === defaultBackgroundParam ? undefined : value },
+      { replace: true },
+    )
+  }
 
   return { backgroundParam, setBackgroundParam }
 }

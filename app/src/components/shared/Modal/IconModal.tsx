@@ -1,10 +1,11 @@
 import type React from 'react'
 import { useState } from 'react'
+import { captureModalOpenOrigin } from '@/components/shared/motion/modalOpenOrigin'
 import { ModalDialog } from './ModalDialog'
 
 type ModalDialogProps = {
   title: string
-  icon: 'info' | 'error' | 'copyright' | 'download' | 'edit'
+  icon: 'info' | 'error' | 'copyright' | 'download' | 'edit' | 'docs'
   buttonCloseName?: string
   open: boolean
   setOpen: (value: boolean) => void
@@ -42,7 +43,14 @@ export const IconModal = ({
 
   return (
     <>
-      <button type="button" className={classes} onClick={() => setOpen(true)}>
+      <button
+        type="button"
+        className={classes}
+        onClick={(e) => {
+          captureModalOpenOrigin(e.currentTarget)
+          setOpen(true)
+        }}
+      >
         {triggerIcon}
       </button>
       <ModalDialog

@@ -6,7 +6,8 @@ import { Fragment } from 'react'
 import { twJoin } from 'tailwind-merge'
 import { getFullname } from '@/components/admin/memberships/pageMemberships/utils/getFullname'
 import { useInternalNotesFilterParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useNotesAtlasParams'
-import { useStaticRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useStaticRegion'
+import { notesSplitControlSegmentClassName } from '@/components/regionen/pageRegionSlug/mobile/mobileControlButton.const'
+import { useRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useRegion'
 import { SmallSpinner } from '@/components/shared/Spinner/SmallSpinner'
 import { internalNotesQueryOptions } from '@/server/regions/regionQueryOptions'
 
@@ -17,8 +18,12 @@ export const menuItemClasses = (active: boolean) => {
   )
 }
 
+/** Portaled Headless UI menu: above primary nav (z-50); desktop max-height matches map chrome insets. */
+export const notesFilterMenuItemsClassName =
+  'z-50 overflow-y-auto rounded-md bg-white text-sm shadow-lg outline-1 outline-black/5 [--anchor-gap:0.5rem] max-sm:[--anchor-padding:var(--map-chrome-top-inset)] sm:[--anchor-max-height:var(--map-chrome-max-height)] transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in'
+
 export const InternalNotesFilterControl = () => {
-  const { slug: regionSlug } = useStaticRegion()
+  const { slug: regionSlug } = useRegion()
   const { internalNotesFilterParam, setInternalNotesFilterParam } = useInternalNotesFilterParam()
   const { data, isLoading } = useQuery(
     internalNotesQueryOptions(regionSlug, internalNotesFilterParam),
@@ -47,13 +52,13 @@ export const InternalNotesFilterControl = () => {
           <button
             type="button"
             className={twJoin(
-              'z-0 -ml-px inline-flex justify-center border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 shadow-md hover:text-gray-800 focus:relative focus:z-10 focus:ring-2 focus:ring-yellow-500 focus:outline-none',
+              notesSplitControlSegmentClassName,
               active ? 'bg-yellow-100' : 'bg-white hover:bg-yellow-50',
               noFilterActive ? '' : 'bg-yellow-400',
             )}
           >
             <span className="sr-only">Hinweise filtern</span>
-            <FunnelIcon className="-mr-1 size-5" aria-hidden="true" />
+            <FunnelIcon className="size-6" aria-hidden="true" />
           </button>
         )}
       </MenuButton>
@@ -61,7 +66,7 @@ export const InternalNotesFilterControl = () => {
       <MenuItems
         transition
         anchor="top start"
-        className="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white text-sm shadow-lg outline-1 outline-black/5 transition data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in"
+        className={twJoin(notesFilterMenuItemsClassName, 'w-72')}
       >
         <MenuSection className="m-1 overflow-clip rounded-md border">
           <MenuHeading className="bg-gray-100 px-4 py-1 text-xs font-semibold text-gray-600 uppercase">
@@ -197,7 +202,7 @@ export const InternalNotesFilterControl = () => {
               id="query"
               type="text" // type "search" shows an `x` but that does not do anything in chrome, maybe due to the preventDefault…
               placeholder="Suchwort"
-              className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset sm:leading-6"
+              className="block w-full rounded-md border-0 py-1.5 text-base text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset sm:leading-6"
               onClick={(e) => {
                 // Required so the flyout does not close when I click in the input field
                 e.preventDefault()

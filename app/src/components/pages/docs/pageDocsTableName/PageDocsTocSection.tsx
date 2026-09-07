@@ -1,17 +1,16 @@
 import { TABLE_OF_CONTENTS_NAV_CLASSNAME } from '@/components/pages/TableOfContents/TableOfContents'
 import { Link } from '@/components/shared/links/Link'
+import type { TopicDocCompiled } from '@/data/topicDocs/runtime'
 import { DOCS_PAGE_SECTION_IDS } from './docsSectionIds.const'
-import type { DocsPageTopicDoc } from './types'
 
 type Props = {
-  topicDoc: DocsPageTopicDoc
+  topicDoc: TopicDocCompiled | null
   tableName: string
   regionSlug: string | null
   showDownloads: boolean
 }
 
-const tocLinkClassName =
-  'block w-full min-w-0 py-1.5 leading-5 hyphens-auto [overflow-wrap:anywhere]'
+const tocLinkClassName = 'block w-full min-w-0 py-1.5 leading-5 hyphens-auto wrap-anywhere'
 
 export const PageDocsTocSection = ({ topicDoc, tableName, regionSlug, showDownloads }: Props) => {
   if (!topicDoc) return null

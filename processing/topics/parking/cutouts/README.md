@@ -2,30 +2,18 @@
 
 ## External cutouts
 
-The processing can cutout external data in addition to the data generated from OSM.
+Processing can punch parking with extra geometries that are not OSM. Those tables live in Postgres as `data.*` and are loaded with the [data-schema](../../../../data-schema/README.md) pipeline ([add-db-data-table skill](../../../../.cursor/skills/add-db-data-table/SKILL.md)).
 
 ### eUVM Berlin
 
-#### Source
+[`2_external_cutouts_euvm.sql`](2_external_cutouts_euvm.sql) reads `data.euvm_cutouts_point` and `data.euvm_cutouts_polygon`. Specs are gitignored at `data-schema/<table>/spec.yaml` (from S3 via `data-schema-pull`).
 
-https://drive.google.com/drive/u/0/folders/1wEKkUayaySZ6AhsdrkTGbbeVAx1YJARs
+#### Prepare the source files
 
-#### Import / Update
+Download the latest point and polygon GeoJSON from [this Google Drive folder](https://drive.google.com/drive/folders/1wEKkUayaySZ6AhsdrkTGbbeVAx1YJARs). Keep the `type` property.
 
-##### Prepare tables (locally)
+Point types that get a buffer: `bollard`, `street_lamp`, `tree`, `street_cabinet`, `traffic_sign`, `water_well` (radii in the SQL, aligned with OSM obstacle categories). Other point types are skipped and logged. Polygons get a 0.6 m buffer.
 
-1. Open QGIS
-2. Add GeoJSON files
-3. Rename layers
-   - `euvm_cutouts_point`
-   - `euvm_cutouts_polygon`
-4. Drag and drop layers to the PostgreSQL connection
+CRS should be WGS84 (EPSG:4326). If load rejects the polygon geometry type, set `expectedGeometryType` in the polygon spec to match the file (`Polygon` vs `MultiPolygon`).
 
-QGIS will copy the external data into the database.
-[Screenshot](https://docs.google.com/document/d/1NThYOMxp4dIYfp_jZbBQX_akVWdE7nYMsQEUc3B-VNE/edit?tab=t.0)
-
-##### Copy data (staging, production)
-
-1. Export tables as SQL from local DB using a DB tool
-2. Connect to staging/producction using a DB tool
-3. Import the data from file
+Then load, publish, and Import those two tables as in the data-schema docs. After Import on staging/production, run parking processing so `parkings_cutouts` updates.

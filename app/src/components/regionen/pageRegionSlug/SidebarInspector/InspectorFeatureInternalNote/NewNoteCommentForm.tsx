@@ -1,8 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { z } from 'zod'
-import { useStaticRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useStaticRegion'
-import { Textarea } from '@/components/shared/form/fields/Textarea'
+import { useRegion } from '@/components/regionen/pageRegionSlug/regionUtils/useRegion'
+import { MarkdownEditorField } from '@/components/shared/form/fields/MarkdownEditorField'
 import { Form } from '@/components/shared/form/Form'
 import { useHasPermissions } from '@/components/shared/hooks/useHasPermissions'
 import { buttonStylesOnYellow } from '@/components/shared/links/styles'
@@ -35,7 +35,7 @@ export const NewNoteCommentForm = ({ noteId }: Props) => {
     },
   })
 
-  const region = useStaticRegion()
+  const region = useRegion()
   const hasPermissions = useHasPermissions()
 
   if (!hasPermissions) {
@@ -66,13 +66,7 @@ export const NewNoteCommentForm = ({ noteId }: Props) => {
         resetFormRef.current = () => form.reset()
         return (
           <>
-            <Textarea
-              form={form}
-              name="body"
-              label="Antwort (Markdown)"
-              className="block min-h-28 border-0 bg-gray-50 py-2 leading-tight text-gray-900 shadow-sm ring-1 ring-gray-300 ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-yellow-600 focus:ring-inset"
-              rows={5}
-            />
+            <MarkdownEditorField form={form} name="body" label="Antwort (Markdown)" />
             <div className="mt-3 flex items-center gap-1 leading-tight">
               <form.Subscribe selector={(s) => s.isSubmitting}>
                 {(isSubmitting) => (

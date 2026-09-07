@@ -1,16 +1,19 @@
+import type { SourceExportApiIdentifier } from '@/components/regionen/pageRegionSlug/mapData/mapDataSources/export/exportIdentifier'
 import { CopyButton } from '@/components/shared/CopyButton'
 import { Link } from '@/components/shared/links/Link'
+import type { TopicDocCompiled } from '@/data/topicDocs/runtime'
 import {
   TILDA_DATASET_ATTRIBUTION_HTML,
   TILDA_DATASET_LICENSE,
 } from '@/data/topicDocs/topicDocsDatasetAttribution.const'
-import type { DocsPageSummaryProps } from './types'
 
-export const PageDocsSummarySection = ({
-  tableName,
-  groupDocs,
-  regionSlug,
-}: DocsPageSummaryProps) => {
+type Props = {
+  tableName: SourceExportApiIdentifier
+  groupDocs: Array<{ tableName: string; topicDoc: TopicDocCompiled | null }>
+  regionSlug: string | null
+}
+
+export const PageDocsSummarySection = ({ tableName, groupDocs, regionSlug }: Props) => {
   const relatedGroupDocs = groupDocs.filter((d) => d.tableName !== tableName)
 
   return (
@@ -29,7 +32,7 @@ export const PageDocsSummarySection = ({
               <div className="not-prose flex items-center gap-2">
                 <div
                   className="min-w-0 flex-1 text-sm text-gray-500 [&_a]:underline"
-                  // biome-ignore lint/security/noDangerouslySetInnerHtml: static OSM/TILDA attribution HTML
+                  // oxlint-disable-next-line react/no-danger -- static OSM/TILDA attribution HTML
                   dangerouslySetInnerHTML={{ __html: TILDA_DATASET_ATTRIBUTION_HTML }}
                 />
                 <div className="shrink-0 print:hidden">
@@ -62,7 +65,7 @@ export const PageDocsSummarySection = ({
             </th>
             <td className="min-w-0 py-0.5 align-middle wrap-break-word">EPSG:4326 (WGS84)</td>
           </tr>
-          {relatedGroupDocs.length > 0 ? (
+          {relatedGroupDocs.length > 0 && regionSlug === null ? (
             <tr className="print:hidden">
               <th className="py-0.5 pr-2 align-middle font-medium whitespace-normal text-gray-900 lg:whitespace-nowrap">
                 Verwandte Datensätze

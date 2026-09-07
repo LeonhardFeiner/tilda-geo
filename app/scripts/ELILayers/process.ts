@@ -23,29 +23,25 @@ const outputFile = path.join(
   '../../src/components/regionen/pageRegionSlug/mapData/mapDataSources/sourcesBackgroundRasterELI.const.ts',
 )
 
-const ELIFeatureSchema = z
-  .object({
-    type: z.literal('Feature'),
-    properties: z
+const ELIFeatureSchema = z.object({
+  type: z.literal('Feature'),
+  properties: z.object({
+    id: z.string(),
+    name: z.string(),
+    type: z.string(),
+    category: z.string().optional(),
+    url: z.string(),
+    attribution: z
       .object({
-        id: z.string(),
-        name: z.string(),
-        type: z.string(),
-        category: z.string().optional(),
-        url: z.string(),
-        attribution: z
-          .object({
-            text: z.string(),
-            required: z.boolean().optional(),
-          })
-          .optional(),
-        min_zoom: z.number().optional(),
-        max_zoom: z.number().optional(),
-        tile_size: z.number().optional(),
+        text: z.string(),
+        required: z.boolean().optional(),
       })
-      .strip(), // Remove any properties we don't need
-  })
-  .strip() // Remove geometry and any other top-level fields we don't need
+      .optional(),
+    min_zoom: z.number().optional(),
+    max_zoom: z.number().optional(),
+    tile_size: z.number().optional(),
+  }),
+})
 
 type ELIFeature = z.infer<typeof ELIFeatureSchema>
 
@@ -57,7 +53,7 @@ async function fetchFileList() {
   }
   const files = await response.json()
 
-  return files.filter((file) => file.name.endsWith('.geojson'))
+  return files.filter((file: { name: string }) => file.name.endsWith('.geojson'))
 }
 
 async function downloadFile(filename: string) {
@@ -137,7 +133,7 @@ function convertELIToMapDataBackgroundSource(feature: ELIFeature, fileId: string
   const result: MapDataBackgroundSource<string> = {
     id: fileId,
     name: props.name,
-    tiles: converted.tiles,
+    tilesUrl: converted.tiles,
     attributionHtml,
   }
 
@@ -174,7 +170,7 @@ async function main() {
   const convertedLayers: Array<{
     id: string
     name: string
-    tiles: string
+    tilesUrl: string
     attributionHtml: string
     maxzoom?: number
     minzoom?: number

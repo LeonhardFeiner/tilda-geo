@@ -11,46 +11,12 @@ export type FormState =
   | { success: false; message: string; errors: Record<string, string[]> }
 
 /**
- * Converts FormData to a plain object with string values.
- * Useful for extracting form data before Zod validation.
- */
-export function formDataToObject(formData: FormData) {
-  const obj: Record<string, string> = {}
-  for (const [key, value] of formData.entries()) {
-    obj[key] = value.toString()
-  }
-  return obj
-}
-
-/**
- * Extracts form data from FormData and validates it with a Zod schema in one step.
- * Throws ZodError if validation fails.
- *
- * @example
- * ```ts
- * try {
- *   const parsed = extractAndValidateFormData(formData, MySchema)
- *   await db.model.create({ data: parsed })
- * } catch (error) {
- *   if (error instanceof z.ZodError) {
- *     return validationErrorState(error)
- *   }
- *   return errorState(error, 'Fehler beim Speichern')
- * }
- * ```
- */
-export function extractAndValidateFormData<T extends z.ZodTypeAny>(formData: FormData, schema: T) {
-  const rawData = formDataToObject(formData)
-  return schema.parse(rawData)
-}
-
-/**
  * Returns a FormState for validation errors.
  * Use when catching ZodError from form validation.
  */
 export function validationErrorState(error: z.ZodError) {
   return {
-    success: false,
+    success: false as const,
     message: 'Bitte korrigieren Sie die Fehler im Formular',
     errors: z.flattenError(error).fieldErrors,
   }
@@ -62,8 +28,40 @@ export function validationErrorState(error: z.ZodError) {
  */
 export function errorState(error: unknown, defaultMessage: string) {
   return {
-    success: false,
+    success: false as const,
     message: error instanceof Error ? error.message : defaultMessage,
     errors: {},
   }
+}
+
+/**
+ * Returns a FormState for successful mutations.
+ */
+export function successState(): {
+  success: true
+  message: string
+  errors: Record<string, never>
+}
+export function successState<T>(options: { message?: string; data: T }): {
+  success: true
+  message: string
+  errors: Record<string, never>
+  data: T
+}
+export function successState(options?: { message?: string }): {
+  success: true
+  message: string
+  errors: Record<string, never>
+}
+export function successState<T>(options?: { message?: string; data?: T }) {
+  const message = options?.message ?? ''
+  if (options !== undefined && 'data' in options) {
+    return {
+      success: true as const,
+      message,
+      errors: {} as Record<string, never>,
+      data: options.data,
+    }
+  }
+  return { success: true as const, message, errors: {} as Record<string, never> }
 }
