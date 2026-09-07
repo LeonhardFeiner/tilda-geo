@@ -119,12 +119,61 @@ export function generateViewerHtml(generatedAt: string) {
       text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .panel-body { margin: 0; }
+    /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
+    #sheet-scrim { display: none; }
     @media (max-width: 768px) {
-      .panel {
-        top: 8px; left: 8px; right: 8px; max-width: none;
-        max-height: min(88vh, calc(100vh - 16px));
+      body { --sheet-peek: 4.9rem; }
+
+      #sheet-scrim {
+        display: block; position: fixed; inset: 0; z-index: 3;
+        background: rgba(0, 0, 0, 0.32);
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.25s ease;
       }
-      .panel:not([open]) { max-height: none; overflow: visible; }
+      body[data-sheet="half"] #sheet-scrim,
+      body[data-sheet="full"] #sheet-scrim { opacity: 1; pointer-events: auto; }
+
+      /* #panel-main becomes a bottom sheet with peek / half / full snap states. */
+      .panel {
+        position: fixed; z-index: 4; inset: auto 0 0 0;
+        width: 100%; max-width: none;
+        border-radius: 16px 16px 0 0;
+        padding: 0 14px calc(12px + env(safe-area-inset-bottom, 0px));
+        max-height: none;
+        height: var(--sheet-peek);
+        overflow: hidden;
+        transition: height 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+        overscroll-behavior: contain;
+        box-shadow: 0 -3px 18px rgba(0, 0, 0, 0.18);
+      }
+      body[data-sheet="half"] .panel { height: 46vh; height: 46dvh; overflow-y: auto; }
+      body[data-sheet="full"] .panel {
+        height: calc(100vh - 8px);
+        height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px);
+        overflow-y: auto;
+      }
+      .panel.is-dragging { transition: none; }
+
+      .panel > summary {
+        position: sticky; top: 0; z-index: 1;
+        margin: 0 -14px 6px; padding: 18px 14px 10px;
+        background: #fff; border-radius: 16px 16px 0 0;
+        touch-action: none; -webkit-user-select: none;
+      }
+      .panel > summary::before {
+        content: ''; position: absolute; top: 8px; left: 50%;
+        width: 40px; height: 4px; margin-left: -20px;
+        border-radius: 999px; background: #d2d2d2;
+      }
+      .panel > summary::after { display: none; }
+      .panel-summary-preview { font-size: 12px; }
+      .panel-body { padding-bottom: 8px; }
+
+      .region-detail {
+        z-index: 2; left: 8px; right: 8px;
+        bottom: calc(var(--sheet-peek) + 8px);
+        width: auto; max-width: none; max-height: 42vh;
+      }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
@@ -448,6 +497,7 @@ export function generateViewerHtml(generatedAt: string) {
 </head>
 <body>
   <div id="map"></div>
+  <div id="sheet-scrim" aria-hidden="true"></div>
   <details class="panel" id="panel-main" open>
     <summary>
       <span>Steuerung & Legende</span>
@@ -2484,26 +2534,107 @@ export function generateViewerHtml(generatedAt: string) {
       requestAnimationFrame(() => map.resize());
     }
 
-    function syncPanelDrawerForViewport() {
+    // --- Mobile bottom sheet for #panel-main: peek / half / full snap states. ---
+    const SHEET_ORDER = ['peek', 'half', 'full'];
+    const sheetScrim = document.getElementById('sheet-scrim');
+
+    function sheetEnabled() {
+      return panelMobileMq.matches && !document.body.classList.contains('ui-minimal');
+    }
+    function sheetState() {
+      return document.body.dataset.sheet || 'peek';
+    }
+    function setSheetState(next) {
+      const state = SHEET_ORDER.includes(next) ? next : 'peek';
+      document.body.dataset.sheet = state;
+      if (panelMain) {
+        panelMain.open = true;
+        if (state === 'peek') panelMain.scrollTop = 0;
+      }
+      notifyMapResize();
+    }
+
+    function applyPanelViewportMode() {
       if (!panelMain) return;
-      if (panelMobileMq.matches && !panelMain.dataset.userToggled) {
-        panelMain.open = false;
-      } else if (!panelMobileMq.matches) {
+      if (sheetEnabled()) {
+        // Always start collapsed on mobile; never remember an "open" state across reloads/rotations.
+        panelMain.open = true;
+        document.body.dataset.sheet = document.body.dataset.sheet || 'peek';
+      } else {
+        delete document.body.dataset.sheet;
         panelMain.open = true;
       }
+      notifyMapResize();
     }
 
     if (panelMain) {
+      const panelSummary = panelMain.querySelector(':scope > summary');
+      let sheetDrag = null;
+      let suppressSummaryClick = false;
+
+      panelSummary?.addEventListener('click', (event) => {
+        if (suppressSummaryClick) {
+          suppressSummaryClick = false;
+          event.preventDefault();
+          event.stopImmediatePropagation();
+          return;
+        }
+        if (!sheetEnabled()) return; // desktop: let <details> toggle natively
+        event.preventDefault();
+        setSheetState(sheetState() === 'peek' ? 'half' : 'peek');
+      });
+
+      panelSummary?.addEventListener('pointerdown', (event) => {
+        if (!sheetEnabled() || (event.button != null && event.button > 0)) return;
+        sheetDrag = {
+          startY: event.clientY,
+          startH: panelMain.getBoundingClientRect().height,
+          moved: false,
+        };
+        panelMain.classList.add('is-dragging');
+        panelSummary.setPointerCapture?.(event.pointerId);
+      });
+      panelSummary?.addEventListener('pointermove', (event) => {
+        if (!sheetDrag) return;
+        const dy = sheetDrag.startY - event.clientY; // drag up => taller
+        if (Math.abs(dy) > 4) sheetDrag.moved = true;
+        const h = Math.min(window.innerHeight * 0.94, Math.max(52, sheetDrag.startH + dy));
+        panelMain.style.height = h + 'px';
+      });
+      const endSheetDrag = (event) => {
+        if (!sheetDrag) return;
+        panelMain.classList.remove('is-dragging');
+        panelSummary.releasePointerCapture?.(event.pointerId);
+        const wasDrag = sheetDrag.moved;
+        const frac = panelMain.getBoundingClientRect().height / window.innerHeight;
+        panelMain.style.height = '';
+        sheetDrag = null;
+        if (!wasDrag) return; // a tap — handled by the click listener
+        suppressSummaryClick = true;
+        setSheetState(frac > 0.62 ? 'full' : frac > 0.2 ? 'half' : 'peek');
+      };
+      panelSummary?.addEventListener('pointerup', endSheetDrag);
+      panelSummary?.addEventListener('pointercancel', endSheetDrag);
+
+      // Keep <details> open on mobile (sheet height is driven by data-sheet, not [open]);
+      // a stray native toggle (keyboard, etc.) just collapses the sheet to peek.
       panelMain.addEventListener('toggle', () => {
-        panelMain.dataset.userToggled = '1';
+        if (sheetEnabled() && !panelMain.open) {
+          panelMain.open = true;
+          setSheetState('peek');
+        }
         notifyMapResize();
       });
-      panelMobileMq.addEventListener('change', () => {
-        delete panelMain.dataset.userToggled;
-        syncPanelDrawerForViewport();
-        notifyMapResize();
+
+      sheetScrim?.addEventListener('click', () => setSheetState('peek'));
+      document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && sheetEnabled() && sheetState() !== 'peek') {
+          setSheetState('peek');
+        }
       });
-      syncPanelDrawerForViewport();
+
+      panelMobileMq.addEventListener('change', applyPanelViewportMode);
+      applyPanelViewportMode();
     }
 
     function urlParams() {
