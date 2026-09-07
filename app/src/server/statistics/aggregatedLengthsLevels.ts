@@ -1,10 +1,8 @@
-/** OSM admin levels written to `public.aggregated_lengths` and statistics export. */
-export const STATS_ADMIN_LEVELS = ['2', '3', '4', '5', '6', '7', '8', '9'] as const
-
-export type StatsAdminLevel = (typeof STATS_ADMIN_LEVELS)[number]
-
-export const STATS_ADMIN_LEVELS_SQL = STATS_ADMIN_LEVELS.map((level) => `'${level}'`).join(', ')
-
+/**
+ * Human-readable key for an OSM admin level in `public.aggregated_lengths`.
+ * The set of levels that gets aggregated lives in
+ * `processing/steps/afterthoughts/sql/aggregate_lengths.sql`.
+ */
 export function levelKeyForAdminLevel(level: string | null) {
   if (level === '2') return 'land'
   if (level === '3') return 'admin3'

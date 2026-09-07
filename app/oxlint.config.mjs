@@ -8,6 +8,8 @@ export default defineConfig({
     '**/routeTree.gen.ts',
     // Vite/Nitro production build output
     '.output/**',
+    // bike-share-map viewer build output (bundled/minified; rebuilt by bun run bike-share-map:viewer)
+    '**/bike-share-map/output/**',
     // Playwright HTML report from `e2e` (gitignored)
     // "playwright-report/**",
   ],

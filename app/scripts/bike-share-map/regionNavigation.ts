@@ -510,6 +510,12 @@ export function partialGapRankForScope(
       return 45
     case 'stadtteile':
       return 55
+    case 'bundeslaender':
+    case 'gemeinden':
+    case 'gemeinden_kreisfrei':
+    case 'gemeindeverbaende_kreisfrei':
+    case 'landkreis_kreisfrei':
+      return 60
     default:
       return 60
   }
@@ -773,6 +779,9 @@ function darstellungCandidateFeatures(
         return ['9']
       case 'stadtteile':
         return ['10']
+      case 'gemeindeverbaende':
+      case 'gemeindeverbaende_kreisfrei':
+        return null
       default:
         return null
     }

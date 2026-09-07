@@ -84,7 +84,7 @@ writeFileSync(
       version: 2,
       deutschlandId: index.deutschlandId,
       kreisfreieStaedteIds: [...index.kreisfreieIds],
-      stadtstaatIds: [...index.stadtstaaten.map((s) => s.id)],
+      stadtstaatIds: index.stadtstaaten.map((s) => s.id),
       featureCount: features.length,
     },
     null,
