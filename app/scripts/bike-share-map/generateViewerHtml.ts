@@ -146,12 +146,11 @@ export function generateViewerHtml(generatedAt: string) {
         overscroll-behavior: contain;
         box-shadow: 0 -3px 18px rgba(0, 0, 0, 0.18);
       }
-      body[data-sheet="half"] .panel { height: 46vh; height: 46dvh; overflow-y: auto; }
-      body[data-sheet="full"] .panel {
-        height: calc(100vh - 8px);
-        height: calc(100dvh - env(safe-area-inset-top, 0px) - 8px);
-        overflow-y: auto;
-      }
+      /* --vph is set from window.innerHeight in JS; the 1vh fallback keeps this valid
+         before JS runs and on browsers without it. (dvh can't be used — the formatter
+         drops the vh fallback declaration.) */
+      body[data-sheet="half"] .panel { height: calc(46 * var(--vph, 1vh)); overflow-y: auto; }
+      body[data-sheet="full"] .panel { height: calc(94 * var(--vph, 1vh)); overflow-y: auto; }
       .panel.is-dragging { transition: none; }
 
       .panel > summary {
@@ -169,10 +168,27 @@ export function generateViewerHtml(generatedAt: string) {
       .panel-summary-preview { font-size: 12px; }
       .panel-body { padding-bottom: 8px; }
 
-      .region-detail {
-        z-index: 2; left: 8px; right: 8px;
-        bottom: calc(var(--sheet-peek) + 8px);
-        width: auto; max-width: none; max-height: 42vh;
+      /* The sheet itself scrolls — no nested scroll box for the full "Alle" ranking. */
+      .ranking-scroll--scroll { max-height: none; overflow: visible; }
+
+      /* Primary sections are permanently open on the phone (see lockOpenSectionsForViewport). */
+      .panel-section[data-lock-open] > summary {
+        pointer-events: none;
+        list-style: none;
+      }
+      .panel-section[data-lock-open] > summary::-webkit-details-marker { display: none; }
+
+      /* On mobile a selected region is moved into the top of the sheet (placeRegionDetail),
+         so render it as an inline block instead of the floating card. */
+      #region-detail-mount:empty { display: none; }
+      #region-detail-mount .region-detail {
+        position: static; z-index: auto;
+        width: auto; max-width: none; max-height: none;
+        border: none; border-radius: 0;
+        border-bottom: 1px solid #e2e2e2;
+        box-shadow: none; overflow: visible;
+        margin: 2px 0 10px; padding: 2px 0 12px;
+        background: transparent;
       }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
@@ -504,6 +520,7 @@ export function generateViewerHtml(generatedAt: string) {
       <span class="panel-summary-preview" id="panel-summary-preview"></span>
     </summary>
     <div class="panel-body">
+    <div id="region-detail-mount"></div>
     <p id="load-status">Lade Gebietsdaten…</p>
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
@@ -828,6 +845,25 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailClose = document.getElementById('region-detail-close');
+    const regionDetailMount = document.getElementById('region-detail-mount');
+    // Anchor marking the card's home spot (floating card, desktop) so it can be moved back.
+    const regionDetailAnchor = document.createComment('region-detail-home');
+    regionDetailEl.parentNode.insertBefore(regionDetailAnchor, regionDetailEl);
+
+    /**
+     * On mobile the selected-region card lives at the top of the settings sheet so its
+     * street-type breakdown and the region ranking scroll together; on desktop it stays
+     * the floating bottom-right card.
+     */
+    function placeRegionDetail() {
+      const inSheet =
+        typeof sheetEnabled === 'function' && sheetEnabled() && !regionDetailEl.hidden;
+      if (inSheet) {
+        if (regionDetailEl.parentNode !== regionDetailMount) regionDetailMount.appendChild(regionDetailEl);
+      } else if (regionDetailEl.parentNode !== regionDetailAnchor.parentNode) {
+        regionDetailAnchor.parentNode.insertBefore(regionDetailEl, regionDetailAnchor);
+      }
+    }
 
     for (const opt of CONFIG.basemapOptions) {
       const el = document.createElement('option');
@@ -1930,6 +1966,12 @@ export function generateViewerHtml(generatedAt: string) {
         regionDetailBody.appendChild(viewLink);
       }
       regionDetailEl.hidden = false;
+      document.body.dataset.regionDetail = '1';
+      placeRegionDetail();
+      if (typeof sheetEnabled === 'function' && sheetEnabled() && sheetState() === 'peek') {
+        setSheetState('half');
+      }
+      regionDetailEl.scrollIntoView?.({ block: 'nearest' });
     }
 
     function setSelectedFeatureId(id, feature) {
@@ -1991,6 +2033,8 @@ export function generateViewerHtml(generatedAt: string) {
       clearOverlayLineHighlight();
       setSelectedFeatureId(null);
       regionDetailEl.hidden = true;
+      delete document.body.dataset.regionDetail;
+      placeRegionDetail();
     }
 
     function refreshSelectedRegionIfNeeded() {
@@ -2538,6 +2582,13 @@ export function generateViewerHtml(generatedAt: string) {
     const SHEET_ORDER = ['peek', 'half', 'full'];
     const sheetScrim = document.getElementById('sheet-scrim');
 
+    // Real viewport-height unit (dvh substitute the CSS formatter can't strip).
+    function updateVhUnit() {
+      document.documentElement.style.setProperty('--vph', window.innerHeight / 100 + 'px');
+    }
+    updateVhUnit();
+    window.addEventListener('resize', updateVhUnit);
+
     function sheetEnabled() {
       return panelMobileMq.matches && !document.body.classList.contains('ui-minimal');
     }
@@ -2554,6 +2605,28 @@ export function generateViewerHtml(generatedAt: string) {
       notifyMapResize();
     }
 
+    // Primary sections: collapsible accordions on desktop, always-open blocks on the phone
+    // (the sheet scrolls — no fiddly nested folding).
+    const PHONE_OPEN_SECTIONS = ['region-scope-block', 'map-legend-section', 'ranking-details'];
+    for (const id of PHONE_OPEN_SECTIONS) {
+      document.getElementById(id)?.addEventListener('toggle', (event) => {
+        if (event.target.dataset.lockOpen && !event.target.open) event.target.open = true;
+      });
+    }
+    function lockOpenSectionsForViewport() {
+      const lock = sheetEnabled();
+      for (const id of PHONE_OPEN_SECTIONS) {
+        const el = document.getElementById(id);
+        if (!el) continue;
+        if (lock) {
+          el.open = true;
+          el.dataset.lockOpen = '1';
+        } else {
+          delete el.dataset.lockOpen;
+        }
+      }
+    }
+
     function applyPanelViewportMode() {
       if (!panelMain) return;
       if (sheetEnabled()) {
@@ -2564,6 +2637,8 @@ export function generateViewerHtml(generatedAt: string) {
         delete document.body.dataset.sheet;
         panelMain.open = true;
       }
+      lockOpenSectionsForViewport();
+      placeRegionDetail();
       notifyMapResize();
     }
 
@@ -2626,11 +2701,14 @@ export function generateViewerHtml(generatedAt: string) {
         notifyMapResize();
       });
 
-      sheetScrim?.addEventListener('click', () => setSheetState('peek'));
+      sheetScrim?.addEventListener('click', () => {
+        if (document.body.dataset.regionDetail) clearRegionSelection();
+        else setSheetState('peek');
+      });
       document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape' && sheetEnabled() && sheetState() !== 'peek') {
-          setSheetState('peek');
-        }
+        if (event.key !== 'Escape' || !sheetEnabled()) return;
+        if (document.body.dataset.regionDetail) clearRegionSelection();
+        else if (sheetState() !== 'peek') setSheetState('peek');
       });
 
       panelMobileMq.addEventListener('change', applyPanelViewportMode);
