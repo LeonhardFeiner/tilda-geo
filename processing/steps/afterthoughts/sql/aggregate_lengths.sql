@@ -67,7 +67,7 @@ DECLARE
   aggregated_length JSONB;
 BEGIN
   SELECT
-    jsonb_object_agg(aggregator_key, ROUND(total_length_km / 1000.0))
+    jsonb_object_agg(aggregator_key, (total_length_km / 1000.0)::double precision)
   INTO aggregated_length
   FROM (
     SELECT
@@ -91,7 +91,7 @@ DECLARE
   aggregated_length JSONB;
 BEGIN
   SELECT
-    jsonb_object_agg(aggregator_key, ROUND(total_length_km / 1000.0))
+    jsonb_object_agg(aggregator_key, (total_length_km / 1000.0)::double precision)
   INTO aggregated_length
   FROM (
     SELECT
@@ -121,10 +121,15 @@ SELECT
   atlas_aggregate_bikelanes(geom),
   atlas_aggregate_roads(geom)
 FROM boundaries
-WHERE (tags->>'admin_level')::TEXT = '4'
-  OR (tags->>'admin_level')::TEXT = '6'
+-- Upstream production aggregates admin levels 4 & 6 only. Local bike-share-map
+-- builds also need 7-9 (Gemeinde/Gemeindebezirk); keep the wider net here since
+-- this only runs against the local processing DB.
+WHERE (tags->>'admin_level')::TEXT IN ('2', '3', '4', '5', '6', '7', '8', '9')
 ON CONFLICT (id)
   DO UPDATE SET
+    name = EXCLUDED.name,
+    level = EXCLUDED.level,
+    geom = EXCLUDED.geom,
     regionalschluessel = EXCLUDED.regionalschluessel,
     bikelane_length = EXCLUDED.bikelane_length,
     road_length = EXCLUDED.road_length;
