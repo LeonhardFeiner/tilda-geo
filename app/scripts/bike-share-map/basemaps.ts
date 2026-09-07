@@ -1,3 +1,11 @@
+/**
+ * MapTiler key, shared with the main app (`src/.../Map/utils/maptilerApiKey.const.ts`).
+ * MapTiler hosts the Positron/Voyager styles that CARTO's free basemap CDN no longer serves
+ * without a key. This value ships in the generated static HTML; lock it to the viewer's
+ * domain(s) in the MapTiler dashboard (Account → Keys → HTTP referrers).
+ */
+const MAPTILER_KEY = 'ECOoUBmpqklzSCASXxcu'
+
 export type BasemapId = 'blank' | 'de' | 'light' | 'muted' | 'osm'
 
 export type BasemapOption = {
@@ -17,14 +25,14 @@ export const BASEMAP_OPTIONS: BasemapOption[] = [
   {
     id: 'light',
     label: 'Hell',
-    description: 'Carto Positron – wenig Straßenkontrast, Orientierung möglich (Standard)',
-    attribution: '© CARTO © OpenStreetMap',
+    description: 'Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)',
+    attribution: '© MapTiler © OpenStreetMap',
   },
   {
     id: 'muted',
     label: 'Gedeckt',
-    description: 'Carto Voyager – etwas mehr Kontext als „hell“',
-    attribution: '© CARTO © OpenStreetMap',
+    description: 'Voyager (MapTiler) – etwas mehr Kontext als „hell“',
+    attribution: '© MapTiler © OpenStreetMap',
   },
   {
     id: 'de',
@@ -72,9 +80,9 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
     basemapId === 'de'
       ? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png'
       : basemapId === 'light'
-        ? 'https://basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png'
+        ? `https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
         : basemapId === 'muted'
-          ? 'https://basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png'
+          ? `https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
           : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
   const attribution =
@@ -82,7 +90,7 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
       ? '© OpenStreetMap Deutschland / FOSSGIS'
       : basemapId === 'osm'
         ? '© OpenStreetMap'
-        : '© CARTO © OpenStreetMap contributors'
+        : '© MapTiler © OpenStreetMap contributors'
 
   return {
     version: 8,
