@@ -10,9 +10,8 @@ type BoundaryProperties = {
 
 type BoundaryFeature = Feature<Polygon | MultiPolygon, BoundaryProperties>
 
-const NAME_ALIASES: Record<string, string[]> = {
-  'Rohrbach an der Ilm': ['Rohrbach'],
-}
+/** Fallback name lookups for Gemeinden whose stats name differs from the boundary name. */
+const NAME_ALIASES: Record<string, string[]> = {}
 
 function normalizeName(name: string) {
   return name.normalize('NFKD').replace(/\p{M}/gu, '').toLowerCase().trim()
