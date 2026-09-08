@@ -191,9 +191,24 @@ export function generateViewerHtml(generatedAt: string) {
         border: none; border-radius: 0;
         border-bottom: 1px solid #e2e2e2;
         box-shadow: none; overflow: visible;
-        margin: 2px 0 10px; padding: 2px 0 12px;
+        margin: 0 0 10px; padding: 0 0 12px;
         background: transparent;
       }
+      /* The floating card's absolute "×" has no anchor here — replace it with a
+         full-width "back to map" bar at the very top of the card. */
+      #region-detail-mount .region-detail-close {
+        position: static;
+        display: flex; align-items: center;
+        width: auto; margin: 0 -14px 10px; padding: 12px 14px;
+        border: none; border-bottom: 1px solid #d6e4f5;
+        background: #eef4fc; color: #1565c0;
+        font-size: 0; cursor: pointer;
+      }
+      #region-detail-mount .region-detail-close::before {
+        content: '‹ Zurück zur Karte';
+        font-size: 13px; font-weight: 600;
+      }
+      #region-detail-mount .region-detail-header { padding-right: 0; }
 
       /* Advanced config (Zählung + Farben & Darstellung + Ansichts-Wechsel) folds
          behind one "Einstellungen" control so the sheet stays focused on
@@ -2107,7 +2122,10 @@ export function generateViewerHtml(generatedAt: string) {
     function bindRegionMapInteraction() {
       if (regionClickBound) return;
       regionClickBound = true;
-      regionDetailClose.addEventListener('click', clearRegionSelection);
+      regionDetailClose.addEventListener('click', () => {
+        if (typeof sheetEnabled === 'function' && sheetEnabled()) setSheetState('peek');
+        else clearRegionSelection();
+      });
       map.on('click', 'regions-fill', (e) => {
         const f = e.features?.[0];
         if (!f?.properties?.id) return;
@@ -2662,6 +2680,15 @@ export function generateViewerHtml(generatedAt: string) {
         panelMain.open = true;
         if (state === 'peek') panelMain.scrollTop = 0;
       }
+      // Invariant: peek = just the map. Collapsing the sheet drops any region selection,
+      // so swipe-down / scrim-tap / Esc all double as "close the region stats".
+      if (
+        state === 'peek' &&
+        document.body.dataset.regionDetail &&
+        typeof clearRegionSelection === 'function'
+      ) {
+        clearRegionSelection();
+      }
       notifyMapResize();
     }
 
@@ -2782,14 +2809,10 @@ export function generateViewerHtml(generatedAt: string) {
         notifyMapResize();
       });
 
-      sheetScrim?.addEventListener('click', () => {
-        if (document.body.dataset.regionDetail) clearRegionSelection();
-        else setSheetState('peek');
-      });
+      sheetScrim?.addEventListener('click', () => setSheetState('peek'));
       document.addEventListener('keydown', (event) => {
         if (event.key !== 'Escape' || !sheetEnabled()) return;
-        if (document.body.dataset.regionDetail) clearRegionSelection();
-        else if (sheetState() !== 'peek') setSheetState('peek');
+        if (sheetState() !== 'peek' || document.body.dataset.regionDetail) setSheetState('peek');
       });
 
       panelMobileMq.addEventListener('change', applyPanelViewportMode);
