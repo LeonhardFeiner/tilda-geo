@@ -170,8 +170,10 @@ export function generateViewerHtml(generatedAt: string) {
       .panel-summary-preview { font-size: 12px; }
       .panel-body { padding-bottom: 8px; }
 
-      /* The sheet itself scrolls — no nested scroll box for the full "Alle" ranking. */
-      .ranking-scroll--scroll { max-height: none; overflow: visible; }
+      /* The sheet itself scrolls — no nested scroll box for the full "Alle" ranking.
+         id+class so this beats the later, equally-specific base rule (media queries
+         add no specificity). */
+      #ranking-scroll.ranking-scroll--scroll { max-height: none; overflow: visible; }
 
       /* Primary sections are permanently open on the phone (see lockOpenSectionsForViewport). */
       .panel-section[data-lock-open] > summary {
