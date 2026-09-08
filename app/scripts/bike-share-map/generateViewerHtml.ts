@@ -224,19 +224,19 @@ export function generateViewerHtml(generatedAt: string) {
       /* Ranking CSV export is a power-user tool — phone shows it only in expert view. */
       body:not(.view-expert) #ranking-csv-actions { display: none; }
 
-      /* One round share button, top-left over the map. It shares the combined view
-         image + link in a single OS share sheet, so the in-sheet toolbar is dropped. */
+      /* Share button, top-left over the map. Styled to match the MapLibre zoom
+         control (top-right) so it reads as a map control, not a floating chip. */
       #share-fab {
         display: flex; align-items: center; justify-content: center;
         position: fixed; z-index: 5;
         top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px;
-        width: 42px; height: 42px; padding: 0;
-        border: 1px solid #cfcfcf; border-radius: 50%;
-        background: #fff; color: #1565c0; cursor: pointer;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+        width: 30px; height: 30px; padding: 0;
+        border: none; border-radius: 4px;
+        background: #fff; color: #333; cursor: pointer;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
       }
-      #share-fab svg { width: 19px; height: 19px; fill: currentColor; }
-      #share-fab:active { background: #eef4fc; }
+      #share-fab svg { width: 18px; height: 18px; fill: currentColor; }
+      #share-fab:active { background: #f2f2f2; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
@@ -590,7 +590,7 @@ export function generateViewerHtml(generatedAt: string) {
   <div id="map"></div>
   <div id="sheet-scrim" aria-hidden="true"></div>
   <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
   </button>
   <details class="panel" id="panel-main" open>
     <summary>
@@ -2239,12 +2239,29 @@ export function generateViewerHtml(generatedAt: string) {
       document.body.removeChild(link);
     }
 
+    function raceTimeout(promise, ms) {
+      return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, ms))]);
+    }
+
     async function waitForMapRender() {
       if (!map.isStyleLoaded()) {
-        await new Promise((resolve) => map.once('load', resolve));
+        await raceTimeout(new Promise((resolve) => map.once('load', resolve)), 4000);
       }
       map.triggerRepaint();
-      await new Promise((resolve) => map.once('idle', resolve));
+      // 'idle' can fail to fire (already idle, stalled tile) — never hang the share.
+      await raceTimeout(new Promise((resolve) => map.once('idle', resolve)), 4000);
+    }
+
+    async function captureLiveMapCanvas() {
+      map.triggerRepaint();
+      await raceTimeout(new Promise((resolve) => map.once('idle', resolve)), 1500);
+      const source = map.getCanvas();
+      if (!source?.width) throw new Error('empty canvas');
+      const copy = document.createElement('canvas');
+      copy.width = source.width;
+      copy.height = source.height;
+      copy.getContext('2d').drawImage(source, 0, 0);
+      return copy;
     }
 
     function bboxForCurrentView() {
@@ -2404,16 +2421,22 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     async function buildShareScreenshotAssets() {
+      // Phone: share exactly the map the user is looking at. The off-screen 1080x1920
+      // re-render (captureMapExportCanvas) is heavy and often comes back blank on
+      // mobile; the ranking goes in the link, not the image.
+      const liveMapOnly = isLikelyMobileShareDevice();
       const canvases = [];
       try {
-        canvases.push(await captureMapExportCanvas());
+        canvases.push(liveMapOnly ? await captureLiveMapCanvas() : await captureMapExportCanvas());
       } catch {
         /* Karte optional */
       }
-      try {
-        canvases.push(drawRankingExportCanvas());
-      } catch {
-        /* Rangliste optional */
+      if (!liveMapOnly) {
+        try {
+          canvases.push(drawRankingExportCanvas());
+        } catch {
+          /* Rangliste optional */
+        }
       }
       const files = [];
       for (const canvas of canvases) {
