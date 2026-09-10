@@ -33,6 +33,7 @@
     "bike-share-map:bayern-gemeinden": "bun ./scripts/bike-share-map/build.ts --scope bayern-gemeinden --stats-api",
     "bike-share-map:export-stats-geojson": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/export-stats-geojson.ts",
     "bike-share-map:viewer": "bun ./scripts/bike-share-map/buildViewer.ts",
+    "bike-share-map:share-pages": "bun ./scripts/bike-share-map/generateSharePages.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",

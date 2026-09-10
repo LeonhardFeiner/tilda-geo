@@ -18,6 +18,25 @@ export const PROJECT_LEAD = 'Leonhard Feiner'
 
 export const VIEWER_SOURCE_REPO_URL = 'https://github.com/LeonhardFeiner/tilda-geo'
 
+/**
+ * Absolute base URL the viewer is deployed to — needed for the per-region share pages, whose
+ * `og:image` / canonical links must be absolute for link-preview crawlers. Override with
+ * `BIKE_SHARE_PAGE_BASE_URL` when deploying the viewer somewhere else.
+ */
+export const SHARE_PAGE_BASE_URL =
+  process.env.BIKE_SHARE_PAGE_BASE_URL || 'https://leonhardfeiner.github.io/tilda-geo/'
+
+/**
+ * Bundesländer (OSM relation ids) that get a rendered per-region Open Graph image on their
+ * share pages; regions elsewhere fall back to the generic card. Rendering every German region
+ * is ~10k images per build, so this stays scoped by default. Override with a comma-separated
+ * `BIKE_SHARE_OG_BUNDESLAENDER` (or `all`).
+ */
+export const SHARE_PAGE_OG_IMAGE_BUNDESLAENDER: readonly string[] =
+  process.env.BIKE_SHARE_OG_BUNDESLAENDER?.split(',')
+    .map((s) => s.trim())
+    .filter(Boolean) ?? [BAYERN_ID]
+
 /** Values above this % use the max choropleth color; gradient runs 0 → this when data exceeds it. */
 export const BIKE_SHARE_COLOR_CAP_PCT = 50
 

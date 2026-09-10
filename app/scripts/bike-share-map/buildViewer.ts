@@ -5,6 +5,7 @@
 import { existsSync, lstatSync, mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -91,6 +92,11 @@ for (const workerEntry of [
 }
 
 writeFileSync(join(viewerDir, 'index.html'), generateViewerHtml(new Date().toISOString()), 'utf8')
+
+const sharePages = await generateSharePages()
+process.stdout.write(
+  `Share pages: ${sharePages.stubCount} stubs, ${sharePages.imageCount} OG images → ${viewerDir}/r\n`,
+)
 
 process.stdout.write(`Viewer: ${viewerDir}/index.html\n`)
 process.stdout.write(`Needs:  ${msgpackPath} (bun run bike-share-map:export-stats-geojson)\n`)
