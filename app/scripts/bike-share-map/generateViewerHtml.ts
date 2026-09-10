@@ -2260,16 +2260,53 @@ export function generateViewerHtml(generatedAt: string) {
       );
     }
 
-    function fitMapToFeature(feature) {
+    /** Pixels of the map hidden by the bottom sheet at its target state (0 on desktop / full). */
+    function mapBottomInset() {
+      if (typeof sheetEnabled !== 'function' || !sheetEnabled()) return 0;
+      const st = typeof sheetState === 'function' ? sheetState() : 'peek';
+      if (st === 'full') return 0;
+      const vph =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vph')) ||
+        window.innerHeight / 100;
+      if (st === 'half') return Math.round(56 * vph);
+      return 0; // peek: the bar is small enough to ignore
+    }
+
+    /**
+     * Keep the focused region visible above the sheet: while a region is selected, pad the
+     * map's bottom by the sheet height so the choropleth (and fitBounds) frame into the strip
+     * that is actually on screen. Reset to 0 once nothing is selected.
+     */
+    function syncMapPadding(animate) {
+      if (!map || typeof map.setPadding !== 'function') return;
+      const bottom = document.body.dataset.regionDetail ? mapBottomInset() : 0;
+      const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
+      const current = (currentPadding && currentPadding.bottom) || 0;
+      if (Math.abs(current - bottom) < 2) return;
+      const padding = { top: 0, right: 0, bottom, left: 0 };
+      if (animate && typeof map.easeTo === 'function') {
+        map.easeTo({ padding, duration: 220 });
+      } else {
+        map.setPadding(padding);
+      }
+    }
+
+    function fitMapToFeature(feature, opts) {
       if (!feature?.geometry) return;
       const bbox = turf.bbox(feature);
-      if (!bbox.every(Number.isFinite) || featureBboxInMapView(bbox)) return;
+      if (!bbox.every(Number.isFinite)) return;
+      if (!(opts && opts.force) && featureBboxInMapView(bbox)) return;
+      const inset = mapBottomInset();
       map.fitBounds(
         [
           [bbox[0], bbox[1]],
           [bbox[2], bbox[3]],
         ],
-        { padding: 72, duration: 400, maxZoom: map.getZoom() },
+        {
+          padding: { top: 60, right: 40, bottom: Math.max(40, inset + 24), left: 40 },
+          duration: 400,
+          maxZoom: map.getZoom(),
+        },
       );
     }
 
@@ -2293,7 +2330,10 @@ export function generateViewerHtml(generatedAt: string) {
       if (!feature) return;
       clearOverlayLineHighlight();
       showRegionDetail(feature);
-      if (panToMap) fitMapToFeature(feature);
+      if (panToMap) {
+        syncMapPadding(true);
+        fitMapToFeature(feature, { force: typeof sheetEnabled === 'function' && sheetEnabled() });
+      }
     }
 
     function clearRegionSelection() {
@@ -2302,6 +2342,7 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailEl.hidden = true;
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
+      syncMapPadding(true);
     }
 
     function refreshSelectedRegionIfNeeded() {
@@ -2482,7 +2523,11 @@ export function generateViewerHtml(generatedAt: string) {
     function fitMapToCurrentView() {
       const bbox = bboxForCurrentView();
       if (bbox.every(Number.isFinite)) {
-        map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], { padding: 48, duration: 0 });
+        const inset = document.body.dataset.regionDetail ? mapBottomInset() : 0;
+        map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], {
+          padding: { top: 48, right: 48, bottom: 48 + inset, left: 48 },
+          duration: 0,
+        });
       }
     }
 
@@ -2920,6 +2965,8 @@ export function generateViewerHtml(generatedAt: string) {
         clearRegionSelection();
       }
       notifyMapResize();
+      // Re-frame a focused region when the sheet changes size (half <-> full).
+      if (document.body.dataset.regionDetail) syncMapPadding(true);
     }
 
     // Primary sections: collapsible accordions on desktop, always-open blocks on the phone
