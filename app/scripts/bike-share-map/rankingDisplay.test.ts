@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
+  bikelaneGapKm,
   buildRankingExportRows,
   buildTopFlopDisplayRows,
+  computeViewBenchmark,
   effectiveRankingTopN,
   focusChainFromParentMap,
   isFocusChainInTopOrFlopWindow,
@@ -87,5 +89,75 @@ describe('rankingDisplay', () => {
   test('skips middle injection when focus is already in flop block', () => {
     const rows = buildTopFlopDisplayRows(items(), 8, ['r26'])
     expect(rows.filter((r) => r.type === 'divider')).toHaveLength(1)
+  })
+})
+
+describe('computeViewBenchmark', () => {
+  const stat = (
+    id: string,
+    roadSumKm: number,
+    bikelaneSumKm: number,
+  ): {
+    id: string
+    name: string
+    roadSumKm: number
+    bikelaneSumKm: number
+    bikeSharePct: number | null
+  } => ({
+    id,
+    name: id.toUpperCase(),
+    roadSumKm,
+    bikelaneSumKm,
+    bikeSharePct: roadSumKm > 0 ? (bikelaneSumKm / roadSumKm) * 100 : null,
+  })
+
+  test('median with odd count and leader are picked from usable rows', () => {
+    const bench = computeViewBenchmark([
+      stat('a', 100, 2), // 2 %
+      stat('b', 100, 10), // 10 %
+      stat('c', 100, 6), // 6 %
+    ])
+    expect(bench).not.toBeNull()
+    expect(bench?.count).toBe(3)
+    expect(bench?.medianPct).toBeCloseTo(6)
+    expect(bench?.leaderPct).toBeCloseTo(10)
+    expect(bench?.leaderId).toBe('b')
+    expect(bench?.leaderName).toBe('B')
+  })
+
+  test('median with even count averages the two middle values', () => {
+    const bench = computeViewBenchmark([
+      stat('a', 100, 2),
+      stat('b', 100, 4),
+      stat('c', 100, 8),
+      stat('d', 100, 10),
+    ])
+    expect(bench?.medianPct).toBeCloseTo(6)
+  })
+
+  test('rows without road data are excluded from the benchmark', () => {
+    const bench = computeViewBenchmark([
+      stat('a', 100, 5), // 5 %
+      stat('b', 0, 0), // no roads
+      { id: 'c', name: 'C', roadSumKm: 0, bikelaneSumKm: 0, bikeSharePct: 0 }, // enrichFeature-style 0
+    ])
+    expect(bench?.count).toBe(1)
+    expect(bench?.medianPct).toBeCloseTo(5)
+  })
+
+  test('returns null when nothing has road data', () => {
+    expect(computeViewBenchmark([{ roadSumKm: 0, bikelaneSumKm: 0, bikeSharePct: 0 }])).toBeNull()
+    expect(computeViewBenchmark([])).toBeNull()
+  })
+})
+
+describe('bikelaneGapKm', () => {
+  test('kilometres needed to reach the target share', () => {
+    expect(bikelaneGapKm({ roadSumKm: 316.9, bikelaneSumKm: 5.2 }, 8.5)).toBeCloseTo(21.7365, 3)
+  })
+
+  test('is zero once the region already meets or beats the target', () => {
+    expect(bikelaneGapKm({ roadSumKm: 100, bikelaneSumKm: 20 }, 15)).toBe(0)
+    expect(bikelaneGapKm({ roadSumKm: 100, bikelaneSumKm: 15 }, 15)).toBe(0)
   })
 })

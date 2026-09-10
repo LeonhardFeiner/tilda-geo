@@ -101,6 +101,9 @@ process.stdout.write(`  untergebiet      rb:… | lk:… | kreisfreie:… | stad
 process.stdout.write(`  darstellung      bundeslaender | landkreis_kreisfrei | gemeinden | …\n`)
 process.stdout.write(`  minimal / ui     minimal=1 or ui=minimal hides the control panel\n`)
 process.stdout.write(`  ui=simple       simplified view (focus= relation id, simple= preset id)\n`)
+process.stdout.write(
+  `  region           relation/… – preselect that region's detail card on load\n`,
+)
 process.stdout.write(`  view / gebiet    legacy view ids still supported\n`)
 process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
 process.stdout.write(`  radwege / bikelanes   1 | 0\n`)

@@ -86,7 +86,24 @@ export function generateViewerHtml(generatedAt: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Radinfra-Karte – Viewer</title>
+  <title>Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?</title>
+  <meta
+    name="description"
+    content="Wie viel Prozent der Straßen haben Radinfrastruktur? Vergleich der Gemeinden und Landkreise auf Basis von OpenStreetMap-Daten."
+  />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Radinfra-Vergleich" />
+  <meta property="og:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
+  <meta
+    property="og:description"
+    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+  />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
+  <meta
+    name="twitter:description"
+    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+  />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -515,6 +532,18 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-close:hover { color: #111; }
     .region-detail-meta { margin: 0 0 8px; color: #555; line-height: 1.45; white-space: pre-line; }
+    .region-detail-gap {
+      margin: 0 0 10px; padding: 8px 10px; border-radius: 6px;
+      font-size: 12px; line-height: 1.45;
+    }
+    .region-detail-gap[hidden] { display: none !important; }
+    .region-detail-gap strong { font-weight: 700; }
+    .region-detail-gap--behind {
+      background: #fdecea; border: 1px solid #f5c6c0; color: #8a1c11;
+    }
+    .region-detail-gap--ahead {
+      background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
+    }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -806,6 +835,7 @@ export function generateViewerHtml(generatedAt: string) {
       <h3 id="region-detail-title"></h3>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
+    <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <div id="region-detail-body"></div>
   </div>
   <script src="./statsClassSums.js"></script>
@@ -913,6 +943,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailEl = document.getElementById('region-detail');
     const regionDetailTitle = document.getElementById('region-detail-title');
     const regionDetailMeta = document.getElementById('region-detail-meta');
+    const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
@@ -1973,6 +2004,85 @@ export function generateViewerHtml(generatedAt: string) {
       overlayLineHighlightTimer = setTimeout(clearOverlayLineHighlight, OVERLAY_HIGHLIGHT_PULSE_MS);
     }
 
+    /** Below this many comparable regions a median/leader comparison is not worth showing. */
+    const MIN_BENCHMARK_REGIONS = 4;
+
+    function viewBenchmark() {
+      const stats = lastRankingSorted.map((f) => f.properties).filter(Boolean);
+      return RankingDisplay.computeViewBenchmark(stats);
+    }
+
+    /**
+     * "What would it take to catch up" for the selected region: km of bike infra missing to
+     * reach the median of the current view, and to reach its leader. Null when the region has
+     * no road data or the view is too small to compare against.
+     */
+    function regionGapSummary(p) {
+      if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
+      const bench = viewBenchmark();
+      if (!bench || bench.count < MIN_BENCHMARK_REGIONS) return null;
+      const leaderName =
+        bench.leaderId && bench.leaderId !== p.id ? bench.leaderName || null : null;
+      return {
+        behind: p.bikeSharePct < bench.medianPct - 0.05,
+        atMedian: Math.abs(p.bikeSharePct - bench.medianPct) <= 0.05,
+        count: bench.count,
+        medianPct: bench.medianPct,
+        medianGapKm: RankingDisplay.bikelaneGapKm(p, bench.medianPct),
+        leaderPct: bench.leaderPct,
+        leaderGapKm: RankingDisplay.bikelaneGapKm(p, bench.leaderPct),
+        leaderName,
+      };
+    }
+
+    function appendGapText(el, pre, strongText, post) {
+      el.appendChild(document.createTextNode(pre));
+      const strong = document.createElement('strong');
+      strong.textContent = strongText;
+      el.appendChild(strong);
+      if (post) el.appendChild(document.createTextNode(post));
+    }
+
+    function renderRegionGap(p) {
+      const g = regionGapSummary(p);
+      regionDetailGap.replaceChildren();
+      if (!g) {
+        regionDetailGap.hidden = true;
+        regionDetailGap.className = 'region-detail-gap';
+        return;
+      }
+      const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
+      if (g.behind) {
+        regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
+        appendGapText(
+          regionDetailGap,
+          'Um den Mittelwert (Median) dieser Ansicht (' +
+            formatUiPct(g.medianPct) +
+            ' %) zu erreichen, müssten rund ',
+          kmBike(g.medianGapKm) + ' km',
+          ' Radinfrastruktur dazukommen.',
+        );
+        if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
+          appendGapText(
+            regionDetailGap,
+            ' Bis zur Spitze (' +
+              g.leaderName +
+              ', ' +
+              formatUiPct(g.leaderPct) +
+              ' %): ',
+            kmBike(g.leaderGapKm) + ' km',
+            '.',
+          );
+        }
+      } else {
+        regionDetailGap.className = 'region-detail-gap region-detail-gap--ahead';
+        regionDetailGap.textContent = g.atMedian
+          ? 'Liegt im Mittelfeld dieser Ansicht (Median ' + formatUiPct(g.medianPct) + ' %).'
+          : 'Liegt über dem Median dieser Ansicht (' + formatUiPct(g.medianPct) + ' %).';
+      }
+      regionDetailGap.hidden = false;
+    }
+
     function showRegionDetail(feature) {
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
@@ -1995,6 +2105,7 @@ export function generateViewerHtml(generatedAt: string) {
         ' km Rad / ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
         ' km Straße';
+      renderRegionGap(p);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
       appendLengthRows(
@@ -2117,6 +2228,18 @@ export function generateViewerHtml(generatedAt: string) {
       } else {
         clearRegionSelection();
       }
+    }
+
+    /**
+     * A shared link can carry ?region=<osm id> so the recipient lands on the same selected
+     * region. Best-effort: only fires when that region is present in the current view.
+     */
+    function applySelectedRegionFromUrl() {
+      if (selectedFeatureId) return;
+      const regionId = urlParams().get('region');
+      if (!regionId) return;
+      const feature = lastRankingFeatures.find((f) => f.properties?.id === regionId);
+      if (feature) selectRegionById(regionId, null, true);
     }
 
     function bindRegionMapInteraction() {
@@ -2979,6 +3102,7 @@ export function generateViewerHtml(generatedAt: string) {
       const params = new URLSearchParams();
       appendViewScopeToUrl(params);
       appendViewerOptionsToUrl(params);
+      if (selectedFeatureId) params.set('region', selectedFeatureId);
       const qs = params.toString();
       return location.origin + location.pathname + (qs ? '?' + qs : '');
     }
@@ -3009,14 +3133,51 @@ export function generateViewerHtml(generatedAt: string) {
       return ok;
     }
 
+    function currentSelectedFeature() {
+      if (!selectedFeatureId) return null;
+      return lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) || null;
+    }
+
     function shareMessageText() {
+      const sel = currentSelectedFeature();
+      if (sel) {
+        const p = sel.properties || {};
+        const name = p.name || p.id || 'Dieses Gebiet';
+        if (p.roadSumKm > 0 && typeof p.bikeSharePct === 'number') {
+          const rankInfo = rankByFeatureId.get(p.id);
+          const g = regionGapSummary(p);
+          const behind = !!(g && g.behind);
+          let msg =
+            name +
+            ': ' +
+            (behind ? 'nur ' : '') +
+            formatUiPct(p.bikeSharePct) +
+            ' % der Straßen mit Radinfrastruktur';
+          if (rankInfo) msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total;
+          msg += '.';
+          if (behind) {
+            msg +=
+              ' Es fehlen rund ' +
+              TildaStats.formatStatKm(g.medianGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+              ' km bis zum Mittelwert dieser Auswahl.';
+          }
+          return msg;
+        }
+        return 'So steht „' + name + '“ beim Radwegausbau da:';
+      }
       const label = regionIndex ? viewLabelForCurrentMode() : 'diesem Gebiet';
-      return 'So steht „' + label + '“ beim Radwegausbau da:';
+      return 'Radinfra-Vergleich – „' + label + '“: Wie viel Prozent der Straßen haben Radwege?';
+    }
+
+    function shareTitleText() {
+      const sel = currentSelectedFeature();
+      const name = sel?.properties?.name;
+      return name ? name + ' – Radinfra-Vergleich' : 'Radinfra-Vergleich';
     }
 
     function sharePayload() {
       const url = buildShareUrl();
-      return { url, title: 'Radinfra-Karte', text: shareMessageText() };
+      return { url, title: shareTitleText(), text: shareMessageText() };
     }
 
     function openShareWindow(url) {
@@ -3877,6 +4038,7 @@ export function generateViewerHtml(generatedAt: string) {
         initOverlayColorInputs();
         applyUrlOptions();
         await applyCurrentView();
+        applySelectedRegionFromUrl();
         if (isSimpleUiFromUrl()) {
           void populateUntergebietSelect();
         }

@@ -158,3 +158,67 @@ export function buildTopFlopDisplayRows(
 
   return rows
 }
+
+export type ViewBenchmarkStat = {
+  id?: string
+  name?: string
+  roadSumKm: number
+  bikelaneSumKm: number
+  bikeSharePct: number | null
+}
+
+export type ViewBenchmark = {
+  /** Regions in the view that have enough road data to carry a comparable share. */
+  count: number
+  /** Median bike-infra share (%) across those regions. */
+  medianPct: number
+  /** Highest bike-infra share (%) in the view. */
+  leaderPct: number
+  leaderId?: string
+  leaderName?: string
+}
+
+function hasComparableShare(
+  stat: ViewBenchmarkStat,
+): stat is ViewBenchmarkStat & { bikeSharePct: number } {
+  return (
+    typeof stat.bikeSharePct === 'number' &&
+    Number.isFinite(stat.bikeSharePct) &&
+    stat.roadSumKm > 0
+  )
+}
+
+/**
+ * Reference points for "how does this region compare" — the median and the leader of the
+ * regions currently in view. Both are always available (no neighbour data needed) and both
+ * move with the counting-class filter, since callers pass the same filtered stats the
+ * ranking uses. Returns null when nothing in the view has usable road data.
+ */
+export function computeViewBenchmark(stats: ViewBenchmarkStat[]): ViewBenchmark | null {
+  const usable = stats.filter(hasComparableShare)
+  if (!usable.length) return null
+  const sortedPct = usable.map((s) => s.bikeSharePct).sort((a, b) => a - b)
+  const mid = Math.floor(sortedPct.length / 2)
+  const medianPct =
+    sortedPct.length % 2 === 0 ? (sortedPct[mid - 1]! + sortedPct[mid]!) / 2 : sortedPct[mid]!
+  const leader = usable.reduce((best, s) => (s.bikeSharePct > best.bikeSharePct ? s : best))
+  return {
+    count: usable.length,
+    medianPct,
+    leaderPct: leader.bikeSharePct,
+    leaderId: leader.id,
+    leaderName: leader.name,
+  }
+}
+
+/**
+ * Kilometres of bike infrastructure `stat` would have to add — holding its road length
+ * fixed — to reach `targetPct` share. Never negative (0 once the target is met).
+ */
+export function bikelaneGapKm(
+  stat: { roadSumKm: number; bikelaneSumKm: number },
+  targetPct: number,
+): number {
+  const target = (targetPct / 100) * stat.roadSumKm
+  return Math.max(0, target - stat.bikelaneSumKm)
+}
