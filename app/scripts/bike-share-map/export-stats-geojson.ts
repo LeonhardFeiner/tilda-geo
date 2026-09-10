@@ -85,6 +85,7 @@ const features = rows
       id: row.id,
       name: row.name ?? '',
       level: row.level ?? '',
+      ...(row.regionalschluessel ? { regionalschluessel: row.regionalschluessel } : {}),
       ...(row.parent_id ? { parent_id: row.parent_id } : {}),
       ...(row.bundesland_id ? { bundesland_id: row.bundesland_id } : {}),
       ...(row.landkreis_id ? { landkreis_id: row.landkreis_id } : {}),

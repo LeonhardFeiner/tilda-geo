@@ -5,6 +5,7 @@ export type AggregatedLengthExportRow = {
   id: string
   name: string | null
   level: string | null
+  regionalschluessel: string | null
   parent_id: string | null
   parent_name: string | null
   bundesland_id: string | null
@@ -27,6 +28,7 @@ export async function fetchAggregatedLengthRows() {
       a.id,
       a.name,
       a.level,
+      a.regionalschluessel,
       parent.id AS parent_id,
       parent.name AS parent_name,
       bl.id AS bundesland_id,

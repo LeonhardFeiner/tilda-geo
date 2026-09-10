@@ -94,6 +94,8 @@ export type RegionFeatureProps = {
   id?: string
   name?: string
   level?: string
+  /** 12-digit amtlicher Regionalschlüssel (Land+RB+Kreis+VB+Gem) — joins to Destatis Gemeindeverzeichnis data. */
+  regionalschluessel?: string
   parent_id?: string
   bundesland_id?: string
   landkreis_id?: string
