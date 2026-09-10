@@ -46,6 +46,34 @@ export function peerGroupLabel(demo: PeerDemographics) {
   return `${URBANIZATION_LABELS[demo.urbanizationCode]}, ${band.label} Einwohner`
 }
 
+export type PeerGroupIndex = {
+  /** peerGroupKey → human-readable group label. */
+  groups: Record<string, string>
+  /** region id → peerGroupKey; only regions with a demographics match. */
+  byId: Record<string, string>
+}
+
+/**
+ * Compact lookup shipped to the interactive viewer: which demographic-peer bucket each
+ * Gemeinde belongs to. The ranking itself is done client-side from the already-loaded
+ * stats, so this only needs the bucket assignment, not the numbers.
+ */
+export function buildPeerGroupIndex(
+  regionRsById: ReadonlyMap<string, string>,
+  demographicsByRs: ReadonlyMap<string, PeerDemographics>,
+): PeerGroupIndex {
+  const groups: Record<string, string> = {}
+  const byId: Record<string, string> = {}
+  for (const [id, rs] of regionRsById) {
+    const demo = demographicsByRs.get(rs)
+    if (!demo) continue
+    const key = peerGroupKey(demo)
+    byId[id] = key
+    groups[key] ??= peerGroupLabel(demo)
+  }
+  return { groups, byId }
+}
+
 export type PeerRegionStat = {
   id: string
   roadSumKm: number

@@ -5,6 +5,7 @@
 import { existsSync, lstatSync, mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 
@@ -50,6 +51,48 @@ if (!hasNeighborsMsgpack) {
 }
 symlinkOutputFile(manifestPath, join(viewerDir, 'manifest.json'))
 symlinkOutputFile(geojsonPath, join(viewerDir, 'stats.geojson'))
+
+// gemeinde-peers.json: {region id → demographic-peer bucket key} + {key → label}, for the
+// region card's "compared to similar Gemeinden nationwide" line. The ranking is computed
+// client-side from the loaded stats, so this stays small (~one line per Gemeinde). Absent
+// when the Destatis dataset has not been fetched — the viewer just omits that line.
+const demographicsPath = join(outputRoot, 'gemeinde-demographics.json')
+if (existsSync(demographicsPath) && existsSync(geojsonPath)) {
+  try {
+    const geo = JSON.parse(await Bun.file(geojsonPath).text()) as {
+      features?: Array<{
+        properties?: { id?: string; level?: string; regionalschluessel?: string }
+      }>
+    }
+    const rsById = new Map<string, string>()
+    for (const f of geo.features ?? []) {
+      const p = f.properties
+      if (p?.id && p.level === '8' && p.regionalschluessel) {
+        rsById.set(String(p.id), String(p.regionalschluessel))
+      }
+    }
+    const demo = JSON.parse(await Bun.file(demographicsPath).text()) as {
+      gemeinden?: Array<{
+        rs: string
+        population: number
+        urbanizationCode: PeerDemographics['urbanizationCode']
+      }>
+    }
+    const demographicsByRs = new Map<string, PeerDemographics>(
+      (demo.gemeinden ?? []).map((g) => [
+        g.rs,
+        { population: g.population, urbanizationCode: g.urbanizationCode },
+      ]),
+    )
+    const index = buildPeerGroupIndex(rsById, demographicsByRs)
+    writeFileSync(join(viewerDir, 'gemeinde-peers.json'), JSON.stringify(index))
+    process.stdout.write(
+      `Peer groups: ${Object.keys(index.byId).length} Gemeinden in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-peers.json skipped: ${err}\n`)
+  }
+}
 
 const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },

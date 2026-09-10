@@ -56,6 +56,7 @@ export function generateViewerHtml(generatedAt: string) {
     neighborsMsgpackUrl: './neighbors.msgpack',
     neighborsUrl: './neighbors.json',
     manifestUrl: './manifest.json',
+    peersUrl: './gemeinde-peers.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -544,6 +545,12 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-gap--ahead {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
+    #region-detail-gap + .region-detail-gap { margin-top: -4px; }
+    .region-detail-gap--peer::before {
+      content: 'Bundesweit'; display: block;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
+    }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -836,6 +843,7 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
+    <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <div id="region-detail-body"></div>
   </div>
   <script src="./statsClassSums.js"></script>
@@ -860,6 +868,14 @@ export function generateViewerHtml(generatedAt: string) {
       }
       return { type: 'geojson', data: await geoRes.json() };
     });
+    // {id → demographic-peer bucket key, key → label}; used by the region card. Optional.
+    let peerGroupIndex = null;
+    fetch(CONFIG.peersUrl)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.byId && data.groups) peerGroupIndex = data;
+      })
+      .catch(() => {});
     let overlaysBound = false;
     let overlayLineHighlight = null;
     let overlayLineHighlightTimer = null;
@@ -944,6 +960,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailTitle = document.getElementById('region-detail-title');
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
+    const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
@@ -2083,6 +2100,72 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailGap.hidden = false;
     }
 
+    /**
+     * Rank the selected Gemeinde against every German Gemeinde in the same population band and
+     * urbanization tier (peerGroupIndex from gemeinde-peers.json), using the current counting
+     * filter so it moves with the rest of the card. Answers "we're just rural, of course we're
+     * behind". Null unless it's a level-8 region with a peer bucket of at least
+     * MIN_BENCHMARK_REGIONS members.
+     */
+    function demographicPeerSummary(p) {
+      if (!peerGroupIndex || String(p.level) !== '8') return null;
+      if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
+      const key = peerGroupIndex.byId[p.id];
+      if (!key) return null;
+      const peers = allFeatures
+        .filter((f) => peerGroupIndex.byId[f.properties?.id] === key)
+        .map(enrichFeature)
+        .map((f) => f.properties)
+        .filter((q) => q.roadSumKm > 0 && typeof q.bikeSharePct === 'number');
+      if (peers.length < MIN_BENCHMARK_REGIONS) return null;
+      const bench = RankingDisplay.computeViewBenchmark(peers);
+      if (!bench) return null;
+      const ranked = peers.slice().sort((a, b) => b.bikeSharePct - a.bikeSharePct);
+      const rank = ranked.findIndex((q) => q.id === p.id) + 1;
+      if (!rank) return null;
+      return {
+        groupLabel: peerGroupIndex.groups[key] || 'vergleichbare Gemeinden',
+        rank,
+        total: ranked.length,
+        medianPct: bench.medianPct,
+        gapKm: RankingDisplay.bikelaneGapKm(p, bench.medianPct),
+        behind: p.bikeSharePct < bench.medianPct - 0.05,
+      };
+    }
+
+    function renderRegionPeerGap(p) {
+      const s = demographicPeerSummary(p);
+      regionDetailPeerGap.replaceChildren();
+      if (!s) {
+        regionDetailPeerGap.hidden = true;
+        regionDetailPeerGap.className = 'region-detail-gap region-detail-gap--peer';
+        return;
+      }
+      const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
+      const groupPhrase = 'Unter vergleichbaren Gemeinden (' + s.groupLabel + '): ';
+      if (s.behind) {
+        regionDetailPeerGap.className =
+          'region-detail-gap region-detail-gap--peer region-detail-gap--behind';
+        appendGapText(regionDetailPeerGap, groupPhrase, 'Platz ' + s.rank + ' von ' + s.total, '.');
+        appendGapText(
+          regionDetailPeerGap,
+          ' Zum Median dieser Gruppe (' + formatUiPct(s.medianPct) + ' %) fehlen rund ',
+          kmBike(s.gapKm) + ' km',
+          '.',
+        );
+      } else {
+        regionDetailPeerGap.className =
+          'region-detail-gap region-detail-gap--peer region-detail-gap--ahead';
+        appendGapText(
+          regionDetailPeerGap,
+          groupPhrase,
+          'Platz ' + s.rank + ' von ' + s.total,
+          ' – über dem Median (' + formatUiPct(s.medianPct) + ' %).',
+        );
+      }
+      regionDetailPeerGap.hidden = false;
+    }
+
     function showRegionDetail(feature) {
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
@@ -2106,6 +2189,7 @@ export function generateViewerHtml(generatedAt: string) {
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
         ' km Straße';
       renderRegionGap(p);
+      renderRegionPeerGap(p);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
       appendLengthRows(

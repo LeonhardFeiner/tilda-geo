@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   buildDemographicPeerSummaries,
+  buildPeerGroupIndex,
   peerGroupKey,
   peerGroupLabel,
   populationBandIndex,
@@ -86,5 +87,31 @@ describe('buildDemographicPeerSummaries', () => {
   test('drops a peer group with fewer than 4 members', () => {
     const summaries = buildDemographicPeerSummaries(regions.slice(0, 3), demographicsByRs, rsById)
     expect(summaries.size).toBe(0)
+  })
+})
+
+describe('buildPeerGroupIndex', () => {
+  test('maps each matched region to its bucket key and collects one label per key', () => {
+    const index = buildPeerGroupIndex(
+      new Map([
+        ['relation/1', '000000000001'],
+        ['relation/2', '000000000002'],
+        ['relation/3', '000000000003'],
+        ['relation/x', '999999999999'], // no demographics — skipped
+      ]),
+      new Map([
+        ['000000000001', { population: 5517, urbanizationCode: '03' }],
+        ['000000000002', { population: 6200, urbanizationCode: '03' }], // same bucket as 1
+        ['000000000003', { population: 120000, urbanizationCode: '01' }],
+      ]),
+    )
+    expect(index.byId).toEqual({
+      'relation/1': '03:4',
+      'relation/2': '03:4',
+      'relation/3': '01:8',
+    })
+    expect(index.groups['03:4']).toBe('ländlich geprägt, 5.000–10.000 Einwohner')
+    expect(index.groups['01:8']).toBe('städtisch geprägt, über 100.000 Einwohner')
+    expect(Object.keys(index.groups)).toHaveLength(2)
   })
 })
