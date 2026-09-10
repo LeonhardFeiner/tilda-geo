@@ -159,6 +159,28 @@ describe('shareHeadline / shareDescription', () => {
     expect(text).not.toContain('fehlen rund')
     expect(text).toContain('Median:')
   })
+
+  test('description adds the demographic peer sentence when attached', () => {
+    const withPeer = {
+      ...sk,
+      peerGroup: {
+        groupLabel: 'ländlich geprägt, 5.000–10.000 Einwohner',
+        rank: 340,
+        total: 412,
+        medianPct: 6.2,
+        gapKm: 12.3,
+        behind: true,
+      },
+    }
+    const text = shareDescription(withPeer, '12.09.2026')
+    expect(text).toContain('Auch unter vergleichbaren Gemeinden bundesweit')
+    expect(text).toContain('ländlich geprägt, 5.000–10.000 Einwohner')
+    expect(text).toContain('Platz 340 von 412')
+  })
+
+  test('description omits the peer sentence when there is no demographics match', () => {
+    expect(shareDescription(sk, '12.09.2026')).not.toContain('vergleichbaren Gemeinden')
+  })
 })
 
 describe('slugForId / shareRedirectParams', () => {
@@ -241,6 +263,24 @@ describe('shareStubHtml / shareOgSvg', () => {
     expect(svg).toMatch(/^<svg /)
     expect(svg).toContain('1,6 %')
     expect(svg).toContain('Schweitenkirchen')
+  })
+
+  test('og image adds a peer-group line only when attached', () => {
+    expect(shareOgSvg(sk)).not.toContain('Vergleichbare Gemeinden bundesweit')
+    const withPeer = {
+      ...sk,
+      peerGroup: {
+        groupLabel: 'ländlich geprägt, 5.000–10.000 Einwohner',
+        rank: 340,
+        total: 412,
+        medianPct: 6.2,
+        gapKm: 12.3,
+        behind: true,
+      },
+    }
+    const svg = shareOgSvg(withPeer)
+    expect(svg).toContain('Vergleichbare Gemeinden bundesweit')
+    expect(svg).toContain('Platz 340 von 412')
   })
 
   test('shrinks the name font size instead of letting a long name run off the card', () => {

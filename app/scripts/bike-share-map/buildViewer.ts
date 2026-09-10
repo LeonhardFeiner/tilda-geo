@@ -95,7 +95,8 @@ writeFileSync(join(viewerDir, 'index.html'), generateViewerHtml(new Date().toISO
 
 const sharePages = await generateSharePages()
 process.stdout.write(
-  `Share pages: ${sharePages.stubCount} stubs, ${sharePages.imageCount} OG images → ${viewerDir}/r\n`,
+  `Share pages: ${sharePages.stubCount} stubs, ${sharePages.imageCount} OG images, ` +
+    `${sharePages.peerCount} with a demographic peer comparison → ${viewerDir}/r\n`,
 )
 
 process.stdout.write(`Viewer: ${viewerDir}/index.html\n`)

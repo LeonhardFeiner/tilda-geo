@@ -34,6 +34,7 @@
     "bike-share-map:export-stats-geojson": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/export-stats-geojson.ts",
     "bike-share-map:viewer": "bun ./scripts/bike-share-map/buildViewer.ts",
     "bike-share-map:share-pages": "bun ./scripts/bike-share-map/generateSharePages.ts",
+    "bike-share-map:gemeinde-demographics": "bun ./scripts/bike-share-map/fetchGemeindeDemographics.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",
@@ -236,7 +237,8 @@
     "tailwindcss": "4.3.2",
     "typescript": "7.0.2",
     "vite": "^8.2.2",
-    "vitest": "4.1.11"
+    "vitest": "4.1.11",
+    "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
     "@typescript/typescript-darwin-arm64": "7.0.2",

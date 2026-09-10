@@ -1,3 +1,4 @@
+import type { DemographicPeerSummary } from './demographicPeers'
 import { bikelaneGapKm, computeViewBenchmark, type ViewBenchmarkStat } from './rankingDisplay'
 import { formatStatKm, formatStatPctUi, STAT_KM_BIKE_UI_DECIMALS } from './statsClassSums'
 
@@ -36,6 +37,13 @@ export type ShareRegionSummary = ShareRegionInput & {
   leaderName: string | null
   leaderPct: number | null
   leaderGapKm: number | null
+  /**
+   * Optional: this region's rank among demographic peers nationwide (same population band +
+   * urbanization tier — see demographicPeers.ts), regardless of Landkreis/Bundesland. Attached
+   * by generateSharePages.ts after buildShareRegionSummaries, since it needs the separate
+   * Destatis dataset. Closes off "we're just rural, of course we're behind".
+   */
+  peerGroup?: DemographicPeerSummary
 }
 
 /** A stub without at least this many peers has nothing to compare against — skip it. */
@@ -152,15 +160,30 @@ export function shareHeadline(s: ShareRegionSummary) {
   return `${s.name}: ${prefix}${pct} % Radinfra – ${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
 }
 
+/**
+ * The Landkreis/Bundesland comparison above can be dismissed as "of course, we're rural" —
+ * this adds the harder-to-dismiss one: rank among Gemeinden nationwide with a similar
+ * population and the same urbanization tier (see demographicPeers.ts).
+ */
+function peerGroupSentence(s: ShareRegionSummary): string {
+  const peer = s.peerGroup
+  if (!peer) return ''
+  if (peer.behind) {
+    return ` Auch unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) reicht es nur zu ${shareRankPhrase(peer)}.`
+  }
+  return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) liegt ${s.name} über dem Median.`
+}
+
 export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const pct = formatStatPctUi(s.bikeSharePct)
   const median = formatStatPctUi(s.medianPct)
   const base = `${pct} % der Straßen in ${s.name} haben Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).`
+  const peerSentence = peerGroupSentence(s)
   if (s.behind) {
     const gapKm = formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)
-    return `${base} Bis zum Mittelwert (${median} %) fehlen rund ${gapKm} km. Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+    return `${base} Bis zum Mittelwert (${median} %) fehlen rund ${gapKm} km.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
   }
-  return `${base} Median: ${median} %. Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+  return `${base} Median: ${median} %.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
 }
 
 export function slugForId(id: string) {
@@ -283,12 +306,22 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const subLineText = s.behind
     ? `Es fehlen rund ${formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)} km bis zum Mittelwert (${formatStatPctUi(s.medianPct)} %)`
     : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
+  const peer = s.peerGroup
+  const peerLineText = peer
+    ? peer.behind
+      ? `Vergleichbare Gemeinden bundesweit (${peer.groupLabel}): ${shareRankPhrase(peer)}`
+      : `Vergleichbare Gemeinden bundesweit (${peer.groupLabel}): über dem Median`
+    : ''
   const nameSize = fitFontSize(s.name, 38, 22)
   const rankSize = fitFontSize(rankLineText, 32, 20)
   const subSize = fitFontSize(subLineText, 25, 17)
+  const peerSize = fitFontSize(peerLineText, 24, 15)
   const name = escapeHtml(s.name)
   const rankLine = escapeHtml(rankLineText)
   const subLine = escapeHtml(subLineText)
+  const peerLine = peerLineText
+    ? `<text x="60" y="512" font-family="Arial, sans-serif" font-size="${peerSize}" fill="#9fc7ba">${escapeHtml(peerLineText)}</text>`
+    : ''
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${bg}" />
   <text x="60" y="110" font-family="Arial, sans-serif" font-size="${nameSize}" font-weight="700" fill="#ffffff">${name}</text>
@@ -296,6 +329,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur an Straßen (km)</text>
   <text x="60" y="410" font-family="Arial, sans-serif" font-size="${rankSize}" font-weight="600" fill="#ffffff">${rankLine}</text>
   <text x="60" y="458" font-family="Arial, sans-serif" font-size="${subSize}" fill="#cfe8dd">${subLine}</text>
+  ${peerLine}
   <text x="60" y="580" font-family="Arial, sans-serif" font-size="21" fill="#8fb9ab">Radinfra-Vergleich · Daten: OpenStreetMap</text>
 </svg>`
 }

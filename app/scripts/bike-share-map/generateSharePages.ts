@@ -14,6 +14,11 @@ import { join } from 'node:path'
 import sharp from 'sharp'
 import { SHARE_PAGE_BASE_URL, SHARE_PAGE_OG_IMAGE_BUNDESLAENDER } from './constants'
 import {
+  buildDemographicPeerSummaries,
+  type DemographicPeerSummary,
+  type PeerDemographics,
+} from './demographicPeers'
+import {
   buildShareRegionSummaries,
   shareOgSvg,
   shareRedirectQuery,
@@ -26,6 +31,7 @@ import { RADINFRA_DEFAULT_FILTER, computeFilteredLengths } from './statsClassSum
 const scriptDir = import.meta.dir
 const outDir = join(scriptDir, 'output')
 const geojsonPath = join(outDir, 'stats.geojson')
+const demographicsPath = join(outDir, 'gemeinde-demographics.json')
 const shareDir = join(outDir, 'viewer', 'r')
 
 type StatsFeature = {
@@ -41,6 +47,30 @@ async function loadFeatures(): Promise<StatsFeature[]> {
   }
   const raw = JSON.parse(await Bun.file(geojsonPath).text()) as { features?: StatsFeature[] }
   return raw.features ?? []
+}
+
+/** RS → population/urbanization from fetchGemeindeDemographics.ts; absent if not fetched yet. */
+async function loadDemographicsByRs(): Promise<Map<string, PeerDemographics>> {
+  if (!existsSync(demographicsPath)) {
+    process.stderr.write(
+      `No demographic peer comparison: ${demographicsPath} missing – ` +
+        `run bike-share-map:gemeinde-demographics to enable it.\n`,
+    )
+    return new Map()
+  }
+  const raw = JSON.parse(await Bun.file(demographicsPath).text()) as {
+    gemeinden?: Array<{
+      rs: string
+      population: number
+      urbanizationCode: PeerDemographics['urbanizationCode']
+    }>
+  }
+  return new Map(
+    (raw.gemeinden ?? []).map((g) => [
+      g.rs,
+      { population: g.population, urbanizationCode: g.urbanizationCode },
+    ]),
+  )
 }
 
 function shareRegionInputFromFeature(f: StatsFeature): ShareRegionInput | null {
@@ -86,9 +116,10 @@ function ogImageIsInScope(region: ShareRegionInput) {
 
 export async function generateSharePages() {
   const features = await loadFeatures()
-  if (!features.length) return { stubCount: 0, imageCount: 0 }
+  if (!features.length) return { stubCount: 0, imageCount: 0, peerCount: 0 }
 
   const nameById = new Map<string, string>()
+  const rsById = new Map<string, string>()
   let deutschlandId = ''
   const regions: ShareRegionInput[] = []
   for (const f of features) {
@@ -96,13 +127,27 @@ export async function generateSharePages() {
     if (!p) continue
     const id = String(p.id ?? '')
     if (id) nameById.set(id, String(p.name ?? id))
+    if (id && p.regionalschluessel) rsById.set(id, String(p.regionalschluessel))
     if (String(p.level ?? '') === '2') deutschlandId = id
     const input = shareRegionInputFromFeature(f)
     if (input && ['4', '6', '8'].includes(input.level)) regions.push(input)
   }
 
   const summaries = buildShareRegionSummaries(regions, nameById)
-  if (!summaries.size) return { stubCount: 0, imageCount: 0 }
+  if (!summaries.size) return { stubCount: 0, imageCount: 0, peerCount: 0 }
+
+  const demographicsByRs = await loadDemographicsByRs()
+  const peerSummaries: Map<string, DemographicPeerSummary> = demographicsByRs.size
+    ? buildDemographicPeerSummaries(
+        regions.filter((r) => r.level === '8'),
+        demographicsByRs,
+        rsById,
+      )
+    : new Map()
+  for (const [id, peerGroup] of peerSummaries) {
+    const summary = summaries.get(id)
+    if (summary) summary.peerGroup = peerGroup
+  }
 
   mkdirSync(shareDir, { recursive: true })
 
@@ -162,15 +207,18 @@ export async function generateSharePages() {
         slug: slugForId(s.id),
         rank: s.rank,
         total: s.total,
+        ...(s.peerGroup ? { peerRank: s.peerGroup.rank, peerTotal: s.peerGroup.total } : {}),
       })),
     ),
     'utf8',
   )
 
-  return { stubCount: entries.length, imageCount }
+  return { stubCount: entries.length, imageCount, peerCount: peerSummaries.size }
 }
 
 if (import.meta.main) {
-  const { stubCount, imageCount } = await generateSharePages()
-  process.stdout.write(`Share pages: ${stubCount} stubs, ${imageCount} OG images → ${shareDir}\n`)
+  const { stubCount, imageCount, peerCount } = await generateSharePages()
+  process.stdout.write(
+    `Share pages: ${stubCount} stubs, ${imageCount} OG images, ${peerCount} with a demographic peer comparison → ${shareDir}\n`,
+  )
 }
