@@ -169,7 +169,7 @@ export function generateViewerHtml(generatedAt: string) {
       /* --vph is set from window.innerHeight in JS; the 1vh fallback keeps this valid
          before JS runs and on browsers without it. (dvh can't be used — the formatter
          drops the vh fallback declaration.) */
-      body[data-sheet="half"] .panel { height: calc(46 * var(--vph, 1vh)); overflow-y: auto; }
+      body[data-sheet="half"] .panel { height: calc(56 * var(--vph, 1vh)); overflow-y: auto; }
       body[data-sheet="full"] .panel { height: calc(94 * var(--vph, 1vh)); overflow-y: auto; }
       .panel.is-dragging { transition: none; }
 
@@ -3024,7 +3024,7 @@ export function generateViewerHtml(generatedAt: string) {
         sheetDrag = null;
         if (!wasDrag) return; // a tap — handled by the click listener
         suppressSummaryClick = true;
-        setSheetState(frac > 0.62 ? 'full' : frac > 0.2 ? 'half' : 'peek');
+        setSheetState(frac > 0.75 ? 'full' : frac > 0.2 ? 'half' : 'peek');
       };
       panelSummary?.addEventListener('pointerup', endSheetDrag);
       panelSummary?.addEventListener('pointercancel', endSheetDrag);
