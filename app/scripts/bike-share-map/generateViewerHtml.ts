@@ -1,5 +1,5 @@
-import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from "./basemaps";
-import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from "./colorScales";
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basemaps'
+import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
   DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM,
@@ -13,32 +13,32 @@ import {
   VIEWER_SOURCE_REPO_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
-} from "./constants";
+} from './constants'
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
   RADINFRA_DEFAULT_FILTER,
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
-} from "./statsClassSums";
-import { viewerRegionNavScript } from "./viewerRegionNavScript";
+} from './statsClassSums'
+import { viewerRegionNavScript } from './viewerRegionNavScript'
 
 export function generateViewerHtml(generatedAt: string) {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
-  );
+  )
 
   const defaultColorScale =
-    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0];
+    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
   if (!defaultColorScale) {
-    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`);
+    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`)
   }
 
-  const generatedDateLabel = new Date(generatedAt).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 
   const config = {
     generatedAt,
@@ -51,12 +51,12 @@ export function generateViewerHtml(generatedAt: string) {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: "./stats.msgpack",
-    statsUrl: "./stats.geojson",
-    neighborsMsgpackUrl: "./neighbors.msgpack",
-    neighborsUrl: "./neighbors.json",
-    manifestUrl: "./manifest.json",
-    peersUrl: "./gemeinde-peers.json",
+    statsMsgpackUrl: './stats.msgpack',
+    statsUrl: './stats.geojson',
+    neighborsMsgpackUrl: './neighbors.msgpack',
+    neighborsUrl: './neighbors.json',
+    manifestUrl: './manifest.json',
+    peersUrl: './gemeinde-peers.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -80,7 +80,7 @@ export function generateViewerHtml(generatedAt: string) {
       label: BIKELANE_CLASS_LABELS[id],
     })),
     radinfraDefaultFilter: RADINFRA_DEFAULT_FILTER,
-  };
+  }
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -4441,5 +4441,5 @@ export function generateViewerHtml(generatedAt: string) {
   </script>
 </body>
 </html>
-`;
+`
 }
