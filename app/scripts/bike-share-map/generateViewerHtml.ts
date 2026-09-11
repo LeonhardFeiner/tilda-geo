@@ -188,11 +188,6 @@ export function generateViewerHtml(generatedAt: string) {
       .panel-summary-preview { font-size: 12px; }
       .panel-body { padding-bottom: 8px; }
 
-      /* The sheet itself scrolls — no nested scroll box for the full "Alle" ranking.
-         id+class so this beats the later, equally-specific base rule (media queries
-         add no specificity). */
-      #ranking-scroll.ranking-scroll--scroll { max-height: none; overflow: visible; }
-
       /* Primary sections are permanently open on the phone (see lockOpenSectionsForViewport). */
       .panel-section[data-lock-open] > summary {
         pointer-events: none;
@@ -488,8 +483,11 @@ export function generateViewerHtml(generatedAt: string) {
       padding-right: 2px;
     }
     .ranking-scroll--scroll {
-      max-height: min(40vh, 320px);
-      overflow-y: auto;
+      /* Let the full "Alle" ranking grow to its natural height instead of scrolling in its
+         own fixed-size box — the panel itself already scrolls, and a box-inside-a-box nested
+         scroll is confusing on both desktop and mobile. */
+      max-height: none;
+      overflow: visible;
     }
     .view-meta {
       font-size: 11px; color: #666; margin: 0; line-height: 1.45;
@@ -2070,6 +2068,24 @@ export function generateViewerHtml(generatedAt: string) {
     /** Below this many comparable regions a median/leader comparison is not worth showing. */
     const MIN_BENCHMARK_REGIONS = 4;
 
+    /**
+     * "dieser Ansicht" only reads naturally when the view has no single named region behind it
+     * (the nationwide default). Once the Gebiet/Untergebiet narrows the comparison down to one
+     * specific Bundesland/Landkreis/etc., name it instead — "der Region Bayern" beats "dieser
+     * Ansicht" once there's an actual region to point to.
+     */
+    function currentViewScopeName() {
+      if (!regionIndex) return null;
+      const scopeId = RegionNav.scopeIdFor(currentViewScope.gebiet, currentViewScope.untergebiet);
+      if (!scopeId) return null;
+      return regionIndex.byId.get(scopeId)?.properties?.name || null;
+    }
+
+    function viewComparisonLabel() {
+      const name = currentViewScopeName();
+      return name ? 'der Region ' + name : 'dieser Ansicht';
+    }
+
     function viewBenchmark() {
       const stats = lastRankingSorted.map((f) => f.properties).filter(Boolean);
       return RankingDisplay.computeViewBenchmark(stats);
@@ -2115,11 +2131,14 @@ export function generateViewerHtml(generatedAt: string) {
         return;
       }
       const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
+      const viewLabel = viewComparisonLabel();
       if (g.behind) {
         regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
         appendGapText(
           regionDetailGap,
-          'Um den Mittelwert (Median) dieser Ansicht (' +
+          'Um den Mittelwert (Median) ' +
+            viewLabel +
+            ' (' +
             formatUiPct(g.medianPct) +
             ' %) zu erreichen, müssten rund ',
           kmBike(g.medianGapKm) + ' km',
@@ -2140,8 +2159,8 @@ export function generateViewerHtml(generatedAt: string) {
       } else {
         regionDetailGap.className = 'region-detail-gap region-detail-gap--ahead';
         regionDetailGap.textContent = g.atMedian
-          ? 'Liegt im Mittelfeld dieser Ansicht (Median ' + formatUiPct(g.medianPct) + ' %).'
-          : 'Liegt über dem Median dieser Ansicht (' + formatUiPct(g.medianPct) + ' %).';
+          ? 'Liegt im Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).'
+          : 'Liegt über dem Median ' + viewLabel + ' (' + formatUiPct(g.medianPct) + ' %).';
       }
       regionDetailGap.hidden = false;
     }
