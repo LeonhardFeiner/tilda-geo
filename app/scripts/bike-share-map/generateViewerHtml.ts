@@ -51,7 +51,8 @@ export function generateViewerHtml(generatedAt: string) {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: './stats.msgpack',
+    statsMsgpackUrl: './stats-core.msgpack',
+    statsExtraMsgpackUrl: './stats-extra.msgpack',
     statsUrl: './stats.geojson',
     neighborsMsgpackUrl: './neighbors.msgpack',
     neighborsUrl: './neighbors.json',
@@ -87,6 +88,13 @@ export function generateViewerHtml(generatedAt: string) {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
+       browser only discovers it once the inline controller script runs, after every script tag
+       above it has downloaded and executed. Preloading lets it start immediately, in parallel
+       with everything else. crossorigin is required even same-origin: fetch() always runs in
+       CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
+  <link rel="preload" href="./stats-core.msgpack" as="fetch" crossorigin="anonymous" />
+  <link rel="preconnect" href="https://unpkg.com" crossorigin />
   <title>Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?</title>
   <meta
     name="description"
@@ -917,12 +925,50 @@ export function generateViewerHtml(generatedAt: string) {
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
 
+    // stats-core.msgpack (fetched above as statsDataPromise) omits Gemeindeverbände (level 7)
+    // and Stadtbezirke (level 9) — together ~40% of the combined payload — so the first paint
+    // never waits on them. They're fetched right after, in the background: the two Darstellung
+    // options they power are only shown in the dropdown once features for them actually exist
+    // (listDarstellungPresetsForScope), so waiting for an explicit selection before fetching
+    // would make those options impossible to ever pick. This still avoids blocking the initial
+    // render/interactivity on that data, which is what makes the page feel slow to load.
+    const DARSTELLUNGEN_NEEDING_EXTRA_LEVELS = new Set([
+      'gemeindeverbaende',
+      'gemeindeverbaende_kreisfrei',
+      'stadtbezirke',
+    ]);
+    let extraLevelsLoaded = false;
+    let extraLevelsPromise = null;
+    function ensureExtraLevelsLoaded() {
+      if (extraLevelsLoaded) return Promise.resolve();
+      if (extraLevelsPromise) return extraLevelsPromise;
+      extraLevelsPromise = loadRegionFeaturesInWorker(CONFIG.statsExtraMsgpackUrl)
+        .then((extraFeatures) => {
+          allFeatures = allFeatures.concat(extraFeatures);
+          rebuildRegionIndex();
+          extraLevelsLoaded = true;
+          // The Gemeindeverbände/Stadtbezirke options may only now have become selectable.
+          if (typeof populateDarstellungSelect === 'function') populateDarstellungSelect();
+        })
+        .catch((err) => {
+          extraLevelsPromise = null; // let the next call retry instead of failing forever
+          throw err;
+        });
+      return extraLevelsPromise;
+    }
+
     const statsReadyPromise = statsDataPromise
       .then((data) => {
         if (data.type === 'msgpack') {
           allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
+          // Fire-and-forget: starts right after the core data is usable, well before anyone
+          // could realistically have picked a Darstellung needing it.
+          ensureExtraLevelsLoaded().catch(() => {});
         } else {
+          // The geojson fallback (msgpack fetch failed) ships every level in one file, so
+          // there is no separate "extra" chunk left to fetch afterwards.
           allFeatures = data.data.features || [];
+          extraLevelsLoaded = true;
         }
         rebuildRegionIndex();
         rawLoaded = true;
@@ -1337,8 +1383,17 @@ export function generateViewerHtml(generatedAt: string) {
       downloadStatsCsv(currentViewFeaturesForExport(), downloadFilenameForView());
     }
 
-    function downloadFullStatsData() {
+    async function downloadFullStatsData() {
       if (!rawLoaded) return;
+      // "Gesamt" means every region, including Gemeindeverbände/Stadtbezirke — load them even
+      // if the current Darstellung never needed them.
+      if (!extraLevelsLoaded) {
+        try {
+          await ensureExtraLevelsLoaded();
+        } catch {
+          /* export with whatever loaded rather than blocking the download entirely */
+        }
+      }
       lengthClassFilter = readLengthClassFilterFromUi();
       downloadStatsCsv(allFeatures.map(enrichFeature), 'radinfra-gesamt.csv');
     }
@@ -4109,6 +4164,23 @@ export function generateViewerHtml(generatedAt: string) {
     async function applyCurrentView() {
       syncViewScopeFromUi();
       syncViewModeLinks();
+      // Normally already loaded in the background by now (see ensureExtraLevelsLoaded above);
+      // this only kicks in if that fetch is still in flight or failed and gets retried here.
+      if (
+        DARSTELLUNGEN_NEEDING_EXTRA_LEVELS.has(currentViewScope.darstellung) &&
+        !extraLevelsLoaded
+      ) {
+        setLoadStatus('Lade zusätzliche Gebiete …');
+        try {
+          await ensureExtraLevelsLoaded();
+        } catch (err) {
+          if (loadError) {
+            loadError.style.display = 'block';
+            loadError.textContent = String((err && err.message) || err);
+          }
+        }
+        setLoadStatus('');
+      }
       const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;

@@ -13,6 +13,11 @@ import {
 } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import {
+  decodeStatsRegionPack,
+  encodeStatsRegionPack,
+  splitStatsFeaturesByLevel,
+} from '../stats-export/statsRegionPack'
 import { PROJECT_LEAD, VIEWER_SOURCE_REPO_URL } from './constants'
 import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
@@ -56,7 +61,20 @@ function symlinkOutputFile(sourcePath: string, linkPath: string) {
   return true
 }
 
-if (!symlinkOutputFile(msgpackPath, join(viewerDir, 'stats.msgpack'))) {
+// stats.msgpack is split into two packs so the viewer doesn't have to download everything up
+// front: stats-core.msgpack (admin levels most visits actually browse) and stats-extra.msgpack
+// (Gemeindeverbände/Stadtbezirke, ~40% of the combined size, behind two niche Darstellung
+// options) — fetched lazily only once one of those is selected. See splitStatsFeaturesByLevel.
+if (existsSync(msgpackPath)) {
+  const packBytes = new Uint8Array(await Bun.file(msgpackPath).arrayBuffer())
+  const { core, extra } = splitStatsFeaturesByLevel(decodeStatsRegionPack(packBytes))
+  writeFileSync(join(viewerDir, 'stats-core.msgpack'), encodeStatsRegionPack(core))
+  writeFileSync(join(viewerDir, 'stats-extra.msgpack'), encodeStatsRegionPack(extra))
+  process.stdout.write(
+    `Stats split: ${core.length} core + ${extra.length} extra (Gemeindeverbände/Stadtbezirke) ` +
+      `→ ${viewerDir}/stats-core.msgpack, stats-extra.msgpack\n`,
+  )
+} else {
   process.stderr.write(
     `Warning: ${msgpackPath} missing – run: bun run bike-share-map:export-stats-geojson\n`,
   )

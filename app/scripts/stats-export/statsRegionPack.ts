@@ -20,3 +20,21 @@ export function decodeStatsRegionPack(bytes: Uint8Array) {
   }
   return data.features
 }
+
+/**
+ * Admin levels split into a separate pack: Gemeindeverbände (7) and Stadtbezirke (9) power two
+ * niche Darstellung dropdown options that most visits never touch, yet make up ~40% of the
+ * combined payload (mostly geometry for ~11k Stadtbezirke). Splitting them out means the first
+ * paint no longer blocks on them — the viewer fetches this pack in the background right after
+ * the core one, instead of bundling it into the initial download everyone pays for up front.
+ */
+export const LAZY_STATS_LEVELS: ReadonlySet<string> = new Set(['7', '9'])
+
+export function splitStatsFeaturesByLevel(features: StatsFeature[]) {
+  const core: StatsFeature[] = []
+  const extra: StatsFeature[] = []
+  for (const f of features) {
+    ;(LAZY_STATS_LEVELS.has(String(f.properties?.level ?? '')) ? extra : core).push(f)
+  }
+  return { core, extra }
+}
