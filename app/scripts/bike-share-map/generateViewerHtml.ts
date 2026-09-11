@@ -4095,7 +4095,15 @@ export function generateViewerHtml(generatedAt: string) {
 
       const run = () => {
         addRegionLayers(geojson, min, max, labelMinZoom);
-        fitMapToCurrentView();
+        // A region can be selected while this reruns for an unrelated reason (simple view
+        // re-applies the view once its neighbor index finishes loading, a basemap swap
+        // re-adds the layers, …). Re-fit to that region instead of the whole scope, or the
+        // refit silently undoes the focus that was just put on it.
+        if (document.body.dataset.regionDetail) {
+          syncMapViewport(false);
+        } else {
+          fitMapToCurrentView();
+        }
       };
       if (map.isStyleLoaded()) {
         run();
