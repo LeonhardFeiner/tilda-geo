@@ -4093,6 +4093,20 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function addRegionLayers(geojson, minPct, maxPct, labelMinZoom) {
+      // Creating the source/layers below throws ("Style is not done loading") if the basemap
+      // hasn't finished loading yet — plausible on a slow mobile connection right at page load.
+      // applyCurrentView()'s 2.5s fallback can call us before that's guaranteed, and an uncaught
+      // throw here skips bindRegionMapInteraction() right after it — permanently, since nothing
+      // retries it — leaving the map with no click handler until an unrelated view change calls
+      // us again once the style has since loaded. Defer instead of crashing.
+      if (
+        !map.getSource('regions') &&
+        typeof map.isStyleLoaded === 'function' &&
+        !map.isStyleLoaded()
+      ) {
+        map.once('idle', () => addRegionLayers(geojson, minPct, maxPct, labelMinZoom));
+        return;
+      }
       lastPctRange = { min: minPct, max: maxPct, scaleCapped: false, dataMax: maxPct };
       updateLegendBar(colorScaleSelect.value);
       applyOverlayLineColors();
@@ -4157,6 +4171,7 @@ export function generateViewerHtml(generatedAt: string) {
         }
         bindRegionMapInteraction();
         updateMapHighlights();
+        map.triggerRepaint();
       }
       updateOverlayVisibility();
     }
