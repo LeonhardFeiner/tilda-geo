@@ -2507,7 +2507,11 @@ export function generateViewerHtml(generatedAt: string) {
         parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vph')) ||
         window.innerHeight / 100;
       if (st === 'half') return Math.round(56 * vph);
-      return 0; // peek: the bar is small enough to ignore
+      // peek: the sheet is always on screen at this height (not "small enough to ignore" —
+      // it can hide an entire region on a Deutschland view, e.g. southern Bavaria, making it
+      // untappable), so measure and reserve it too.
+      const measured = panelMain ? panelMain.getBoundingClientRect().height : 0;
+      return measured > 0 ? Math.round(measured) : 78; // fallback ~= --sheet-peek (4.9rem)
     }
 
     function fitMapToFeature(feature, opts) {
@@ -2540,14 +2544,17 @@ export function generateViewerHtml(generatedAt: string) {
       const selected = document.body.dataset.regionDetail
         ? selectedFeatureOverride || currentSelectedFeature()
         : null;
-      const bottom = selected ? mapBottomInset() : 0;
+      // The sheet (even at peek) always occupies this much of the screen on mobile, so the
+      // inset applies whether or not a region is selected — not doing so left regions under
+      // the peek bar (e.g. southern Bavaria on a Deutschland view) untappable.
+      const bottom = mapBottomInset();
       const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
       const paddingChanged = !currentPadding || Math.abs((currentPadding.bottom || 0) - bottom) >= 2;
       if (paddingChanged) map.setPadding({ top: 0, right: 0, bottom, left: 0 });
       if (selected) {
         fitMapToFeature(selected, { force: true, zoomIn: true, duration: animate ? 420 : 0 });
       } else if (paddingChanged && animate && typeof map.easeTo === 'function') {
-        map.easeTo({ padding: { top: 0, right: 0, bottom: 0, left: 0 }, duration: 260 });
+        map.easeTo({ padding: { top: 0, right: 0, bottom, left: 0 }, duration: 260 });
       }
     }
 
@@ -2768,7 +2775,10 @@ export function generateViewerHtml(generatedAt: string) {
     function fitMapToCurrentView() {
       const bbox = bboxForCurrentView();
       if (bbox.every(Number.isFinite)) {
-        const inset = document.body.dataset.regionDetail ? mapBottomInset() : 0;
+        // Reserve space for the bottom sheet even with nothing selected — on mobile it's
+        // always on screen (at least at peek height), so without this the view's southern
+        // edge can render behind it and become untappable.
+        const inset = mapBottomInset();
         map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], {
           padding: { top: 48, right: 48, bottom: 48 + inset, left: 48 },
           duration: 0,
