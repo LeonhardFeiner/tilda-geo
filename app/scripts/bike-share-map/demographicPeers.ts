@@ -1,6 +1,8 @@
 import type { UrbanizationCode } from './fetchGemeindeDemographics'
 import { bikelaneGapKm, computeViewBenchmark, type ViewBenchmarkStat } from './rankingDisplay'
 
+export type { UrbanizationCode }
+
 /**
  * Compares a Gemeinde against demographic peers nationwide — same population band and
  * urbanization tier — instead of only its own Landkreis (sharePages.ts). A Landkreis mixes a

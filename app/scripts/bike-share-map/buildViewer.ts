@@ -2,12 +2,34 @@
 /**
  * Interactive viewer: stats.msgpack + neighbors + HTML.
  */
-import { existsSync, lstatSync, mkdirSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs'
+import {
+  existsSync,
+  lstatSync,
+  mkdirSync,
+  statSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { PROJECT_LEAD, VIEWER_SOURCE_REPO_URL } from './constants'
 import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
+import { methodologyPageHtml } from './methodologyPage'
+import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
+
+type StatsGeoFeature = {
+  properties?: {
+    id?: string
+    name?: string
+    level?: string
+    regionalschluessel?: string
+    road_length?: unknown
+    bikelane_length?: unknown
+  }
+}
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const outputRoot = join(scriptDir, 'output')
@@ -56,16 +78,31 @@ symlinkOutputFile(geojsonPath, join(viewerDir, 'stats.geojson'))
 // region card's "compared to similar Gemeinden nationwide" line. The ranking is computed
 // client-side from the loaded stats, so this stays small (~one line per Gemeinde). Absent
 // when the Destatis dataset has not been fetched — the viewer just omits that line.
+const geoFeatures: StatsGeoFeature[] = existsSync(geojsonPath)
+  ? ((JSON.parse(await Bun.file(geojsonPath).text()) as { features?: StatsGeoFeature[] })
+      .features ?? [])
+  : []
+
+/** Nationwide bike-infra share (%) under the default counting filter — for the methodology page. */
+let nationalSharePct: number | null = null
+{
+  const de = geoFeatures.find((f) => String(f.properties?.level ?? '') === '2')
+  if (de?.properties) {
+    const { roadKm, bikeKm } = computeFilteredLengths(
+      de.properties.road_length,
+      de.properties.bikelane_length,
+      RADINFRA_DEFAULT_FILTER,
+    )
+    if (roadKm > 0) nationalSharePct = (bikeKm / roadKm) * 100
+  }
+}
+
+let peerGemeindeCount = 0
 const demographicsPath = join(outputRoot, 'gemeinde-demographics.json')
-if (existsSync(demographicsPath) && existsSync(geojsonPath)) {
+if (existsSync(demographicsPath) && geoFeatures.length) {
   try {
-    const geo = JSON.parse(await Bun.file(geojsonPath).text()) as {
-      features?: Array<{
-        properties?: { id?: string; level?: string; regionalschluessel?: string }
-      }>
-    }
     const rsById = new Map<string, string>()
-    for (const f of geo.features ?? []) {
+    for (const f of geoFeatures) {
       const p = f.properties
       if (p?.id && p.level === '8' && p.regionalschluessel) {
         rsById.set(String(p.id), String(p.regionalschluessel))
@@ -85,14 +122,36 @@ if (existsSync(demographicsPath) && existsSync(geojsonPath)) {
       ]),
     )
     const index = buildPeerGroupIndex(rsById, demographicsByRs)
+    peerGemeindeCount = Object.keys(index.byId).length
     writeFileSync(join(viewerDir, 'gemeinde-peers.json'), JSON.stringify(index))
     process.stdout.write(
-      `Peer groups: ${Object.keys(index.byId).length} Gemeinden in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
+      `Peer groups: ${peerGemeindeCount} Gemeinden in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
     )
   } catch (err) {
     process.stderr.write(`gemeinde-peers.json skipped: ${err}\n`)
   }
 }
+
+const dataDateLabel = existsSync(geojsonPath)
+  ? statSync(geojsonPath).mtime.toLocaleDateString('de-DE', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })
+  : ''
+writeFileSync(
+  join(viewerDir, 'methodik.html'),
+  methodologyPageHtml({
+    dataDateLabel,
+    nationalSharePct,
+    peerGemeindeCount,
+    projectLead: PROJECT_LEAD,
+    sourceRepoUrl: VIEWER_SOURCE_REPO_URL,
+    viewerHref: './index.html',
+  }),
+  'utf8',
+)
+process.stdout.write(`Methodology: ${viewerDir}/methodik.html\n`)
 
 const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },
