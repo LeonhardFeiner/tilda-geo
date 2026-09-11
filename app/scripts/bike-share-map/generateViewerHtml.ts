@@ -1,5 +1,5 @@
-import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basemaps'
-import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from "./basemaps";
+import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from "./colorScales";
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
   DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM,
@@ -13,32 +13,32 @@ import {
   VIEWER_SOURCE_REPO_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
-} from './constants'
+} from "./constants";
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
   RADINFRA_DEFAULT_FILTER,
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
-} from './statsClassSums'
-import { viewerRegionNavScript } from './viewerRegionNavScript'
+} from "./statsClassSums";
+import { viewerRegionNavScript } from "./viewerRegionNavScript";
 
 export function generateViewerHtml(generatedAt: string) {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
-  )
+  );
 
   const defaultColorScale =
-    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
+    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0];
   if (!defaultColorScale) {
-    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`)
+    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`);
   }
 
-  const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  const generatedDateLabel = new Date(generatedAt).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   const config = {
     generatedAt,
@@ -51,12 +51,12 @@ export function generateViewerHtml(generatedAt: string) {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: './stats.msgpack',
-    statsUrl: './stats.geojson',
-    neighborsMsgpackUrl: './neighbors.msgpack',
-    neighborsUrl: './neighbors.json',
-    manifestUrl: './manifest.json',
-    peersUrl: './gemeinde-peers.json',
+    statsMsgpackUrl: "./stats.msgpack",
+    statsUrl: "./stats.geojson",
+    neighborsMsgpackUrl: "./neighbors.msgpack",
+    neighborsUrl: "./neighbors.json",
+    manifestUrl: "./manifest.json",
+    peersUrl: "./gemeinde-peers.json",
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -80,7 +80,7 @@ export function generateViewerHtml(generatedAt: string) {
       label: BIKELANE_CLASS_LABELS[id],
     })),
     radinfraDefaultFilter: RADINFRA_DEFAULT_FILTER,
-  }
+  };
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -556,6 +556,22 @@ export function generateViewerHtml(generatedAt: string) {
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .region-detail-trend { margin: 0 0 10px; }
+    .region-detail-trend[hidden] { display: none !important; }
+    .region-detail-trend-btn {
+      font-size: 11px; font-weight: 600; color: #1565c0;
+      background: #eef4fb; border: 1px solid #cfe0f3; border-radius: 6px;
+      padding: 5px 9px; cursor: pointer;
+    }
+    .region-detail-trend-btn:hover { background: #e2edfa; }
+    .region-detail-trend-btn:disabled { cursor: default; opacity: 0.7; }
+    .region-detail-trend-btn[hidden] { display: none !important; }
+    #region-detail-trend-result[hidden] { display: none !important; }
+    .region-detail-trend-sparkline { display: block; margin: 6px 0 4px; }
+    .region-detail-trend-summary { margin: 0 0 4px; font-size: 12px; line-height: 1.4; color: #333; }
+    .region-detail-trend-note { margin: 0; font-size: 10px; line-height: 1.4; color: #888; }
+    .region-detail-trend-note a { color: #888; }
+    .region-detail-trend-error { color: #b71c1c; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -851,6 +867,10 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <div class="region-detail-trend" id="region-detail-trend" hidden>
+      <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn"></button>
+      <div id="region-detail-trend-result" hidden></div>
+    </div>
     <div id="region-detail-body"></div>
   </div>
   <script src="./statsClassSums.js"></script>
@@ -968,6 +988,9 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
+    const regionDetailTrend = document.getElementById('region-detail-trend');
+    const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
+    const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
@@ -2189,6 +2212,191 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailPeerGap.hidden = false;
     }
 
+    // Live historical trend, fetched on demand from the ohsome API (HeiGIT) — an OSM full-history
+    // aggregation service. Approximate (its filter can't reach TILDA's exact bikelane
+    // classification) so it's kept opt-in and clearly labelled, rather than baked into every
+    // region's stats. Scoped to Landkreis/Gemeinde (level 6/8) to keep geometry payloads small.
+    const OHSOME_ELEMENTS_LENGTH_URL = 'https://api.ohsome.org/v1/elements/length';
+    const OHSOME_TREND_FIRST_YEAR = 2012;
+    const OHSOME_ROAD_FILTER = 'highway=* and geometry:line';
+    const OHSOME_BIKELANE_FILTER =
+      '(highway=cycleway or cycleway=* or cycleway:both=* or cycleway:left=* or cycleway:right=* or bicycle_road=yes) and geometry:line';
+    const trendCache = new Map(); // region id -> { years, sharePct } | 'error'
+    let trendFeature = null;
+
+    function regionSupportsTrend(feature) {
+      const level = String(feature?.properties?.level ?? '');
+      return (level === '6' || level === '8') && !!feature?.geometry;
+    }
+
+    async function fetchOhsomeSeries(bpolys, filter, signal) {
+      const body = new URLSearchParams({
+        bpolys: JSON.stringify(bpolys),
+        filter,
+        time: OHSOME_TREND_FIRST_YEAR + '-01-01/' + new Date().toISOString().slice(0, 10) + '/P1Y',
+      });
+      const res = await fetch(OHSOME_ELEMENTS_LENGTH_URL, { method: 'POST', body, signal });
+      if (!res.ok) throw new Error('ohsome ' + res.status);
+      const json = await res.json();
+      return Array.isArray(json.result) ? json.result : [];
+    }
+
+    function buildTrendSparkline(values) {
+      const w = 220;
+      const h = 36;
+      const pad = 2;
+      const defined = values.filter((v) => v != null);
+      const min = Math.min(...defined);
+      const max = Math.max(...defined);
+      const range = max - min || 1;
+      const step = (w - pad * 2) / Math.max(1, values.length - 1);
+      const points = values
+        .map((v, i) => {
+          if (v == null) return null;
+          const x = pad + i * step;
+          const y = h - pad - ((v - min) / range) * (h - pad * 2);
+          return x.toFixed(1) + ',' + y.toFixed(1);
+        })
+        .filter((p) => p != null)
+        .join(' ');
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNs, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', String(w));
+      svg.setAttribute('height', String(h));
+      svg.setAttribute('class', 'region-detail-trend-sparkline');
+      const poly = document.createElementNS(svgNs, 'polyline');
+      poly.setAttribute('points', points);
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', '#1b6e4b');
+      poly.setAttribute('stroke-width', '2');
+      poly.setAttribute('stroke-linecap', 'round');
+      poly.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(poly);
+      return svg;
+    }
+
+    function appendTrendNote(container) {
+      const note = document.createElement('p');
+      note.className = 'region-detail-trend-note';
+      const ohsomeLink = document.createElement('a');
+      ohsomeLink.href = 'https://api.ohsome.org';
+      ohsomeLink.target = '_blank';
+      ohsomeLink.rel = 'noopener noreferrer';
+      ohsomeLink.textContent = 'ohsome API';
+      const heigitLink = document.createElement('a');
+      heigitLink.href = 'https://heigit.org';
+      heigitLink.target = '_blank';
+      heigitLink.rel = 'noopener noreferrer';
+      heigitLink.textContent = 'HeiGIT';
+      note.append(
+        'Näherungswert aus dem OSM-Verlauf, nicht identisch mit der Zählung oben · ',
+        ohsomeLink,
+        ', ',
+        heigitLink,
+      );
+      container.appendChild(note);
+    }
+
+    function renderRegionTrend(data, container) {
+      const { years, sharePct } = data;
+      regionDetailTrendBtn.hidden = true;
+      container.hidden = false;
+      container.replaceChildren();
+      const valid = sharePct.filter((v) => v != null);
+      if (valid.length < 2) {
+        const p = document.createElement('p');
+        p.className = 'region-detail-trend-note';
+        p.textContent = 'Für dieses Gebiet liegen keine auswertbaren Verlaufsdaten vor.';
+        container.appendChild(p);
+        return;
+      }
+      container.appendChild(buildTrendSparkline(sharePct));
+      const first = valid[0];
+      const last = valid[valid.length - 1];
+      const change = last - first;
+      const dir = change > 0.2 ? 'gestiegen' : change < -0.2 ? 'gesunken' : 'kaum verändert';
+      const summary = document.createElement('p');
+      summary.className = 'region-detail-trend-summary';
+      summary.textContent =
+        'Grober Radinfra-Anteil ' +
+        years[0] +
+        '–' +
+        years[years.length - 1] +
+        ': ' +
+        formatUiPct(first) +
+        ' % → ' +
+        formatUiPct(last) +
+        ' % (' +
+        dir +
+        ').';
+      container.appendChild(summary);
+      appendTrendNote(container);
+    }
+
+    function renderTrendError(container) {
+      regionDetailTrendBtn.hidden = false;
+      regionDetailTrendBtn.disabled = false;
+      regionDetailTrendBtn.textContent = 'Erneut versuchen';
+      container.hidden = false;
+      container.replaceChildren();
+      const p = document.createElement('p');
+      p.className = 'region-detail-trend-note region-detail-trend-error';
+      p.textContent = 'Verlauf konnte nicht geladen werden (ohsome API nicht erreichbar).';
+      container.appendChild(p);
+    }
+
+    async function loadRegionTrend(feature) {
+      const id = String(feature.properties?.id ?? '');
+      if (!id) return;
+      regionDetailTrendBtn.disabled = true;
+      regionDetailTrendBtn.textContent = 'Lädt …';
+      regionDetailTrendResult.hidden = false;
+      regionDetailTrendResult.replaceChildren();
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timeoutId = controller && setTimeout(() => controller.abort(), 12000);
+      try {
+        const bpolys = { type: 'Feature', properties: {}, geometry: feature.geometry };
+        const signal = controller ? controller.signal : undefined;
+        const [roadSeries, bikeSeries] = await Promise.all([
+          fetchOhsomeSeries(bpolys, OHSOME_ROAD_FILTER, signal),
+          fetchOhsomeSeries(bpolys, OHSOME_BIKELANE_FILTER, signal),
+        ]);
+        const years = roadSeries.map((r) => Number(String(r.timestamp).slice(0, 4)));
+        const sharePct = roadSeries.map((r, i) => {
+          const road = r.value;
+          const bike = bikeSeries[i] ? bikeSeries[i].value : 0;
+          return road > 0 ? (bike / road) * 100 : null;
+        });
+        const data = { years, sharePct };
+        trendCache.set(id, data);
+        if (trendFeature === feature) renderRegionTrend(data, regionDetailTrendResult);
+      } catch {
+        trendCache.set(id, 'error');
+        if (trendFeature === feature) renderTrendError(regionDetailTrendResult);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    }
+
+    function setupRegionTrend(feature) {
+      trendFeature = feature;
+      if (!regionSupportsTrend(feature)) {
+        regionDetailTrend.hidden = true;
+        return;
+      }
+      regionDetailTrend.hidden = false;
+      regionDetailTrendBtn.hidden = false;
+      regionDetailTrendBtn.disabled = false;
+      regionDetailTrendBtn.textContent = 'Entwicklung seit ' + OHSOME_TREND_FIRST_YEAR + ' zeigen';
+      regionDetailTrendResult.hidden = true;
+      regionDetailTrendResult.replaceChildren();
+      const id = String(feature.properties?.id ?? '');
+      const cached = trendCache.get(id);
+      if (cached === 'error') renderTrendError(regionDetailTrendResult);
+      else if (cached) renderRegionTrend(cached, regionDetailTrendResult);
+    }
+
     function showRegionDetail(feature, opts) {
       const freshSelection = !!(opts && opts.freshSelection);
       const p = feature.properties || {};
@@ -2214,6 +2422,7 @@ export function generateViewerHtml(generatedAt: string) {
         ' km Straße';
       renderRegionGap(p);
       renderRegionPeerGap(p);
+      setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
       appendLengthRows(
@@ -2406,6 +2615,9 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailClose.addEventListener('click', () => {
         if (typeof sheetEnabled === 'function' && sheetEnabled()) setSheetState('peek');
         else clearRegionSelection();
+      });
+      regionDetailTrendBtn.addEventListener('click', () => {
+        if (trendFeature) loadRegionTrend(trendFeature);
       });
       map.on('click', 'regions-fill', (e) => {
         const f = e.features?.[0];
@@ -4229,5 +4441,5 @@ export function generateViewerHtml(generatedAt: string) {
   </script>
 </body>
 </html>
-`
+`;
 }

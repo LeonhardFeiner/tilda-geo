@@ -472,6 +472,22 @@
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .region-detail-trend { margin: 0 0 10px; }
+    .region-detail-trend[hidden] { display: none !important; }
+    .region-detail-trend-btn {
+      font-size: 11px; font-weight: 600; color: #1565c0;
+      background: #eef4fb; border: 1px solid #cfe0f3; border-radius: 6px;
+      padding: 5px 9px; cursor: pointer;
+    }
+    .region-detail-trend-btn:hover { background: #e2edfa; }
+    .region-detail-trend-btn:disabled { cursor: default; opacity: 0.7; }
+    .region-detail-trend-btn[hidden] { display: none !important; }
+    #region-detail-trend-result[hidden] { display: none !important; }
+    .region-detail-trend-sparkline { display: block; margin: 6px 0 4px; }
+    .region-detail-trend-summary { margin: 0 0 4px; font-size: 12px; line-height: 1.4; color: #333; }
+    .region-detail-trend-note { margin: 0; font-size: 10px; line-height: 1.4; color: #888; }
+    .region-detail-trend-note a { color: #888; }
+    .region-detail-trend-error { color: #b71c1c; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -767,6 +783,10 @@
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <div class="region-detail-trend" id="region-detail-trend" hidden>
+      <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn"></button>
+      <div id="region-detail-trend-result" hidden></div>
+    </div>
     <div id="region-detail-body"></div>
   </div>
   <script src="./statsClassSums.js"></script>
@@ -777,7 +797,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-10T23:58:17.777Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-11T06:22:10.415Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1515,6 +1535,9 @@
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
+    const regionDetailTrend = document.getElementById('region-detail-trend');
+    const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
+    const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
@@ -2736,6 +2759,191 @@
       regionDetailPeerGap.hidden = false;
     }
 
+    // Live historical trend, fetched on demand from the ohsome API (HeiGIT) — an OSM full-history
+    // aggregation service. Approximate (its filter can't reach TILDA's exact bikelane
+    // classification) so it's kept opt-in and clearly labelled, rather than baked into every
+    // region's stats. Scoped to Landkreis/Gemeinde (level 6/8) to keep geometry payloads small.
+    const OHSOME_ELEMENTS_LENGTH_URL = 'https://api.ohsome.org/v1/elements/length';
+    const OHSOME_TREND_FIRST_YEAR = 2012;
+    const OHSOME_ROAD_FILTER = 'highway=* and geometry:line';
+    const OHSOME_BIKELANE_FILTER =
+      '(highway=cycleway or cycleway=* or cycleway:both=* or cycleway:left=* or cycleway:right=* or bicycle_road=yes) and geometry:line';
+    const trendCache = new Map(); // region id -> { years, sharePct } | 'error'
+    let trendFeature = null;
+
+    function regionSupportsTrend(feature) {
+      const level = String(feature?.properties?.level ?? '');
+      return (level === '6' || level === '8') && !!feature?.geometry;
+    }
+
+    async function fetchOhsomeSeries(bpolys, filter, signal) {
+      const body = new URLSearchParams({
+        bpolys: JSON.stringify(bpolys),
+        filter,
+        time: OHSOME_TREND_FIRST_YEAR + '-01-01/' + new Date().toISOString().slice(0, 10) + '/P1Y',
+      });
+      const res = await fetch(OHSOME_ELEMENTS_LENGTH_URL, { method: 'POST', body, signal });
+      if (!res.ok) throw new Error('ohsome ' + res.status);
+      const json = await res.json();
+      return Array.isArray(json.result) ? json.result : [];
+    }
+
+    function buildTrendSparkline(values) {
+      const w = 220;
+      const h = 36;
+      const pad = 2;
+      const defined = values.filter((v) => v != null);
+      const min = Math.min(...defined);
+      const max = Math.max(...defined);
+      const range = max - min || 1;
+      const step = (w - pad * 2) / Math.max(1, values.length - 1);
+      const points = values
+        .map((v, i) => {
+          if (v == null) return null;
+          const x = pad + i * step;
+          const y = h - pad - ((v - min) / range) * (h - pad * 2);
+          return x.toFixed(1) + ',' + y.toFixed(1);
+        })
+        .filter((p) => p != null)
+        .join(' ');
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNs, 'svg');
+      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+      svg.setAttribute('width', String(w));
+      svg.setAttribute('height', String(h));
+      svg.setAttribute('class', 'region-detail-trend-sparkline');
+      const poly = document.createElementNS(svgNs, 'polyline');
+      poly.setAttribute('points', points);
+      poly.setAttribute('fill', 'none');
+      poly.setAttribute('stroke', '#1b6e4b');
+      poly.setAttribute('stroke-width', '2');
+      poly.setAttribute('stroke-linecap', 'round');
+      poly.setAttribute('stroke-linejoin', 'round');
+      svg.appendChild(poly);
+      return svg;
+    }
+
+    function appendTrendNote(container) {
+      const note = document.createElement('p');
+      note.className = 'region-detail-trend-note';
+      const ohsomeLink = document.createElement('a');
+      ohsomeLink.href = 'https://api.ohsome.org';
+      ohsomeLink.target = '_blank';
+      ohsomeLink.rel = 'noopener noreferrer';
+      ohsomeLink.textContent = 'ohsome API';
+      const heigitLink = document.createElement('a');
+      heigitLink.href = 'https://heigit.org';
+      heigitLink.target = '_blank';
+      heigitLink.rel = 'noopener noreferrer';
+      heigitLink.textContent = 'HeiGIT';
+      note.append(
+        'Näherungswert aus dem OSM-Verlauf, nicht identisch mit der Zählung oben · ',
+        ohsomeLink,
+        ', ',
+        heigitLink,
+      );
+      container.appendChild(note);
+    }
+
+    function renderRegionTrend(data, container) {
+      const { years, sharePct } = data;
+      regionDetailTrendBtn.hidden = true;
+      container.hidden = false;
+      container.replaceChildren();
+      const valid = sharePct.filter((v) => v != null);
+      if (valid.length < 2) {
+        const p = document.createElement('p');
+        p.className = 'region-detail-trend-note';
+        p.textContent = 'Für dieses Gebiet liegen keine auswertbaren Verlaufsdaten vor.';
+        container.appendChild(p);
+        return;
+      }
+      container.appendChild(buildTrendSparkline(sharePct));
+      const first = valid[0];
+      const last = valid[valid.length - 1];
+      const change = last - first;
+      const dir = change > 0.2 ? 'gestiegen' : change < -0.2 ? 'gesunken' : 'kaum verändert';
+      const summary = document.createElement('p');
+      summary.className = 'region-detail-trend-summary';
+      summary.textContent =
+        'Grober Radinfra-Anteil ' +
+        years[0] +
+        '–' +
+        years[years.length - 1] +
+        ': ' +
+        formatUiPct(first) +
+        ' % → ' +
+        formatUiPct(last) +
+        ' % (' +
+        dir +
+        ').';
+      container.appendChild(summary);
+      appendTrendNote(container);
+    }
+
+    function renderTrendError(container) {
+      regionDetailTrendBtn.hidden = false;
+      regionDetailTrendBtn.disabled = false;
+      regionDetailTrendBtn.textContent = 'Erneut versuchen';
+      container.hidden = false;
+      container.replaceChildren();
+      const p = document.createElement('p');
+      p.className = 'region-detail-trend-note region-detail-trend-error';
+      p.textContent = 'Verlauf konnte nicht geladen werden (ohsome API nicht erreichbar).';
+      container.appendChild(p);
+    }
+
+    async function loadRegionTrend(feature) {
+      const id = String(feature.properties?.id ?? '');
+      if (!id) return;
+      regionDetailTrendBtn.disabled = true;
+      regionDetailTrendBtn.textContent = 'Lädt …';
+      regionDetailTrendResult.hidden = false;
+      regionDetailTrendResult.replaceChildren();
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timeoutId = controller && setTimeout(() => controller.abort(), 12000);
+      try {
+        const bpolys = { type: 'Feature', properties: {}, geometry: feature.geometry };
+        const signal = controller ? controller.signal : undefined;
+        const [roadSeries, bikeSeries] = await Promise.all([
+          fetchOhsomeSeries(bpolys, OHSOME_ROAD_FILTER, signal),
+          fetchOhsomeSeries(bpolys, OHSOME_BIKELANE_FILTER, signal),
+        ]);
+        const years = roadSeries.map((r) => Number(String(r.timestamp).slice(0, 4)));
+        const sharePct = roadSeries.map((r, i) => {
+          const road = r.value;
+          const bike = bikeSeries[i] ? bikeSeries[i].value : 0;
+          return road > 0 ? (bike / road) * 100 : null;
+        });
+        const data = { years, sharePct };
+        trendCache.set(id, data);
+        if (trendFeature === feature) renderRegionTrend(data, regionDetailTrendResult);
+      } catch {
+        trendCache.set(id, 'error');
+        if (trendFeature === feature) renderTrendError(regionDetailTrendResult);
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
+      }
+    }
+
+    function setupRegionTrend(feature) {
+      trendFeature = feature;
+      if (!regionSupportsTrend(feature)) {
+        regionDetailTrend.hidden = true;
+        return;
+      }
+      regionDetailTrend.hidden = false;
+      regionDetailTrendBtn.hidden = false;
+      regionDetailTrendBtn.disabled = false;
+      regionDetailTrendBtn.textContent = 'Entwicklung seit ' + OHSOME_TREND_FIRST_YEAR + ' zeigen';
+      regionDetailTrendResult.hidden = true;
+      regionDetailTrendResult.replaceChildren();
+      const id = String(feature.properties?.id ?? '');
+      const cached = trendCache.get(id);
+      if (cached === 'error') renderTrendError(regionDetailTrendResult);
+      else if (cached) renderRegionTrend(cached, regionDetailTrendResult);
+    }
+
     function showRegionDetail(feature, opts) {
       const freshSelection = !!(opts && opts.freshSelection);
       const p = feature.properties || {};
@@ -2761,6 +2969,7 @@
         ' km Straße';
       renderRegionGap(p);
       renderRegionPeerGap(p);
+      setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
       appendLengthRows(
@@ -2953,6 +3162,9 @@
       regionDetailClose.addEventListener('click', () => {
         if (typeof sheetEnabled === 'function' && sheetEnabled()) setSheetState('peek');
         else clearRegionSelection();
+      });
+      regionDetailTrendBtn.addEventListener('click', () => {
+        if (trendFeature) loadRegionTrend(trendFeature);
       });
       map.on('click', 'regions-fill', (e) => {
         const f = e.features?.[0];
