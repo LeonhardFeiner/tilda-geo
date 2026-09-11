@@ -410,6 +410,11 @@
     .view-meta {
       font-size: 11px; color: #666; margin: 0; line-height: 1.45;
     }
+    .national-context {
+      font-size: 12px; font-weight: 600; color: #333;
+      margin: 6px 0 0; line-height: 1.4;
+    }
+    .national-context[hidden] { display: none !important; }
     .footer {
       font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
       border-top: 1px solid #eee; line-height: 1.55;
@@ -674,6 +679,7 @@
           <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
         </div>
         <p class="view-meta" id="view-meta"></p>
+        <p class="national-context" id="national-context" hidden></p>
         <div class="map-legend-toggles">
           <label>
             <input type="checkbox" id="toggle-bikelanes" checked />
@@ -744,6 +750,7 @@
     </div>
     <p class="footer">
       Erstellt am 11.09.2026 ·
+      <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="https://github.com/LeonhardFeiner/tilda-geo" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -770,7 +777,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-10T22:33:06.692Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-10T23:58:17.777Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1916,6 +1923,22 @@
       }
       document.getElementById('view-meta').textContent = metaText;
       updateScaleCapHint();
+      updateNationalContext();
+    }
+
+    /** Nationwide reference value (Deutschland row), recomputed under the current counting filter. */
+    function updateNationalContext() {
+      const el = document.getElementById('national-context');
+      if (!el) return;
+      const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
+      const p = de ? enrichFeature(de).properties : null;
+      if (!p || !(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') {
+        el.hidden = true;
+        return;
+      }
+      el.textContent =
+        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % der Straßen mit Radinfrastruktur';
+      el.hidden = false;
     }
 
     function repaintRegionsFromCounting() {
@@ -2713,7 +2736,8 @@
       regionDetailPeerGap.hidden = false;
     }
 
-    function showRegionDetail(feature) {
+    function showRegionDetail(feature, opts) {
+      const freshSelection = !!(opts && opts.freshSelection);
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
       if (detailId) setSelectedFeatureId(detailId, feature);
@@ -2782,10 +2806,15 @@
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
       placeRegionDetail();
-      if (typeof sheetEnabled === 'function' && sheetEnabled() && sheetState() === 'peek') {
-        setSheetState('half');
+      if (typeof sheetEnabled === 'function' && sheetEnabled()) {
+        const wasPeek = sheetState() === 'peek';
+        if (wasPeek) setSheetState('half');
+        // On a new selection show the card from its top (region name first), not wherever
+        // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
+        if ((wasPeek || freshSelection) && panelMain) panelMain.scrollTop = 0;
+      } else if (freshSelection) {
+        regionDetailEl.scrollIntoView?.({ block: 'nearest' });
       }
-      regionDetailEl.scrollIntoView?.({ block: 'nearest' });
     }
 
     function setSelectedFeatureId(id, feature) {
@@ -2819,42 +2848,45 @@
       return 0; // peek: the bar is small enough to ignore
     }
 
-    /**
-     * Keep the focused region visible above the sheet: while a region is selected, pad the
-     * map's bottom by the sheet height so the choropleth (and fitBounds) frame into the strip
-     * that is actually on screen. Reset to 0 once nothing is selected.
-     */
-    function syncMapPadding(animate) {
-      if (!map || typeof map.setPadding !== 'function') return;
-      const bottom = document.body.dataset.regionDetail ? mapBottomInset() : 0;
-      const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
-      const current = (currentPadding && currentPadding.bottom) || 0;
-      if (Math.abs(current - bottom) < 2) return;
-      const padding = { top: 0, right: 0, bottom, left: 0 };
-      if (animate && typeof map.easeTo === 'function') {
-        map.easeTo({ padding, duration: 220 });
-      } else {
-        map.setPadding(padding);
-      }
-    }
-
     function fitMapToFeature(feature, opts) {
       if (!feature?.geometry) return;
       const bbox = turf.bbox(feature);
       if (!bbox.every(Number.isFinite)) return;
       if (!(opts && opts.force) && featureBboxInMapView(bbox)) return;
       const inset = mapBottomInset();
+      const maxZoom = opts && opts.zoomIn ? Math.max(map.getZoom(), 12) : map.getZoom();
       map.fitBounds(
         [
           [bbox[0], bbox[1]],
           [bbox[2], bbox[3]],
         ],
         {
-          padding: { top: 60, right: 40, bottom: Math.max(40, inset + 24), left: 40 },
-          duration: 400,
-          maxZoom: map.getZoom(),
+          padding: { top: 56, right: 40, bottom: Math.max(40, inset + 28), left: 40 },
+          duration: opts && typeof opts.duration === 'number' ? opts.duration : 400,
+          maxZoom,
         },
       );
+    }
+
+    /**
+     * While a region is selected on the phone the sheet covers the lower part of the map:
+     * pad the map's bottom by the sheet height and re-frame the selected region into the
+     * strip that is still visible. Resets to 0 when nothing is selected.
+     */
+    function syncMapViewport(animate) {
+      if (!map || typeof map.setPadding !== 'function') return;
+      const selected = document.body.dataset.regionDetail
+        ? selectedFeatureOverride || currentSelectedFeature()
+        : null;
+      const bottom = selected ? mapBottomInset() : 0;
+      const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
+      const paddingChanged = !currentPadding || Math.abs((currentPadding.bottom || 0) - bottom) >= 2;
+      if (paddingChanged) map.setPadding({ top: 0, right: 0, bottom, left: 0 });
+      if (selected) {
+        fitMapToFeature(selected, { force: true, zoomIn: true, duration: animate ? 420 : 0 });
+      } else if (paddingChanged && animate && typeof map.easeTo === 'function') {
+        map.easeTo({ padding: { top: 0, right: 0, bottom: 0, left: 0 }, duration: 260 });
+      }
     }
 
     function selectRegionById(id, mapFeature, panToMap) {
@@ -2876,10 +2908,11 @@
           : null);
       if (!feature) return;
       clearOverlayLineHighlight();
-      showRegionDetail(feature);
-      if (panToMap) {
-        syncMapPadding(true);
-        fitMapToFeature(feature, { force: typeof sheetEnabled === 'function' && sheetEnabled() });
+      showRegionDetail(feature, { freshSelection: true });
+      // Desktop: only recentre when asked (ranking click). Phone: always pull the region into
+      // the strip left visible above the sheet.
+      if (panToMap || (typeof sheetEnabled === 'function' && sheetEnabled())) {
+        syncMapViewport(true);
       }
     }
 
@@ -2889,7 +2922,7 @@
       regionDetailEl.hidden = true;
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
-      syncMapPadding(true);
+      syncMapViewport(true);
     }
 
     function refreshSelectedRegionIfNeeded() {
@@ -3513,7 +3546,7 @@
       }
       notifyMapResize();
       // Re-frame a focused region when the sheet changes size (half <-> full).
-      if (document.body.dataset.regionDetail) syncMapPadding(true);
+      if (document.body.dataset.regionDetail) syncMapViewport(true);
     }
 
     // Primary sections: collapsible accordions on desktop, always-open blocks on the phone

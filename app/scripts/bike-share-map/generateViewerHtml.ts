@@ -494,6 +494,11 @@ export function generateViewerHtml(generatedAt: string) {
     .view-meta {
       font-size: 11px; color: #666; margin: 0; line-height: 1.45;
     }
+    .national-context {
+      font-size: 12px; font-weight: 600; color: #333;
+      margin: 6px 0 0; line-height: 1.4;
+    }
+    .national-context[hidden] { display: none !important; }
     .footer {
       font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
       border-top: 1px solid #eee; line-height: 1.55;
@@ -758,6 +763,7 @@ export function generateViewerHtml(generatedAt: string) {
           <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
         </div>
         <p class="view-meta" id="view-meta"></p>
+        <p class="national-context" id="national-context" hidden></p>
         <div class="map-legend-toggles">
           <label>
             <input type="checkbox" id="toggle-bikelanes" checked />
@@ -828,6 +834,7 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
     <p class="footer">
       Erstellt am ${generatedDateLabel} ·
+      <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="${VIEWER_SOURCE_REPO_URL}" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -1369,6 +1376,22 @@ export function generateViewerHtml(generatedAt: string) {
       }
       document.getElementById('view-meta').textContent = metaText;
       updateScaleCapHint();
+      updateNationalContext();
+    }
+
+    /** Nationwide reference value (Deutschland row), recomputed under the current counting filter. */
+    function updateNationalContext() {
+      const el = document.getElementById('national-context');
+      if (!el) return;
+      const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
+      const p = de ? enrichFeature(de).properties : null;
+      if (!p || !(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') {
+        el.hidden = true;
+        return;
+      }
+      el.textContent =
+        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % der Straßen mit Radinfrastruktur';
+      el.hidden = false;
     }
 
     function repaintRegionsFromCounting() {
@@ -2166,7 +2189,8 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailPeerGap.hidden = false;
     }
 
-    function showRegionDetail(feature) {
+    function showRegionDetail(feature, opts) {
+      const freshSelection = !!(opts && opts.freshSelection);
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
       if (detailId) setSelectedFeatureId(detailId, feature);
@@ -2235,10 +2259,15 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
       placeRegionDetail();
-      if (typeof sheetEnabled === 'function' && sheetEnabled() && sheetState() === 'peek') {
-        setSheetState('half');
+      if (typeof sheetEnabled === 'function' && sheetEnabled()) {
+        const wasPeek = sheetState() === 'peek';
+        if (wasPeek) setSheetState('half');
+        // On a new selection show the card from its top (region name first), not wherever
+        // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
+        if ((wasPeek || freshSelection) && panelMain) panelMain.scrollTop = 0;
+      } else if (freshSelection) {
+        regionDetailEl.scrollIntoView?.({ block: 'nearest' });
       }
-      regionDetailEl.scrollIntoView?.({ block: 'nearest' });
     }
 
     function setSelectedFeatureId(id, feature) {
@@ -2272,42 +2301,45 @@ export function generateViewerHtml(generatedAt: string) {
       return 0; // peek: the bar is small enough to ignore
     }
 
-    /**
-     * Keep the focused region visible above the sheet: while a region is selected, pad the
-     * map's bottom by the sheet height so the choropleth (and fitBounds) frame into the strip
-     * that is actually on screen. Reset to 0 once nothing is selected.
-     */
-    function syncMapPadding(animate) {
-      if (!map || typeof map.setPadding !== 'function') return;
-      const bottom = document.body.dataset.regionDetail ? mapBottomInset() : 0;
-      const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
-      const current = (currentPadding && currentPadding.bottom) || 0;
-      if (Math.abs(current - bottom) < 2) return;
-      const padding = { top: 0, right: 0, bottom, left: 0 };
-      if (animate && typeof map.easeTo === 'function') {
-        map.easeTo({ padding, duration: 220 });
-      } else {
-        map.setPadding(padding);
-      }
-    }
-
     function fitMapToFeature(feature, opts) {
       if (!feature?.geometry) return;
       const bbox = turf.bbox(feature);
       if (!bbox.every(Number.isFinite)) return;
       if (!(opts && opts.force) && featureBboxInMapView(bbox)) return;
       const inset = mapBottomInset();
+      const maxZoom = opts && opts.zoomIn ? Math.max(map.getZoom(), 12) : map.getZoom();
       map.fitBounds(
         [
           [bbox[0], bbox[1]],
           [bbox[2], bbox[3]],
         ],
         {
-          padding: { top: 60, right: 40, bottom: Math.max(40, inset + 24), left: 40 },
-          duration: 400,
-          maxZoom: map.getZoom(),
+          padding: { top: 56, right: 40, bottom: Math.max(40, inset + 28), left: 40 },
+          duration: opts && typeof opts.duration === 'number' ? opts.duration : 400,
+          maxZoom,
         },
       );
+    }
+
+    /**
+     * While a region is selected on the phone the sheet covers the lower part of the map:
+     * pad the map's bottom by the sheet height and re-frame the selected region into the
+     * strip that is still visible. Resets to 0 when nothing is selected.
+     */
+    function syncMapViewport(animate) {
+      if (!map || typeof map.setPadding !== 'function') return;
+      const selected = document.body.dataset.regionDetail
+        ? selectedFeatureOverride || currentSelectedFeature()
+        : null;
+      const bottom = selected ? mapBottomInset() : 0;
+      const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
+      const paddingChanged = !currentPadding || Math.abs((currentPadding.bottom || 0) - bottom) >= 2;
+      if (paddingChanged) map.setPadding({ top: 0, right: 0, bottom, left: 0 });
+      if (selected) {
+        fitMapToFeature(selected, { force: true, zoomIn: true, duration: animate ? 420 : 0 });
+      } else if (paddingChanged && animate && typeof map.easeTo === 'function') {
+        map.easeTo({ padding: { top: 0, right: 0, bottom: 0, left: 0 }, duration: 260 });
+      }
     }
 
     function selectRegionById(id, mapFeature, panToMap) {
@@ -2329,10 +2361,11 @@ export function generateViewerHtml(generatedAt: string) {
           : null);
       if (!feature) return;
       clearOverlayLineHighlight();
-      showRegionDetail(feature);
-      if (panToMap) {
-        syncMapPadding(true);
-        fitMapToFeature(feature, { force: typeof sheetEnabled === 'function' && sheetEnabled() });
+      showRegionDetail(feature, { freshSelection: true });
+      // Desktop: only recentre when asked (ranking click). Phone: always pull the region into
+      // the strip left visible above the sheet.
+      if (panToMap || (typeof sheetEnabled === 'function' && sheetEnabled())) {
+        syncMapViewport(true);
       }
     }
 
@@ -2342,7 +2375,7 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailEl.hidden = true;
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
-      syncMapPadding(true);
+      syncMapViewport(true);
     }
 
     function refreshSelectedRegionIfNeeded() {
@@ -2966,7 +2999,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       notifyMapResize();
       // Re-frame a focused region when the sheet changes size (half <-> full).
-      if (document.body.dataset.regionDetail) syncMapPadding(true);
+      if (document.body.dataset.regionDetail) syncMapViewport(true);
     }
 
     // Primary sections: collapsible accordions on desktop, always-open blocks on the phone
