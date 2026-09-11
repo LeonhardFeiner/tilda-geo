@@ -2470,7 +2470,10 @@ export function generateViewerHtml(generatedAt: string) {
       placeRegionDetail();
       if (typeof sheetEnabled === 'function' && sheetEnabled()) {
         const wasPeek = sheetState() === 'peek';
+        // setSheetState() always re-syncs the map itself; when the sheet is already open
+        // (switching between regions without a peek->half transition) nothing else would.
         if (wasPeek) setSheetState('half');
+        else syncMapViewport(true);
         // On a new selection show the card from its top (region name first), not wherever
         // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
         if ((wasPeek || freshSelection) && panelMain) panelMain.scrollTop = 0;
@@ -2578,9 +2581,9 @@ export function generateViewerHtml(generatedAt: string) {
       if (!feature) return;
       clearOverlayLineHighlight();
       showRegionDetail(feature, { freshSelection: true });
-      // Desktop: only recentre when asked (ranking click). Phone: always pull the region into
-      // the strip left visible above the sheet.
-      if (panToMap || (typeof sheetEnabled === 'function' && sheetEnabled())) {
+      // Desktop: only recentre when asked (ranking click) — showRegionDetail doesn't sync the
+      // map itself there (sheetEnabled() is false). Phone: showRegionDetail already synced.
+      if (panToMap && !(typeof sheetEnabled === 'function' && sheetEnabled())) {
         syncMapViewport(true);
       }
     }
@@ -2591,7 +2594,14 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailEl.hidden = true;
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
-      syncMapViewport(true);
+      // Clearing (tapping the same region again, the map background, …) should collapse an
+      // open sheet back to peek too — otherwise it's left open over an empty region card.
+      // setSheetState() re-syncs the map itself; skip the redundant extra call in that case.
+      if (typeof sheetEnabled === 'function' && sheetEnabled() && sheetState() !== 'peek') {
+        setSheetState('peek');
+      } else {
+        syncMapViewport(true);
+      }
     }
 
     function refreshSelectedRegionIfNeeded() {
@@ -3220,8 +3230,10 @@ export function generateViewerHtml(generatedAt: string) {
         clearRegionSelection();
       }
       notifyMapResize();
-      // Re-frame a focused region when the sheet changes size (half <-> full).
-      if (document.body.dataset.regionDetail) syncMapViewport(true);
+      // The sheet occupies a different amount of the screen at every state (even peek, even
+      // with nothing selected) — always re-sync the map's padding/fit to match, not just when
+      // a region happens to be selected.
+      syncMapViewport(true);
     }
 
     // Primary sections: collapsible accordions on desktop, always-open blocks on the phone
