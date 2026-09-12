@@ -4517,14 +4517,6 @@ export function generateViewerHtml(generatedAt: string) {
       });
     }
 
-    async function loadAllRegionFeaturesSync() {
-      const data = await statsDataPromise;
-      if (data.type === 'msgpack') {
-        return StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
-      }
-      return data.data.features || [];
-    }
-
     async function init() {
       try {
         await statsReadyPromise;
