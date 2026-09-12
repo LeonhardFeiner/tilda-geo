@@ -2858,14 +2858,21 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailTrendBtn.addEventListener('click', () => {
         if (trendFeature) loadRegionTrend(trendFeature);
       });
-      map.on('click', 'regions-fill', (e) => {
-        const f = e.features?.[0];
-        if (!f?.properties?.id) return;
-        selectRegionById(f.properties.id, f);
-      });
+      // A single hit-test per click, not two: this used to be a layer-filtered map.on('click',
+      // 'regions-fill', ...) selecting the region, PLUS a separate generic map.on('click', ...)
+      // doing its own queryRenderedFeatures call to detect "clicked empty space" and clear the
+      // selection. Both fire for the same click, but their two independent hit-tests could
+      // disagree — the generic one would sometimes come back empty even though the layer-
+      // filtered one had just found (and selected) a feature at the same point, immediately
+      // clearing the selection that was just made. This is exactly the "tapping a region does
+      // nothing" report — reproduced deterministically, not just theorized, in a real (non-
+      // headless-stubbed) browser. Querying once and branching on the result removes the
+      // possibility of the two disagreeing.
       map.on('click', (e) => {
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
-        if (!hits.length) clearRegionSelection();
+        const f = hits[0];
+        if (f?.properties?.id) selectRegionById(f.properties.id, f);
+        else clearRegionSelection();
       });
     }
 
