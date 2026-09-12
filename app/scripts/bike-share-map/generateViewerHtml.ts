@@ -2357,9 +2357,19 @@ export function generateViewerHtml(generatedAt: string) {
     // region's stats. Scoped to Landkreis/Gemeinde (level 6/8) to keep geometry payloads small.
     const OHSOME_ELEMENTS_LENGTH_URL = 'https://api.ohsome.org/v1/elements/length';
     const OHSOME_TREND_FIRST_YEAR = 2012;
-    const OHSOME_ROAD_FILTER = 'highway=* and geometry:line';
+    // Verified live against TILDA's own numbers for a real region (Münchsmünster: 14.2%):
+    // plain 'highway=*' pulls in footways/paths/tracks/steps TILDA's road classes don't count
+    // (170km vs 123km there), and the old bike filter only matched cycleway=*-style tags,
+    // completely missing highway=footway/path + bicycle=yes|designated shared paths — 63% of
+    // this region's actual bike infrastructure in TILDA's own classification (3.5km vs 17.5km
+    // ohsome saw). Combined, the trend read 2.0% instead of 14.2% — a ~7x error, not just
+    // rounding noise. This still won't exactly match TILDA's fuller classification (needsClarification
+    // and similar edge cases aren't reachable by a simple tag filter), but the same region now
+    // comes back at ~16.8%, an ~18% relative error instead of ~86%.
+    const OHSOME_ROAD_FILTER =
+      'highway in (motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service) and geometry:line';
     const OHSOME_BIKELANE_FILTER =
-      '(highway=cycleway or cycleway=* or cycleway:both=* or cycleway:left=* or cycleway:right=* or bicycle_road=yes) and geometry:line';
+      '(highway=cycleway or cycleway=* or cycleway:both=* or cycleway:left=* or cycleway:right=* or bicycle_road=yes or (highway in (footway, path) and bicycle in (yes, designated))) and geometry:line';
     const trendCache = new Map(); // region id -> { years, sharePct } | 'error'
     let trendFeature = null;
 
@@ -2367,7 +2377,9 @@ export function generateViewerHtml(generatedAt: string) {
     // changes day to day, and each fetch is two ohsome API calls the visitor otherwise pays
     // for again every single time they reopen the same region. Errors are not persisted (an
     // outage shouldn't stick around after ohsome recovers).
-    const TREND_STORAGE_PREFIX = 'bikeShareTrend:';
+    // v2: bumped when OHSOME_ROAD_FILTER/OHSOME_BIKELANE_FILTER changed (2026-09) to fix a ~7x
+    // undercount — invalidates any v1 entries still sitting in a returning visitor's storage.
+    const TREND_STORAGE_PREFIX = 'bikeShareTrend:v2:';
     const TREND_STORAGE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
     function readTrendFromStorage(id) {
@@ -3425,6 +3437,22 @@ export function generateViewerHtml(generatedAt: string) {
       updateVhUnit();
       notifyMapResize();
     });
+    // iOS Safari in particular often does NOT fire window 'resize' for the address-bar
+    // collapsing on load/scroll — only visualViewport does. Cover both so the very first
+    // settling of the chrome (which is exactly the "doesn't work until I touch the UI once"
+    // report) gets picked up without needing an unrelated interaction to trigger a resize first.
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', () => {
+        updateVhUnit();
+        notifyMapResize();
+      });
+    }
+    // Also resync shortly after load regardless of any resize event firing at all — covers the
+    // case where the chrome was already mid-collapse when the map was constructed, so there was
+    // never a "change" for a resize listener to observe in the first place.
+    for (const delay of [300, 1200]) {
+      setTimeout(notifyMapResize, delay);
+    }
 
     function sheetEnabled() {
       return panelMobileMq.matches && !document.body.classList.contains('ui-minimal');
