@@ -3471,7 +3471,13 @@ export function generateViewerHtml(generatedAt: string) {
         }
         if (!sheetEnabled()) return; // desktop: let <details> toggle natively
         event.preventDefault();
-        setSheetState(sheetState() === 'peek' ? 'half' : 'peek');
+        // Drag can reach all three snap states, but nothing else ever calls setSheetState('full')
+        // — a click/tap (and, since <summary> is natively keyboard-operable, Enter/Space) only
+        // ever toggled peek<->half, leaving 'full' completely unreachable without a drag gesture.
+        // Cycle through all three so keyboard/assistive-tech users aren't locked out of it.
+        const next =
+          sheetState() === 'peek' ? 'half' : sheetState() === 'half' ? 'full' : 'peek';
+        setSheetState(next);
       });
 
       panelSummary?.addEventListener('pointerdown', (event) => {
