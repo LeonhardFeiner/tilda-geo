@@ -4546,9 +4546,15 @@ export function generateViewerHtml(generatedAt: string) {
         if (isSimpleUiFromUrl()) {
           void populateUntergebietSelect();
         }
-        const loadNeighborsAfterPageReady = () => ensureNeighborsLoaded();
-        if (document.readyState === 'complete') loadNeighborsAfterPageReady();
-        else window.addEventListener('load', loadNeighborsAfterPageReady, { once: true });
+        // Neighbor data (SimpleView's "Nachbarn" presets) is only ever consumed in simple UI
+        // mode — switching mode always does a full page reload (navigateToViewMode uses
+        // location.assign), so an expert session never needs it. Skip the ~1.3MB fetch +
+        // worker spin-up entirely for the majority of visitors who land in expert mode.
+        if (isSimpleUiFromUrl()) {
+          const loadNeighborsAfterPageReady = () => ensureNeighborsLoaded();
+          if (document.readyState === 'complete') loadNeighborsAfterPageReady();
+          else window.addEventListener('load', loadNeighborsAfterPageReady, { once: true });
+        }
       } catch (e) {
         loadError.style.display = 'block';
         loadError.textContent = String(e.message || e);
