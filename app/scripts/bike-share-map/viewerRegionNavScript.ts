@@ -51,6 +51,7 @@ export function viewerRegionNavScript() {
 
     const mapLegendSection = document.getElementById('map-legend-section');
     const viewModeLinksExpertPanel = document.getElementById('view-mode-links-expert-panel');
+    const regionSearchBlock = document.getElementById('region-search-block');
     let mapLegendToggleLocked = false;
 
     function applyUiModeClass() {
@@ -59,6 +60,8 @@ export function viewerRegionNavScript() {
       document.body.classList.toggle('view-expert', uiMode() === 'expert');
       if (simpleViewBlock) simpleViewBlock.hidden = uiMode() !== 'simple';
       if (regionScopeBlock) regionScopeBlock.hidden = uiMode() !== 'expert';
+      // Expert-only shortcut for the Gebiet/Untergebiet selects, same visibility rule as those.
+      if (regionSearchBlock) regionSearchBlock.hidden = uiMode() !== 'expert';
       if (viewModeLinksExpertPanel) viewModeLinksExpertPanel.hidden = uiMode() !== 'simple';
       if (mapLegendSection) {
         const simple = uiMode() === 'simple';
@@ -76,9 +79,31 @@ export function viewerRegionNavScript() {
       });
     }
 
+    // Bundesland/Landkreis/Gemeinde only (not the lazy-loaded Gemeindeverbände/Stadtbezirke,
+    // and not Regierungsbezirke/Stadtteile) — keeps the list a manageable ~11k entries covering
+    // the levels people actually search for, without waiting on the background extra-levels
+    // fetch or ballooning past what a simple substring scan should do per keystroke.
+    let regionSearchEntries = [];
+    const REGION_SEARCH_LEVELS = new Set(['4', '6', '8']);
+
+    function rebuildRegionSearchEntries() {
+      const byId = new Map();
+      for (const f of allFeatures) {
+        const p = f.properties || {};
+        const level = String(p.level ?? '');
+        if (!REGION_SEARCH_LEVELS.has(level)) continue;
+        const id = String(p.id ?? '');
+        const name = String(p.name ?? '');
+        if (!id || !name) continue;
+        byId.set(id, { id, name, level });
+      }
+      regionSearchEntries = [...byId.values()];
+    }
+
     function rebuildRegionIndex() {
       regionIndex = RegionNav.buildRegionIndex(allFeatures);
       if (!neighborIndex?.precomputed) neighborIndex = null;
+      rebuildRegionSearchEntries();
     }
 
     function ensureNeighborIndex() {

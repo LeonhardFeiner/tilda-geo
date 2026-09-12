@@ -614,6 +614,27 @@ export function generateViewerHtml(generatedAt: string) {
     body.view-simple #map-legend-section > :not(summary) { padding-bottom: 8px; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
+    .region-search-block { position: relative; margin-bottom: 10px; }
+    .region-search-block[hidden] { display: none !important; }
+    .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
+    #region-search-input {
+      width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
+      border-radius: 4px; border: 1px solid #ccc;
+    }
+    .region-search-results {
+      position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
+      padding: 4px 0; list-style: none;
+      background: #fff; border: 1px solid #ccc; border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      max-height: 220px; overflow-y: auto;
+    }
+    .region-search-results[hidden] { display: none !important; }
+    .region-search-results li {
+      padding: 6px 10px; font-size: 13px; cursor: pointer;
+    }
+    .region-search-results li:hover,
+    .region-search-results li:focus { background: #eef4fc; outline: none; }
+    .region-search-results li .region-search-result-level { color: #777; font-size: 11px; }
     .panel-options { display: flex; flex-direction: column; }
     .simple-view-block {
       padding: 0 0 8px;
@@ -665,6 +686,16 @@ export function generateViewerHtml(generatedAt: string) {
     <p id="load-status">Lade Gebietsdaten…</p>
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
+    <div class="region-search-block" id="region-search-block">
+      <label for="region-search-input">Gebiet suchen</label>
+      <input
+        type="text"
+        id="region-search-input"
+        autocomplete="off"
+        placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
+      />
+      <ul id="region-search-results" class="region-search-results" hidden></ul>
+    </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
       <div class="region-nav" id="region-nav">
@@ -4331,6 +4362,84 @@ export function generateViewerHtml(generatedAt: string) {
     gebietSelect?.addEventListener('change', onGebietChange);
     untergebietSelect?.addEventListener('change', onUntergebietChange);
     darstellungSelect?.addEventListener('change', onDarstellungChange);
+
+    // Jump straight to a Bundesland/Landkreis/Gemeinde by name instead of drilling through the
+    // Gebiet/Untergebiet selects. A Gemeinde match ends up selected (its detail card opens,
+    // since it's a sibling in its own filtered view); a Bundesland/Landkreis match instead
+    // drills the view down into it (there's no "its own card" view for those scopes normally
+    // either — picking one in Untergebiet does the same).
+    const regionSearchInput = document.getElementById('region-search-input');
+    const regionSearchResults = document.getElementById('region-search-results');
+    function regionSearchLevelLabel(level) {
+      return level === '4' ? 'Bundesland' : level === '6' ? 'Landkreis' : 'Gemeinde';
+    }
+    function hideRegionSearchResults() {
+      if (!regionSearchResults) return;
+      regionSearchResults.hidden = true;
+      regionSearchResults.replaceChildren();
+    }
+    function jumpToRegionBySearch(id) {
+      if (!regionIndex) return;
+      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      if (!scope) return;
+      applyExpertScopeToUi(scope);
+      updateScaleCapDefaultForView();
+      void applyCurrentView().then(() => selectRegionById(id, null, true));
+    }
+    function renderRegionSearchResults(query) {
+      if (!regionSearchResults) return;
+      if (!query) {
+        hideRegionSearchResults();
+        return;
+      }
+      const q = query.toLowerCase();
+      const matches = regionSearchEntries
+        .filter((e) => e.name.toLowerCase().includes(q))
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+        .slice(0, 8);
+      regionSearchResults.replaceChildren();
+      if (!matches.length) {
+        hideRegionSearchResults();
+        return;
+      }
+      for (const m of matches) {
+        const li = document.createElement('li');
+        li.tabIndex = 0;
+        li.append(m.name + ' ');
+        const level = document.createElement('span');
+        level.className = 'region-search-result-level';
+        level.textContent = '(' + regionSearchLevelLabel(m.level) + ')';
+        li.appendChild(level);
+        const pick = () => {
+          hideRegionSearchResults();
+          regionSearchInput.value = '';
+          jumpToRegionBySearch(m.id);
+        };
+        li.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus, avoid blur-hide racing the click
+        li.addEventListener('click', pick);
+        li.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') pick();
+        });
+        regionSearchResults.appendChild(li);
+      }
+      regionSearchResults.hidden = false;
+    }
+    if (regionSearchInput) {
+      regionSearchInput.addEventListener('input', () => {
+        renderRegionSearchResults(regionSearchInput.value.trim());
+      });
+      regionSearchInput.addEventListener('blur', () => {
+        setTimeout(hideRegionSearchResults, 150);
+      });
+      regionSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          regionSearchInput.value = '';
+          hideRegionSearchResults();
+        } else if (e.key === 'ArrowDown' && !regionSearchResults.hidden) {
+          regionSearchResults.querySelector('li')?.focus();
+        }
+      });
+    }
     if (simpleViewSelect) simpleViewSelect.addEventListener('change', onSimpleViewChange);
     const switchToExpertLink = document.getElementById('switch-to-expert-link');
     if (switchToExpertLink) {

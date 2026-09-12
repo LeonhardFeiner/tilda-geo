@@ -529,6 +529,27 @@
     body.view-simple #map-legend-section > :not(summary) { padding-bottom: 8px; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
+    .region-search-block { position: relative; margin-bottom: 10px; }
+    .region-search-block[hidden] { display: none !important; }
+    .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
+    #region-search-input {
+      width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
+      border-radius: 4px; border: 1px solid #ccc;
+    }
+    .region-search-results {
+      position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
+      padding: 4px 0; list-style: none;
+      background: #fff; border: 1px solid #ccc; border-radius: 6px;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+      max-height: 220px; overflow-y: auto;
+    }
+    .region-search-results[hidden] { display: none !important; }
+    .region-search-results li {
+      padding: 6px 10px; font-size: 13px; cursor: pointer;
+    }
+    .region-search-results li:hover,
+    .region-search-results li:focus { background: #eef4fc; outline: none; }
+    .region-search-results li .region-search-result-level { color: #777; font-size: 11px; }
     .panel-options { display: flex; flex-direction: column; }
     .simple-view-block {
       padding: 0 0 8px;
@@ -580,6 +601,16 @@
     <p id="load-status">Lade Gebietsdaten…</p>
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
+    <div class="region-search-block" id="region-search-block">
+      <label for="region-search-input">Gebiet suchen</label>
+      <input
+        type="text"
+        id="region-search-input"
+        autocomplete="off"
+        placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
+      />
+      <ul id="region-search-results" class="region-search-results" hidden></ul>
+    </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
       <div class="region-nav" id="region-nav">
@@ -802,7 +833,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-12T11:11:20.161Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-12T11:25:49.581Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -883,6 +914,7 @@
 
     const mapLegendSection = document.getElementById('map-legend-section');
     const viewModeLinksExpertPanel = document.getElementById('view-mode-links-expert-panel');
+    const regionSearchBlock = document.getElementById('region-search-block');
     let mapLegendToggleLocked = false;
 
     function applyUiModeClass() {
@@ -891,6 +923,8 @@
       document.body.classList.toggle('view-expert', uiMode() === 'expert');
       if (simpleViewBlock) simpleViewBlock.hidden = uiMode() !== 'simple';
       if (regionScopeBlock) regionScopeBlock.hidden = uiMode() !== 'expert';
+      // Expert-only shortcut for the Gebiet/Untergebiet selects, same visibility rule as those.
+      if (regionSearchBlock) regionSearchBlock.hidden = uiMode() !== 'expert';
       if (viewModeLinksExpertPanel) viewModeLinksExpertPanel.hidden = uiMode() !== 'simple';
       if (mapLegendSection) {
         const simple = uiMode() === 'simple';
@@ -908,9 +942,31 @@
       });
     }
 
+    // Bundesland/Landkreis/Gemeinde only (not the lazy-loaded Gemeindeverbände/Stadtbezirke,
+    // and not Regierungsbezirke/Stadtteile) — keeps the list a manageable ~11k entries covering
+    // the levels people actually search for, without waiting on the background extra-levels
+    // fetch or ballooning past what a simple substring scan should do per keystroke.
+    let regionSearchEntries = [];
+    const REGION_SEARCH_LEVELS = new Set(['4', '6', '8']);
+
+    function rebuildRegionSearchEntries() {
+      const byId = new Map();
+      for (const f of allFeatures) {
+        const p = f.properties || {};
+        const level = String(p.level ?? '');
+        if (!REGION_SEARCH_LEVELS.has(level)) continue;
+        const id = String(p.id ?? '');
+        const name = String(p.name ?? '');
+        if (!id || !name) continue;
+        byId.set(id, { id, name, level });
+      }
+      regionSearchEntries = [...byId.values()];
+    }
+
     function rebuildRegionIndex() {
       regionIndex = RegionNav.buildRegionIndex(allFeatures);
       if (!neighborIndex?.precomputed) neighborIndex = null;
+      rebuildRegionSearchEntries();
     }
 
     function ensureNeighborIndex() {
@@ -4877,6 +4933,84 @@
     gebietSelect?.addEventListener('change', onGebietChange);
     untergebietSelect?.addEventListener('change', onUntergebietChange);
     darstellungSelect?.addEventListener('change', onDarstellungChange);
+
+    // Jump straight to a Bundesland/Landkreis/Gemeinde by name instead of drilling through the
+    // Gebiet/Untergebiet selects. A Gemeinde match ends up selected (its detail card opens,
+    // since it's a sibling in its own filtered view); a Bundesland/Landkreis match instead
+    // drills the view down into it (there's no "its own card" view for those scopes normally
+    // either — picking one in Untergebiet does the same).
+    const regionSearchInput = document.getElementById('region-search-input');
+    const regionSearchResults = document.getElementById('region-search-results');
+    function regionSearchLevelLabel(level) {
+      return level === '4' ? 'Bundesland' : level === '6' ? 'Landkreis' : 'Gemeinde';
+    }
+    function hideRegionSearchResults() {
+      if (!regionSearchResults) return;
+      regionSearchResults.hidden = true;
+      regionSearchResults.replaceChildren();
+    }
+    function jumpToRegionBySearch(id) {
+      if (!regionIndex) return;
+      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      if (!scope) return;
+      applyExpertScopeToUi(scope);
+      updateScaleCapDefaultForView();
+      void applyCurrentView().then(() => selectRegionById(id, null, true));
+    }
+    function renderRegionSearchResults(query) {
+      if (!regionSearchResults) return;
+      if (!query) {
+        hideRegionSearchResults();
+        return;
+      }
+      const q = query.toLowerCase();
+      const matches = regionSearchEntries
+        .filter((e) => e.name.toLowerCase().includes(q))
+        .sort((a, b) => a.name.localeCompare(b.name, 'de'))
+        .slice(0, 8);
+      regionSearchResults.replaceChildren();
+      if (!matches.length) {
+        hideRegionSearchResults();
+        return;
+      }
+      for (const m of matches) {
+        const li = document.createElement('li');
+        li.tabIndex = 0;
+        li.append(m.name + ' ');
+        const level = document.createElement('span');
+        level.className = 'region-search-result-level';
+        level.textContent = '(' + regionSearchLevelLabel(m.level) + ')';
+        li.appendChild(level);
+        const pick = () => {
+          hideRegionSearchResults();
+          regionSearchInput.value = '';
+          jumpToRegionBySearch(m.id);
+        };
+        li.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus, avoid blur-hide racing the click
+        li.addEventListener('click', pick);
+        li.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') pick();
+        });
+        regionSearchResults.appendChild(li);
+      }
+      regionSearchResults.hidden = false;
+    }
+    if (regionSearchInput) {
+      regionSearchInput.addEventListener('input', () => {
+        renderRegionSearchResults(regionSearchInput.value.trim());
+      });
+      regionSearchInput.addEventListener('blur', () => {
+        setTimeout(hideRegionSearchResults, 150);
+      });
+      regionSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          regionSearchInput.value = '';
+          hideRegionSearchResults();
+        } else if (e.key === 'ArrowDown' && !regionSearchResults.hidden) {
+          regionSearchResults.querySelector('li')?.focus();
+        }
+      });
+    }
     if (simpleViewSelect) simpleViewSelect.addEventListener('change', onSimpleViewChange);
     const switchToExpertLink = document.getElementById('switch-to-expert-link');
     if (switchToExpertLink) {
