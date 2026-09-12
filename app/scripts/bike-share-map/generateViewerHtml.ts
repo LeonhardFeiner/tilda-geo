@@ -565,6 +565,10 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-trend { margin: 0 0 10px; }
     .region-detail-trend[hidden] { display: none !important; }
+    #region-detail-trend-heading {
+      margin: 0 0 4px; font-size: 11px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 0.02em; color: #666;
+    }
     .region-detail-trend-btn {
       font-size: 11px; font-weight: 600; color: #1565c0;
       background: #eef4fb; border: 1px solid #cfe0f3; border-radius: 6px;
@@ -586,11 +590,12 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-rows { margin: 0; padding: 0; list-style: none; }
     .region-detail-rows li {
-      display: flex; justify-content: space-between; gap: 8px;
-      padding: 2px 0; border-bottom: 1px solid #f0f0f0;
+      display: flex; flex-direction: column; gap: 3px;
+      padding: 3px 0; border-bottom: 1px solid #f0f0f0;
     }
+    .region-detail-row-head { display: flex; justify-content: space-between; gap: 8px; }
     .region-detail-rows li.region-detail-row-clickable {
-      cursor: pointer; margin: 0 -4px; padding: 2px 4px; border-radius: 4px;
+      cursor: pointer; margin: 0 -4px; padding: 3px 4px; border-radius: 4px;
     }
     .region-detail-rows li.region-detail-row-clickable:hover { background: #f5f5f5; }
     .region-detail-rows li.region-detail-row-active { background: #e3f2fd; }
@@ -598,6 +603,10 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-rows .km {
       font-variant-numeric: tabular-nums; color: #444; white-space: nowrap;
     }
+    .region-detail-bar-track {
+      height: 6px; border-radius: 3px; background: #eee; overflow: hidden;
+    }
+    .region-detail-bar-fill { height: 100%; border-radius: 3px; }
     .region-detail-tags {
       margin-top: 4px; font-size: 11px;
     }
@@ -906,7 +915,8 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
-      <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn"></button>
+      <h4 id="region-detail-trend-heading"></h4>
+      <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
       <div id="region-detail-trend-result" hidden></div>
     </div>
     <div id="region-detail-body"></div>
@@ -1073,6 +1083,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailTrend = document.getElementById('region-detail-trend');
+    const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
     const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
@@ -1992,7 +2003,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
-    function appendLengthRows(parent, title, rows, highlightKind) {
+    function appendLengthRows(parent, title, rows, highlightKind, barColor) {
       if (!rows.length) return;
       const section = document.createElement('section');
       section.className = 'region-detail-section';
@@ -2001,15 +2012,29 @@ export function generateViewerHtml(generatedAt: string) {
       section.appendChild(h4);
       const ul = document.createElement('ul');
       ul.className = 'region-detail-rows';
+      const maxKm = Math.max(...rows.map((row) => row.km || 0), 0.001);
       for (const row of rows) {
         const li = document.createElement('li');
+        const head = document.createElement('div');
+        head.className = 'region-detail-row-head';
         const label = document.createElement('span');
         label.textContent = row.label;
         const km = document.createElement('span');
         km.className = 'km';
         km.textContent =
           TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
-        li.append(label, km);
+        head.append(label, km);
+        li.appendChild(head);
+        if (barColor) {
+          const track = document.createElement('div');
+          track.className = 'region-detail-bar-track';
+          const fill = document.createElement('div');
+          fill.className = 'region-detail-bar-fill';
+          fill.style.width = Math.max(0, (100 * (row.km || 0)) / maxKm) + '%';
+          fill.style.background = barColor;
+          track.appendChild(fill);
+          li.appendChild(track);
+        }
         if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
         ul.appendChild(li);
       }
@@ -2498,6 +2523,16 @@ export function generateViewerHtml(generatedAt: string) {
       appendTrendNote(container);
     }
 
+    function renderTrendLoading(container) {
+      regionDetailTrendBtn.hidden = true;
+      container.hidden = false;
+      container.replaceChildren();
+      const p = document.createElement('p');
+      p.className = 'region-detail-trend-note';
+      p.textContent = 'Lädt …';
+      container.appendChild(p);
+    }
+
     function renderTrendError(container) {
       regionDetailTrendBtn.hidden = false;
       regionDetailTrendBtn.disabled = false;
@@ -2513,10 +2548,8 @@ export function generateViewerHtml(generatedAt: string) {
     async function loadRegionTrend(feature) {
       const id = String(feature.properties?.id ?? '');
       if (!id) return;
-      regionDetailTrendBtn.disabled = true;
-      regionDetailTrendBtn.textContent = 'Lädt …';
-      regionDetailTrendResult.hidden = false;
-      regionDetailTrendResult.replaceChildren();
+      regionDetailTrendBtn.hidden = true;
+      renderTrendLoading(regionDetailTrendResult);
       const controller = typeof AbortController === 'function' ? new AbortController() : null;
       const timeoutId = controller && setTimeout(() => controller.abort(), 12000);
       try {
@@ -2544,6 +2577,8 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
+    // Loads automatically (no click needed) — the button only reappears as a manual retry
+    // if the ohsome fetch fails.
     function setupRegionTrend(feature) {
       trendFeature = feature;
       if (!regionSupportsTrend(feature)) {
@@ -2551,11 +2586,10 @@ export function generateViewerHtml(generatedAt: string) {
         return;
       }
       regionDetailTrend.hidden = false;
-      regionDetailTrendBtn.hidden = false;
+      regionDetailTrendHeading.textContent = 'Entwicklung seit ' + OHSOME_TREND_FIRST_YEAR;
+      regionDetailTrendBtn.hidden = true;
       regionDetailTrendBtn.disabled = false;
-      regionDetailTrendBtn.textContent = 'Entwicklung seit ' + OHSOME_TREND_FIRST_YEAR + ' zeigen';
-      regionDetailTrendResult.hidden = true;
-      regionDetailTrendResult.replaceChildren();
+      regionDetailTrendBtn.textContent = 'Erneut versuchen';
       const id = String(feature.properties?.id ?? '');
       let cached = trendCache.get(id);
       if (!cached) {
@@ -2567,6 +2601,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       if (cached === 'error') renderTrendError(regionDetailTrendResult);
       else if (cached) renderRegionTrend(cached, regionDetailTrendResult);
+      else void loadRegionTrend(feature);
     }
 
     function showRegionDetail(feature, opts) {
@@ -2601,6 +2636,8 @@ export function generateViewerHtml(generatedAt: string) {
         regionDetailBody,
         'Straßen nach Klasse',
         TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
+        null,
+        overlayRoadColorInput.value,
       );
       if (uiMode() !== 'simple') {
         appendTagLengthDetails(
@@ -2614,6 +2651,7 @@ export function generateViewerHtml(generatedAt: string) {
         'Radinfrastruktur nach Klasse',
         TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
         'bikelane-class',
+        overlayBikelaneColorInput.value,
       );
       if (uiMode() !== 'simple') {
         appendTagLengthDetails(
@@ -3377,7 +3415,16 @@ export function generateViewerHtml(generatedAt: string) {
       document.documentElement.style.setProperty('--vph', window.innerHeight / 100 + 'px');
     }
     updateVhUnit();
-    window.addEventListener('resize', updateVhUnit);
+    // On phone, the browser chrome (address bar) collapsing/expanding after the initial paint
+    // fires this same 'resize' event and changes #map's actual on-screen size — but MapLibre
+    // keeps hit-testing against the canvas size from construction time until told otherwise, so
+    // taps in the newly-revealed strip (typically the bottom, once the chrome collapses) landed
+    // nowhere. Previously this only got fixed incidentally, whenever the sheet toggle's own
+    // notifyMapResize() call happened to fire for an unrelated reason.
+    window.addEventListener('resize', () => {
+      updateVhUnit();
+      notifyMapResize();
+    });
 
     function sheetEnabled() {
       return panelMobileMq.matches && !document.body.classList.contains('ui-minimal');
