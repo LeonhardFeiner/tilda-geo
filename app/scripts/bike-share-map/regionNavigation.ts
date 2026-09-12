@@ -268,7 +268,11 @@ export function scopeLevelFor(gebiet: GebietValue, untergebiet: UntergebietValue
 export function scopeIdFor(gebiet: GebietValue, untergebiet: UntergebietValue) {
   if (untergebiet.startsWith('rb:')) return untergebiet.slice(3)
   if (untergebiet.startsWith('lk:')) return untergebiet.slice(3)
-  if (untergebiet.startsWith('kreisfrei:')) return untergebiet.slice(9)
+  // 'kreisfrei:'.length === 10, not 9 — a stray leading ':' was left on the returned id,
+  // silently breaking every scopeId-keyed lookup (byId.get, presence maps, …) for a kreisfreie
+  // city scope specifically. Found via a failing test for the new lazy-presence feature, but
+  // pre-existing and unrelated to it.
+  if (untergebiet.startsWith('kreisfrei:')) return untergebiet.slice(10)
   if (untergebiet.startsWith('stadt:')) return untergebiet.slice(6)
   if (gebiet === DEUTSCHLAND_GEBIET) return null
   return gebiet
@@ -608,12 +612,46 @@ function comparePresetsForDarstellungList(
   return a.label.localeCompare(b.label, 'de')
 }
 
+/**
+ * Presets whose candidate pool includes Gemeindeverbände (admin level 7) or Stadtbezirke (9) —
+ * the levels split into the lazily-fetched stats-extra.msgpack (see splitStatsFeaturesByLevel).
+ * Without that pack loaded, `features`/`index` simply have no level-7/9 entries, so
+ * hasFeaturesForDarstellungPreset (and, for 'stadtbezirke', isPresetAllowedForScope's own
+ * descendant-count check) can only ever see them as absent — wrongly hiding a real option, or
+ * worse, silently showing an ungrouped substitute for it. computeLazyDarstellungPresence
+ * precomputes the true answer at build time, from the full (unsplit) feature set, so the client
+ * can consult it instead until the real data has actually loaded.
+ */
+export const LAZY_LEVEL_PRESET_IDS: ReadonlySet<DisplayPresetId> = new Set([
+  'gemeindeverbaende',
+  'gemeindeverbaende_kreisfrei',
+  'stadtbezirke',
+] satisfies DisplayPresetId[])
+
+/** Preset id → scope ids (Bundesland/Landkreis/kreisfreie id, or DEUTSCHLAND_GEBIET for the
+ * nationwide scope) where that preset actually has data. Built by computeLazyDarstellungPresence. */
+export type LazyDarstellungPresence = Partial<Record<DisplayPresetId, string[]>>
+
+export function isLazyPresetKnownAvailable(
+  preset: DisplayPresetId,
+  gebiet: GebietValue,
+  untergebiet: UntergebietValue,
+  presence: LazyDarstellungPresence,
+) {
+  const scopeId = scopeIdFor(gebiet, untergebiet) ?? DEUTSCHLAND_GEBIET
+  return !!presence[preset]?.includes(scopeId)
+}
+
 export function hasFeaturesForDarstellungPreset(
   features: StatsFeature[],
   view: ViewScope,
   preset: DisplayPresetId,
   index: RegionIndex,
+  lazyPresence?: LazyDarstellungPresence,
 ) {
+  if (LAZY_LEVEL_PRESET_IDS.has(preset) && lazyPresence) {
+    return isLazyPresetKnownAvailable(preset, view.gebiet, view.untergebiet, lazyPresence)
+  }
   const scopeLevel = scopeLevelFor(view.gebiet, view.untergebiet)
   const scopeId = scopeIdFor(view.gebiet, view.untergebiet)
   const pool = darstellungCandidateFeatures(features, { ...view, darstellung: preset }, index)
@@ -631,18 +669,74 @@ export function listDarstellungPresetsForScope(
   view: ViewScope,
   index: RegionIndex,
   features: StatsFeature[],
+  lazyPresence?: LazyDarstellungPresence,
 ) {
   const scopeLevel = scopeLevelFor(view.gebiet, view.untergebiet)
   const available = DISPLAY_PRESETS.filter((preset) => {
-    if (!isPresetAllowedForScope(preset.id, scopeLevel, index, view.gebiet, view.untergebiet)) {
+    if (
+      !isPresetAllowedForScope(
+        preset.id,
+        scopeLevel,
+        index,
+        view.gebiet,
+        view.untergebiet,
+        lazyPresence,
+      )
+    ) {
       return false
     }
-    return hasFeaturesForDarstellungPreset(features, view, preset.id, index)
+    return hasFeaturesForDarstellungPreset(features, view, preset.id, index, lazyPresence)
   })
 
   return available.sort((a, b) =>
     comparePresetsForDarstellungList(a, b, scopeLevel, view.gebiet, view.untergebiet, index),
   )
+}
+
+/**
+ * Build-time only: run the real isPresetAllowedForScope/hasFeaturesForDarstellungPreset checks
+ * (no lazyPresence — the real thing) against the full, unsplit feature set for every scope a
+ * user could actually land on, to find out where each lazy-level preset truly has data. Ships
+ * as a small JSON the client loads eagerly (see LAZY_LEVEL_PRESET_IDS), so the Darstellung
+ * dropdown is correct before stats-extra.msgpack has been fetched.
+ */
+export function computeLazyDarstellungPresence(
+  features: StatsFeature[],
+  index: RegionIndex,
+): LazyDarstellungPresence {
+  const scopes: Array<{ gebiet: GebietValue; untergebiet: UntergebietValue }> = [
+    { gebiet: DEUTSCHLAND_GEBIET, untergebiet: '' },
+  ]
+  for (const id of index.idsByLevel.get('4') ?? []) {
+    scopes.push({ gebiet: id, untergebiet: '' })
+  }
+  for (const id of index.idsByLevel.get('5') ?? []) {
+    const bl = String(index.byId.get(id)?.properties?.bundesland_id ?? '')
+    if (bl) scopes.push({ gebiet: bl, untergebiet: `rb:${id}` })
+  }
+  for (const id of index.idsByLevel.get('6') ?? []) {
+    const bl = String(index.byId.get(id)?.properties?.bundesland_id ?? '')
+    if (!bl) continue
+    const prefix = index.kreisfreieIds.has(id) ? 'kreisfrei' : 'lk'
+    scopes.push({ gebiet: bl, untergebiet: `${prefix}:${id}` })
+  }
+
+  const presence: LazyDarstellungPresence = {}
+  for (const presetId of LAZY_LEVEL_PRESET_IDS) {
+    const scopeIds = new Set<string>()
+    for (const scope of scopes) {
+      const scopeLevel = scopeLevelFor(scope.gebiet, scope.untergebiet)
+      if (!isPresetAllowedForScope(presetId, scopeLevel, index, scope.gebiet, scope.untergebiet)) {
+        continue
+      }
+      const view: ViewScope = { ...scope, darstellung: presetId }
+      if (hasFeaturesForDarstellungPreset(features, view, presetId, index)) {
+        scopeIds.add(scopeIdFor(scope.gebiet, scope.untergebiet) ?? DEUTSCHLAND_GEBIET)
+      }
+    }
+    presence[presetId] = [...scopeIds]
+  }
+  return presence
 }
 
 /** @deprecated Use {@link listDarstellungPresetsForScope} – coverage groups are no longer shown in the UI. */
@@ -690,9 +784,14 @@ export function isPresetAllowedForScope(
   index: RegionIndex,
   gebiet: GebietValue,
   untergebiet: UntergebietValue,
+  lazyPresence?: LazyDarstellungPresence,
 ) {
   const minLevel = presetMinLevel(preset)
   if (minLevel <= scopeLevel) return false
+
+  if (LAZY_LEVEL_PRESET_IDS.has(preset) && lazyPresence) {
+    return isLazyPresetKnownAvailable(preset, gebiet, untergebiet, lazyPresence)
+  }
 
   const scopeId = scopeIdFor(gebiet, untergebiet)
   if (gebiet === DEUTSCHLAND_GEBIET && !untergebiet) {

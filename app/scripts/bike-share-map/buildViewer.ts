@@ -23,6 +23,7 @@ import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { methodologyPageHtml } from './methodologyPage'
+import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
 import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
 
 type StatsGeoFeature = {
@@ -67,12 +68,25 @@ function symlinkOutputFile(sourcePath: string, linkPath: string) {
 // options) — fetched lazily only once one of those is selected. See splitStatsFeaturesByLevel.
 if (existsSync(msgpackPath)) {
   const packBytes = new Uint8Array(await Bun.file(msgpackPath).arrayBuffer())
-  const { core, extra } = splitStatsFeaturesByLevel(decodeStatsRegionPack(packBytes))
+  const fullFeatures = decodeStatsRegionPack(packBytes)
+  const { core, extra } = splitStatsFeaturesByLevel(fullFeatures)
   writeFileSync(join(viewerDir, 'stats-core.msgpack'), encodeStatsRegionPack(core))
   writeFileSync(join(viewerDir, 'stats-extra.msgpack'), encodeStatsRegionPack(extra))
   process.stdout.write(
     `Stats split: ${core.length} core + ${extra.length} extra (Gemeindeverbände/Stadtbezirke) ` +
       `→ ${viewerDir}/stats-core.msgpack, stats-extra.msgpack\n`,
+  )
+
+  // From the FULL (unsplit) feature set, so the Darstellung dropdown can list
+  // Gemeindeverbände/Stadtbezirke options correctly before stats-extra.msgpack loads.
+  const fullIndex = buildRegionIndex(fullFeatures)
+  const lazyPresence = computeLazyDarstellungPresence(fullFeatures, fullIndex)
+  writeFileSync(
+    join(viewerDir, 'lazy-darstellung-presence.json'),
+    JSON.stringify(lazyPresence),
+  )
+  process.stdout.write(
+    `Lazy Darstellung presence → ${viewerDir}/lazy-darstellung-presence.json\n`,
   )
 } else {
   process.stderr.write(

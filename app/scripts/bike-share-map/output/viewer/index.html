@@ -833,7 +833,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-12T11:40:48.082Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-12T12:14:16.823Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -853,6 +853,17 @@
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data && data.byId && data.groups) peerGroupIndex = data;
+      })
+      .catch(() => {});
+    // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
+    // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
+    // before stats-extra.msgpack has actually been fetched. Small (a few KB); safe to await
+    // eagerly alongside the core stats fetch. See RegionNav.computeLazyDarstellungPresence.
+    let lazyDarstellungPresence = null;
+    const lazyDarstellungPresencePromise = fetch(CONFIG.lazyDarstellungPresenceUrl)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        lazyDarstellungPresence = data;
       })
       .catch(() => {});
     let overlaysBound = false;
@@ -1092,7 +1103,14 @@
         RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
       if (
-        !RegionNav.isPresetAllowedForScope(darstellung, scopeLevel, regionIndex, gebiet, untergebiet)
+        !RegionNav.isPresetAllowedForScope(
+          darstellung,
+          scopeLevel,
+          regionIndex,
+          gebiet,
+          untergebiet,
+          currentLazyPresence(),
+        )
       ) {
         darstellung = RegionNav.defaultDarstellungForScope(
           gebiet,
@@ -1278,7 +1296,12 @@
       const scope = readViewScopeFromUi();
       const prev = darstellungSelect.value;
       darstellungSelect.replaceChildren();
-      const presets = RegionNav.listDarstellungPresetsForScope(scope, regionIndex, allFeatures);
+      const presets = RegionNav.listDarstellungPresetsForScope(
+        scope,
+        regionIndex,
+        allFeatures,
+        currentLazyPresence(),
+      );
       for (const preset of presets) {
         const el = document.createElement('option');
         el.value = preset.id;
@@ -1441,7 +1464,16 @@
         RegionNav.parseDarstellungParam(params.get('darstellung')) ||
         RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
-      if (!RegionNav.isPresetAllowedForScope(darstellung, scopeLevel, regionIndex, gebiet, untergebiet)) {
+      if (
+        !RegionNav.isPresetAllowedForScope(
+          darstellung,
+          scopeLevel,
+          regionIndex,
+          gebiet,
+          untergebiet,
+          currentLazyPresence(),
+        )
+      ) {
         darstellung = RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       }
       return { gebiet, untergebiet, darstellung };
@@ -1529,18 +1561,18 @@
 
     // stats-core.msgpack (fetched above as statsDataPromise) omits Gemeindeverbände (level 7)
     // and Stadtbezirke (level 9) — together ~40% of the combined payload — so the first paint
-    // never waits on them. They're fetched right after, in the background: the two Darstellung
-    // options they power are only shown in the dropdown once features for them actually exist
-    // (listDarstellungPresetsForScope), so waiting for an explicit selection before fetching
-    // would make those options impossible to ever pick. This still avoids blocking the initial
-    // render/interactivity on that data, which is what makes the page feel slow to load.
-    const DARSTELLUNGEN_NEEDING_EXTRA_LEVELS = new Set([
-      'gemeindeverbaende',
-      'gemeindeverbaende_kreisfrei',
-      'stadtbezirke',
-    ]);
+    // never waits on them, and (unlike an earlier version of this) nothing fetches them in the
+    // background either: lazyDarstellungPresence (tiny, precomputed at build time) already
+    // tells populateDarstellungSelect which scopes have real Gemeindeverbände/Stadtbezirke data,
+    // so those options list correctly without needing the actual features loaded — only once a
+    // visitor actually picks one of them does applyCurrentView (below) fetch stats-extra.msgpack.
+    const DARSTELLUNGEN_NEEDING_EXTRA_LEVELS = RegionNav.LAZY_LEVEL_PRESET_IDS;
     let extraLevelsLoaded = false;
     let extraLevelsPromise = null;
+    // Once the real level-7/9 features are loaded, prefer them over the precomputed snapshot.
+    function currentLazyPresence() {
+      return extraLevelsLoaded ? undefined : lazyDarstellungPresence;
+    }
     function ensureExtraLevelsLoaded() {
       if (extraLevelsLoaded) return Promise.resolve();
       if (extraLevelsPromise) return extraLevelsPromise;
@@ -1563,9 +1595,6 @@
       .then((data) => {
         if (data.type === 'msgpack') {
           allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
-          // Fire-and-forget: starts right after the core data is usable, well before anyone
-          // could realistically have picked a Darstellung needing it.
-          ensureExtraLevelsLoaded().catch(() => {});
         } else {
           // The geojson fallback (msgpack fetch failed) ships every level in one file, so
           // there is no separate "extra" chunk left to fetch afterwards.
@@ -4845,8 +4874,9 @@
     async function applyCurrentView() {
       syncViewScopeFromUi();
       syncViewModeLinks();
-      // Normally already loaded in the background by now (see ensureExtraLevelsLoaded above);
-      // this only kicks in if that fetch is still in flight or failed and gets retried here.
+      // Nothing prefetches stats-extra.msgpack in the background any more (see
+      // lazyDarstellungPresence above) — this is the only place it gets fetched, on demand,
+      // the first time a visitor actually picks a Gemeindeverbände/Stadtbezirke Darstellung.
       if (
         DARSTELLUNGEN_NEEDING_EXTRA_LEVELS.has(currentViewScope.darstellung) &&
         !extraLevelsLoaded
@@ -5264,6 +5294,7 @@
     async function init() {
       try {
         await statsReadyPromise;
+        await lazyDarstellungPresencePromise; // tiny fetch, in flight since page load — just a safety margin
         const manifestPromise = fetch(CONFIG.manifestUrl)
           .catch(() => ({ ok: false }))
           .then(async (res) => (res.ok ? res.json() : {}));

@@ -2,9 +2,11 @@ import { describe, expect, test } from 'vitest'
 import {
   buildRegionIndex,
   comparePresetUnitLevelHierarchy,
+  computeLazyDarstellungPresence,
   defaultDarstellungPresetForScope,
   DEUTSCHLAND_GEBIET,
   filterFeaturesForView,
+  hasFeaturesForDarstellungPreset,
   isPresetAllowedForScope,
   isStandaloneGemeinde,
   listAllBundeslaender,
@@ -368,5 +370,102 @@ describe('regionNavigation', () => {
     const ids = presets.map((p) => p.id)
     expect(ids.indexOf('landkreise')).toBeLessThan(ids.indexOf('gemeindeverbaende'))
     expect(ids.indexOf('gemeindeverbaende')).toBeLessThan(ids.indexOf('gemeinden'))
+  })
+})
+
+describe('lazy Darstellung presence (Gemeindeverbände / Stadtbezirke before stats-extra loads)', () => {
+  // Same hierarchy as above, plus one Stadtbezirk under the kreisfreie city (relation/KF) —
+  // the shared fixture already has a level-7 Gemeindeverband (relation/VG) but no level-9 unit.
+  const fullFeatures = [
+    ...features,
+    {
+      type: 'Feature',
+      properties: {
+        id: 'relation/SB',
+        name: 'Stadtbezirk Nord',
+        level: '9',
+        parent_id: 'relation/KF',
+        bundesland_id: 'relation/BY',
+      },
+      geometry: { type: 'Polygon', coordinates: [] },
+    },
+  ] satisfies StatsFeature[]
+  const fullIndex = buildRegionIndex(fullFeatures)
+  const presence = computeLazyDarstellungPresence(fullFeatures, fullIndex)
+
+  // What the client actually has before stats-extra.msgpack is fetched: no level 7/9 at all.
+  const coreOnlyFeatures = fullFeatures.filter((f) => {
+    const level = f.properties?.level
+    return level !== '7' && level !== '9'
+  })
+  const coreOnlyIndex = buildRegionIndex(coreOnlyFeatures)
+
+  test('computeLazyDarstellungPresence finds the real scopes from the full feature set', () => {
+    expect(presence.gemeindeverbaende).toContain('relation/BY')
+    expect(presence.gemeindeverbaende_kreisfrei).toContain('relation/BY')
+    expect(presence.stadtbezirke).toContain('relation/KF')
+    // München (relation/LK) itself has no Stadtbezirke — only the kreisfreie city does.
+    expect(presence.stadtbezirke).not.toContain('relation/LK')
+  })
+
+  test('isPresetAllowedForScope: without presence, stadtbezirke is wrongly hidden once extras are missing', () => {
+    const scopeLevel = scopeLevelFor('relation/BY', 'kreisfrei:relation/KF')
+    expect(
+      isPresetAllowedForScope(
+        'stadtbezirke',
+        scopeLevel,
+        coreOnlyIndex,
+        'relation/BY',
+        'kreisfrei:relation/KF',
+      ),
+    ).toBe(false)
+    expect(
+      isPresetAllowedForScope(
+        'stadtbezirke',
+        scopeLevel,
+        coreOnlyIndex,
+        'relation/BY',
+        'kreisfrei:relation/KF',
+        presence,
+      ),
+    ).toBe(true)
+  })
+
+  test('hasFeaturesForDarstellungPreset: presence stands in for the not-yet-loaded level-9 data', () => {
+    const view = {
+      gebiet: 'relation/BY',
+      untergebiet: 'kreisfrei:relation/KF',
+      darstellung: 'stadtbezirke',
+    } as const
+    expect(
+      hasFeaturesForDarstellungPreset(coreOnlyFeatures, view, 'stadtbezirke', coreOnlyIndex),
+    ).toBe(false)
+    expect(
+      hasFeaturesForDarstellungPreset(
+        coreOnlyFeatures,
+        view,
+        'stadtbezirke',
+        coreOnlyIndex,
+        presence,
+      ),
+    ).toBe(true)
+  })
+
+  test('listDarstellungPresetsForScope lists stadtbezirke for the city scope once presence says it exists', () => {
+    const view = {
+      gebiet: 'relation/BY',
+      untergebiet: 'kreisfrei:relation/KF',
+      darstellung: 'gemeinden',
+    } as const
+    const withoutPresence = listDarstellungPresetsForScope(view, coreOnlyIndex, coreOnlyFeatures)
+    expect(withoutPresence.some((p) => p.id === 'stadtbezirke')).toBe(false)
+
+    const withPresence = listDarstellungPresetsForScope(
+      view,
+      coreOnlyIndex,
+      coreOnlyFeatures,
+      presence,
+    )
+    expect(withPresence.some((p) => p.id === 'stadtbezirke')).toBe(true)
   })
 })

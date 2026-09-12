@@ -53,6 +53,7 @@ export function generateViewerHtml(generatedAt: string) {
     roadsTiles: TILDA_ROADS_TILES,
     statsMsgpackUrl: './stats-core.msgpack',
     statsExtraMsgpackUrl: './stats-extra.msgpack',
+    lazyDarstellungPresenceUrl: './lazy-darstellung-presence.json',
     statsUrl: './stats.geojson',
     neighborsMsgpackUrl: './neighbors.msgpack',
     neighborsUrl: './neighbors.json',
@@ -940,6 +941,17 @@ export function generateViewerHtml(generatedAt: string) {
         if (data && data.byId && data.groups) peerGroupIndex = data;
       })
       .catch(() => {});
+    // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
+    // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
+    // before stats-extra.msgpack has actually been fetched. Small (a few KB); safe to await
+    // eagerly alongside the core stats fetch. See RegionNav.computeLazyDarstellungPresence.
+    let lazyDarstellungPresence = null;
+    const lazyDarstellungPresencePromise = fetch(CONFIG.lazyDarstellungPresenceUrl)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        lazyDarstellungPresence = data;
+      })
+      .catch(() => {});
     let overlaysBound = false;
     let overlayLineHighlight = null;
     let overlayLineHighlightTimer = null;
@@ -958,18 +970,18 @@ export function generateViewerHtml(generatedAt: string) {
 
     // stats-core.msgpack (fetched above as statsDataPromise) omits Gemeindeverbände (level 7)
     // and Stadtbezirke (level 9) — together ~40% of the combined payload — so the first paint
-    // never waits on them. They're fetched right after, in the background: the two Darstellung
-    // options they power are only shown in the dropdown once features for them actually exist
-    // (listDarstellungPresetsForScope), so waiting for an explicit selection before fetching
-    // would make those options impossible to ever pick. This still avoids blocking the initial
-    // render/interactivity on that data, which is what makes the page feel slow to load.
-    const DARSTELLUNGEN_NEEDING_EXTRA_LEVELS = new Set([
-      'gemeindeverbaende',
-      'gemeindeverbaende_kreisfrei',
-      'stadtbezirke',
-    ]);
+    // never waits on them, and (unlike an earlier version of this) nothing fetches them in the
+    // background either: lazyDarstellungPresence (tiny, precomputed at build time) already
+    // tells populateDarstellungSelect which scopes have real Gemeindeverbände/Stadtbezirke data,
+    // so those options list correctly without needing the actual features loaded — only once a
+    // visitor actually picks one of them does applyCurrentView (below) fetch stats-extra.msgpack.
+    const DARSTELLUNGEN_NEEDING_EXTRA_LEVELS = RegionNav.LAZY_LEVEL_PRESET_IDS;
     let extraLevelsLoaded = false;
     let extraLevelsPromise = null;
+    // Once the real level-7/9 features are loaded, prefer them over the precomputed snapshot.
+    function currentLazyPresence() {
+      return extraLevelsLoaded ? undefined : lazyDarstellungPresence;
+    }
     function ensureExtraLevelsLoaded() {
       if (extraLevelsLoaded) return Promise.resolve();
       if (extraLevelsPromise) return extraLevelsPromise;
@@ -992,9 +1004,6 @@ export function generateViewerHtml(generatedAt: string) {
       .then((data) => {
         if (data.type === 'msgpack') {
           allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
-          // Fire-and-forget: starts right after the core data is usable, well before anyone
-          // could realistically have picked a Darstellung needing it.
-          ensureExtraLevelsLoaded().catch(() => {});
         } else {
           // The geojson fallback (msgpack fetch failed) ships every level in one file, so
           // there is no separate "extra" chunk left to fetch afterwards.
@@ -4274,8 +4283,9 @@ export function generateViewerHtml(generatedAt: string) {
     async function applyCurrentView() {
       syncViewScopeFromUi();
       syncViewModeLinks();
-      // Normally already loaded in the background by now (see ensureExtraLevelsLoaded above);
-      // this only kicks in if that fetch is still in flight or failed and gets retried here.
+      // Nothing prefetches stats-extra.msgpack in the background any more (see
+      // lazyDarstellungPresence above) — this is the only place it gets fetched, on demand,
+      // the first time a visitor actually picks a Gemeindeverbände/Stadtbezirke Darstellung.
       if (
         DARSTELLUNGEN_NEEDING_EXTRA_LEVELS.has(currentViewScope.darstellung) &&
         !extraLevelsLoaded
@@ -4693,6 +4703,7 @@ export function generateViewerHtml(generatedAt: string) {
     async function init() {
       try {
         await statsReadyPromise;
+        await lazyDarstellungPresencePromise; // tiny fetch, in flight since page load — just a safety margin
         const manifestPromise = fetch(CONFIG.manifestUrl)
           .catch(() => ({ ok: false }))
           .then(async (res) => (res.ok ? res.json() : {}));

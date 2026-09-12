@@ -229,7 +229,14 @@ export function viewerRegionNavScript() {
         RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
       if (
-        !RegionNav.isPresetAllowedForScope(darstellung, scopeLevel, regionIndex, gebiet, untergebiet)
+        !RegionNav.isPresetAllowedForScope(
+          darstellung,
+          scopeLevel,
+          regionIndex,
+          gebiet,
+          untergebiet,
+          currentLazyPresence(),
+        )
       ) {
         darstellung = RegionNav.defaultDarstellungForScope(
           gebiet,
@@ -415,7 +422,12 @@ export function viewerRegionNavScript() {
       const scope = readViewScopeFromUi();
       const prev = darstellungSelect.value;
       darstellungSelect.replaceChildren();
-      const presets = RegionNav.listDarstellungPresetsForScope(scope, regionIndex, allFeatures);
+      const presets = RegionNav.listDarstellungPresetsForScope(
+        scope,
+        regionIndex,
+        allFeatures,
+        currentLazyPresence(),
+      );
       for (const preset of presets) {
         const el = document.createElement('option');
         el.value = preset.id;
@@ -578,7 +590,16 @@ export function viewerRegionNavScript() {
         RegionNav.parseDarstellungParam(params.get('darstellung')) ||
         RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       const scopeLevel = RegionNav.scopeLevelFor(gebiet, untergebiet);
-      if (!RegionNav.isPresetAllowedForScope(darstellung, scopeLevel, regionIndex, gebiet, untergebiet)) {
+      if (
+        !RegionNav.isPresetAllowedForScope(
+          darstellung,
+          scopeLevel,
+          regionIndex,
+          gebiet,
+          untergebiet,
+          currentLazyPresence(),
+        )
+      ) {
         darstellung = RegionNav.defaultDarstellungForScope(gebiet, untergebiet, regionIndex, allFeatures);
       }
       return { gebiet, untergebiet, darstellung };
