@@ -17,6 +17,7 @@ export type MethodologyPageInput = {
 const OSM_TAGGING_URL = 'https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur'
 const TILDA_URL = 'https://tilda-geo.de'
 const RADINFRA_URL = 'https://radinfra.de'
+const RADINFRA_STATS_URL = 'https://radinfra.de/statistik/'
 const DESTATIS_URL =
   'https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html'
 const DEGURBA_URL = 'https://ec.europa.eu/eurostat/de/web/degree-of-urbanisation'
@@ -135,6 +136,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
     `<strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="${input.sourceRepoUrl}">tilda-geo</a> / <a href="${TILDA_URL}">TILDA</a>. Stand der hier verwendeten Auswertung: ${input.dataDateLabel}.`,
     `<strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.`,
     `<strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="${DESTATIS_URL}">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.`,
+    `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}
 
   <h2>Wie werden Straßen gezählt?</h2>
