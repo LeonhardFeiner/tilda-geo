@@ -81,13 +81,8 @@ if (existsSync(msgpackPath)) {
   // Gemeindeverbände/Stadtbezirke options correctly before stats-extra.msgpack loads.
   const fullIndex = buildRegionIndex(fullFeatures)
   const lazyPresence = computeLazyDarstellungPresence(fullFeatures, fullIndex)
-  writeFileSync(
-    join(viewerDir, 'lazy-darstellung-presence.json'),
-    JSON.stringify(lazyPresence),
-  )
-  process.stdout.write(
-    `Lazy Darstellung presence → ${viewerDir}/lazy-darstellung-presence.json\n`,
-  )
+  writeFileSync(join(viewerDir, 'lazy-darstellung-presence.json'), JSON.stringify(lazyPresence))
+  process.stdout.write(`Lazy Darstellung presence → ${viewerDir}/lazy-darstellung-presence.json\n`)
 } else {
   process.stderr.write(
     `Warning: ${msgpackPath} missing – run: bun run bike-share-map:export-stats-geojson\n`,
