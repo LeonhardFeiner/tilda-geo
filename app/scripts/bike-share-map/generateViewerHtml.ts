@@ -2391,8 +2391,8 @@ export function generateViewerHtml(generatedAt: string) {
      * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
      * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
      * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops; density is stops/km², plus
-     * the mean distance from residential-road sample points to the nearest station, a rough
-     * "where people live" proxy since this DB has no buildings/address table), gemeinde-terrain.json
+     * the population-weighted mean distance to the nearest station from the Zensus 2022 100m
+     * population grid), gemeinde-terrain.json
      * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles, sampled both
      * over the whole Gemeinde area and along the actual road network, plus a steep-spot
      * percentile and mean/range elevation — see that script's header for why these can diverge,
@@ -2418,10 +2418,10 @@ export function generateViewerHtml(generatedAt: string) {
             ' pro km²',
         );
       }
-      if (transit && typeof transit.avgDistanceResidentialM === 'number') {
-        const km = transit.avgDistanceResidentialM / 1000;
+      if (transit && typeof transit.avgDistanceToStationM === 'number') {
+        const km = transit.avgDistanceToStationM / 1000;
         lines.push(
-          'Ø Entfernung zur nächsten Haltestelle (Wohnstraßen): ' +
+          'Ø Entfernung zur nächsten Haltestelle (einwohnergewichtet): ' +
             km.toLocaleString('de-DE', { maximumFractionDigits: km < 10 ? 1 : 0 }) +
             ' km',
         );
