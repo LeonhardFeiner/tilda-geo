@@ -2390,7 +2390,9 @@ export function generateViewerHtml(generatedAt: string) {
      * ?extra=1 (see extraFeaturesEnabled) while we're still evaluating whether any of these is
      * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
      * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
-     * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops), gemeinde-terrain.json
+     * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops; density is stops/km², plus
+     * the mean distance from residential-road sample points to the nearest station, a rough
+     * "where people live" proxy since this DB has no buildings/address table), gemeinde-terrain.json
      * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles, sampled both
      * over the whole Gemeinde area and along the actual road network, plus a steep-spot
      * percentile and mean/range elevation — see that script's header for why these can diverge,
@@ -2403,17 +2405,25 @@ export function generateViewerHtml(generatedAt: string) {
         return;
       }
       const density = densityIndex ? densityIndex.byId[p.id] : null;
-      const transitDensity = transitIndex ? transitIndex.byId[p.id] : null;
+      const transit = transitIndex ? transitIndex.byId[p.id] : null;
       const slope = terrainIndex ? terrainIndex.byId[p.id] : null;
       const lines = [];
       if (typeof density === 'number') {
         lines.push('Bevölkerungsdichte: ' + Math.round(density).toLocaleString('de-DE') + ' Einwohner/km²');
       }
-      if (typeof transitDensity === 'number') {
+      if (transit && typeof transit.density === 'number') {
         lines.push(
           'Bahn-/Tram-/Fährhaltestellen: ' +
-            transitDensity.toLocaleString('de-DE', { maximumFractionDigits: 2 }) +
+            transit.density.toLocaleString('de-DE', { maximumFractionDigits: 2 }) +
             ' pro km²',
+        );
+      }
+      if (transit && typeof transit.avgDistanceResidentialM === 'number') {
+        const km = transit.avgDistanceResidentialM / 1000;
+        lines.push(
+          'Ø Entfernung zur nächsten Haltestelle (Wohnstraßen): ' +
+            km.toLocaleString('de-DE', { maximumFractionDigits: km < 10 ? 1 : 0 }) +
+            ' km',
         );
       }
       if (slope && typeof slope.elevationMean === 'number') {

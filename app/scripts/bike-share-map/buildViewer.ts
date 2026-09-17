@@ -172,21 +172,30 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       `Density: ${Object.keys(densityById).length} Gemeinden → ${viewerDir}/gemeinde-density.json\n`,
     )
 
-    // gemeinde-transit.json: {id → rail/tram/ferry stops per km²}, from
-    // fetchTransitStopCounts.ts's raw counts + Destatis areaKm2. Same experimental, ?extra=1-only
-    // treatment as density above. Absent when transit-stop-counts.json hasn't been fetched (the
-    // publicTransport topic isn't part of the default local processing run).
+    // gemeinde-transit.json: {id → {density?, avgDistanceResidentialM?}}, from
+    // fetchTransitStopCounts.ts's raw counts + Destatis areaKm2 (density = stopCount / areaKm2;
+    // avgDistanceResidentialM passes through as-is, already a per-point average). Same
+    // experimental, ?extra=1-only treatment as density above. Absent when
+    // transit-stop-counts.json hasn't been fetched (the publicTransport topic isn't part of the
+    // default local processing run).
     const transitCountsPath = join(outputRoot, 'transit-stop-counts.json')
     if (existsSync(transitCountsPath)) {
       const areaByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.areaKm2]))
       const counts = JSON.parse(await Bun.file(transitCountsPath).text()) as {
-        byId?: Record<string, number>
+        byId?: Record<string, { stopCount?: number; avgDistanceResidentialM?: number }>
       }
-      const transitById: Record<string, number> = {}
-      for (const [id, count] of Object.entries(counts.byId ?? {})) {
+      const transitById: Record<string, { density?: number; avgDistanceResidentialM?: number }> = {}
+      for (const [id, entry] of Object.entries(counts.byId ?? {})) {
         const rs = rsById.get(id)
         const areaKm2 = rs ? areaByRs.get(rs) : undefined
-        if (typeof areaKm2 === 'number' && areaKm2 > 0) transitById[id] = count / areaKm2
+        const out: { density?: number; avgDistanceResidentialM?: number } = {}
+        if (typeof entry.stopCount === 'number' && typeof areaKm2 === 'number' && areaKm2 > 0) {
+          out.density = entry.stopCount / areaKm2
+        }
+        if (typeof entry.avgDistanceResidentialM === 'number') {
+          out.avgDistanceResidentialM = entry.avgDistanceResidentialM
+        }
+        if (out.density !== undefined || out.avgDistanceResidentialM !== undefined) transitById[id] = out
       }
       writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
       process.stdout.write(
