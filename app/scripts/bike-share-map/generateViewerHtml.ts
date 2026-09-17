@@ -2391,7 +2391,9 @@ export function generateViewerHtml(generatedAt: string) {
      * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
      * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
      * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops), gemeinde-terrain.json
-     * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles).
+     * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles, sampled both
+     * over the whole Gemeinde area and along the actual road network — see that script's header
+     * for why the two can differ).
      */
     function renderRegionExtra(p) {
       if (!extraFeaturesEnabled()) {
@@ -2401,7 +2403,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       const density = densityIndex ? densityIndex.byId[p.id] : null;
       const transitDensity = transitIndex ? transitIndex.byId[p.id] : null;
-      const slopePercent = terrainIndex ? terrainIndex.byId[p.id] : null;
+      const slope = terrainIndex ? terrainIndex.byId[p.id] : null;
       const lines = [];
       if (typeof density === 'number') {
         lines.push('Bevölkerungsdichte: ' + Math.round(density).toLocaleString('de-DE') + ' Einwohner/km²');
@@ -2413,10 +2415,17 @@ export function generateViewerHtml(generatedAt: string) {
             ' pro km²',
         );
       }
-      if (typeof slopePercent === 'number') {
+      if (slope && typeof slope.area === 'number') {
         lines.push(
-          'Mittlere Geländesteigung: ' +
-            slopePercent.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
+          'Mittlere Geländesteigung (Fläche): ' +
+            slope.area.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
+            ' %',
+        );
+      }
+      if (slope && typeof slope.road === 'number') {
+        lines.push(
+          'Mittlere Straßensteigung: ' +
+            slope.road.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
             ' %',
         );
       }

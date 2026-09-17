@@ -1,7 +1,15 @@
 #!/usr/bin/env bun
 /**
- * Estimates terrain flatness per Gemeinde (level 8, from `public.aggregated_lengths`) as the
- * mean local slope (in %, i.e. rise/run × 100) sampled on a grid inside each Gemeinde polygon.
+ * Estimates terrain flatness per Gemeinde (level 8, from `public.aggregated_lengths`), two ways:
+ *  - `area`: mean local slope sampled on a uniform grid across the whole Gemeinde polygon —
+ *    a general "how hilly is this area" figure, but includes land no one actually cycles on
+ *    (forests, fields) and can be skewed by terrain far from where people travel.
+ *  - `road`: mean local slope sampled along the actual road network (`public.roads`) instead —
+ *    closer to what a cyclist experiences, though still an average over the whole network, not
+ *    weighted by which roads people actually use most.
+ * Both are means of local slope *magnitude* (%, i.e. rise/run × 100), not the net elevation gain
+ * along any particular route, so neither captures "one unavoidable climb out of an otherwise flat
+ * town" well.
  *
  * Elevation source: Mapzen/Terrarium terrain-RGB tiles on the public AWS Open Data bucket
  * `elevation-tiles-prod` (no auth, derived from SRTM/ASTER/etc. — see
@@ -10,8 +18,8 @@
  * since this Postgres image doesn't have GDAL raster drivers and the repo has no
  * gdal/rasterio toolchain otherwise.
  *
- * Needs local Postgres with `public.aggregated_lengths` populated (level 8), and network
- * access to the tile bucket (~1,100 small PNGs at TILE_ZOOM=10 for all of Germany).
+ * Needs local Postgres with `public.aggregated_lengths` and `public.roads` populated, and
+ * network access to the tile bucket (~1,100 small PNGs at TILE_ZOOM=10 for all of Germany).
  */
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
@@ -33,6 +41,8 @@ const TILE_ZOOM = 10
 const SAMPLE_STEP_DEG = 0.005
 /** Offset for the finite-difference slope estimate, in degrees (~150m, ~1 tile pixel). */
 const SLOPE_EPS_DEG = 0.0015
+/** Target spacing between road sample points, in meters — finer than the area grid since it only has to cover the road network, not the whole polygon. */
+const ROAD_SAMPLE_STEP_M = 300
 
 const TILE_URL = (z: number, x: number, y: number) =>
   `https://s3.amazonaws.com/elevation-tiles-prod/terrarium/${z}/${x}/${y}.png`
@@ -155,7 +165,7 @@ async function fetchGemeindeGeometries() {
   }
 }
 
-function meanSlopePercentForPolygon(
+function meanAreaSlopePercentForPolygon(
   geometry: Polygon | MultiPolygon,
   sampleElevation: (lon: number, lat: number) => number | null,
 ) {
@@ -181,24 +191,97 @@ function meanSlopePercentForPolygon(
   return mean * 100
 }
 
+/**
+ * Sample points (in WGS84) along every `public.roads` linestring, spaced ~ROAD_SAMPLE_STEP_M
+ * apart, tagged with whichever Gemeinde (level 8) polygon contains them.
+ *
+ * Segmentizing directly against `aggregated_lengths` in one query (no intermediate table) was
+ * catastrophically slow — Postgres called ST_LineInterpolatePoints per bbox-overlap candidate
+ * row with no index to prune the per-point ST_Contains checks. Materializing the segmentized
+ * points into an indexed temp table first (mirroring the `temp_roads_segmentized` pattern in
+ * processing/steps/afterthoughts/sql/aggregate_lengths.sql) turns it into an index-assisted join
+ * and brings the whole-of-Germany run down to well under a minute.
+ */
+async function fetchRoadSamplePoints() {
+  const client = new Client({ connectionString: getBaseDatabaseUrl() })
+  await client.connect()
+  try {
+    await client.query('SET statement_timeout = 0')
+    await client.query(`
+      CREATE TEMP TABLE _terrain_road_pts AS
+      SELECT (ST_DumpPoints(
+        ST_LineInterpolatePoints(
+          r.geom,
+          LEAST(0.5, GREATEST(0.05, ${ROAD_SAMPLE_STEP_M} / NULLIF((r.tags->>'length')::float8, 0)))::float8,
+          true
+        )
+      )).geom AS geom
+      FROM public.roads r
+      WHERE r.geom IS NOT NULL
+    `)
+    await client.query(`CREATE INDEX ON _terrain_road_pts USING gist(geom)`)
+    const { rows } = await client.query<{ gemeinde_id: string; lon: number; lat: number }>(`
+      SELECT al.id AS gemeinde_id,
+             ST_X(ST_Transform(pt.geom, 4326)) AS lon,
+             ST_Y(ST_Transform(pt.geom, 4326)) AS lat
+      FROM public.aggregated_lengths al
+      JOIN _terrain_road_pts pt ON pt.geom && al.geom
+      WHERE al.level = '8' AND ST_Contains(al.geom, pt.geom)
+    `)
+    return rows
+  } finally {
+    await client.end()
+  }
+}
+
 if (import.meta.main) {
-  const [regions, tiles] = await Promise.all([
+  const [regions, tiles, roadPoints] = await Promise.all([
     fetchGemeindeGeometries(),
     fetchTiles(GERMANY_BBOX, TILE_ZOOM),
+    fetchRoadSamplePoints(),
   ])
   const sampleElevation = makeElevationSampler(tiles, TILE_ZOOM)
 
-  const byId: Record<string, number> = {}
+  const areaById: Record<string, number> = {}
   let processed = 0
   for (const row of regions) {
     const geometry = JSON.parse(row.geometry) as Polygon | MultiPolygon
-    const meanSlopePercent = meanSlopePercentForPolygon(geometry, sampleElevation)
-    if (meanSlopePercent !== null) byId[row.id] = meanSlopePercent
+    const meanSlopePercent = meanAreaSlopePercentForPolygon(geometry, sampleElevation)
+    if (meanSlopePercent !== null) areaById[row.id] = meanSlopePercent
     processed++
-    if (processed % 2000 === 0) process.stdout.write(`  regions: ${processed}/${regions.length}\n`)
+    if (processed % 2000 === 0) process.stdout.write(`  area regions: ${processed}/${regions.length}\n`)
+  }
+
+  const roadSlopeSums = new Map<string, { sum: number; count: number }>()
+  let roadPointsProcessed = 0
+  for (const { gemeinde_id, lon, lat } of roadPoints) {
+    const slope = localSlope(sampleElevation, lon, lat)
+    if (slope !== null) {
+      const acc = roadSlopeSums.get(gemeinde_id) ?? { sum: 0, count: 0 }
+      acc.sum += slope
+      acc.count += 1
+      roadSlopeSums.set(gemeinde_id, acc)
+    }
+    roadPointsProcessed++
+    if (roadPointsProcessed % 2_000_000 === 0) {
+      process.stdout.write(`  road points: ${roadPointsProcessed}/${roadPoints.length}\n`)
+    }
+  }
+  const roadById: Record<string, number> = {}
+  for (const [id, { sum, count }] of roadSlopeSums) roadById[id] = (sum / count) * 100
+
+  const byId: Record<string, { area?: number; road?: number }> = {}
+  for (const id of new Set([...Object.keys(areaById), ...Object.keys(roadById)])) {
+    const entry: { area?: number; road?: number } = {}
+    if (id in areaById) entry.area = areaById[id]
+    if (id in roadById) entry.road = roadById[id]
+    byId[id] = entry
   }
 
   mkdirSync(outDir, { recursive: true })
   writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
-  process.stdout.write(`${outPath} (${Object.keys(byId).length}/${regions.length} Gemeinden)\n`)
+  process.stdout.write(
+    `${outPath} (${Object.keys(areaById).length} area, ${Object.keys(roadById).length} road, ` +
+      `${regions.length} Gemeinden total, ${roadPoints.length} road sample points)\n`,
+  )
 }
