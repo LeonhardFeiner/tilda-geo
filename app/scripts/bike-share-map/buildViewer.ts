@@ -140,6 +140,8 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         rs: string
         population: number
         urbanizationCode: PeerDemographics['urbanizationCode']
+        densityPerKm2: number
+        areaKm2: number
       }>
     }
     const demographicsByRs = new Map<string, PeerDemographics>(
@@ -154,8 +156,66 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
     process.stdout.write(
       `Peer groups: ${peerGemeindeCount} Gemeinden in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
     )
+
+    // gemeinde-density.json: {id → Einwohner/km²}. Not part of the peer index above (that's
+    // deliberately numbers-free, see buildPeerGroupIndex) since this ships the raw figure for an
+    // experimental region-card line gated behind ?extra=1 — see extraFeaturesEnabled in
+    // viewerRegionNavScript.ts.
+    const densityByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.densityPerKm2]))
+    const densityById: Record<string, number> = {}
+    for (const [id, rs] of rsById) {
+      const density = densityByRs.get(rs)
+      if (typeof density === 'number') densityById[id] = density
+    }
+    writeFileSync(join(viewerDir, 'gemeinde-density.json'), JSON.stringify({ byId: densityById }))
+    process.stdout.write(
+      `Density: ${Object.keys(densityById).length} Gemeinden → ${viewerDir}/gemeinde-density.json\n`,
+    )
+
+    // gemeinde-transit.json: {id → rail/tram/ferry stops per km²}, from
+    // fetchTransitStopCounts.ts's raw counts + Destatis areaKm2. Same experimental, ?extra=1-only
+    // treatment as density above. Absent when transit-stop-counts.json hasn't been fetched (the
+    // publicTransport topic isn't part of the default local processing run).
+    const transitCountsPath = join(outputRoot, 'transit-stop-counts.json')
+    if (existsSync(transitCountsPath)) {
+      const areaByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.areaKm2]))
+      const counts = JSON.parse(await Bun.file(transitCountsPath).text()) as {
+        byId?: Record<string, number>
+      }
+      const transitById: Record<string, number> = {}
+      for (const [id, count] of Object.entries(counts.byId ?? {})) {
+        const rs = rsById.get(id)
+        const areaKm2 = rs ? areaByRs.get(rs) : undefined
+        if (typeof areaKm2 === 'number' && areaKm2 > 0) transitById[id] = count / areaKm2
+      }
+      writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
+      process.stdout.write(
+        `Transit stops: ${Object.keys(transitById).length} Gemeinden → ${viewerDir}/gemeinde-transit.json\n`,
+      )
+    }
   } catch (err) {
-    process.stderr.write(`gemeinde-peers.json skipped: ${err}\n`)
+    process.stderr.write(`gemeinde-peers.json / gemeinde-density.json / gemeinde-transit.json skipped: ${err}\n`)
+  }
+}
+
+// gemeinde-terrain.json: {id → mean local slope in %}, from fetchTerrainFlatness.ts. Already
+// keyed by region id (no Destatis RS join needed). Same experimental, ?extra=1-only treatment.
+// Absent when terrain-flatness.json hasn't been fetched.
+const terrainPath = join(outputRoot, 'terrain-flatness.json')
+if (existsSync(terrainPath)) {
+  try {
+    const terrain = JSON.parse(await Bun.file(terrainPath).text()) as {
+      byId?: Record<string, number>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-terrain.json'),
+      JSON.stringify({ byId: terrain.byId ?? {} }),
+    )
+    process.stdout.write(
+      `Terrain: ${Object.keys(terrain.byId ?? {}).length} Gemeinden → ${viewerDir}/gemeinde-terrain.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-terrain.json skipped: ${err}\n`)
   }
 }
 

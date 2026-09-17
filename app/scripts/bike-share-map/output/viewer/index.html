@@ -477,6 +477,8 @@
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; white-space: pre-line; }
+    .region-detail-extra[hidden] { display: none !important; }
     .region-detail-trend { margin: 0 0 10px; }
     .region-detail-trend[hidden] { display: none !important; }
     #region-detail-trend-heading {
@@ -810,7 +812,7 @@
     </div>
     </div>
     <p class="footer">
-      Erstellt am 12.09.2026 ·
+      Erstellt am 17.09.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -828,6 +830,7 @@
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <p class="region-detail-extra" id="region-detail-extra" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
       <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
@@ -843,7 +846,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-12T14:31:29.969Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-17T07:39:29.839Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -865,6 +868,33 @@
         if (data && data.byId && data.groups) peerGroupIndex = data;
       })
       .catch(() => {});
+    // {id → Einwohner/km²}. Not linked to from anywhere in the UI (see extraFeaturesEnabled) —
+    // only fetched when the URL already asked for it, so regular visitors never pay for it.
+    let densityIndex = null;
+    // {id → rail/tram/ferry stops per km²}. Same ?extra=1-only treatment as densityIndex above.
+    let transitIndex = null;
+    // {id → mean local slope in %}. Same ?extra=1-only treatment.
+    let terrainIndex = null;
+    if (extraFeaturesEnabled()) {
+      fetch(CONFIG.densityUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) densityIndex = data;
+        })
+        .catch(() => {});
+      fetch(CONFIG.transitUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) transitIndex = data;
+        })
+        .catch(() => {});
+      fetch(CONFIG.terrainUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) terrainIndex = data;
+        })
+        .catch(() => {});
+    }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
     // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
     // before stats-extra.msgpack has actually been fetched. Small (a few KB); safe to await
@@ -931,6 +961,12 @@
       const p = new URLSearchParams(location.search);
       if (p.get('ui') === 'simple' || p.get('view') === 'simple') return 'simple';
       return 'expert';
+    }
+
+    // Undocumented, unlinked toggle for stats still being evaluated for public display
+    // (e.g. population density) — reachable only by URL, never surfaced in the UI itself.
+    function extraFeaturesEnabled() {
+      return new URLSearchParams(location.search).get('extra') === '1';
     }
 
     const mapLegendSection = document.getElementById('map-legend-section');
@@ -1673,6 +1709,7 @@
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
+    const regionDetailExtra = document.getElementById('region-detail-extra');
     const regionDetailTrend = document.getElementById('region-detail-trend');
     const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
@@ -2942,6 +2979,50 @@
       regionDetailPeerGap.hidden = false;
     }
 
+    /**
+     * Population density, rail/tram/ferry-stop density, and terrain flatness — shown only behind
+     * ?extra=1 (see extraFeaturesEnabled) while we're still evaluating whether any of these is
+     * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
+     * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
+     * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops), gemeinde-terrain.json
+     * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles).
+     */
+    function renderRegionExtra(p) {
+      if (!extraFeaturesEnabled()) {
+        regionDetailExtra.hidden = true;
+        regionDetailExtra.textContent = '';
+        return;
+      }
+      const density = densityIndex ? densityIndex.byId[p.id] : null;
+      const transitDensity = transitIndex ? transitIndex.byId[p.id] : null;
+      const slopePercent = terrainIndex ? terrainIndex.byId[p.id] : null;
+      const lines = [];
+      if (typeof density === 'number') {
+        lines.push('Bevölkerungsdichte: ' + Math.round(density).toLocaleString('de-DE') + ' Einwohner/km²');
+      }
+      if (typeof transitDensity === 'number') {
+        lines.push(
+          'Bahn-/Tram-/Fährhaltestellen: ' +
+            transitDensity.toLocaleString('de-DE', { maximumFractionDigits: 2 }) +
+            ' pro km²',
+        );
+      }
+      if (typeof slopePercent === 'number') {
+        lines.push(
+          'Mittlere Geländesteigung: ' +
+            slopePercent.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
+            ' %',
+        );
+      }
+      if (!lines.length) {
+        regionDetailExtra.hidden = true;
+        regionDetailExtra.textContent = '';
+        return;
+      }
+      regionDetailExtra.textContent = lines.join('\n');
+      regionDetailExtra.hidden = false;
+    }
+
     // Live historical trend, fetched on demand from the ohsome API (HeiGIT) — an OSM full-history
     // aggregation service. Approximate (its filter can't reach TILDA's exact bikelane
     // classification) so it's kept opt-in and clearly labelled, rather than baked into every
@@ -3181,10 +3262,11 @@
     }
 
     // Loads automatically (no click needed) — the button only reappears as a manual retry
-    // if the ohsome fetch fails.
+    // if the ohsome fetch fails. Gated behind ?extra=1: ohsome's numbers don't line up closely
+    // enough with TILDA's own bikelane classification to show by default.
     function setupRegionTrend(feature) {
       trendFeature = feature;
-      if (!regionSupportsTrend(feature)) {
+      if (!extraFeaturesEnabled() || !regionSupportsTrend(feature)) {
         regionDetailTrend.hidden = true;
         return;
       }
@@ -3232,6 +3314,7 @@
         ' km Straße';
       renderRegionGap(p);
       renderRegionPeerGap(p);
+      renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
@@ -3449,14 +3532,21 @@
       regionDetailTrendBtn.addEventListener('click', () => {
         if (trendFeature) loadRegionTrend(trendFeature);
       });
-      map.on('click', 'regions-fill', (e) => {
-        const f = e.features?.[0];
-        if (!f?.properties?.id) return;
-        selectRegionById(f.properties.id, f);
-      });
+      // A single hit-test per click, not two: this used to be a layer-filtered map.on('click',
+      // 'regions-fill', ...) selecting the region, PLUS a separate generic map.on('click', ...)
+      // doing its own queryRenderedFeatures call to detect "clicked empty space" and clear the
+      // selection. Both fire for the same click, but their two independent hit-tests could
+      // disagree — the generic one would sometimes come back empty even though the layer-
+      // filtered one had just found (and selected) a feature at the same point, immediately
+      // clearing the selection that was just made. This is exactly the "tapping a region does
+      // nothing" report — reproduced deterministically, not just theorized, in a real (non-
+      // headless-stubbed) browser. Querying once and branching on the result removes the
+      // possibility of the two disagreeing.
       map.on('click', (e) => {
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
-        if (!hits.length) clearRegionSelection();
+        const f = hits[0];
+        if (f?.properties?.id) selectRegionById(f.properties.id, f);
+        else clearRegionSelection();
       });
     }
 

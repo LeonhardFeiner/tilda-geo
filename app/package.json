@@ -35,6 +35,8 @@
     "bike-share-map:viewer": "bun ./scripts/bike-share-map/buildViewer.ts",
     "bike-share-map:share-pages": "bun ./scripts/bike-share-map/generateSharePages.ts",
     "bike-share-map:gemeinde-demographics": "bun ./scripts/bike-share-map/fetchGemeindeDemographics.ts",
+    "bike-share-map:transit-stop-counts": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTransitStopCounts.ts",
+    "bike-share-map:terrain-flatness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTerrainFlatness.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",

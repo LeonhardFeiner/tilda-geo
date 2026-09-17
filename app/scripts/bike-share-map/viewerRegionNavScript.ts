@@ -49,6 +49,12 @@ export function viewerRegionNavScript() {
       return 'expert';
     }
 
+    // Undocumented, unlinked toggle for stats still being evaluated for public display
+    // (e.g. population density) — reachable only by URL, never surfaced in the UI itself.
+    function extraFeaturesEnabled() {
+      return new URLSearchParams(location.search).get('extra') === '1';
+    }
+
     const mapLegendSection = document.getElementById('map-legend-section');
     const viewModeLinksExpertPanel = document.getElementById('view-mode-links-expert-panel');
     const regionSearchBlock = document.getElementById('region-search-block');

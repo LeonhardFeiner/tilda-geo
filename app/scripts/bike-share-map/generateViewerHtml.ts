@@ -59,6 +59,9 @@ export function generateViewerHtml(generatedAt: string) {
     neighborsUrl: './neighbors.json',
     manifestUrl: './manifest.json',
     peersUrl: './gemeinde-peers.json',
+    densityUrl: './gemeinde-density.json',
+    transitUrl: './gemeinde-transit.json',
+    terrainUrl: './gemeinde-terrain.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -563,6 +566,8 @@ export function generateViewerHtml(generatedAt: string) {
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; white-space: pre-line; }
+    .region-detail-extra[hidden] { display: none !important; }
     .region-detail-trend { margin: 0 0 10px; }
     .region-detail-trend[hidden] { display: none !important; }
     #region-detail-trend-heading {
@@ -914,6 +919,7 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <p class="region-detail-extra" id="region-detail-extra" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
       <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
@@ -951,6 +957,33 @@ export function generateViewerHtml(generatedAt: string) {
         if (data && data.byId && data.groups) peerGroupIndex = data;
       })
       .catch(() => {});
+    // {id → Einwohner/km²}. Not linked to from anywhere in the UI (see extraFeaturesEnabled) —
+    // only fetched when the URL already asked for it, so regular visitors never pay for it.
+    let densityIndex = null;
+    // {id → rail/tram/ferry stops per km²}. Same ?extra=1-only treatment as densityIndex above.
+    let transitIndex = null;
+    // {id → mean local slope in %}. Same ?extra=1-only treatment.
+    let terrainIndex = null;
+    if (extraFeaturesEnabled()) {
+      fetch(CONFIG.densityUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) densityIndex = data;
+        })
+        .catch(() => {});
+      fetch(CONFIG.transitUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) transitIndex = data;
+        })
+        .catch(() => {});
+      fetch(CONFIG.terrainUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) terrainIndex = data;
+        })
+        .catch(() => {});
+    }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
     // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
     // before stats-extra.msgpack has actually been fetched. Small (a few KB); safe to await
@@ -1082,6 +1115,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
+    const regionDetailExtra = document.getElementById('region-detail-extra');
     const regionDetailTrend = document.getElementById('region-detail-trend');
     const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
@@ -2351,6 +2385,50 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailPeerGap.hidden = false;
     }
 
+    /**
+     * Population density, rail/tram/ferry-stop density, and terrain flatness — shown only behind
+     * ?extra=1 (see extraFeaturesEnabled) while we're still evaluating whether any of these is
+     * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
+     * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
+     * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops), gemeinde-terrain.json
+     * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles).
+     */
+    function renderRegionExtra(p) {
+      if (!extraFeaturesEnabled()) {
+        regionDetailExtra.hidden = true;
+        regionDetailExtra.textContent = '';
+        return;
+      }
+      const density = densityIndex ? densityIndex.byId[p.id] : null;
+      const transitDensity = transitIndex ? transitIndex.byId[p.id] : null;
+      const slopePercent = terrainIndex ? terrainIndex.byId[p.id] : null;
+      const lines = [];
+      if (typeof density === 'number') {
+        lines.push('Bevölkerungsdichte: ' + Math.round(density).toLocaleString('de-DE') + ' Einwohner/km²');
+      }
+      if (typeof transitDensity === 'number') {
+        lines.push(
+          'Bahn-/Tram-/Fährhaltestellen: ' +
+            transitDensity.toLocaleString('de-DE', { maximumFractionDigits: 2 }) +
+            ' pro km²',
+        );
+      }
+      if (typeof slopePercent === 'number') {
+        lines.push(
+          'Mittlere Geländesteigung: ' +
+            slopePercent.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
+            ' %',
+        );
+      }
+      if (!lines.length) {
+        regionDetailExtra.hidden = true;
+        regionDetailExtra.textContent = '';
+        return;
+      }
+      regionDetailExtra.textContent = lines.join('\\n');
+      regionDetailExtra.hidden = false;
+    }
+
     // Live historical trend, fetched on demand from the ohsome API (HeiGIT) — an OSM full-history
     // aggregation service. Approximate (its filter can't reach TILDA's exact bikelane
     // classification) so it's kept opt-in and clearly labelled, rather than baked into every
@@ -2590,10 +2668,11 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     // Loads automatically (no click needed) — the button only reappears as a manual retry
-    // if the ohsome fetch fails.
+    // if the ohsome fetch fails. Gated behind ?extra=1: ohsome's numbers don't line up closely
+    // enough with TILDA's own bikelane classification to show by default.
     function setupRegionTrend(feature) {
       trendFeature = feature;
-      if (!regionSupportsTrend(feature)) {
+      if (!extraFeaturesEnabled() || !regionSupportsTrend(feature)) {
         regionDetailTrend.hidden = true;
         return;
       }
@@ -2641,6 +2720,7 @@ export function generateViewerHtml(generatedAt: string) {
         ' km Straße';
       renderRegionGap(p);
       renderRegionPeerGap(p);
+      renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
