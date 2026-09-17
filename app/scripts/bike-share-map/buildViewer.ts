@@ -195,7 +195,8 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         if (typeof entry.avgDistanceResidentialM === 'number') {
           out.avgDistanceResidentialM = entry.avgDistanceResidentialM
         }
-        if (out.density !== undefined || out.avgDistanceResidentialM !== undefined) transitById[id] = out
+        if (out.density !== undefined || out.avgDistanceResidentialM !== undefined)
+          transitById[id] = out
       }
       writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
       process.stdout.write(
