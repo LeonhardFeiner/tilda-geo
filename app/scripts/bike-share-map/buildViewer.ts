@@ -194,7 +194,9 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       )
     }
   } catch (err) {
-    process.stderr.write(`gemeinde-peers.json / gemeinde-density.json / gemeinde-transit.json skipped: ${err}\n`)
+    process.stderr.write(
+      `gemeinde-peers.json / gemeinde-density.json / gemeinde-transit.json skipped: ${err}\n`,
+    )
   }
 }
 

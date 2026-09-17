@@ -104,8 +104,14 @@ function makeElevationSampler(tiles: Map<string, Tile>, zoom: number) {
     const lonMax = tileXToLon(x + 1, zoom)
     const latMax = tileYToLat(y, zoom)
     const latMin = tileYToLat(y + 1, zoom)
-    const px = Math.min(tile.width - 1, Math.max(0, Math.floor(((lon - lonMin) / (lonMax - lonMin)) * tile.width)))
-    const py = Math.min(tile.width - 1, Math.max(0, Math.floor(((latMax - lat) / (latMax - latMin)) * tile.width)))
+    const px = Math.min(
+      tile.width - 1,
+      Math.max(0, Math.floor(((lon - lonMin) / (lonMax - lonMin)) * tile.width)),
+    )
+    const py = Math.min(
+      tile.width - 1,
+      Math.max(0, Math.floor(((latMax - lat) / (latMax - latMin)) * tile.width)),
+    )
     const idx = (py * tile.width + px) * tile.channels
     const r = tile.data[idx]
     const g = tile.data[idx + 1]
@@ -116,7 +122,11 @@ function makeElevationSampler(tiles: Map<string, Tile>, zoom: number) {
 }
 
 /** Local slope magnitude (rise/run, unitless) at a point via central finite differences. */
-function localSlope(sampleElevation: (lon: number, lat: number) => number | null, lon: number, lat: number) {
+function localSlope(
+  sampleElevation: (lon: number, lat: number) => number | null,
+  lon: number,
+  lat: number,
+) {
   const metersPerDegLat = 111_320
   const metersPerDegLon = 111_320 * Math.cos((lat * Math.PI) / 180)
   const east = sampleElevation(lon + SLOPE_EPS_DEG, lat)

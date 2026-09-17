@@ -40,10 +40,7 @@ if (import.meta.main) {
   const byId: Record<string, number> = {}
   for (const row of rows) byId[row.id] = Number(row.stop_count)
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
-    outPath,
-    JSON.stringify({ fetchedAt: new Date().toISOString(), byId }),
-  )
+  writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
   const withStops = Object.values(byId).filter((n) => n > 0).length
   process.stdout.write(
     `${outPath} (${rows.length} Gemeinden, ${withStops} with at least one stop)\n`,
