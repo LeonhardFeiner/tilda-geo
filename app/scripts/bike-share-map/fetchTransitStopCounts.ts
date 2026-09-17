@@ -166,7 +166,9 @@ if (import.meta.main) {
   mkdirSync(outDir, { recursive: true })
   writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
   const withStops = Object.values(byId).filter((v) => v.stopCount > 0).length
-  const withDistance = Object.values(byId).filter((v) => v.avgDistanceToStationM !== undefined).length
+  const withDistance = Object.values(byId).filter(
+    (v) => v.avgDistanceToStationM !== undefined,
+  ).length
   process.stdout.write(
     `${outPath} (${stopCountRows.length} Gemeinden, ${withStops} with at least one stop, ` +
       `${withDistance} with a population-weighted distance figure)\n`,
