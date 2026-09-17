@@ -209,7 +209,13 @@ if (existsSync(terrainPath)) {
     const terrain = JSON.parse(await Bun.file(terrainPath).text()) as {
       byId?: Record<
         string,
-        { area?: number; road?: number; roadSteepP95?: number; elevationMean?: number; elevationRange?: number }
+        {
+          area?: number
+          road?: number
+          roadSteepP95?: number
+          elevationMean?: number
+          elevationRange?: number
+        }
       >
     }
     writeFileSync(

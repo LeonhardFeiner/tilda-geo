@@ -267,12 +267,19 @@ if (import.meta.main) {
   ])
   const sampleElevation = makeElevationSampler(tiles, TILE_ZOOM)
 
-  const areaById: Record<string, { slopePercent: number; elevationMeanM: number; elevationRangeM: number }> = {}
+  const areaById: Record<
+    string,
+    { slopePercent: number; elevationMeanM: number; elevationRangeM: number }
+  > = {}
   let processed = 0
   for (const row of regions) {
     const geometry = JSON.parse(row.geometry) as Polygon | MultiPolygon
     const stats = areaTerrainStatsForPolygon(geometry, sampleElevation)
-    if (stats.slopePercent !== null && stats.elevationMeanM !== null && stats.elevationRangeM !== null) {
+    if (
+      stats.slopePercent !== null &&
+      stats.elevationMeanM !== null &&
+      stats.elevationRangeM !== null
+    ) {
       areaById[row.id] = {
         slopePercent: stats.slopePercent,
         elevationMeanM: stats.elevationMeanM,
@@ -308,7 +315,13 @@ if (import.meta.main) {
 
   const byId: Record<
     string,
-    { area?: number; road?: number; roadSteepP95?: number; elevationMean?: number; elevationRange?: number }
+    {
+      area?: number
+      road?: number
+      roadSteepP95?: number
+      elevationMean?: number
+      elevationRange?: number
+    }
   > = {}
   for (const id of new Set([...Object.keys(areaById), ...Object.keys(roadById)])) {
     const entry: (typeof byId)[string] = {}
