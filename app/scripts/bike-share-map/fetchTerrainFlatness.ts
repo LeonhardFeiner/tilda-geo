@@ -249,7 +249,8 @@ if (import.meta.main) {
     const meanSlopePercent = meanAreaSlopePercentForPolygon(geometry, sampleElevation)
     if (meanSlopePercent !== null) areaById[row.id] = meanSlopePercent
     processed++
-    if (processed % 2000 === 0) process.stdout.write(`  area regions: ${processed}/${regions.length}\n`)
+    if (processed % 2000 === 0)
+      process.stdout.write(`  area regions: ${processed}/${regions.length}\n`)
   }
 
   const roadSlopeSums = new Map<string, { sum: number; count: number }>()
