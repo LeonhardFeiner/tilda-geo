@@ -200,14 +200,17 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
   }
 }
 
-// gemeinde-terrain.json: {id → {area?, road?} mean local slope in %}, from
-// fetchTerrainFlatness.ts. Already keyed by region id (no Destatis RS join needed). Same
+// gemeinde-terrain.json: {id → {area?, road?, roadSteepP95?, elevationMean?, elevationRange?}},
+// from fetchTerrainFlatness.ts. Already keyed by region id (no Destatis RS join needed). Same
 // experimental, ?extra=1-only treatment. Absent when terrain-flatness.json hasn't been fetched.
 const terrainPath = join(outputRoot, 'terrain-flatness.json')
 if (existsSync(terrainPath)) {
   try {
     const terrain = JSON.parse(await Bun.file(terrainPath).text()) as {
-      byId?: Record<string, { area?: number; road?: number }>
+      byId?: Record<
+        string,
+        { area?: number; road?: number; roadSteepP95?: number; elevationMean?: number; elevationRange?: number }
+      >
     }
     writeFileSync(
       join(viewerDir, 'gemeinde-terrain.json'),

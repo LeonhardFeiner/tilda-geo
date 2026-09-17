@@ -2392,8 +2392,9 @@ export function generateViewerHtml(generatedAt: string) {
      * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
      * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops), gemeinde-terrain.json
      * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles, sampled both
-     * over the whole Gemeinde area and along the actual road network — see that script's header
-     * for why the two can differ).
+     * over the whole Gemeinde area and along the actual road network, plus a steep-spot
+     * percentile and mean/range elevation — see that script's header for why these can diverge,
+     * e.g. a high-elevation plateau can be locally flatter than a lower-lying river valley).
      */
     function renderRegionExtra(p) {
       if (!extraFeaturesEnabled()) {
@@ -2415,6 +2416,13 @@ export function generateViewerHtml(generatedAt: string) {
             ' pro km²',
         );
       }
+      if (slope && typeof slope.elevationMean === 'number') {
+        let elevationLine = 'Höhenlage (Ø): ' + Math.round(slope.elevationMean).toLocaleString('de-DE') + ' m';
+        if (typeof slope.elevationRange === 'number') {
+          elevationLine += ' (Spanne ' + Math.round(slope.elevationRange).toLocaleString('de-DE') + ' m)';
+        }
+        lines.push(elevationLine);
+      }
       if (slope && typeof slope.area === 'number') {
         lines.push(
           'Mittlere Geländesteigung (Fläche): ' +
@@ -2426,6 +2434,13 @@ export function generateViewerHtml(generatedAt: string) {
         lines.push(
           'Mittlere Straßensteigung: ' +
             slope.road.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
+            ' %',
+        );
+      }
+      if (slope && typeof slope.roadSteepP95 === 'number') {
+        lines.push(
+          'Steilste Straßenabschnitte (P95): ' +
+            slope.roadSteepP95.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
             ' %',
         );
       }

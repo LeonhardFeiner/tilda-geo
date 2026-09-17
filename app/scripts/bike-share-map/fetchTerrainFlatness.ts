@@ -1,15 +1,24 @@
 #!/usr/bin/env bun
 /**
- * Estimates terrain flatness per Gemeinde (level 8, from `public.aggregated_lengths`), two ways:
- *  - `area`: mean local slope sampled on a uniform grid across the whole Gemeinde polygon —
- *    a general "how hilly is this area" figure, but includes land no one actually cycles on
- *    (forests, fields) and can be skewed by terrain far from where people travel.
- *  - `road`: mean local slope sampled along the actual road network (`public.roads`) instead —
- *    closer to what a cyclist experiences, though still an average over the whole network, not
- *    weighted by which roads people actually use most.
- * Both are means of local slope *magnitude* (%, i.e. rise/run × 100), not the net elevation gain
- * along any particular route, so neither captures "one unavoidable climb out of an otherwise flat
- * town" well.
+ * Estimates terrain figures per Gemeinde (level 8, from `public.aggregated_lengths`):
+ *  - `area` / `road`: mean local slope *magnitude* (%, i.e. rise/run × 100), sampled either on a
+ *    uniform grid across the whole Gemeinde polygon or along the actual road network
+ *    (`public.roads`). `area` includes land no one cycles on (forests, fields) and can be skewed
+ *    by terrain far from where people travel; `road` is closer to what a cyclist experiences, but
+ *    still an average over the whole network, not weighted by which roads people actually use.
+ *  - `roadSteepP95`: the 95th percentile (rather than the raw maximum, which is too sensitive to
+ *    single-pixel DEM noise — voids, tree canopy, tile-edge artifacts) of those same road-sample
+ *    local slopes. Answers "how steep does it get at the steepest ~5% of sampled roadside spots"
+ *    — closer to "is there an unavoidable climb" than the mean, which averages it away. An
+ *    along-road elevation-gain-per-distance version was tried first and dropped: most OSM road
+ *    ways are shorter than the ROAD_SAMPLE_STEP_M spacing (~1.7 points/road on average), so
+ *    consecutive same-road point pairs would be too sparse to be reliable.
+ *  - `elevationMeanM` / `elevationRangeM`: mean elevation and (max − min) over the same area grid,
+ *    in meters. A high mean elevation does NOT imply steep terrain — a Gemeinde can sit on a broad
+ *    plateau (locally flat, e.g. Schweitenkirchen in Landkreis Pfaffenhofen an der Ilm) while a
+ *    lower-lying neighbor cut by a river valley (e.g. Ilmmünster there) is far steeper on average.
+ *    These two figures make that distinction visible instead of leaving "steep" and "high" to be
+ *    confused with each other.
  *
  * Elevation source: Mapzen/Terrarium terrain-RGB tiles on the public AWS Open Data bucket
  * `elevation-tiles-prod` (no auth, derived from SRTM/ASTER/etc. — see
@@ -165,7 +174,18 @@ async function fetchGemeindeGeometries() {
   }
 }
 
-function meanAreaSlopePercentForPolygon(
+function mean(values: number[]) {
+  return values.reduce((a, b) => a + b, 0) / values.length
+}
+
+/** Value at percentile `p` (0-1) of `values`, nearest-rank — good enough for a rough proxy. */
+function percentile(values: number[], p: number) {
+  const sorted = [...values].sort((a, b) => a - b)
+  const index = Math.min(sorted.length - 1, Math.floor(p * sorted.length))
+  return sorted[index] ?? sorted[sorted.length - 1] ?? 0
+}
+
+function areaTerrainStatsForPolygon(
   geometry: Polygon | MultiPolygon,
   sampleElevation: (lon: number, lat: number) => number | null,
 ) {
@@ -182,13 +202,18 @@ function meanAreaSlopePercentForPolygon(
     candidates.push([centerLon, centerLat])
   }
   const slopes: number[] = []
+  const elevations: number[] = []
   for (const [lon, lat] of candidates) {
+    const elevation = sampleElevation(lon, lat)
+    if (elevation !== null) elevations.push(elevation)
     const slope = localSlope(sampleElevation, lon, lat)
     if (slope !== null) slopes.push(slope)
   }
-  if (!slopes.length) return null
-  const mean = slopes.reduce((a, b) => a + b, 0) / slopes.length
-  return mean * 100
+  return {
+    slopePercent: slopes.length ? mean(slopes) * 100 : null,
+    elevationMeanM: elevations.length ? mean(elevations) : null,
+    elevationRangeM: elevations.length ? Math.max(...elevations) - Math.min(...elevations) : null,
+  }
 }
 
 /**
@@ -242,40 +267,62 @@ if (import.meta.main) {
   ])
   const sampleElevation = makeElevationSampler(tiles, TILE_ZOOM)
 
-  const areaById: Record<string, number> = {}
+  const areaById: Record<string, { slopePercent: number; elevationMeanM: number; elevationRangeM: number }> = {}
   let processed = 0
   for (const row of regions) {
     const geometry = JSON.parse(row.geometry) as Polygon | MultiPolygon
-    const meanSlopePercent = meanAreaSlopePercentForPolygon(geometry, sampleElevation)
-    if (meanSlopePercent !== null) areaById[row.id] = meanSlopePercent
+    const stats = areaTerrainStatsForPolygon(geometry, sampleElevation)
+    if (stats.slopePercent !== null && stats.elevationMeanM !== null && stats.elevationRangeM !== null) {
+      areaById[row.id] = {
+        slopePercent: stats.slopePercent,
+        elevationMeanM: stats.elevationMeanM,
+        elevationRangeM: stats.elevationRangeM,
+      }
+    }
     processed++
     if (processed % 2000 === 0)
       process.stdout.write(`  area regions: ${processed}/${regions.length}\n`)
   }
 
-  const roadSlopeSums = new Map<string, { sum: number; count: number }>()
+  const roadSlopesByGemeinde = new Map<string, number[]>()
   let roadPointsProcessed = 0
   for (const { gemeinde_id, lon, lat } of roadPoints) {
     const slope = localSlope(sampleElevation, lon, lat)
     if (slope !== null) {
-      const acc = roadSlopeSums.get(gemeinde_id) ?? { sum: 0, count: 0 }
-      acc.sum += slope
-      acc.count += 1
-      roadSlopeSums.set(gemeinde_id, acc)
+      const arr = roadSlopesByGemeinde.get(gemeinde_id) ?? []
+      arr.push(slope)
+      roadSlopesByGemeinde.set(gemeinde_id, arr)
     }
     roadPointsProcessed++
     if (roadPointsProcessed % 2_000_000 === 0) {
       process.stdout.write(`  road points: ${roadPointsProcessed}/${roadPoints.length}\n`)
     }
   }
-  const roadById: Record<string, number> = {}
-  for (const [id, { sum, count }] of roadSlopeSums) roadById[id] = (sum / count) * 100
+  const roadById: Record<string, { slopePercent: number; steepP95Percent: number }> = {}
+  for (const [id, slopes] of roadSlopesByGemeinde) {
+    roadById[id] = {
+      slopePercent: mean(slopes) * 100,
+      steepP95Percent: percentile(slopes, 0.95) * 100,
+    }
+  }
 
-  const byId: Record<string, { area?: number; road?: number }> = {}
+  const byId: Record<
+    string,
+    { area?: number; road?: number; roadSteepP95?: number; elevationMean?: number; elevationRange?: number }
+  > = {}
   for (const id of new Set([...Object.keys(areaById), ...Object.keys(roadById)])) {
-    const entry: { area?: number; road?: number } = {}
-    if (id in areaById) entry.area = areaById[id]
-    if (id in roadById) entry.road = roadById[id]
+    const entry: (typeof byId)[string] = {}
+    const area = areaById[id]
+    const road = roadById[id]
+    if (area) {
+      entry.area = area.slopePercent
+      entry.elevationMean = area.elevationMeanM
+      entry.elevationRange = area.elevationRangeM
+    }
+    if (road) {
+      entry.road = road.slopePercent
+      entry.roadSteepP95 = road.steepP95Percent
+    }
     byId[id] = entry
   }
 
