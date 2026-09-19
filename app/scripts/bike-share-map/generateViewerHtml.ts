@@ -210,6 +210,8 @@ export function generateViewerHtml(generatedAt: string) {
       /* On mobile a selected region is moved into the top of the sheet (placeRegionDetail),
          so render it as an inline block instead of the floating card. */
       #region-detail-mount:empty { display: none; }
+      /* A selected region owns the top of the sheet; the intro line would only push it down. */
+      body[data-region-detail] .site-tagline { display: none; }
       #region-detail-mount .region-detail {
         position: static; z-index: auto;
         width: auto; max-width: none; max-height: none;
@@ -235,13 +237,13 @@ export function generateViewerHtml(generatedAt: string) {
       }
       #region-detail-mount .region-detail-header { padding-right: 0; }
 
-      /* Advanced config (Zählung + Farben & Darstellung + Ansichts-Wechsel) folds
-         behind one "Einstellungen" control so the sheet stays focused on
-         Gebiet / Legende / Rangliste. Expert view only — simple view is already slim. */
+      /* Advanced config (Zählung + Farben & Darstellung) folds behind one "Einstellungen"
+         control so the sheet stays focused on Gebiet / Legende / Rangliste. Expert view
+         only — simple view is already slim. The simple/expert switch is deliberately not in
+         this fold: it is primary navigation, not an advanced setting. */
       body.view-expert .settings-toggle { display: flex; }
       body.view-expert:not([data-settings-open]) #count-classes-details,
-      body.view-expert:not([data-settings-open]) #color-options-details,
-      body.view-expert:not([data-settings-open]) #view-mode-links-expert-panel {
+      body.view-expert:not([data-settings-open]) #color-options-details {
         display: none;
       }
       body[data-settings-open] .settings-toggle { color: #1565c0; }
@@ -390,8 +392,18 @@ export function generateViewerHtml(generatedAt: string) {
     .overlay-layer-hint { margin: 2px 0 0; }
     .choropleth-legend { margin: 0; }
     .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
-    .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0; }
-    .legend-labels { display: flex; justify-content: space-between; font-size: 12px; color: #555; }
+    .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0 0; }
+    /* Tick labels sit at their value's own position on the bar, so a mid-tone can be read off
+       the scale instead of only the two ends. */
+    .legend-ticks { position: relative; height: 4px; }
+    .legend-ticks span { position: absolute; top: 0; width: 1px; height: 4px; background: #b5b5b5; }
+    .legend-labels {
+      position: relative; height: 15px;
+      font-size: 11px; color: #555; line-height: 1.25;
+    }
+    .legend-labels span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
+    .legend-labels span.legend-label--start { left: 0; transform: none; }
+    .legend-labels span.legend-label--end { left: auto; right: 0; transform: none; }
     .map-legend {
       display: flex; flex-direction: column; gap: 8px;
       margin-top: 0; padding-top: 8px;
@@ -427,6 +439,11 @@ export function generateViewerHtml(generatedAt: string) {
       margin-right: -4px;
     }
     .ranking-list li.ranking-row-clickable:hover { background: #f5f5f5; }
+    .ranking-list li.ranking-row-clickable:focus-visible {
+      outline: 2px solid #1565c0;
+      outline-offset: 1px;
+      background: #f5f5f5;
+    }
     .ranking-list li.ranking-row-selected {
       background: #e3f2fd;
     }
@@ -560,9 +577,12 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-gap--ahead {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
-    #region-detail-gap + .region-detail-gap { margin-top: -4px; }
+    #region-detail-peer-gap + .region-detail-gap { margin-top: -4px; }
+    .region-detail-gap--peer .region-detail-gap-headline {
+      display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
+    }
     .region-detail-gap--peer::before {
-      content: 'Bundesweit'; display: block;
+      content: 'Ähnlich große Gemeinden bundesweit'; display: block;
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -619,7 +639,18 @@ export function generateViewerHtml(generatedAt: string) {
       cursor: pointer; color: #1565c0; user-select: none;
     }
     .region-detail-tags[open] summary { margin-bottom: 4px; }
-    #load-error { color: #b71c1c; font-size: 13px; display: none; }
+    #load-error {
+      display: none; margin: 0 0 8px; padding: 8px 10px;
+      border: 1px solid #f5c6c0; border-radius: 6px; background: #fdecea;
+      color: #8a1c11; font-size: 12px; line-height: 1.45;
+    }
+    .load-error-retry {
+      display: inline-block; margin-top: 6px;
+      font-size: 12px; font-weight: 600; color: #8a1c11;
+      background: #fff; border: 1px solid #e0a9a2; border-radius: 6px;
+      padding: 4px 9px; cursor: pointer;
+    }
+    .load-error-retry:hover { background: #fff5f4; }
     #load-status { color: #555; font-size: 13px; margin: 0 0 8px; display: none; }
     body.ui-minimal #panel-main { display: none !important; }
     body.view-simple #count-classes-details,
@@ -672,11 +703,29 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .simple-counting-notice button:hover { background: #f5f5f5; }
     .region-scope-block[hidden] { display: none !important; }
-    .view-mode-links {
-      margin: 4px 0 0; font-size: 11px; line-height: 1.45;
+    .site-title {
+      margin: 0; font-size: 15px; font-weight: 600; color: #222;
+      line-height: 1.3; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
-    .view-mode-links a { color: #1565c0; text-decoration: none; }
-    .view-mode-links a:hover { text-decoration: underline; }
+    .site-tagline {
+      margin: 0 0 10px; font-size: 12px; line-height: 1.45; color: #555;
+    }
+    .site-tagline a { color: #1565c0; text-decoration: none; }
+    .site-tagline a:hover { text-decoration: underline; }
+    /* Both directions of the simple <-> expert switch, always visible, in both modes. */
+    .view-mode-switch {
+      display: flex; gap: 0; margin: 0 0 10px;
+      border: 1px solid #ccc; border-radius: 6px; overflow: hidden;
+    }
+    .view-mode-btn {
+      flex: 1; padding: 5px 8px;
+      font-size: 12px; font-weight: 600; text-align: center; text-decoration: none;
+      color: #444; background: #fff; cursor: pointer;
+    }
+    .view-mode-btn + .view-mode-btn { border-left: 1px solid #ccc; }
+    .view-mode-btn:hover { background: #f2f6fb; }
+    .view-mode-btn[aria-current="true"] { background: #1565c0; color: #fff; }
     .region-detail-view-link {
       margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;
       font-size: 11px;
@@ -693,11 +742,19 @@ export function generateViewerHtml(generatedAt: string) {
   </button>
   <details class="panel" id="panel-main" open>
     <summary>
-      <span>Steuerung & Legende</span>
+      <h1 class="site-title">Radinfra-Vergleich</h1>
       <span class="panel-summary-preview" id="panel-summary-preview"></span>
     </summary>
     <div class="panel-body">
     <div id="region-detail-mount"></div>
+    <p class="site-tagline">
+      Anteil der Straßen mit Radinfrastruktur – je Gemeinde, Landkreis und Bundesland,
+      berechnet aus OpenStreetMap-Daten. <a href="./methodik.html">Wie wird gerechnet?</a>
+    </p>
+    <nav class="view-mode-switch" id="view-mode-switch" aria-label="Ansichtsmodus">
+      <a class="view-mode-btn" id="view-mode-simple" href="#">Einfache Ansicht</a>
+      <a class="view-mode-btn" id="view-mode-expert" href="#">Expertenansicht</a>
+    </nav>
     <p id="load-status">Lade Gebietsdaten…</p>
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
@@ -828,7 +885,8 @@ export function generateViewerHtml(generatedAt: string) {
         <div class="choropleth-legend">
           <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
           <div class="legend-bar" id="legend-bar"></div>
-          <div class="legend-labels"><span id="legend-min"></span><span id="legend-max"></span></div>
+          <div class="legend-ticks" id="legend-ticks"></div>
+          <div class="legend-labels" id="legend-labels"></div>
         </div>
         <p class="view-meta" id="view-meta"></p>
         <p class="national-context" id="national-context" hidden></p>
@@ -876,12 +934,9 @@ export function generateViewerHtml(generatedAt: string) {
           </div>
         </div>
         <div class="ranking-scroll" id="ranking-scroll">
-          <ol class="ranking-list" id="ranking-list"></ol>
+          <ol class="ranking-list" id="ranking-list" aria-label="Rangliste der Gebiete"></ol>
         </div>
     </details>
-    <p class="view-mode-links" id="view-mode-links-expert-panel" hidden>
-      <a href="#" id="switch-to-expert-link">Expertenansicht</a>
-    </p>
     <div class="panel-actions">
       <div class="share-toolbar" role="group" aria-label="Ansicht teilen und exportieren">
         <button type="button" id="share-native" class="share-btn share-btn--primary" hidden title="Teilen" aria-label="Teilen">
@@ -917,8 +972,8 @@ export function generateViewerHtml(generatedAt: string) {
       <h3 id="region-detail-title"></h3>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
-    <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-extra" id="region-detail-extra" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
@@ -957,32 +1012,32 @@ export function generateViewerHtml(generatedAt: string) {
         if (data && data.byId && data.groups) peerGroupIndex = data;
       })
       .catch(() => {});
-    // {id → Einwohner/km²}. Not linked to from anywhere in the UI (see extraFeaturesEnabled) —
-    // only fetched when the URL already asked for it, so regular visitors never pay for it.
+    // Region-card context figures, keyed by region id: population density, transit stops, terrain.
+    // ~800 KB gzipped together, so fetched on the first region selection (ensureRegionExtraIndexes)
+    // rather than on page load — a visitor who never opens a region card never pays for them.
     let densityIndex = null;
-    // {id → rail/tram/ferry stops per km²}. Same ?extra=1-only treatment as densityIndex above.
     let transitIndex = null;
-    // {id → mean local slope in %}. Same ?extra=1-only treatment.
     let terrainIndex = null;
-    if (extraFeaturesEnabled()) {
-      fetch(CONFIG.densityUrl)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && data.byId) densityIndex = data;
-        })
-        .catch(() => {});
-      fetch(CONFIG.transitUrl)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && data.byId) transitIndex = data;
-        })
-        .catch(() => {});
-      fetch(CONFIG.terrainUrl)
-        .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && data.byId) terrainIndex = data;
-        })
-        .catch(() => {});
+    let regionExtraIndexesPromise = null;
+    function ensureRegionExtraIndexes() {
+      if (regionExtraIndexesPromise) return;
+      const load = (url, assign) =>
+        fetch(url)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            if (data && data.byId) assign(data);
+          })
+          .catch(() => {});
+      regionExtraIndexesPromise = Promise.all([
+        load(CONFIG.densityUrl, (data) => { densityIndex = data; }),
+        load(CONFIG.transitUrl, (data) => { transitIndex = data; }),
+        load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
+      ]).then(() => {
+        const selected = selectedFeatureId
+          ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId)
+          : null;
+        if (selected) renderRegionExtra(selected.properties || {});
+      });
     }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
     // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
@@ -1010,6 +1065,34 @@ export function generateViewerHtml(generatedAt: string) {
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
+
+    /**
+     * Visitors got the raw exception text here, up to and including build instructions
+     * ("bun run bike-share-map:export-stats-geojson"). They get a sentence they can act on;
+     * the technical detail goes to the console for whoever is actually debugging.
+     */
+    function showLoadError(error, message) {
+      console.error('[radinfra-viewer]', error);
+      if (!loadError) return;
+      loadError.replaceChildren();
+      const text = document.createElement('span');
+      text.textContent = message;
+      loadError.appendChild(text);
+      loadError.appendChild(document.createElement('br'));
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'load-error-retry';
+      retry.textContent = 'Erneut versuchen';
+      retry.addEventListener('click', () => location.reload());
+      loadError.appendChild(retry);
+      loadError.style.display = 'block';
+    }
+
+    function clearLoadError() {
+      if (!loadError) return;
+      loadError.replaceChildren();
+      loadError.style.display = 'none';
+    }
 
     // stats-core.msgpack (fetched above as statsDataPromise) omits Gemeindeverbände (level 7)
     // and Stadtbezirke (level 9) — together ~40% of the combined payload — so the first paint
@@ -1058,10 +1141,10 @@ export function generateViewerHtml(generatedAt: string) {
         if (loadStatus) loadStatus.textContent = '';
       })
       .catch((e) => {
-        if (loadError) {
-          loadError.style.display = 'block';
-          loadError.textContent = String(e.message || e);
-        }
+        showLoadError(
+          e,
+          'Die Gebietsdaten konnten nicht geladen werden. Bitte die Internetverbindung prüfen.',
+        );
         throw e;
       });
 
@@ -1506,33 +1589,66 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
+    const LEGEND_TICK_COUNT = 5;
+
+    /**
+     * The choropleth interpolates linearly from min to max, so an evenly spaced value sits at
+     * the same relative position on the bar. Labelling only the two ends left every mid-tone
+     * unreadable, which is most of the map.
+     */
     function updateLegendRange(min, max) {
-      document.getElementById('legend-min').textContent = formatUiPct(min) + ' %';
-      document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
+      const labels = document.getElementById('legend-labels');
+      const ticks = document.getElementById('legend-ticks');
+      if (!labels) return;
+      const span = max - min;
+      const count = span > 0 ? LEGEND_TICK_COUNT : 2;
+      labels.replaceChildren();
+      if (ticks) ticks.replaceChildren();
+      for (let i = 0; i < count; i++) {
+        const t = i / (count - 1);
+        const el = document.createElement('span');
+        // Only the last label carries the unit — repeating it on every tick is noise.
+        el.textContent = formatUiPct(min + span * t) + (i === count - 1 ? ' %' : '');
+        if (i === 0) {
+          el.className = 'legend-label--start';
+        } else if (i === count - 1) {
+          el.className = 'legend-label--end';
+        } else {
+          el.style.left = t * 100 + '%';
+          if (ticks) {
+            const tick = document.createElement('span');
+            tick.style.left = t * 100 + '%';
+            ticks.appendChild(tick);
+          }
+        }
+        labels.appendChild(el);
+      }
     }
 
     function updateViewMetaText(filtered, range) {
       let metaText = viewLabelForCurrentMode() + ' · ' + filtered.length + ' Gebiete';
       if (range.scaleCapped) {
         if (range.robustApplied && !getScaleCapSettings().enabled) {
-          const parts = ['Skala 0–' + formatUiPct(range.max) + ' %'];
+          const parts = [
+            'Farben bis ' + formatUiPct(range.max) + ' %, höhere Werte gleich dunkel',
+          ];
           if (range.dataMax > range.max) {
-            parts.push('max. ' + formatUiPct(range.dataMax) + ' % in Daten');
+            parts.push('höchster Wert ' + formatUiPct(range.dataMax) + ' %');
           }
           if (range.outlierCount > 0) {
-            parts.push(range.outlierCount + ' Ausreißer ignoriert');
+            parts.push(range.outlierCount + ' Ausreißer nicht in der Skala');
           }
           if (range.excludedLowRoadCount > 0) {
-            parts.push(range.excludedLowRoadCount + ' mit wenig Straßennetz');
+            parts.push(range.excludedLowRoadCount + ' Gebiete mit sehr wenig Straßen');
           }
-          metaText += ' · ' + parts.join(', ');
+          metaText += ' · ' + parts.join(' · ');
         } else {
           metaText +=
-            ' · Skala 0–' +
+            ' · Farben bis ' +
             range.capPct +
-            ' % (max. ' +
+            ' %, höhere Werte gleich dunkel · höchster Wert ' +
             formatUiPct(range.dataMax) +
-            ' % = volle Farbe)';
+            ' %';
         }
       }
       document.getElementById('view-meta').textContent = metaText;
@@ -1671,6 +1787,7 @@ export function generateViewerHtml(generatedAt: string) {
     function setRankingMode(mode) {
       if (mode !== 'topflop' && mode !== 'all') return;
       rankingMode = mode;
+      scheduleUrlSync();
       syncRankingModeButtons();
       syncRankingScrollLayout();
       if (lastRankingSorted.length) {
@@ -1792,6 +1909,7 @@ export function generateViewerHtml(generatedAt: string) {
       for (const li of list.querySelectorAll('li[data-ranking-id]')) {
         const id = li.dataset.rankingId;
         li.classList.toggle('ranking-row-selected', id === selectedFeatureId);
+        li.setAttribute('aria-pressed', String(id === selectedFeatureId));
         li.classList.toggle(
           'ranking-row-focus',
           focusIds.has(id) && id !== selectedFeatureId,
@@ -1903,18 +2021,33 @@ export function generateViewerHtml(generatedAt: string) {
       const pct = f.properties.bikeSharePct;
       const li = document.createElement('li');
       const featureId = String(f.properties?.id ?? '');
+      const label = f.properties?.name || f.properties?.id || '–';
       if (featureId) {
         li.dataset.rankingId = featureId;
         li.classList.add('ranking-row-clickable');
+        // The map polygons themselves can't be reached with a keyboard, so this list is the
+        // only path to a region for keyboard and screen-reader users — it needs real button
+        // semantics, not just a click listener and a title attribute.
+        li.setAttribute('role', 'button');
+        li.tabIndex = 0;
+        li.setAttribute('aria-pressed', String(featureId === selectedFeatureId));
+        li.setAttribute(
+          'aria-label',
+          'Platz ' + rank + ', ' + label + ', ' + formatUiPct(pct) + ' Prozent Radinfrastruktur',
+        );
         li.title = 'Auf der Karte auswählen';
         li.addEventListener('click', () => selectRegionById(featureId, null, true));
+        li.addEventListener('keydown', (event) => {
+          if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
+          event.preventDefault(); // Space would scroll the ranking instead of selecting.
+          selectRegionById(featureId, null, true);
+        });
       }
       const rankEl = document.createElement('span');
       rankEl.className = 'ranking-rank';
       rankEl.textContent = rank + '.';
       const name = document.createElement('span');
       name.className = 'ranking-name';
-      const label = f.properties?.name || f.properties?.id || '–';
       name.textContent = label;
       name.title = label;
       const track = document.createElement('div');
@@ -2352,6 +2485,11 @@ export function generateViewerHtml(generatedAt: string) {
       };
     }
 
+    /**
+     * Leads with the rank, on its own line: "Platz 3 von 47 vergleichbaren Gemeinden" is the
+     * most meaningful sentence the card can produce for a resident, far more so than the raw
+     * percentage above it — so it reads as a headline, not as a footnote.
+     */
     function renderRegionPeerGap(p) {
       const s = demographicPeerSummary(p);
       regionDetailPeerGap.replaceChildren();
@@ -2361,35 +2499,38 @@ export function generateViewerHtml(generatedAt: string) {
         return;
       }
       const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
-      const groupPhrase = 'Unter vergleichbaren Gemeinden (' + s.groupLabel + '): ';
+      regionDetailPeerGap.className =
+        'region-detail-gap region-detail-gap--peer ' +
+        (s.behind ? 'region-detail-gap--behind' : 'region-detail-gap--ahead');
+      const headline = document.createElement('span');
+      headline.className = 'region-detail-gap-headline';
+      headline.textContent = 'Platz ' + s.rank + ' von ' + s.total;
+      regionDetailPeerGap.appendChild(headline);
+      regionDetailPeerGap.appendChild(
+        document.createTextNode(
+          'unter Gemeinden mit ähnlichem Profil (' + s.groupLabel + ').',
+        ),
+      );
       if (s.behind) {
-        regionDetailPeerGap.className =
-          'region-detail-gap region-detail-gap--peer region-detail-gap--behind';
-        appendGapText(regionDetailPeerGap, groupPhrase, 'Platz ' + s.rank + ' von ' + s.total, '.');
         appendGapText(
           regionDetailPeerGap,
-          ' Zum Median dieser Gruppe (' + formatUiPct(s.medianPct) + ' %) fehlen rund ',
+          ' Zum Median der Gruppe (' + formatUiPct(s.medianPct) + ' %) fehlen rund ',
           kmBike(s.gapKm) + ' km',
-          '.',
+          ' Radinfrastruktur.',
         );
       } else {
-        regionDetailPeerGap.className =
-          'region-detail-gap region-detail-gap--peer region-detail-gap--ahead';
-        appendGapText(
-          regionDetailPeerGap,
-          groupPhrase,
-          'Platz ' + s.rank + ' von ' + s.total,
-          ' – über dem Median (' + formatUiPct(s.medianPct) + ' %).',
+        regionDetailPeerGap.appendChild(
+          document.createTextNode(
+            ' Über dem Median der Gruppe (' + formatUiPct(s.medianPct) + ' %).',
+          ),
         );
       }
       regionDetailPeerGap.hidden = false;
     }
 
     /**
-     * Population density, rail/tram/ferry-stop density, and terrain flatness — shown only behind
-     * ?extra=1 (see extraFeaturesEnabled) while we're still evaluating whether any of these is
-     * worth surfacing publicly as a possible explanation for why bike infrastructure varies.
-     * Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
+     * Population density, rail/tram/ferry-stop density, and terrain flatness — context for why
+     * bike infrastructure varies between regions. Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
      * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops; density is stops/km², plus
      * the population-weighted mean distance to the nearest station from the Zensus 2022 100m
      * population grid), gemeinde-terrain.json
@@ -2399,11 +2540,7 @@ export function generateViewerHtml(generatedAt: string) {
      * e.g. a high-elevation plateau can be locally flatter than a lower-lying river valley).
      */
     function renderRegionExtra(p) {
-      if (!extraFeaturesEnabled()) {
-        regionDetailExtra.hidden = true;
-        regionDetailExtra.textContent = '';
-        return;
-      }
+      ensureRegionExtraIndexes();
       const density = densityIndex ? densityIndex.byId[p.id] : null;
       const transit = transitIndex ? transitIndex.byId[p.id] : null;
       const slope = terrainIndex ? terrainIndex.byId[p.id] : null;
@@ -2752,8 +2889,8 @@ export function generateViewerHtml(generatedAt: string) {
         ' km Rad / ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
         ' km Straße';
-      renderRegionGap(p);
       renderRegionPeerGap(p);
+      renderRegionGap(p);
       renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
@@ -2796,7 +2933,7 @@ export function generateViewerHtml(generatedAt: string) {
         link.addEventListener('click', (e) => {
           if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
           e.preventDefault();
-          navigateToViewMode('simple', p.id);
+          void navigateToViewMode('simple', p.id);
         });
         viewLink.appendChild(link);
         regionDetailBody.appendChild(viewLink);
@@ -2824,6 +2961,9 @@ export function generateViewerHtml(generatedAt: string) {
         id && feature?.geometry && feature.properties?.id === id ? feature : null;
       updateMapHighlights();
       syncRankingRowHighlights();
+      // A selection is a step the Back button should be able to undo.
+      scheduleUrlSync('push');
+      syncViewModeLinks();
     }
 
     function featureBboxInMapView(bbox) {
@@ -3046,7 +3186,7 @@ export function generateViewerHtml(generatedAt: string) {
       panelSummaryPreview.textContent = viewLabelForCurrentMode();
     }
 
-    function navigateToViewMode(mode, focusId) {
+    async function navigateToViewMode(mode, focusId) {
       const params = new URLSearchParams(location.search);
       if (mode === 'simple') {
         if (uiMode() === 'expert') {
@@ -3076,7 +3216,24 @@ export function generateViewerHtml(generatedAt: string) {
       }
       appendViewerOptionsToUrl(params);
       const qs = params.toString();
-      location.assign(location.pathname + (qs ? '?' + qs : ''));
+      const url = location.pathname + (qs ? '?' + qs : '');
+      // This used to be location.assign(): a full reload that re-downloaded the whole stats
+      // file and rebuilt the map just to change which controls are visible. Everything the
+      // other mode needs is already in memory, so push the URL and re-render in place.
+      if (url !== location.pathname + location.search) history.pushState(null, '', url);
+      await applyStateFromUrl();
+    }
+
+    /** Which region the simple view should focus on when switching modes. */
+    function preferredSimpleFocusId() {
+      if (!regionIndex) return null;
+      return (
+        simpleFocusContext?.focusId ||
+        selectedFeatureId ||
+        RegionNav.scopeIdFor(currentViewScope.gebiet, currentViewScope.untergebiet) ||
+        regionIndex.deutschlandId ||
+        RegionNav.DEUTSCHLAND_GEBIET
+      );
     }
 
     function imageFilename(suffix) {
@@ -3807,7 +3964,7 @@ export function generateViewerHtml(generatedAt: string) {
       else params.delete('radwege');
       if (toggleRoads.checked) params.set('strassen', '1');
       else params.delete('strassen');
-      if (rankingDetails.open) params.set('ranking', 'open');
+      if (!rankingDetails.open) params.set('ranking', '0');
       else params.delete('ranking');
       if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
       else params.delete('rankingMode');
@@ -3878,6 +4035,96 @@ export function generateViewerHtml(generatedAt: string) {
       const qs = params.toString();
       return location.origin + location.pathname + (qs ? '?' + qs : '');
     }
+
+    /**
+     * Read live from the address bar rather than rebuilt from UI state, so they have to be
+     * carried over by hand on every rewrite: the minimal-chrome switches and the unlinked
+     * ?extra=1 toggle. Share links deliberately drop them (buildShareUrl starts from empty).
+     */
+    const PRESERVED_URL_PARAMS = ['chrome', 'embed', 'extra'];
+
+    function currentStateUrl() {
+      const params = new URLSearchParams();
+      const live = urlParams();
+      for (const key of PRESERVED_URL_PARAMS) {
+        const value = live.get(key);
+        if (value != null) params.set(key, value);
+      }
+      appendViewScopeToUrl(params);
+      appendViewerOptionsToUrl(params);
+      if (selectedFeatureId) params.set('region', selectedFeatureId);
+      const qs = params.toString();
+      return location.pathname + (qs ? '?' + qs : '');
+    }
+
+    // The address bar mirrors the view, the selected region and the display options, so reload,
+    // bookmarking and the browser's Back button all work on state that used to live only in
+    // memory. Selections and view changes push a history entry (Back undoes that one step);
+    // option tweaks only replace it, so the history doesn't fill up with colour changes.
+    let urlSyncEnabled = false;
+    let applyingUrlState = false;
+    let urlSyncTimer = null;
+    let urlSyncPushPending = false;
+    // The state the page loaded with. Until something actually changes, the address bar is left
+    // exactly as the visitor typed or received it, rather than being rewritten on arrival with
+    // the parameters that only spell out the defaults.
+    let urlSyncBaseline = null;
+
+    function cancelPendingUrlSync() {
+      if (urlSyncTimer == null) return;
+      clearTimeout(urlSyncTimer);
+      urlSyncTimer = null;
+      urlSyncPushPending = false;
+    }
+
+    function scheduleUrlSync(mode) {
+      if (!urlSyncEnabled || applyingUrlState) return;
+      if (mode === 'push') urlSyncPushPending = true;
+      if (urlSyncTimer != null) return;
+      urlSyncTimer = setTimeout(() => {
+        urlSyncTimer = null;
+        const push = urlSyncPushPending;
+        urlSyncPushPending = false;
+        if (!urlSyncEnabled || applyingUrlState || !regionIndex) return;
+        const next = currentStateUrl();
+        if (next === location.pathname + location.search) return;
+        if (urlSyncBaseline !== null && next === urlSyncBaseline) return;
+        urlSyncBaseline = null;
+        if (push) history.pushState(null, '', next);
+        else history.replaceState(null, '', next);
+      }, 0);
+    }
+
+    /**
+     * Re-render everything from the address bar without reloading. Drives both the browser's
+     * Back/Forward buttons and the simple/expert switch.
+     */
+    async function applyStateFromUrl() {
+      if (!regionIndex) return;
+      cancelPendingUrlSync();
+      applyingUrlState = true;
+      try {
+        applyUiModeClass();
+        applyUrlOptions({ live: true });
+        await applyCurrentView();
+        const wantedRegion = urlParams().get('region') || null;
+        if (wantedRegion !== (selectedFeatureId || null)) {
+          if (selectedFeatureId) clearRegionSelection();
+          if (wantedRegion && lastRankingFeatures.some((f) => f.properties?.id === wantedRegion)) {
+            selectRegionById(wantedRegion, null, true);
+          }
+        }
+        // Expert sessions never fetch the neighbor index (see init); arriving in simple view
+        // through the switch rather than through a page load has to ask for it here.
+        if (uiMode() === 'simple') ensureNeighborsLoaded();
+      } finally {
+        applyingUrlState = false;
+      }
+    }
+
+    window.addEventListener('popstate', () => {
+      void applyStateFromUrl();
+    });
 
     let copyViewLinkFeedbackTimer = null;
 
@@ -4112,15 +4359,36 @@ export function generateViewerHtml(generatedAt: string) {
       applyOverlayLineColors();
     }
 
-    function applyUrlOptions() {
+    /**
+     * opts.live = re-applying an already running page to a new URL (Back/Forward, the view
+     * switch) rather than setting the page up once. A missing param then means "back to the
+     * default", not "keep whatever is currently set" — otherwise going back to a plain URL
+     * would keep the basemap or colour scale of the state being left behind.
+     */
+    function applyUrlOptions(opts) {
+      const live = !!(opts && opts.live);
       const params = urlParams();
       if (regionIndex) {
         const scope = resolveViewScopeFromUrl();
         applyViewScopeToUi(scope);
       }
 
-      const basemap = params.get('basemap');
-      if (basemap && CONFIG.basemapStyles[basemap]) {
+      const basemapParam = params.get('basemap');
+      const basemap =
+        basemapParam && CONFIG.basemapStyles[basemapParam]
+          ? basemapParam
+          : live
+            ? CONFIG.basemap
+            : null;
+      if (live) {
+        // setBasemap() swaps the style and re-adds the overlays once it has loaded; the raw
+        // setStyle() below only gets away without that because at init nothing has been
+        // added to the map yet.
+        if (basemap && basemapSelect.value !== basemap) {
+          basemapSelect.value = basemap;
+          setBasemap(basemap);
+        }
+      } else if (basemap) {
         basemapSelect.value = basemap;
         overlaysBound = false;
         map.setStyle(CONFIG.basemapStyles[basemap]);
@@ -4129,10 +4397,14 @@ export function generateViewerHtml(generatedAt: string) {
       const radwege = params.get('radwege') ?? params.get('bikelanes');
       if (radwege != null && radwege !== '') {
         toggleBikelanes.checked = parseBoolParam(radwege, true);
+      } else if (live) {
+        toggleBikelanes.checked = true;
       }
       const strassen = params.get('strassen') ?? params.get('roads');
       if (strassen != null && strassen !== '') {
         toggleRoads.checked = parseBoolParam(strassen, false);
+      } else if (live) {
+        toggleRoads.checked = false;
       }
 
       const ranking = params.get('ranking');
@@ -4145,6 +4417,9 @@ export function generateViewerHtml(generatedAt: string) {
       if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
         rankingMode = rankingModeParam;
         syncRankingModeButtons();
+      } else if (live && rankingMode !== 'topflop') {
+        rankingMode = 'topflop';
+        syncRankingModeButtons();
       }
       lastRankingViewAvailable = true;
 
@@ -4153,12 +4428,17 @@ export function generateViewerHtml(generatedAt: string) {
       if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
         colorScaleSelect.value = colors;
         scaleFromUrl = colors;
+      } else if (live && colorScaleSelect.value !== CONFIG.defaultColorScale) {
+        colorScaleSelect.value = CONFIG.defaultColorScale;
+        scaleFromUrl = CONFIG.defaultColorScale;
       }
 
       const cap = params.get('cap') ?? params.get('kappung');
       if (cap != null && cap !== '') {
         const capNum = Number(cap);
         if (Number.isFinite(capNum)) scaleCapPctInput.value = String(capNum);
+      } else if (live) {
+        scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
       }
       const capEnabled = params.get('capEnabled') ?? params.get('kappungEnabled');
       if (capEnabled != null && capEnabled !== '') {
@@ -4176,22 +4456,30 @@ export function generateViewerHtml(generatedAt: string) {
           robustScale,
           defaultRobustScaleEnabledForView(),
         );
+      } else if (live) {
+        scaleRobustEnabledCb.checked = defaultRobustScaleEnabledForView();
       }
       syncScaleCapInputState();
 
-      applyLengthClassFilterFromUrl(params);
+      if (!applyLengthClassFilterFromUrl(params) && live) {
+        lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
+        applyLengthClassFilterToUi(lengthClassFilter);
+      }
       syncSimpleCountingNotice();
 
       const radfarbe =
         params.get('radfarbe') ?? params.get('radwegeFarbe') ?? params.get('bikelaneColor');
       const radParsed = parseHexColorParam(radfarbe);
       if (radParsed) overlayBikelaneColorInput.value = radParsed;
-      else if (scaleFromUrl) syncOverlayColorInputsFromScale(scaleFromUrl);
+      else if (scaleFromUrl || live) {
+        syncOverlayColorInputsFromScale(scaleFromUrl || colorScaleSelect.value);
+      }
 
       const strassenfarbe =
         params.get('strassenfarbe') ?? params.get('strassenFarbe') ?? params.get('roadColor');
       const roadParsed = parseHexColorParam(strassenfarbe);
       if (roadParsed) overlayRoadColorInput.value = roadParsed;
+      else if (live) overlayRoadColorInput.value = CONFIG.defaultOverlayColors.road;
 
       const radwegeMinZoom =
         params.get('radwegeMinZoom') ?? params.get('bikelaneMinZoom') ?? params.get('radwegeMinzoom');
@@ -4199,6 +4487,8 @@ export function generateViewerHtml(generatedAt: string) {
         overlayBikelaneMinzoomInput.value = String(
           clampOverlayMinZoom(radwegeMinZoom, CONFIG.defaultOverlayMinZoom.bikelane),
         );
+      } else if (live) {
+        overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
       }
       const strassenMinZoomMajor =
         params.get('strassenMinZoomMajor') ??
@@ -4209,6 +4499,8 @@ export function generateViewerHtml(generatedAt: string) {
         overlayRoadMinzoomMajorInput.value = String(
           clampOverlayMinZoom(strassenMinZoomMajor, CONFIG.defaultOverlayMinZoom.roadMajor),
         );
+      } else if (live) {
+        overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
       }
       const strassenMinZoomFull =
         params.get('strassenMinZoomFull') ?? params.get('strassenMinZoomVoll');
@@ -4220,6 +4512,8 @@ export function generateViewerHtml(generatedAt: string) {
             CONFIG.overlayRoadFullMinZoomLimits,
           ),
         );
+      } else if (live) {
+        overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
       }
 
       updateBasemapHint();
@@ -4227,6 +4521,7 @@ export function generateViewerHtml(generatedAt: string) {
       updateColorScaleHint();
       applyOverlayLineColors();
       applyOverlayMinZoom();
+      if (live) updateOverlayVisibility();
     }
 
     function setLayerVisibility(id, visible) {
@@ -4488,26 +4783,28 @@ export function generateViewerHtml(generatedAt: string) {
       ) {
         setLoadStatus('Lade zusätzliche Gebiete …');
         try {
+          clearLoadError();
           await ensureExtraLevelsLoaded();
         } catch (err) {
-          if (loadError) {
-            loadError.style.display = 'block';
-            loadError.textContent = String((err && err.message) || err);
-          }
+          showLoadError(
+            err,
+            'Die zusätzlichen Gebiete (Gemeindeverbände, Stadtbezirke) konnten nicht geladen ' +
+              'werden. Die übrigen Ansichten funktionieren weiterhin.',
+          );
         }
         setLoadStatus('');
       }
       const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
-      document.getElementById('legend-min').textContent = formatUiPct(min) + ' %';
-      document.getElementById('legend-max').textContent = formatUiPct(max) + ' %';
+      updateLegendRange(min, max);
       lastRankingFeatures = filtered;
       updateRankingVisibility();
       updateScaleCapHint();
       updateRanking(filtered, min, max);
       updateViewMetaText(filtered, range);
       updatePanelSummaryPreview();
+      scheduleUrlSync();
       refreshSelectedRegionIfNeeded();
       const geojson = { type: 'FeatureCollection', features: filtered };
       const labelMinZoom = labelMinZoomForView();
@@ -4548,6 +4845,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function setBasemap(id) {
+      scheduleUrlSync();
       const center = map.getCenter();
       const zoom = map.getZoom();
       map.setStyle(CONFIG.basemapStyles[id]);
@@ -4653,15 +4951,26 @@ export function generateViewerHtml(generatedAt: string) {
       });
     }
     if (simpleViewSelect) simpleViewSelect.addEventListener('change', onSimpleViewChange);
-    const switchToExpertLink = document.getElementById('switch-to-expert-link');
-    if (switchToExpertLink) {
-      switchToExpertLink.addEventListener('click', (e) => {
+    for (const [id, mode] of [
+      ['view-mode-simple', 'simple'],
+      ['view-mode-expert', 'expert'],
+    ]) {
+      const link = document.getElementById(id);
+      // Real hrefs (kept current by syncViewModeLinks) so middle-click and "open in new tab"
+      // still work; a plain left click switches in place instead.
+      link?.addEventListener('click', (e) => {
         if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
         e.preventDefault();
-        const focusId = simpleFocusContext?.focusId || regionIndex?.deutschlandId;
-        navigateToViewMode('expert', focusId);
+        if (uiMode() === mode) return;
+        void navigateToViewMode(mode, preferredSimpleFocusId());
       });
     }
+    const panelOptions = document.getElementById('panel-options');
+    if (panelOptions) {
+      panelOptions.addEventListener('change', () => scheduleUrlSync());
+      panelOptions.addEventListener('input', () => scheduleUrlSync());
+    }
+    rankingDetails?.addEventListener('toggle', () => scheduleUrlSync());
     toggleBikelanes?.addEventListener('change', updateOverlayVisibility);
     toggleRoads?.addEventListener('change', updateOverlayVisibility);
     overlayBikelaneColorInput?.addEventListener('input', applyOverlayLineColors);
@@ -4841,9 +5150,19 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function syncViewModeLinks() {
-      const expertLink = document.getElementById('switch-to-expert-link');
-      if (expertLink && simpleFocusContext?.focusId && regionIndex) {
-        expertLink.href = buildExpertViewUrl(simpleFocusContext.focusId);
+      if (!regionIndex) return;
+      const focusId = preferredSimpleFocusId();
+      if (!focusId) return;
+      const simple = uiMode() === 'simple';
+      const simpleLink = document.getElementById('view-mode-simple');
+      const expertLink = document.getElementById('view-mode-expert');
+      if (simpleLink) {
+        simpleLink.href = buildSimpleViewUrl(focusId, simple ? simpleViewPreset : null);
+        simpleLink.setAttribute('aria-current', simple ? 'true' : 'false');
+      }
+      if (expertLink) {
+        expertLink.href = buildExpertViewUrl(focusId);
+        expertLink.setAttribute('aria-current', simple ? 'false' : 'true');
       }
     }
 
@@ -4926,18 +5245,19 @@ export function generateViewerHtml(generatedAt: string) {
         if (isSimpleUiFromUrl()) {
           void populateUntergebietSelect();
         }
+        urlSyncEnabled = true;
+        urlSyncBaseline = currentStateUrl();
+        syncViewModeLinks();
         // Neighbor data (SimpleView's "Nachbarn" presets) is only ever consumed in simple UI
-        // mode — switching mode always does a full page reload (navigateToViewMode uses
-        // location.assign), so an expert session never needs it. Skip the ~1.3MB fetch +
-        // worker spin-up entirely for the majority of visitors who land in expert mode.
+        // mode, so skip the ~1.3MB fetch + worker spin-up for visitors who land in expert
+        // mode. Switching to simple in-page asks for it then (see applyStateFromUrl).
         if (isSimpleUiFromUrl()) {
           const loadNeighborsAfterPageReady = () => ensureNeighborsLoaded();
           if (document.readyState === 'complete') loadNeighborsAfterPageReady();
           else window.addEventListener('load', loadNeighborsAfterPageReady, { once: true });
         }
       } catch (e) {
-        loadError.style.display = 'block';
-        loadError.textContent = String(e.message || e);
+        showLoadError(e, 'Die Karte konnte nicht vollständig geladen werden.');
       }
     }
 
@@ -4946,9 +5266,11 @@ export function generateViewerHtml(generatedAt: string) {
         await statsReadyPromise;
         await init();
       } catch (e) {
-        if (loadError) {
-          loadError.style.display = 'block';
-          loadError.textContent = String(e.message || e);
+        // statsReadyPromise already reported its own failure; only add one if nothing has.
+        if (loadError && loadError.style.display !== 'block') {
+          showLoadError(e, 'Die Karte konnte nicht geladen werden.');
+        } else {
+          console.error('[radinfra-viewer]', e);
         }
       }
     })();

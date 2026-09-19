@@ -49,14 +49,13 @@ export function viewerRegionNavScript() {
       return 'expert';
     }
 
-    // Undocumented, unlinked toggle for stats still being evaluated for public display
-    // (e.g. population density) — reachable only by URL, never surfaced in the UI itself.
+    // Undocumented, unlinked toggle for features not ready for public display (currently the
+    // ohsome trend chart) — reachable only by URL, never surfaced in the UI itself.
     function extraFeaturesEnabled() {
       return new URLSearchParams(location.search).get('extra') === '1';
     }
 
     const mapLegendSection = document.getElementById('map-legend-section');
-    const viewModeLinksExpertPanel = document.getElementById('view-mode-links-expert-panel');
     const regionSearchBlock = document.getElementById('region-search-block');
     let mapLegendToggleLocked = false;
 
@@ -68,7 +67,8 @@ export function viewerRegionNavScript() {
       if (regionScopeBlock) regionScopeBlock.hidden = uiMode() !== 'expert';
       // Expert-only shortcut for the Gebiet/Untergebiet selects, same visibility rule as those.
       if (regionSearchBlock) regionSearchBlock.hidden = uiMode() !== 'expert';
-      if (viewModeLinksExpertPanel) viewModeLinksExpertPanel.hidden = uiMode() !== 'simple';
+      // Both halves of the simple/expert switch stay visible; only the active one changes.
+      if (typeof syncViewModeLinks === 'function') syncViewModeLinks();
       if (mapLegendSection) {
         const simple = uiMode() === 'simple';
         mapLegendSection.open = simple ? true : mapLegendSection.open;
@@ -466,12 +466,16 @@ export function viewerRegionNavScript() {
 
     function onSimpleViewChange() {
       if (simpleViewSelectSyncing) return;
+      // A view change is a step of its own in the browser history.
+      scheduleUrlSync('push');
       simpleViewPreset = simpleViewSelect.value;
       updateScaleCapDefaultForView();
       void applyCurrentView();
     }
 
     function onGebietChange() {
+      // A view change is a step of its own in the browser history.
+      scheduleUrlSync('push');
       populateUntergebietSelect();
       untergebietSelect.value = '';
       populateDarstellungSelect();
@@ -482,6 +486,8 @@ export function viewerRegionNavScript() {
     }
 
     function onUntergebietChange() {
+      // A view change is a step of its own in the browser history.
+      scheduleUrlSync('push');
       populateDarstellungSelect();
       syncViewScopeFromUi();
       currentViewScope.darstellung = darstellungSelect.value;
@@ -490,6 +496,8 @@ export function viewerRegionNavScript() {
     }
 
     function onDarstellungChange() {
+      // A view change is a step of its own in the browser history.
+      scheduleUrlSync('push');
       syncViewScopeFromUi();
       updateScaleCapDefaultForView();
       void applyCurrentView();
