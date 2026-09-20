@@ -273,6 +273,78 @@ export function viewerRegionNavScript() {
         untergebiet: untergebietSelect.value || '',
         darstellung: darstellungSelect.value,
       };
+      renderRegionBreadcrumb();
+    }
+
+    /**
+     * The area you are looking at, as a path you can click your way back up. The Gebiet and
+     * Untergebiet selects say the same thing between them, but only if you read both and know
+     * that "Untergebiet" means "narrow to one Kreis" — and neither offers a way one level up.
+     */
+    function renderRegionBreadcrumb() {
+      const el = document.getElementById('region-breadcrumb');
+      if (!el || !regionIndex) return;
+      const { gebiet, untergebiet } = currentViewScope;
+      const nameOf = (id) => String(regionIndex.byId.get(id)?.properties?.name ?? id);
+
+      const crumbs = [{ label: 'Deutschland', gebiet: RegionNav.DEUTSCHLAND_GEBIET, untergebiet: '' }];
+      if (gebiet && gebiet !== RegionNav.DEUTSCHLAND_GEBIET) {
+        crumbs.push({ label: nameOf(gebiet), gebiet, untergebiet: '' });
+      }
+      if (untergebiet) {
+        const id = RegionNav.scopeIdFor(gebiet, untergebiet);
+        if (id) crumbs.push({ label: nameOf(id), gebiet, untergebiet });
+      }
+
+      el.replaceChildren();
+      crumbs.forEach((crumb, i) => {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'region-breadcrumb-sep';
+          sep.textContent = '›';
+          el.appendChild(sep);
+        }
+        const last = i === crumbs.length - 1;
+        if (last) {
+          const current = document.createElement('span');
+          current.className = 'region-breadcrumb-current';
+          current.textContent = crumb.label;
+          current.setAttribute('aria-current', 'location');
+          el.appendChild(current);
+          return;
+        }
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = crumb.label;
+        button.addEventListener('click', () => goToBreadcrumb(crumb));
+        el.appendChild(button);
+      });
+
+      if (crumbs.length > 1) {
+        const up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'region-breadcrumb-up';
+        up.textContent = '↑ eine Ebene höher';
+        up.addEventListener('click', () => goToBreadcrumb(crumbs[crumbs.length - 2]));
+        el.appendChild(up);
+      }
+    }
+
+    function goToBreadcrumb(crumb) {
+      // A jump up is a step of its own in the browser history.
+      scheduleUrlSync('push');
+      applyExpertScopeToUi({
+        gebiet: crumb.gebiet,
+        untergebiet: crumb.untergebiet,
+        darstellung: RegionNav.defaultDarstellungForScope(
+          crumb.gebiet,
+          crumb.untergebiet,
+          regionIndex,
+          allFeatures,
+        ),
+      });
+      updateScaleCapDefaultForView();
+      void applyCurrentView();
     }
 
     function applyExpertScopeValuesOnly(scope) {
@@ -285,6 +357,7 @@ export function viewerRegionNavScript() {
         untergebiet: scope.untergebiet || '',
         darstellung: scope.darstellung || darstellungSelect.value || 'bundeslaender',
       };
+      renderRegionBreadcrumb();
     }
 
     function buildSimpleViewUrl(focusId, preset) {
@@ -446,6 +519,7 @@ export function viewerRegionNavScript() {
         return;
       }
       currentViewScope = readViewScopeFromUi();
+      renderRegionBreadcrumb();
     }
 
     function onSimpleViewChange() {
@@ -616,19 +690,9 @@ export function viewerRegionNavScript() {
         if (typeof syncSimpleCountingNotice === 'function') syncSimpleCountingNotice();
         return;
       }
-      gebietSelect.value = scope.gebiet;
-      populateUntergebietSelect();
-      untergebietSelect.value = scope.untergebiet || '';
-      populateDarstellungSelect();
-      const allowed = [...darstellungSelect.options].map((o) => o.value);
-      darstellungSelect.value = allowed.includes(scope.darstellung)
-        ? scope.darstellung
-        : darstellungSelect.value;
-      currentViewScope = {
-        gebiet: gebietSelect.value,
-        untergebiet: untergebietSelect.value || '',
-        darstellung: darstellungSelect.value,
-      };
+      // Same work as the expert path everywhere else, breadcrumb included — this used to be a
+      // verbatim copy, which is why the breadcrumb stayed empty until the first scope change.
+      applyExpertScopeToUi(scope);
     }
 
     function rankingFocusChainIds() {

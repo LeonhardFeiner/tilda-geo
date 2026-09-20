@@ -643,6 +643,23 @@
     }
     .region-detail-view-link a { color: #1565c0; text-decoration: none; }
     .region-detail-view-link a:hover { text-decoration: underline; }
+    .region-breadcrumb {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px;
+      margin-bottom: 8px; font-size: 12px; line-height: 1.5;
+    }
+    .region-breadcrumb .region-breadcrumb-sep { color: #999; }
+    .region-breadcrumb button {
+      font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
+      cursor: pointer;
+    }
+    .region-breadcrumb button:hover { text-decoration: underline; }
+    /* The area you are in reads as a label, not another place to click. */
+    .region-breadcrumb .region-breadcrumb-current { color: #333; font-weight: 600; }
+    .region-breadcrumb .region-breadcrumb-up { margin-left: auto; color: #555; }
+    .region-scope-selects { margin-top: 8px; }
+    .region-scope-selects > summary {
+      cursor: pointer; font-size: 11px; color: #666; margin-bottom: 4px;
+    }
     .region-detail-drill {
       font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
       cursor: pointer; text-align: left;
@@ -687,14 +704,21 @@
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
       <div class="region-nav" id="region-nav">
-        <label for="gebiet-select">Gebiet</label>
-        <select id="gebiet-select"></select>
-        <p class="region-nav" id="untergebiet-wrap">
-          <label for="untergebiet-select">Untergebiet</label>
-          <select id="untergebiet-select"></select>
-        </p>
-        <label for="darstellung-select">Karte zeigt</label>
+        <!-- Two orthogonal axes, one control each: the breadcrumb picks the area, the select
+             picks how fine the polygons in it are. The Gebiet/Untergebiet selects below still
+             hold that area state and stay reachable for picking a Kreis straight from a list. -->
+        <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
+        <label for="darstellung-select">Zeige</label>
         <select id="darstellung-select"></select>
+        <details class="region-scope-selects" id="region-scope-selects">
+          <summary>Gebiet aus Liste wählen</summary>
+          <label for="gebiet-select">Gebiet</label>
+          <select id="gebiet-select"></select>
+          <p class="region-nav" id="untergebiet-wrap">
+            <label for="untergebiet-select">Untergebiet</label>
+            <select id="untergebiet-select"></select>
+          </p>
+        </details>
       </div>
     </details>
     <div class="simple-view-block" id="simple-view-block" hidden>
@@ -907,7 +931,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-09-20T02:19:19.544Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-09-20T02:31:51.804Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"traffic","label":"Ampel (kontrast)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"green","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#b71c1c","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1248,6 +1272,78 @@
         untergebiet: untergebietSelect.value || '',
         darstellung: darstellungSelect.value,
       };
+      renderRegionBreadcrumb();
+    }
+
+    /**
+     * The area you are looking at, as a path you can click your way back up. The Gebiet and
+     * Untergebiet selects say the same thing between them, but only if you read both and know
+     * that "Untergebiet" means "narrow to one Kreis" — and neither offers a way one level up.
+     */
+    function renderRegionBreadcrumb() {
+      const el = document.getElementById('region-breadcrumb');
+      if (!el || !regionIndex) return;
+      const { gebiet, untergebiet } = currentViewScope;
+      const nameOf = (id) => String(regionIndex.byId.get(id)?.properties?.name ?? id);
+
+      const crumbs = [{ label: 'Deutschland', gebiet: RegionNav.DEUTSCHLAND_GEBIET, untergebiet: '' }];
+      if (gebiet && gebiet !== RegionNav.DEUTSCHLAND_GEBIET) {
+        crumbs.push({ label: nameOf(gebiet), gebiet, untergebiet: '' });
+      }
+      if (untergebiet) {
+        const id = RegionNav.scopeIdFor(gebiet, untergebiet);
+        if (id) crumbs.push({ label: nameOf(id), gebiet, untergebiet });
+      }
+
+      el.replaceChildren();
+      crumbs.forEach((crumb, i) => {
+        if (i > 0) {
+          const sep = document.createElement('span');
+          sep.className = 'region-breadcrumb-sep';
+          sep.textContent = '›';
+          el.appendChild(sep);
+        }
+        const last = i === crumbs.length - 1;
+        if (last) {
+          const current = document.createElement('span');
+          current.className = 'region-breadcrumb-current';
+          current.textContent = crumb.label;
+          current.setAttribute('aria-current', 'location');
+          el.appendChild(current);
+          return;
+        }
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.textContent = crumb.label;
+        button.addEventListener('click', () => goToBreadcrumb(crumb));
+        el.appendChild(button);
+      });
+
+      if (crumbs.length > 1) {
+        const up = document.createElement('button');
+        up.type = 'button';
+        up.className = 'region-breadcrumb-up';
+        up.textContent = '↑ eine Ebene höher';
+        up.addEventListener('click', () => goToBreadcrumb(crumbs[crumbs.length - 2]));
+        el.appendChild(up);
+      }
+    }
+
+    function goToBreadcrumb(crumb) {
+      // A jump up is a step of its own in the browser history.
+      scheduleUrlSync('push');
+      applyExpertScopeToUi({
+        gebiet: crumb.gebiet,
+        untergebiet: crumb.untergebiet,
+        darstellung: RegionNav.defaultDarstellungForScope(
+          crumb.gebiet,
+          crumb.untergebiet,
+          regionIndex,
+          allFeatures,
+        ),
+      });
+      updateScaleCapDefaultForView();
+      void applyCurrentView();
     }
 
     function applyExpertScopeValuesOnly(scope) {
@@ -1260,6 +1356,7 @@
         untergebiet: scope.untergebiet || '',
         darstellung: scope.darstellung || darstellungSelect.value || 'bundeslaender',
       };
+      renderRegionBreadcrumb();
     }
 
     function buildSimpleViewUrl(focusId, preset) {
@@ -1421,6 +1518,7 @@
         return;
       }
       currentViewScope = readViewScopeFromUi();
+      renderRegionBreadcrumb();
     }
 
     function onSimpleViewChange() {
@@ -1591,19 +1689,9 @@
         if (typeof syncSimpleCountingNotice === 'function') syncSimpleCountingNotice();
         return;
       }
-      gebietSelect.value = scope.gebiet;
-      populateUntergebietSelect();
-      untergebietSelect.value = scope.untergebiet || '';
-      populateDarstellungSelect();
-      const allowed = [...darstellungSelect.options].map((o) => o.value);
-      darstellungSelect.value = allowed.includes(scope.darstellung)
-        ? scope.darstellung
-        : darstellungSelect.value;
-      currentViewScope = {
-        gebiet: gebietSelect.value,
-        untergebiet: untergebietSelect.value || '',
-        darstellung: darstellungSelect.value,
-      };
+      // Same work as the expert path everywhere else, breadcrumb included — this used to be a
+      // verbatim copy, which is why the breadcrumb stayed empty until the first scope change.
+      applyExpertScopeToUi(scope);
     }
 
     function rankingFocusChainIds() {

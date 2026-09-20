@@ -732,6 +732,23 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-view-link a { color: #1565c0; text-decoration: none; }
     .region-detail-view-link a:hover { text-decoration: underline; }
+    .region-breadcrumb {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px;
+      margin-bottom: 8px; font-size: 12px; line-height: 1.5;
+    }
+    .region-breadcrumb .region-breadcrumb-sep { color: #999; }
+    .region-breadcrumb button {
+      font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
+      cursor: pointer;
+    }
+    .region-breadcrumb button:hover { text-decoration: underline; }
+    /* The area you are in reads as a label, not another place to click. */
+    .region-breadcrumb .region-breadcrumb-current { color: #333; font-weight: 600; }
+    .region-breadcrumb .region-breadcrumb-up { margin-left: auto; color: #555; }
+    .region-scope-selects { margin-top: 8px; }
+    .region-scope-selects > summary {
+      cursor: pointer; font-size: 11px; color: #666; margin-bottom: 4px;
+    }
     .region-detail-drill {
       font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
       cursor: pointer; text-align: left;
@@ -776,14 +793,21 @@ export function generateViewerHtml(generatedAt: string) {
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
       <div class="region-nav" id="region-nav">
-        <label for="gebiet-select">Gebiet</label>
-        <select id="gebiet-select"></select>
-        <p class="region-nav" id="untergebiet-wrap">
-          <label for="untergebiet-select">Untergebiet</label>
-          <select id="untergebiet-select"></select>
-        </p>
-        <label for="darstellung-select">Karte zeigt</label>
+        <!-- Two orthogonal axes, one control each: the breadcrumb picks the area, the select
+             picks how fine the polygons in it are. The Gebiet/Untergebiet selects below still
+             hold that area state and stay reachable for picking a Kreis straight from a list. -->
+        <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
+        <label for="darstellung-select">Zeige</label>
         <select id="darstellung-select"></select>
+        <details class="region-scope-selects" id="region-scope-selects">
+          <summary>Gebiet aus Liste wählen</summary>
+          <label for="gebiet-select">Gebiet</label>
+          <select id="gebiet-select"></select>
+          <p class="region-nav" id="untergebiet-wrap">
+            <label for="untergebiet-select">Untergebiet</label>
+            <select id="untergebiet-select"></select>
+          </p>
+        </details>
       </div>
     </details>
     <div class="simple-view-block" id="simple-view-block" hidden>
