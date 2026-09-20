@@ -160,6 +160,17 @@ function sum(nums: Array<number | undefined | null>) {
   return t
 }
 
+/** Total of a `{ class: length }` record such as road_length, tolerating anything unparsable. */
+export function sumLengthRecord(value: unknown) {
+  if (value == null || typeof value !== 'object' || Array.isArray(value)) return 0
+  let total = 0
+  for (const raw of Object.values(value as Record<string, unknown>)) {
+    const n = typeof raw === 'number' ? raw : Number(raw)
+    if (Number.isFinite(n)) total += n
+  }
+  return total
+}
+
 function asLengthRecord(value: unknown) {
   if (value == null) return {}
   if (typeof value === 'string') {

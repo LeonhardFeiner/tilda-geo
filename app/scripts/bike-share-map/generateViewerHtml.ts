@@ -732,6 +732,11 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-view-link a { color: #1565c0; text-decoration: none; }
     .region-detail-view-link a:hover { text-decoration: underline; }
+    .region-detail-drill {
+      font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
+      cursor: pointer; text-align: left;
+    }
+    .region-detail-drill:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
@@ -986,6 +991,7 @@ export function generateViewerHtml(generatedAt: string) {
   <script src="./regionNavigation.js"></script>
   <script src="./statsMsgpack.js"></script>
   <script src="./simpleView.js"></script>
+  <script src="./regionSearch.js"></script>
   <script src="./rankingDisplay.js"></script>
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
@@ -2923,6 +2929,36 @@ export function generateViewerHtml(generatedAt: string) {
           TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
           'bikelane-tag',
         );
+      }
+      // Drilling into a region is now a deliberate click. Search used to do it implicitly and
+      // only for some levels, which is why a Landkreis search never showed a card at all.
+      if (uiMode() !== 'simple') {
+        const drillScope = regionIndex
+          ? SimpleView.expertViewScopeFromFocus(p.id, regionIndex)
+          : null;
+        const currentScope = currentViewScope;
+        const drillChangesView =
+          drillScope &&
+          (drillScope.gebiet !== currentScope.gebiet ||
+            (drillScope.untergebiet || '') !== (currentScope.untergebiet || '') ||
+            drillScope.darstellung !== currentScope.darstellung);
+        if (drillChangesView) {
+          const drill = document.createElement('p');
+          drill.className = 'region-detail-view-link';
+          const drillButton = document.createElement('button');
+          drillButton.type = 'button';
+          drillButton.className = 'region-detail-drill';
+          drillButton.textContent = 'Untergebiete anzeigen';
+          drillButton.title = 'Die Ansicht in dieses Gebiet hineinzoomen';
+          drillButton.addEventListener('click', () => {
+            scheduleUrlSync('push');
+            applyExpertScopeToUi(drillScope);
+            updateScaleCapDefaultForView();
+            void applyCurrentView();
+          });
+          drill.appendChild(drillButton);
+          regionDetailBody.appendChild(drill);
+        }
       }
       if (uiMode() !== 'simple') {
         const viewLink = document.createElement('p');
@@ -4874,15 +4910,11 @@ export function generateViewerHtml(generatedAt: string) {
     darstellungSelect?.addEventListener('change', onDarstellungChange);
 
     // Jump straight to a Bundesland/Landkreis/Gemeinde by name instead of drilling through the
-    // Gebiet/Untergebiet selects. A Gemeinde match ends up selected (its detail card opens,
-    // since it's a sibling in its own filtered view); a Bundesland/Landkreis match instead
-    // drills the view down into it (there's no "its own card" view for those scopes normally
-    // either — picking one in Untergebiet does the same).
+    // Gebiet/Untergebiet selects. Whatever level you search, the region you named is the one
+    // that ends up selected, shown among its own siblings — see siblingViewScopeFromFocus.
+    // Drilling into it is a separate, explicit step (the card's "Untergebiete anzeigen").
     const regionSearchInput = document.getElementById('region-search-input');
     const regionSearchResults = document.getElementById('region-search-results');
-    function regionSearchLevelLabel(level) {
-      return level === '4' ? 'Bundesland' : level === '6' ? 'Landkreis' : 'Gemeinde';
-    }
     function hideRegionSearchResults() {
       if (!regionSearchResults) return;
       regionSearchResults.hidden = true;
@@ -4890,11 +4922,20 @@ export function generateViewerHtml(generatedAt: string) {
     }
     function jumpToRegionBySearch(id) {
       if (!regionIndex) return;
-      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      const scope = SimpleView.siblingViewScopeFromFocus(id, regionIndex);
       if (!scope) return;
+      // A jump is a step of its own in the browser history.
+      scheduleUrlSync('push');
       applyExpertScopeToUi(scope);
       updateScaleCapDefaultForView();
-      void applyCurrentView().then(() => selectRegionById(id, null, true));
+      void applyCurrentView().then(() => {
+        // The sibling scope always contains the searched region, so this always opens its card
+        // and recentres on it — no level-dependent "sometimes a card, sometimes a refit".
+        // Clear first: selectRegionById treats a re-select of the current region as a toggle,
+        // which would leave a search for the already-selected region with no card at all.
+        if (selectedFeatureId) clearRegionSelection();
+        selectRegionById(id, null, true);
+      });
     }
     function renderRegionSearchResults(query) {
       if (!regionSearchResults) return;
@@ -4902,11 +4943,7 @@ export function generateViewerHtml(generatedAt: string) {
         hideRegionSearchResults();
         return;
       }
-      const q = query.toLowerCase();
-      const matches = regionSearchEntries
-        .filter((e) => e.name.toLowerCase().includes(q))
-        .sort((a, b) => a.name.localeCompare(b.name, 'de'))
-        .slice(0, 8);
+      const matches = RegionSearch.rankRegionSearchMatches(regionSearchEntries, query);
       regionSearchResults.replaceChildren();
       if (!matches.length) {
         hideRegionSearchResults();
@@ -4918,7 +4955,12 @@ export function generateViewerHtml(generatedAt: string) {
         li.append(m.name + ' ');
         const level = document.createElement('span');
         level.className = 'region-search-result-level';
-        level.textContent = '(' + regionSearchLevelLabel(m.level) + ')';
+        // The parent disambiguates: "Neuenkirchen" alone names 11 different Gemeinden.
+        const context = [
+          RegionSearch.regionSearchLevelLabel(m.level, m.id, regionIndex),
+          m.parentName,
+        ].filter(Boolean);
+        level.textContent = '(' + context.join(', ') + ')';
         li.appendChild(level);
         const pick = () => {
           hideRegionSearchResults();

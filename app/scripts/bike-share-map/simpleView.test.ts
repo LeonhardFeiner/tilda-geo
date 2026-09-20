@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { buildRegionIndex } from './regionNavigation'
+import { buildRegionIndex, filterFeaturesForView } from './regionNavigation'
 import type { StatsFeature } from './regionNavigation'
 import { neighborIndexFromPrecomputed } from './regionNeighbors'
 import {
@@ -9,6 +9,7 @@ import {
   gemeindeUnitIdsInLandkreise,
   listSimplePresetsForFocus,
   resolveFocusContext,
+  siblingViewScopeFromFocus,
   simplePresetLabel,
   simplePresetToViewScope,
 } from './simpleView'
@@ -395,5 +396,101 @@ describe('simpleView', () => {
       'lk_neighbors_landkreise',
       'lk_neighbors_gemeinden',
     ])
+  })
+})
+
+describe('siblingViewScopeFromFocus', () => {
+  const index = buildRegionIndex(features)
+
+  const scopeFor = (id: string) => siblingViewScopeFromFocus(id, index)
+
+  test('shows a Bundesland among the Bundesländer, not drilled into', () => {
+    expect(scopeFor('relation/BY')).toEqual({
+      gebiet: 'deutschland',
+      untergebiet: '',
+      darstellung: 'bundeslaender',
+    })
+  })
+
+  test('shows a Landkreis among the Kreise of its Bundesland', () => {
+    expect(scopeFor('relation/LK')).toEqual({
+      gebiet: 'relation/BY',
+      untergebiet: '',
+      darstellung: 'landkreis_kreisfrei',
+    })
+  })
+
+  test('treats a kreisfreie Stadt like any other Kreis', () => {
+    expect(scopeFor('relation/KF')).toEqual({
+      gebiet: 'relation/BY',
+      untergebiet: '',
+      darstellung: 'landkreis_kreisfrei',
+    })
+  })
+
+  test('shows a Gemeinde among the Gemeinden of its Landkreis', () => {
+    expect(scopeFor('relation/G')).toEqual({
+      gebiet: 'relation/BY',
+      untergebiet: 'lk:relation/LK',
+      darstellung: 'gemeinden_kreisfrei',
+    })
+  })
+
+  test('a Regierungsbezirk sits among Regierungsbezirke, not Bundesländer', () => {
+    expect(scopeFor('relation/RB')).toEqual({
+      gebiet: 'relation/BY',
+      untergebiet: '',
+      darstellung: 'regierungsbezirke',
+    })
+  })
+
+  test('the searched region is always in the view it lands in', () => {
+    // This is the whole point: expertViewScopeFromFocus drills in, so only a Gemeinde ended up
+    // selected, and a kreisfreie Stadt landed on an empty map.
+    for (const id of ['relation/BY', 'relation/LK', 'relation/KF', 'relation/G']) {
+      const scope = scopeFor(id)!
+      const shown = filterFeaturesForView(features, scope, index)
+      expect(shown.length).toBeGreaterThan(0)
+      expect(shown.map((f) => f.properties?.id)).toContain(id)
+    }
+  })
+})
+
+describe('presets that would draw an empty map', () => {
+  // Berlin: a Stadtstaat has nothing below it on level 6, so the bl_* presets are empty.
+  const stadtstaatFeatures = [
+    ...features,
+    {
+      type: 'Feature',
+      properties: { id: 'relation/62422', name: 'Berlin', level: '4' },
+      geometry: { type: 'Polygon', coordinates: [] },
+    },
+  ] satisfies StatsFeature[]
+  const index = buildRegionIndex(stadtstaatFeatures)
+
+  test('a Stadtstaat is not offered Landkreise or Gemeinden inside itself', () => {
+    const ctx = resolveFocusContext('relation/62422', index)!
+    const presets = listSimplePresetsForFocus(ctx, index, { features: stadtstaatFeatures })
+    expect(presets).not.toContain('bl_landkreis_kreisfrei')
+    expect(presets).not.toContain('bl_gemeinden_kreisfrei')
+  })
+
+  test('the default preset for a focus is always one it was actually offered', () => {
+    for (const id of [
+      'deutschland',
+      'relation/BY',
+      'relation/LK',
+      'relation/KF',
+      'relation/62422',
+    ]) {
+      const ctx = resolveFocusContext(id, index)!
+      const presets = listSimplePresetsForFocus(ctx, index, { features: stadtstaatFeatures })
+      expect(presets).toContain(defaultSimplePresetForFocus(ctx, index))
+    }
+  })
+
+  test('a kreisfreie Stadt falls back to its Bundesland instead of lk_gemeinden', () => {
+    const ctx = resolveFocusContext('relation/KF', index)!
+    expect(defaultSimplePresetForFocus(ctx, index)).toBe('bl_landkreis_kreisfrei')
   })
 })

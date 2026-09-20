@@ -265,6 +265,7 @@ const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },
   { entry: 'regionNavigation.bundle.ts', name: 'regionNavigation.js' },
   { entry: 'simpleView.bundle.ts', name: 'simpleView.js' },
+  { entry: 'regionSearch.bundle.ts', name: 'regionSearch.js' },
   { entry: 'statsMsgpack.bundle.ts', name: 'statsMsgpack.js' },
   { entry: 'rankingDisplay.bundle.ts', name: 'rankingDisplay.js' },
 ] as const

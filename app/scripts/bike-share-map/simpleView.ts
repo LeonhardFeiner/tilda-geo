@@ -374,7 +374,11 @@ function isSimplePresetApplicable(
       )
     case 'bl_landkreis_kreisfrei':
     case 'bl_gemeinden_kreisfrei':
-      return ctx.kind !== 'deutschland'
+      // Stadtstaaten (Berlin, Hamburg) have nothing below them on level 6, so both presets
+      // would draw an empty map. Bremen does have two (Bremen, Bremerhaven) and stays.
+      return (
+        ctx.kind !== 'deutschland' && landkreisIdsInBundesland(ctx.bundeslandId, index).length > 0
+      )
     case 'lk_gemeinden':
       return !!ctx.landkreisId && isRegularLandkreis(ctx.landkreisId, index)
     case 'neighbors_other':
@@ -424,8 +428,18 @@ export function defaultSimplePresetForFocus(ctx: FocusContext, index: RegionInde
       ? 'de_landkreis_kreisfrei'
       : 'de_bundeslaender'
   }
-  if (ctx.kind === 'bundesland') return 'bl_landkreis_kreisfrei'
-  if (ctx.landkreisId) return 'lk_gemeinden'
+  // Every branch below picks from `allowed`: an unavailable preset silently resolves to an
+  // empty map, which is how searching a kreisfreie Stadt or a Stadtstaat used to end up on a
+  // blank view (lk_gemeinden / bl_landkreis_kreisfrei have nothing to list for those).
+  if (ctx.kind === 'bundesland') {
+    if (allowed.includes('bl_landkreis_kreisfrei')) return 'bl_landkreis_kreisfrei'
+    return allowed.at(-1) ?? 'de_landkreis_kreisfrei'
+  }
+  if (ctx.landkreisId) {
+    if (allowed.includes('lk_gemeinden')) return 'lk_gemeinden'
+    // A kreisfreie Stadt has no Gemeinden below it; show it among the Kreise of its Bundesland.
+    if (allowed.includes('bl_landkreis_kreisfrei')) return 'bl_landkreis_kreisfrei'
+  }
   return allowed.at(-1) ?? 'de_landkreis_kreisfrei'
 }
 
@@ -747,4 +761,54 @@ export function expertViewScopeFromFocus(focusId: string, index: RegionIndex) {
     } satisfies ViewScope
   }
   return null
+}
+
+/**
+ * The view that shows a region *among its own siblings*, so it can be compared.
+ *
+ * expertViewScopeFromFocus drills *into* a region instead — the simple view of a Landkreis
+ * lists its Gemeinden, and the expert equivalent has to match that. Search needs the opposite:
+ * whatever level you typed, that region is the one that ends up selected, never the container
+ * whose contents you are suddenly looking at. Keeping the two rules apart is what makes a
+ * Bundesland, a Landkreis and a Gemeinde search behave alike.
+ */
+export function siblingViewScopeFromFocus(focusId: string, index: RegionIndex) {
+  const ctx = resolveFocusContext(focusId, index)
+  if (!ctx) return null
+  if (ctx.kind === 'deutschland') {
+    return {
+      gebiet: DEUTSCHLAND_GEBIET,
+      untergebiet: '',
+      darstellung: 'bundeslaender',
+    } satisfies ViewScope
+  }
+  if (ctx.kind === 'bundesland') {
+    // Level 5 resolves to kind 'bundesland' too, but a Regierungsbezirk's siblings are the
+    // other Regierungsbezirke of its Bundesland, not the Bundesländer.
+    if (ctx.focusId !== ctx.bundeslandId) {
+      return {
+        gebiet: ctx.bundeslandId,
+        untergebiet: '',
+        darstellung: 'regierungsbezirke',
+      } satisfies ViewScope
+    }
+    return {
+      gebiet: DEUTSCHLAND_GEBIET,
+      untergebiet: '',
+      darstellung: 'bundeslaender',
+    } satisfies ViewScope
+  }
+  if (ctx.kind === 'landkreis') {
+    // kreisfrei included: a kreisfreie Stadt's peers are the Kreise of its Bundesland.
+    return {
+      gebiet: ctx.gebiet,
+      untergebiet: '',
+      darstellung: 'landkreis_kreisfrei',
+    } satisfies ViewScope
+  }
+  return {
+    gebiet: ctx.gebiet,
+    untergebiet: ctx.untergebiet,
+    darstellung: 'gemeinden_kreisfrei',
+  } satisfies ViewScope
 }

@@ -85,31 +85,15 @@ export function viewerRegionNavScript() {
       });
     }
 
-    // Bundesland/Landkreis/Gemeinde only (not the lazy-loaded Gemeindeverbände/Stadtbezirke,
-    // and not Regierungsbezirke/Stadtteile) — keeps the list a manageable ~11k entries covering
-    // the levels people actually search for, without waiting on the background extra-levels
-    // fetch or ballooning past what a simple substring scan should do per keystroke.
+    // ~11k Bundesland/Landkreis/Gemeinde entries — see RegionSearch.REGION_SEARCH_LEVELS for
+    // why the lazy-loaded levels stay out. Needs regionIndex, for the parent names that tell
+    // the 11 Neuenkirchen apart.
     let regionSearchEntries = [];
-    const REGION_SEARCH_LEVELS = new Set(['4', '6', '8']);
-
-    function rebuildRegionSearchEntries() {
-      const byId = new Map();
-      for (const f of allFeatures) {
-        const p = f.properties || {};
-        const level = String(p.level ?? '');
-        if (!REGION_SEARCH_LEVELS.has(level)) continue;
-        const id = String(p.id ?? '');
-        const name = String(p.name ?? '');
-        if (!id || !name) continue;
-        byId.set(id, { id, name, level });
-      }
-      regionSearchEntries = [...byId.values()];
-    }
 
     function rebuildRegionIndex() {
       regionIndex = RegionNav.buildRegionIndex(allFeatures);
       if (!neighborIndex?.precomputed) neighborIndex = null;
-      rebuildRegionSearchEntries();
+      regionSearchEntries = RegionSearch.buildRegionSearchEntries(allFeatures, regionIndex);
     }
 
     function ensureNeighborIndex() {

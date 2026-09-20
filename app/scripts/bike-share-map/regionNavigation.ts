@@ -99,6 +99,8 @@ export type RegionFeatureProps = {
   parent_id?: string
   bundesland_id?: string
   landkreis_id?: string
+  /** `{ highway class: length }`; present on every level, and the only size proxy the stats carry. */
+  road_length?: unknown
 }
 
 export type StatsFeature = {

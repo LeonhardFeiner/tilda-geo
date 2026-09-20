@@ -3,7 +3,7 @@ import { booleanPointInPolygon, centroid } from '@turf/turf'
 import type { Feature, FeatureCollection, Geometry, Polygon, MultiPolygon } from 'geojson'
 import { BAYERN_ID } from './constants'
 import type { LandkreisRef } from './resolveLandkreis'
-import { formatStatPct } from './statsClassSums'
+import { formatStatPct, sumLengthRecord } from './statsClassSums'
 import type { RegionStat, StatsFilter } from './types'
 
 function parseFloatCell(value: string | undefined) {
@@ -17,16 +17,6 @@ function sumPrefixedColumns(row: Record<string, string>, prefix: string) {
   for (const [key, raw] of Object.entries(row)) {
     if (!key.startsWith(prefix)) continue
     total += parseFloatCell(raw)
-  }
-  return total
-}
-
-function sumLengthRecord(value: unknown) {
-  if (value == null || typeof value !== 'object' || Array.isArray(value)) return 0
-  let total = 0
-  for (const raw of Object.values(value as Record<string, unknown>)) {
-    const n = typeof raw === 'number' ? raw : Number(raw)
-    if (Number.isFinite(n)) total += n
   }
   return total
 }
