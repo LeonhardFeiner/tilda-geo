@@ -208,6 +208,8 @@ export function viewerRegionNavScript() {
         el.appendChild(button);
       });
 
+      renderRegionChildPicker();
+
       if (crumbs.length > 1) {
         const up = document.createElement('button');
         up.type = 'button';
@@ -215,6 +217,60 @@ export function viewerRegionNavScript() {
         up.textContent = '↑ eine Ebene höher';
         up.addEventListener('click', () => goToBreadcrumb(crumbs[crumbs.length - 2]));
         el.appendChild(up);
+      }
+    }
+
+    /**
+     * One step into the area you are looking at: the Bundesländer from Deutschland, the
+     * Regierungsbezirke / Landkreise / Kreisfreien Städte from a Bundesland. It reads the
+     * options the Gebiet/Untergebiet selects already hold and writes back through them, so the
+     * scope handling stays in one place. A single Kreis has nothing further to step into —
+     * its Gemeinden are a "Zeige" option.
+     */
+    function renderRegionChildPicker() {
+      const picker = document.getElementById('region-child-select');
+      const label = document.getElementById('region-child-label');
+      if (!picker || !label) return;
+      const { gebiet, untergebiet } = currentViewScope;
+      const fromDeutschland = gebiet === RegionNav.DEUTSCHLAND_GEBIET;
+      const source = fromDeutschland ? gebietSelect : untergebiet ? null : untergebietSelect;
+      picker.replaceChildren();
+      if (!source) {
+        picker.hidden = true;
+        label.hidden = true;
+        return;
+      }
+      const placeholder = document.createElement('option');
+      placeholder.value = '';
+      placeholder.textContent = fromDeutschland
+        ? 'Bundesland wählen …'
+        : RegionNav.isStadtstaatGebiet(gebiet)
+          ? 'Bezirk wählen …'
+          : 'Landkreis wählen …';
+      picker.appendChild(placeholder);
+      for (const node of source.children) {
+        if (node.tagName === 'OPTION') {
+          // The "whole Bundesland" / Deutschland entry is where you already are.
+          if (node.value === '' || node.value === RegionNav.DEUTSCHLAND_GEBIET) continue;
+        }
+        picker.appendChild(node.cloneNode(true));
+      }
+      picker.value = '';
+      const hasChoices = picker.options.length > 1;
+      picker.hidden = !hasChoices;
+      label.hidden = !hasChoices;
+    }
+
+    function onRegionChildPick() {
+      const picker = document.getElementById('region-child-select');
+      const value = picker.value;
+      if (!value) return;
+      if (currentViewScope.gebiet === RegionNav.DEUTSCHLAND_GEBIET) {
+        gebietSelect.value = value;
+        onGebietChange();
+      } else {
+        untergebietSelect.value = value;
+        onUntergebietChange();
       }
     }
 

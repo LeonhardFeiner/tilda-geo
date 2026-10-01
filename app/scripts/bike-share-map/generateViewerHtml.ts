@@ -682,10 +682,6 @@ export function generateViewerHtml(generatedAt: string) {
     /* The area you are in reads as a label, not another place to click. */
     .region-breadcrumb .region-breadcrumb-current { color: #333; font-weight: 600; }
     .region-breadcrumb .region-breadcrumb-up { margin-left: auto; color: #555; }
-    .region-scope-selects { margin-top: 8px; }
-    .region-scope-selects > summary {
-      cursor: pointer; font-size: 11px; color: #666; margin-bottom: 4px;
-    }
     .region-detail-drill {
       font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
       cursor: pointer; text-align: left;
@@ -727,20 +723,21 @@ export function generateViewerHtml(generatedAt: string) {
       <summary>Gebiet &amp; Darstellung</summary>
       <div class="region-nav" id="region-nav">
         <!-- Two orthogonal axes, one control each: the breadcrumb picks the area, the select
-             picks how fine the polygons in it are. The Gebiet/Untergebiet selects below still
-             hold that area state and stay reachable for picking a Kreis straight from a list. -->
+             picks how fine the polygons in it are. The picker under "Zeige" steps one level into
+             the area (Bundesland from Deutschland, Landkreis from a Bundesland). -->
         <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
         <label for="darstellung-select">Zeige</label>
         <select id="darstellung-select"></select>
-        <details class="region-scope-selects" id="region-scope-selects">
-          <summary>Gebiet aus Liste wählen</summary>
-          <label for="gebiet-select">Gebiet</label>
+        <label for="region-child-select" id="region-child-label" hidden>Weiter hinein</label>
+        <select id="region-child-select" hidden></select>
+        <!-- Not user-facing: the area state the breadcrumb and the picker above read and write
+             (and what the 37 call sites, URL round-tripping and Back/Forward are built on). -->
+        <div hidden>
           <select id="gebiet-select"></select>
           <p class="region-nav" id="untergebiet-wrap">
-            <label for="untergebiet-select">Untergebiet</label>
             <select id="untergebiet-select"></select>
           </p>
-        </details>
+        </div>
       </div>
     </details>
     <details class="panel-section settings-drawer" id="settings-drawer">
@@ -4803,6 +4800,7 @@ export function generateViewerHtml(generatedAt: string) {
     });
     gebietSelect?.addEventListener('change', onGebietChange);
     untergebietSelect?.addEventListener('change', onUntergebietChange);
+    document.getElementById('region-child-select')?.addEventListener('change', onRegionChildPick);
     darstellungSelect?.addEventListener('change', onDarstellungChange);
 
     // Jump straight to a Bundesland/Landkreis/Gemeinde by name instead of drilling through the
