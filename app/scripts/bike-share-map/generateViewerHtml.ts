@@ -326,15 +326,15 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .share-btn {
       display: inline-flex; align-items: center; justify-content: center;
-      flex: 1 1 0; min-width: 0; width: auto; aspect-ratio: 1;
-      max-width: 2.25rem; max-height: 2.25rem; padding: 0;
+      flex: 1 1 auto; min-width: 0; width: auto; height: 2.25rem; gap: 5px;
+      padding: 0 8px; font: inherit; font-size: 11px; font-weight: 600; white-space: nowrap;
       border: 1px solid #ccc; border-radius: 6px; background: #fafafa;
       cursor: pointer; color: #444;
     }
     .share-btn:hover:not(:disabled) { background: #f0f0f0; }
     .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
     .share-btn svg {
-      width: 62%; height: 62%; max-width: 1.15rem; max-height: 1.15rem;
+      width: 1rem; height: 1rem; flex: none;
       fill: currentColor;
     }
     .share-btn--primary { border-color: #1565c0; color: #1565c0; }
@@ -762,7 +762,7 @@ export function generateViewerHtml(generatedAt: string) {
         <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
         <label for="darstellung-select">Zeige</label>
         <select id="darstellung-select"></select>
-        <label for="region-child-select" id="region-child-label" hidden>Weiter hinein</label>
+        <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
         <!-- Not user-facing: the area state the breadcrumb and the picker above read and write
              (and what the 37 call sites, URL round-tripping and Back/Forward are built on). -->
@@ -933,16 +933,16 @@ export function generateViewerHtml(generatedAt: string) {
     <div class="panel-actions">
       <div class="share-toolbar" role="group" aria-label="Ansicht teilen und exportieren">
         <button type="button" id="share-native" class="share-btn share-btn--primary" hidden title="Teilen" aria-label="Teilen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>Teilen
         </button>
         <button type="button" id="copy-view-link" class="share-btn" disabled title="Link kopieren" aria-label="Link kopieren">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>Link
         </button>
         <button type="button" id="share-map-image" class="share-btn" disabled title="Karte als Bild speichern" aria-label="Karte als Bild speichern">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Karte
         </button>
         <button type="button" id="share-ranking-image" class="share-btn" disabled title="Rangliste als Bild speichern" aria-label="Rangliste als Bild speichern">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 4h7v3h-7v-3z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 4h7v3h-7v-3z"/></svg>Rangliste
         </button>
       </div>
       <span id="copy-view-link-feedback" hidden></span>
