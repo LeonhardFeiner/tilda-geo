@@ -249,6 +249,58 @@ export function computeFilteredLengths(
   return { roadKm, bikeKm }
 }
 
+/**
+ * How far the bike-infrastructure figure can be trusted, judged from the data alone.
+ *
+ * The signal that actually separates regions is tagging: infrastructure that exists in OSM but
+ * whose tags don't say what kind it is lands in "needsClarification". Across Gemeinden that
+ * share is 0 for most and above 40 % for roughly one in seven. (Road-network density was tried
+ * as a completeness proxy and rejected: its lowest values are Alpine and tiny places, so it
+ * mostly measures terrain.)
+ */
+export const TAGGING_MIXED_SHARE = 0.15
+export const TAGGING_POOR_SHARE = 0.4
+/** Below this much mapped bike infrastructure a share of it says nothing. */
+export const TAGGING_MIN_BIKE_KM = 1
+/** A real road network with next to no bike infrastructure on it: absent, or just not mapped. */
+export const SPARSE_MIN_ROAD_KM = 20
+export const SPARSE_MAX_BIKE_KM = 0.5
+
+export type BikeDataQuality =
+  | { level: 'sparse'; bikeKm: number; roadKm: number }
+  | {
+      level: 'good' | 'mixed' | 'poor'
+      unclearKm: number
+      bikeKm: number
+      unclearShare: number
+    }
+
+/** Independent of the counting filter: it describes the data, not the current definition. */
+export function assessBikeDataQuality(
+  road_length: unknown,
+  bikelane_length: unknown,
+): BikeDataQuality | null {
+  const roadKm = getRoadSums(asLengthRecord(road_length)).sum
+  const bike = getBikelaneSums(asLengthRecord(bikelane_length))
+  if (roadKm >= SPARSE_MIN_ROAD_KM && bike.sum < SPARSE_MAX_BIKE_KM) {
+    return { level: 'sparse', bikeKm: bike.sum, roadKm }
+  }
+  if (bike.sum < TAGGING_MIN_BIKE_KM) return null
+  const unclearShare = bike.needsClarification / bike.sum
+  const level =
+    unclearShare >= TAGGING_POOR_SHARE
+      ? 'poor'
+      : unclearShare >= TAGGING_MIXED_SHARE
+        ? 'mixed'
+        : 'good'
+  return {
+    level,
+    unclearKm: bike.needsClarification,
+    bikeKm: bike.sum,
+    unclearShare,
+  }
+}
+
 export type ClassLengthRow = {
   id: string
   label: string

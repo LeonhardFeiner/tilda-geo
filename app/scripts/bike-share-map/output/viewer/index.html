@@ -463,6 +463,18 @@
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
     #region-detail-peer-gap + .region-detail-gap { margin-top: -4px; }
+    .region-detail-quality {
+      margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
+      font-size: 11px; line-height: 1.45; color: #555;
+      background: #f5f5f5; border-left: 3px solid #9e9e9e;
+    }
+    .region-detail-quality[hidden] { display: none !important; }
+    .region-detail-quality strong { font-weight: 700; color: #333; }
+    .region-detail-quality--good { border-left-color: #43a047; }
+    .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
+    .region-detail-quality--poor,
+    .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
+    .ranking-quality { margin-left: 4px; color: #ef6c00; font-size: 11px; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -845,6 +857,7 @@
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
+    <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <p class="region-detail-extra" id="region-detail-extra" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
@@ -862,7 +875,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-01T21:13:31.127Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-01T21:29:20.159Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1749,6 +1762,7 @@
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
+    const regionDetailQuality = document.getElementById('region-detail-quality');
     const regionDetailTrend = document.getElementById('region-detail-trend');
     const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
@@ -2607,6 +2621,21 @@
       pctEl.className = 'ranking-pct';
       pctEl.textContent = formatUiPct(pct) + ' %';
       li.append(rankEl, name, track, pctEl);
+      const quality = TildaStats.assessBikeDataQuality(
+        f.properties?.road_length,
+        f.properties?.bikelane_length,
+      );
+      if (quality && (quality.level === 'poor' || quality.level === 'sparse')) {
+        const flag = document.createElement('span');
+        flag.className = 'ranking-quality';
+        flag.textContent = '⚠';
+        flag.title =
+          quality.level === 'poor'
+            ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
+            : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
+        flag.setAttribute('aria-label', flag.title);
+        li.appendChild(flag);
+      }
       list.appendChild(li);
     }
 
@@ -2952,6 +2981,61 @@
       strong.textContent = strongText;
       el.appendChild(strong);
       if (post) el.appendChild(document.createTextNode(post));
+    }
+
+    /**
+     * Says how far this region's figure can be trusted, from the data alone (see
+     * assessBikeDataQuality). The "ohne unklare Wege" figure is the conservative end of the
+     * range — shown only when those ways are part of the count, since otherwise they don't
+     * move the number.
+     */
+    function renderRegionQuality(p) {
+      const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
+      regionDetailQuality.replaceChildren();
+      if (!q) {
+        regionDetailQuality.hidden = true;
+        regionDetailQuality.className = 'region-detail-quality';
+        return;
+      }
+      regionDetailQuality.className = 'region-detail-quality region-detail-quality--' + q.level;
+      const km = (v) => TildaStats.formatStatKm(v, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
+      const head = document.createElement('strong');
+      let text;
+      if (q.level === 'sparse') {
+        head.textContent = 'Datenlage: kaum Radinfrastruktur erfasst. ';
+        text =
+          km(q.bikeKm) +
+          ' km Rad bei ' +
+          TildaStats.formatStatKm(q.roadKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+          ' km Straße – das kann heißen, dass es kaum welche gibt, oder dass sie in ' +
+          'OpenStreetMap noch fehlt.';
+      } else {
+        const share = Math.round(q.unclearShare * 100) + ' %';
+        if (q.level === 'good') {
+          head.textContent = 'Datenlage: gut. ';
+          text = 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
+        } else {
+          head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
+          text =
+            share +
+            ' (' +
+            km(q.unclearKm) +
+            ' km) der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig ' +
+            'getaggt („Klärung nötig“).';
+          const counted = readLengthClassFilterFromUi().bikelane.needsClarification;
+          if (counted && p.roadSumKm > 0) {
+            const conservative = ((p.bikelaneSumKm - q.unclearKm) / p.roadSumKm) * 100;
+            text +=
+              ' Ohne diese Wege läge der Anteil bei ' +
+              formatUiPct(Math.max(0, conservative)) +
+              ' % statt ' +
+              formatUiPct(p.bikeSharePct) +
+              ' %.';
+          }
+        }
+      }
+      regionDetailQuality.append(head, document.createTextNode(text));
+      regionDetailQuality.hidden = false;
     }
 
     function renderRegionGap(p) {
@@ -3436,6 +3520,7 @@
         ' km Straße';
       renderRegionPeerGap(p);
       renderRegionGap(p);
+      renderRegionQuality(p);
       renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();

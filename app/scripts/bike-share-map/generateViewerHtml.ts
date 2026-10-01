@@ -552,6 +552,18 @@ export function generateViewerHtml(generatedAt: string) {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
     #region-detail-peer-gap + .region-detail-gap { margin-top: -4px; }
+    .region-detail-quality {
+      margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
+      font-size: 11px; line-height: 1.45; color: #555;
+      background: #f5f5f5; border-left: 3px solid #9e9e9e;
+    }
+    .region-detail-quality[hidden] { display: none !important; }
+    .region-detail-quality strong { font-weight: 700; color: #333; }
+    .region-detail-quality--good { border-left-color: #43a047; }
+    .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
+    .region-detail-quality--poor,
+    .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
+    .ranking-quality { margin-left: 4px; color: #ef6c00; font-size: 11px; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -934,6 +946,7 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
+    <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <p class="region-detail-extra" id="region-detail-extra" hidden></p>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
@@ -1160,6 +1173,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
+    const regionDetailQuality = document.getElementById('region-detail-quality');
     const regionDetailTrend = document.getElementById('region-detail-trend');
     const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
@@ -2018,6 +2032,21 @@ export function generateViewerHtml(generatedAt: string) {
       pctEl.className = 'ranking-pct';
       pctEl.textContent = formatUiPct(pct) + ' %';
       li.append(rankEl, name, track, pctEl);
+      const quality = TildaStats.assessBikeDataQuality(
+        f.properties?.road_length,
+        f.properties?.bikelane_length,
+      );
+      if (quality && (quality.level === 'poor' || quality.level === 'sparse')) {
+        const flag = document.createElement('span');
+        flag.className = 'ranking-quality';
+        flag.textContent = '⚠';
+        flag.title =
+          quality.level === 'poor'
+            ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
+            : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
+        flag.setAttribute('aria-label', flag.title);
+        li.appendChild(flag);
+      }
       list.appendChild(li);
     }
 
@@ -2363,6 +2392,61 @@ export function generateViewerHtml(generatedAt: string) {
       strong.textContent = strongText;
       el.appendChild(strong);
       if (post) el.appendChild(document.createTextNode(post));
+    }
+
+    /**
+     * Says how far this region's figure can be trusted, from the data alone (see
+     * assessBikeDataQuality). The "ohne unklare Wege" figure is the conservative end of the
+     * range — shown only when those ways are part of the count, since otherwise they don't
+     * move the number.
+     */
+    function renderRegionQuality(p) {
+      const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
+      regionDetailQuality.replaceChildren();
+      if (!q) {
+        regionDetailQuality.hidden = true;
+        regionDetailQuality.className = 'region-detail-quality';
+        return;
+      }
+      regionDetailQuality.className = 'region-detail-quality region-detail-quality--' + q.level;
+      const km = (v) => TildaStats.formatStatKm(v, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
+      const head = document.createElement('strong');
+      let text;
+      if (q.level === 'sparse') {
+        head.textContent = 'Datenlage: kaum Radinfrastruktur erfasst. ';
+        text =
+          km(q.bikeKm) +
+          ' km Rad bei ' +
+          TildaStats.formatStatKm(q.roadKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+          ' km Straße – das kann heißen, dass es kaum welche gibt, oder dass sie in ' +
+          'OpenStreetMap noch fehlt.';
+      } else {
+        const share = Math.round(q.unclearShare * 100) + ' %';
+        if (q.level === 'good') {
+          head.textContent = 'Datenlage: gut. ';
+          text = 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
+        } else {
+          head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
+          text =
+            share +
+            ' (' +
+            km(q.unclearKm) +
+            ' km) der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig ' +
+            'getaggt („Klärung nötig“).';
+          const counted = readLengthClassFilterFromUi().bikelane.needsClarification;
+          if (counted && p.roadSumKm > 0) {
+            const conservative = ((p.bikelaneSumKm - q.unclearKm) / p.roadSumKm) * 100;
+            text +=
+              ' Ohne diese Wege läge der Anteil bei ' +
+              formatUiPct(Math.max(0, conservative)) +
+              ' % statt ' +
+              formatUiPct(p.bikeSharePct) +
+              ' %.';
+          }
+        }
+      }
+      regionDetailQuality.append(head, document.createTextNode(text));
+      regionDetailQuality.hidden = false;
     }
 
     function renderRegionGap(p) {
@@ -2847,6 +2931,7 @@ export function generateViewerHtml(generatedAt: string) {
         ' km Straße';
       renderRegionPeerGap(p);
       renderRegionGap(p);
+      renderRegionQuality(p);
       renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
