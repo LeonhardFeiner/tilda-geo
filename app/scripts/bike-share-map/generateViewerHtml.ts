@@ -253,7 +253,24 @@ export function generateViewerHtml(generatedAt: string) {
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
-      .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+      .counting-state {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
+    }
+    .counting-state--custom #counting-state-label { color: #8a4b00; }
+    #counting-reset {
+      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
+      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
+    }
+    #counting-reset[hidden] { display: none !important; }
+    #counting-reset:hover { background: #f2f6fb; }
+    .counting-group { border-top: 1px solid #eee; }
+    .counting-group > summary {
+      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
+    }
+    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
+    .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
+    .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
     .settings-heading { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #333; }
     .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
     .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
@@ -756,20 +773,19 @@ export function generateViewerHtml(generatedAt: string) {
       <summary>Einstellungen</summary>
       <div class="settings-group" id="count-classes-details">
         <h3 class="settings-heading">Was zählt als Radinfrastruktur?</h3>
-        <label for="counting-mode">Zählung</label>
-        <select id="counting-mode">
-          <option value="standard">Radinfra.de-Standard</option>
-          <option value="custom">Eigene Auswahl …</option>
-        </select>
-        <div id="counting-custom" hidden>
-          <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen.</p>
-          <div class="class-filters" id="road-class-filters">
-            <strong>Straßen</strong>
-          </div>
-          <div class="class-filters" id="bikelane-class-filters">
-            <strong>Radinfrastruktur</strong>
-          </div>
-        </div>
+        <p class="counting-state">
+          <span id="counting-state-label">Radinfra.de-Standard</span>
+          <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
+        </p>
+        <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen. Haken setzen oder entfernen:</p>
+        <details class="counting-group" id="road-class-group">
+          <summary>Straßen <span class="counting-count" id="road-class-count"></span></summary>
+          <div class="class-filters" id="road-class-filters"></div>
+        </details>
+        <details class="counting-group" id="bikelane-class-group">
+          <summary>Radinfrastruktur <span class="counting-count" id="bikelane-class-count"></span></summary>
+          <div class="class-filters" id="bikelane-class-filters"></div>
+        </details>
       </div>
       <div class="settings-group" id="color-options-details">
         <h3 class="settings-heading">Karte</h3>
@@ -1272,25 +1288,44 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     /**
-     * The count definition is a two-state choice (Radinfra.de standard, or your own selection)
-     * and the legend always says which one the numbers on the map are based on — the number
-     * is only comparable if the definition is visible next to it.
+     * The count definition: either the Radinfra.de standard or a deviation from it. The legend
+     * always says which one the numbers are based on (a number is only comparable if its
+     * definition is visible next to it); here the status line says it too, offers the way back,
+     * and each class group shows how many of its classes are on.
      */
     function syncCountingUi() {
-      const modeSelect = document.getElementById('counting-mode');
-      const custom = document.getElementById('counting-custom');
-      const label = document.getElementById('metric-definition-counting');
-      const isStandard = lengthClassFiltersEqual(
-        readLengthClassFilterFromUi(),
-        CONFIG.radinfraDefaultFilter,
-      );
-      // A filter that arrives through the URL or the checkboxes is, by definition, custom.
-      if (modeSelect && !isStandard && modeSelect.value === 'standard') modeSelect.value = 'custom';
-      if (custom && modeSelect) custom.hidden = modeSelect.value !== 'custom';
-      if (label) {
-        label.textContent = isStandard
+      const filter = readLengthClassFilterFromUi();
+      const isStandard = lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter);
+      const stateLabel = document.getElementById('counting-state-label');
+      const resetBtn = document.getElementById('counting-reset');
+      const legendLabel = document.getElementById('metric-definition-counting');
+      if (stateLabel) {
+        stateLabel.textContent = isStandard ? 'Radinfra.de-Standard' : 'Eigene Zählung';
+        stateLabel.parentElement?.classList.toggle('counting-state--custom', !isStandard);
+      }
+      if (resetBtn) resetBtn.hidden = isStandard;
+      if (legendLabel) {
+        legendLabel.textContent = isStandard
           ? 'nach Radinfra.de-Standard'
           : 'nach eigener Zählung (weicht vom Radinfra.de-Standard ab)';
+      }
+      for (const [kind, options] of [
+        ['road', CONFIG.roadClassOptions],
+        ['bikelane', CONFIG.bikelaneClassOptions],
+      ]) {
+        const on = options.filter((opt) => filter[kind][opt.id]).length;
+        const changed = options.some((opt) => !!filter[kind][opt.id] !== !!CONFIG.radinfraDefaultFilter[kind][opt.id]);
+        const count = document.getElementById(kind + '-class-count');
+        if (count) count.textContent = '(' + on + ' von ' + options.length + ')';
+        document.getElementById(kind + '-class-group')?.classList.toggle('counting-group--changed', changed);
+      }
+    }
+
+    /** A count that arrives through the URL deviates somewhere: show where, rather than hide it. */
+    function openChangedCountingGroups() {
+      for (const kind of ['road', 'bikelane']) {
+        const group = document.getElementById(kind + '-class-group');
+        if (group?.classList.contains('counting-group--changed')) group.open = true;
       }
     }
 
@@ -1318,10 +1353,7 @@ export function generateViewerHtml(generatedAt: string) {
         label.append(input, document.createTextNode(' ' + opt.label));
         bikeRoot.appendChild(label);
       }
-      document.getElementById('counting-mode')?.addEventListener('change', (e) => {
-        if (e.target.value === 'standard') applyRadinfraDefaultCounting();
-        else syncCountingUi();
-      });
+      document.getElementById('counting-reset')?.addEventListener('click', applyRadinfraDefaultCounting);
     }
 
     initCountClassFilters();
@@ -3965,6 +3997,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       lengthClassFilter = filter;
       applyLengthClassFilterToUi(lengthClassFilter);
+      openChangedCountingGroups();
       return true;
     }
 
