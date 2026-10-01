@@ -16,6 +16,15 @@ export type ColorScaleDef = {
 /** Low → high bike-share % (red = wenig Radinfra, grün = viel). */
 export const COLOR_SCALES = [
   {
+    id: 'traffic',
+    label: 'Ampel (Rot–Gelb–Grün)',
+    legendGradient: 'linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)',
+    low: '#c62828',
+    mid: '#ffeb3b',
+    high: '#2e7d32',
+    bikelaneColor: '#1565c0',
+  },
+  {
     id: 'green',
     label: 'Grün (dezent)',
     legendGradient: 'linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)',
@@ -23,15 +32,6 @@ export const COLOR_SCALES = [
     mid: '#43a047',
     high: '#1b5e20',
     bikelaneColor: '#b71c1c',
-  },
-  {
-    id: 'traffic',
-    label: 'Ampel (kontrast)',
-    legendGradient: 'linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)',
-    low: '#c62828',
-    mid: '#ffeb3b',
-    high: '#2e7d32',
-    bikelaneColor: '#1565c0',
   },
   {
     id: 'colorblind',
@@ -44,7 +44,7 @@ export const COLOR_SCALES = [
   },
 ] satisfies ColorScaleDef[]
 
-export const DEFAULT_COLOR_SCALE: ColorScaleId = 'green'
+export const DEFAULT_COLOR_SCALE: ColorScaleId = 'traffic'
 
 export function isColorScaleId(value: string) {
   return COLOR_SCALES.some((s) => s.id === value)
