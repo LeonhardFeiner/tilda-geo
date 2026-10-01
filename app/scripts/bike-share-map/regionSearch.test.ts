@@ -1,7 +1,8 @@
-import { describe, expect, test } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import { buildRegionIndex, type StatsFeature } from './regionNavigation'
 import {
   buildRegionSearchEntries,
+  findRegionAtPoint,
   MATCH_EXACT,
   MATCH_NONE,
   MATCH_PREFIX,
@@ -211,5 +212,41 @@ describe('regionSearchLevelLabel', () => {
     // Steinfurt has a Gemeinde below it, so it is a real Landkreis, not a kreisfreie Stadt.
     expect(regionSearchLevelLabel('6', 'relation/LK', index)).toBe('Landkreis')
     expect(regionSearchLevelLabel('8', 'relation/GM', index)).toBe('Gemeinde')
+  })
+})
+
+describe('findRegionAtPoint', () => {
+  const square = (x: number, y: number, size: number) => [
+    [
+      [x, y],
+      [x + size, y],
+      [x + size, y + size],
+      [x, y + size],
+      [x, y],
+    ],
+  ]
+  const feature = (id: string, level: string, geometry: unknown) =>
+    ({ properties: { id, level }, geometry }) as never
+
+  it('prefers the Gemeinde over the Landkreis around it', () => {
+    const features = [
+      feature('lk', '6', { type: 'Polygon', coordinates: square(0, 0, 10) }),
+      feature('gm', '8', { type: 'Polygon', coordinates: square(4, 4, 2) }),
+    ]
+    expect(findRegionAtPoint(features, 5, 5)?.properties?.id).toBe('gm')
+    expect(findRegionAtPoint(features, 1, 1)?.properties?.id).toBe('lk')
+  })
+
+  it('respects holes and multipolygons, and returns null outside everything', () => {
+    const withHole = {
+      type: 'Polygon',
+      coordinates: [...square(0, 0, 10), ...square(4, 4, 2)],
+    }
+    const multi = { type: 'MultiPolygon', coordinates: [square(20, 20, 2), square(30, 30, 2)] }
+    const features = [feature('donut', '8', withHole), feature('islands', '8', multi)]
+    expect(findRegionAtPoint(features, 5, 5)).toBeNull()
+    expect(findRegionAtPoint(features, 1, 1)?.properties?.id).toBe('donut')
+    expect(findRegionAtPoint(features, 31, 31)?.properties?.id).toBe('islands')
+    expect(findRegionAtPoint(features, 50, 50)).toBeNull()
   })
 })

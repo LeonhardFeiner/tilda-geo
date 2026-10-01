@@ -665,6 +665,15 @@ export function generateViewerHtml(generatedAt: string) {
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
+    .region-locate {
+      margin: 6px 0 0; padding: 0; border: 0; background: none; cursor: pointer;
+      font: inherit; font-size: 12px; color: #1565c0;
+    }
+    .region-locate:hover { text-decoration: underline; }
+    .region-locate[hidden], .region-locate-status[hidden] { display: none !important; }
+    .region-locate-status { margin: 4px 0 0; font-size: 11px; color: #8a1c11; }
+    .region-search-results li.region-search-empty { cursor: default; color: #666; }
+    .region-search-results li.region-search-empty:hover { background: none; }
     .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
     #region-search-input {
       width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
@@ -752,6 +761,8 @@ export function generateViewerHtml(generatedAt: string) {
         placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
+      <button type="button" id="region-locate" class="region-locate" hidden>Mein Standort verwenden</button>
+      <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
@@ -4984,7 +4995,11 @@ export function generateViewerHtml(generatedAt: string) {
       const matches = RegionSearch.rankRegionSearchMatches(regionSearchEntries, query);
       regionSearchResults.replaceChildren();
       if (!matches.length) {
-        hideRegionSearchResults();
+        const none = document.createElement('li');
+        none.className = 'region-search-empty';
+        none.textContent = 'Keine Treffer – Gemeinde, Landkreis oder Bundesland eingeben.';
+        regionSearchResults.appendChild(none);
+        regionSearchResults.hidden = false;
         return;
       }
       for (const m of matches) {
@@ -5013,6 +5028,43 @@ export function generateViewerHtml(generatedAt: string) {
         regionSearchResults.appendChild(li);
       }
       regionSearchResults.hidden = false;
+    }
+    // "Where am I": the position is matched against the geometries already in the page, so it
+    // never leaves the device. Only offered where the browser has a geolocation API at all.
+    const regionLocateBtn = document.getElementById('region-locate');
+    const regionLocateStatus = document.getElementById('region-locate-status');
+    function showLocateStatus(text) {
+      if (!regionLocateStatus) return;
+      regionLocateStatus.textContent = text || '';
+      regionLocateStatus.hidden = !text;
+    }
+    if (regionLocateBtn && navigator.geolocation) {
+      regionLocateBtn.hidden = false;
+      regionLocateBtn.addEventListener('click', () => {
+        showLocateStatus('');
+        regionLocateBtn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            regionLocateBtn.disabled = false;
+            const f = RegionSearch.findRegionAtPoint(
+              allFeatures,
+              pos.coords.longitude,
+              pos.coords.latitude,
+            );
+            if (f?.properties?.id) jumpToRegionBySearch(f.properties.id);
+            else showLocateStatus('Dein Standort liegt außerhalb der Gebiete in dieser Karte.');
+          },
+          (err) => {
+            regionLocateBtn.disabled = false;
+            showLocateStatus(
+              err && err.code === 1
+                ? 'Standortzugriff wurde nicht erlaubt.'
+                : 'Standort konnte nicht bestimmt werden.',
+            );
+          },
+          { timeout: 10000, maximumAge: 60000 },
+        );
+      });
     }
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {

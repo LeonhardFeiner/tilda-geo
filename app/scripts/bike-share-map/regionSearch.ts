@@ -190,3 +190,54 @@ export function regionSearchLevelLabel(level: string, id: string, index: RegionI
   if (level === '6') return index && isKreisfrei(id, index) ? 'Kreisfreie Stadt' : 'Landkreis'
   return 'Gemeinde'
 }
+
+type Ring = number[][]
+
+function ringContainsPoint(ring: Ring, lng: number, lat: number) {
+  let inside = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [xi, yi] = ring[i]!
+    const [xj, yj] = ring[j]!
+    if (yi! > lat !== yj! > lat && lng < ((xj! - xi!) * (lat - yi!)) / (yj! - yi!) + xi!) {
+      inside = !inside
+    }
+  }
+  return inside
+}
+
+function polygonContainsPoint(polygon: Ring[], lng: number, lat: number) {
+  if (!polygon[0] || !ringContainsPoint(polygon[0], lng, lat)) return false
+  return !polygon.slice(1).some((hole) => ringContainsPoint(hole, lng, lat))
+}
+
+export function geometryContainsPoint(
+  geometry: { type?: string; coordinates?: unknown } | null | undefined,
+  lng: number,
+  lat: number,
+) {
+  if (!geometry?.coordinates) return false
+  if (geometry.type === 'Polygon') {
+    return polygonContainsPoint(geometry.coordinates as Ring[], lng, lat)
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return (geometry.coordinates as Ring[][]).some((polygon) =>
+      polygonContainsPoint(polygon, lng, lat),
+    )
+  }
+  return false
+}
+
+/**
+ * The smallest searchable region (Gemeinde, else Landkreis / kreisfreie Stadt, else Bundesland)
+ * that contains a coordinate — what "use my location" jumps to. Runs on the geometries the page
+ * already holds, so the position never leaves the device.
+ */
+export function findRegionAtPoint(features: StatsFeature[], lng: number, lat: number) {
+  for (const level of ['8', '6', '4']) {
+    for (const f of features) {
+      if (String(f.properties?.level ?? '') !== level) continue
+      if (geometryContainsPoint(f.geometry as never, lng, lat)) return f
+    }
+  }
+  return null
+}

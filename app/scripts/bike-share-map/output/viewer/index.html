@@ -576,6 +576,15 @@
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
+    .region-locate {
+      margin: 6px 0 0; padding: 0; border: 0; background: none; cursor: pointer;
+      font: inherit; font-size: 12px; color: #1565c0;
+    }
+    .region-locate:hover { text-decoration: underline; }
+    .region-locate[hidden], .region-locate-status[hidden] { display: none !important; }
+    .region-locate-status { margin: 4px 0 0; font-size: 11px; color: #8a1c11; }
+    .region-search-results li.region-search-empty { cursor: default; color: #666; }
+    .region-search-results li.region-search-empty:hover { background: none; }
     .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
     #region-search-input {
       width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
@@ -663,6 +672,8 @@
         placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
+      <button type="button" id="region-locate" class="region-locate" hidden>Mein Standort verwenden</button>
+      <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Darstellung</summary>
@@ -896,7 +907,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-01T22:13:38.363Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-01T22:22:51.142Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1072,10 +1083,22 @@
       untergebietSelect.value = scope.untergebiet || '';
       populateDarstellungSelect();
       const allowed = [...darstellungSelect.options].map((o) => o.value);
+      // A Darstellung the scope doesn't offer (a Gemeinde searched inside a Landkreis asks for
+      // "gemeinden_kreisfrei", which only a Bundesland lists) falls back to what that scope
+      // would show by default — not to the first entry of the list, which can be a coarser view
+      // that doesn't contain the region at all.
+      const defaultForScope = RegionNav.defaultDarstellungForScope(
+        gebietSelect.value,
+        untergebietSelect.value || '',
+        regionIndex,
+        allFeatures,
+      );
       const real = allowed.includes(scope.darstellung)
         ? scope.darstellung
-        : [...darstellungSelect.options].find((o) => !o.value.startsWith(NEIGHBOR_OPTION_PREFIX))
-            ?.value ?? scope.darstellung;
+        : allowed.includes(defaultForScope)
+          ? defaultForScope
+          : ([...darstellungSelect.options].find((o) => !o.value.startsWith(NEIGHBOR_OPTION_PREFIX))
+              ?.value ?? scope.darstellung);
       currentViewScope = {
         gebiet: gebietSelect.value,
         untergebiet: untergebietSelect.value || '',
@@ -5573,7 +5596,11 @@
       const matches = RegionSearch.rankRegionSearchMatches(regionSearchEntries, query);
       regionSearchResults.replaceChildren();
       if (!matches.length) {
-        hideRegionSearchResults();
+        const none = document.createElement('li');
+        none.className = 'region-search-empty';
+        none.textContent = 'Keine Treffer – Gemeinde, Landkreis oder Bundesland eingeben.';
+        regionSearchResults.appendChild(none);
+        regionSearchResults.hidden = false;
         return;
       }
       for (const m of matches) {
@@ -5602,6 +5629,43 @@
         regionSearchResults.appendChild(li);
       }
       regionSearchResults.hidden = false;
+    }
+    // "Where am I": the position is matched against the geometries already in the page, so it
+    // never leaves the device. Only offered where the browser has a geolocation API at all.
+    const regionLocateBtn = document.getElementById('region-locate');
+    const regionLocateStatus = document.getElementById('region-locate-status');
+    function showLocateStatus(text) {
+      if (!regionLocateStatus) return;
+      regionLocateStatus.textContent = text || '';
+      regionLocateStatus.hidden = !text;
+    }
+    if (regionLocateBtn && navigator.geolocation) {
+      regionLocateBtn.hidden = false;
+      regionLocateBtn.addEventListener('click', () => {
+        showLocateStatus('');
+        regionLocateBtn.disabled = true;
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            regionLocateBtn.disabled = false;
+            const f = RegionSearch.findRegionAtPoint(
+              allFeatures,
+              pos.coords.longitude,
+              pos.coords.latitude,
+            );
+            if (f?.properties?.id) jumpToRegionBySearch(f.properties.id);
+            else showLocateStatus('Dein Standort liegt außerhalb der Gebiete in dieser Karte.');
+          },
+          (err) => {
+            regionLocateBtn.disabled = false;
+            showLocateStatus(
+              err && err.code === 1
+                ? 'Standortzugriff wurde nicht erlaubt.'
+                : 'Standort konnte nicht bestimmt werden.',
+            );
+          },
+          { timeout: 10000, maximumAge: 60000 },
+        );
+      });
     }
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {

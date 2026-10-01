@@ -108,10 +108,22 @@ export function viewerRegionNavScript() {
       untergebietSelect.value = scope.untergebiet || '';
       populateDarstellungSelect();
       const allowed = [...darstellungSelect.options].map((o) => o.value);
+      // A Darstellung the scope doesn't offer (a Gemeinde searched inside a Landkreis asks for
+      // "gemeinden_kreisfrei", which only a Bundesland lists) falls back to what that scope
+      // would show by default — not to the first entry of the list, which can be a coarser view
+      // that doesn't contain the region at all.
+      const defaultForScope = RegionNav.defaultDarstellungForScope(
+        gebietSelect.value,
+        untergebietSelect.value || '',
+        regionIndex,
+        allFeatures,
+      );
       const real = allowed.includes(scope.darstellung)
         ? scope.darstellung
-        : [...darstellungSelect.options].find((o) => !o.value.startsWith(NEIGHBOR_OPTION_PREFIX))
-            ?.value ?? scope.darstellung;
+        : allowed.includes(defaultForScope)
+          ? defaultForScope
+          : ([...darstellungSelect.options].find((o) => !o.value.startsWith(NEIGHBOR_OPTION_PREFIX))
+              ?.value ?? scope.darstellung);
       currentViewScope = {
         gebiet: gebietSelect.value,
         untergebiet: untergebietSelect.value || '',
