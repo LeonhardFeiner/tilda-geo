@@ -226,7 +226,7 @@ export function generateViewerHtml(generatedAt: string) {
       #region-detail-mount .region-detail-close {
         position: static;
         display: flex; align-items: center;
-        width: auto; margin: 0 -14px 10px; padding: 12px 14px;
+        width: calc(100% + 28px); margin: 0 -14px 10px; padding: 12px 14px; text-align: left;
         border: none; border-bottom: 1px solid #d6e4f5;
         background: #eef4fc; color: #1565c0;
         font-size: 0; cursor: pointer;
@@ -253,29 +253,7 @@ export function generateViewerHtml(generatedAt: string) {
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
-      .counting-state {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
-    }
-    .counting-state--custom #counting-state-label { color: #8a4b00; }
-    #counting-reset {
-      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
-      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
-    }
-    #counting-reset[hidden] { display: none !important; }
-    #counting-reset:hover { background: #f2f6fb; }
-    .counting-group { border-top: 1px solid #eee; }
-    .counting-group > summary {
-      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
-    }
-    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
-    .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
-    .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
-    .settings-heading { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #333; }
-    .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
-    .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
-    .metric-definition a:hover { text-decoration: underline; }
-    .panel-actions { margin-top: 0; }
+      .panel-actions { margin-top: 0; }
       #copy-view-link-feedback {
         position: fixed; z-index: 6;
         top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
@@ -285,6 +263,11 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
+    /* Field labels in the panel read as quiet captions, like "Gebiet suchen". */
+    .region-nav > label, .settings-group > label {
+      font-size: 12px; font-weight: 600; color: #555; margin: 8px 0 3px;
+    }
+    .panel label[hidden], .panel select[hidden] { display: none !important; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
@@ -307,7 +290,29 @@ export function generateViewerHtml(generatedAt: string) {
     .panel-section[open] > summary { margin-bottom: 8px; }
     .panel-section > summary::-webkit-details-marker { color: #666; }
     .panel-section[open] > :not(summary) { padding-bottom: 8px; }
-    .map-legend-section .map-legend { padding-bottom: 0; }
+    .map-legend-section .map-legend { padding: 0; }
+    .counting-state {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
+    }
+    .counting-state--custom #counting-state-label { color: #8a4b00; }
+    #counting-reset {
+      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
+      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
+    }
+    #counting-reset[hidden] { display: none !important; }
+    #counting-reset:hover { background: #f2f6fb; }
+    .counting-group { border-top: 1px solid #eee; }
+    .counting-group > summary {
+      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
+    }
+    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
+    .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
+    .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+    .settings-heading { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #222; }
+    .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
+    .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
+    .metric-definition a:hover { text-decoration: underline; }
     .class-filters { margin: 8px 0; }
     .class-filters strong { display: block; font-size: 12px; margin-bottom: 4px; }
     .class-filters label {
@@ -580,7 +585,7 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
     .region-detail-quality--poor,
     .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
-    .ranking-quality { margin-left: 4px; color: #ef6c00; font-size: 11px; cursor: help; }
+    .ranking-quality { margin-right: 3px; color: #ef6c00; font-size: 11px; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -1388,6 +1393,7 @@ export function generateViewerHtml(generatedAt: string) {
           roadSumKm: road,
           bikelaneSumKm: bike,
           bikeSharePct: pct != null ? pct : 0,
+          lowRoad,
           label,
         },
       };
@@ -1516,7 +1522,7 @@ export function generateViewerHtml(generatedAt: string) {
       const sorted = [...features].sort(compareByBikeShare);
       const rankIndex = new Map();
       sorted
-        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .filter(isRanked)
         .forEach((f, i) => {
           const id = f.properties?.id;
           if (id) rankIndex.set(id, i + 1);
@@ -1631,28 +1637,35 @@ export function generateViewerHtml(generatedAt: string) {
       }
     }
 
+    function gebiete(n) {
+      return n + (n === 1 ? ' Gebiet' : ' Gebiete');
+    }
+
     function updateViewMetaText(filtered, range) {
-      let metaText = viewLabelForCurrentMode() + ' · ' + filtered.length + ' Gebiete';
+      let metaText = viewLabelForCurrentMode() + ' · ' + gebiete(filtered.length);
       if (range.scaleCapped) {
         if (range.robustApplied && !getScaleCapSettings().enabled) {
           const parts = [
-            'Farben bis ' + formatUiPct(range.max) + ' %, höhere Werte gleich dunkel',
+            'Farbskala endet bei ' + formatUiPct(range.max) + ' % (höhere Werte sind gleich gefärbt)',
           ];
           if (range.dataMax > range.max) {
-            parts.push('höchster Wert ' + formatUiPct(range.dataMax) + ' %');
+            parts.push('Maximum ' + formatUiPct(range.dataMax) + ' %');
           }
           if (range.outlierCount > 0) {
-            parts.push(range.outlierCount + ' Ausreißer nicht in der Skala');
+            parts.push(
+              range.outlierCount + ' Ausreißer' +
+                ' außerhalb der Skala',
+            );
           }
           if (range.excludedLowRoadCount > 0) {
-            parts.push(range.excludedLowRoadCount + ' Gebiete mit sehr wenig Straßen');
+            parts.push(gebiete(range.excludedLowRoadCount) + ' mit sehr wenig Straßen (ohne Rang)');
           }
           metaText += ' · ' + parts.join(' · ');
         } else {
           metaText +=
-            ' · Farben bis ' +
+            ' · Farbskala endet bei ' +
             range.capPct +
-            ' %, höhere Werte gleich dunkel · höchster Wert ' +
+            ' % (höhere Werte sind gleich gefärbt) · Maximum ' +
             formatUiPct(range.dataMax) +
             ' %';
         }
@@ -2077,7 +2090,7 @@ export function generateViewerHtml(generatedAt: string) {
             ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
             : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
         flag.setAttribute('aria-label', flag.title);
-        li.appendChild(flag);
+        pctEl.prepend(flag);
       }
       list.appendChild(li);
     }
@@ -2149,10 +2162,19 @@ export function generateViewerHtml(generatedAt: string) {
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
+    /**
+     * Whether a region takes part in the ranking. A network of a few km makes the percentage
+     * jump with every way mapped — the top of the nationwide list used to be a 100 % forest
+     * boundary — so those are shown on the map and in the card but not ranked.
+     */
+    function isRanked(f) {
+      return typeof f.properties?.bikeSharePct === 'number' && !f.properties?.lowRoad;
+    }
+
     function rebuildRankIndex(features) {
       rankByFeatureId.clear();
       const withPct = [...features]
-        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .filter(isRanked)
         .sort(compareByBikeShare);
       withPct.forEach((f, i) => {
         const id = f.properties?.id;
@@ -2948,12 +2970,15 @@ export function generateViewerHtml(generatedAt: string) {
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' in dieser Ansicht'
         : 'Kein Rang (ohne Straßendaten in der Zählung)';
+      const rankLine = p.lowRoad && p.roadSumKm > 0
+        ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
+        : rankText;
       const pct =
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
           ? formatUiPct(p.bikeSharePct) + ' %'
           : '–';
       regionDetailMeta.textContent =
-        rankText +
+        rankLine +
         '\\n' +
         pct +
         ' · ' +
@@ -3245,7 +3270,7 @@ export function generateViewerHtml(generatedAt: string) {
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByBikeShare);
-      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const withPct = sorted.filter(isRanked);
       const span = Math.max(maxPct - minPct, 0.001);
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
@@ -3277,7 +3302,7 @@ export function generateViewerHtml(generatedAt: string) {
       if (withoutPct > 0) {
         const note = document.createElement('li');
         note.className = 'ranking-more';
-        note.textContent = withoutPct + ' ohne Straßendaten';
+        note.textContent = withoutPct + ' ohne Rang (weniger als 5 km Straße erfasst)';
         list.appendChild(note);
       }
       syncRankingRowHighlights();
@@ -3663,7 +3688,7 @@ export function generateViewerHtml(generatedAt: string) {
     function drawRankingExportCanvas() {
       const { width, height, padding } = RankingDisplay.PORTRAIT_EXPORT;
       const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
-      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const withPct = sorted.filter(isRanked);
       const topN = currentRankingTopN();
       const showsAlle = RankingDisplay.rankingShowsAsAlle(withPct.length, rankingMode, topN);
       const rows = rankingExportRows(withPct);

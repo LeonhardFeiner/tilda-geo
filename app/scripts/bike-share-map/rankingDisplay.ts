@@ -1,3 +1,5 @@
+import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
+
 export type RankingDisplayItem = { id: string }
 
 export type RankingDisplayRow = { type: 'row'; index: number; rank: number } | { type: 'divider' }
@@ -184,7 +186,7 @@ function hasComparableShare(
   return (
     typeof stat.bikeSharePct === 'number' &&
     Number.isFinite(stat.bikeSharePct) &&
-    stat.roadSumKm > 0
+    stat.roadSumKm >= DEFAULT_MIN_ROAD_KM_FOR_SCALE
   )
 }
 

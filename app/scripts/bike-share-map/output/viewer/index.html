@@ -137,7 +137,7 @@
       #region-detail-mount .region-detail-close {
         position: static;
         display: flex; align-items: center;
-        width: auto; margin: 0 -14px 10px; padding: 12px 14px;
+        width: calc(100% + 28px); margin: 0 -14px 10px; padding: 12px 14px; text-align: left;
         border: none; border-bottom: 1px solid #d6e4f5;
         background: #eef4fc; color: #1565c0;
         font-size: 0; cursor: pointer;
@@ -164,29 +164,7 @@
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
-      .counting-state {
-      display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
-    }
-    .counting-state--custom #counting-state-label { color: #8a4b00; }
-    #counting-reset {
-      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
-      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
-    }
-    #counting-reset[hidden] { display: none !important; }
-    #counting-reset:hover { background: #f2f6fb; }
-    .counting-group { border-top: 1px solid #eee; }
-    .counting-group > summary {
-      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
-    }
-    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
-    .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
-    .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
-    .settings-heading { margin: 0 0 6px; font-size: 12px; font-weight: 600; color: #333; }
-    .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
-    .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
-    .metric-definition a:hover { text-decoration: underline; }
-    .panel-actions { margin-top: 0; }
+      .panel-actions { margin-top: 0; }
       #copy-view-link-feedback {
         position: fixed; z-index: 6;
         top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
@@ -196,6 +174,11 @@
       }
     }
     .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
+    /* Field labels in the panel read as quiet captions, like "Gebiet suchen". */
+    .region-nav > label, .settings-group > label {
+      font-size: 12px; font-weight: 600; color: #555; margin: 8px 0 3px;
+    }
+    .panel label[hidden], .panel select[hidden] { display: none !important; }
     .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
@@ -218,7 +201,29 @@
     .panel-section[open] > summary { margin-bottom: 8px; }
     .panel-section > summary::-webkit-details-marker { color: #666; }
     .panel-section[open] > :not(summary) { padding-bottom: 8px; }
-    .map-legend-section .map-legend { padding-bottom: 0; }
+    .map-legend-section .map-legend { padding: 0; }
+    .counting-state {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
+    }
+    .counting-state--custom #counting-state-label { color: #8a4b00; }
+    #counting-reset {
+      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
+      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
+    }
+    #counting-reset[hidden] { display: none !important; }
+    #counting-reset:hover { background: #f2f6fb; }
+    .counting-group { border-top: 1px solid #eee; }
+    .counting-group > summary {
+      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
+    }
+    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
+    .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
+    .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
+    .settings-heading { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #222; }
+    .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
+    .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
+    .metric-definition a:hover { text-decoration: underline; }
     .class-filters { margin: 8px 0; }
     .class-filters strong { display: block; font-size: 12px; margin-bottom: 4px; }
     .class-filters label {
@@ -491,7 +496,7 @@
     .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
     .region-detail-quality--poor,
     .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
-    .ranking-quality { margin-left: 4px; color: #ef6c00; font-size: 11px; cursor: help; }
+    .ranking-quality { margin-right: 3px; color: #ef6c00; font-size: 11px; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -855,7 +860,7 @@
     </div>
     </div>
     <p class="footer">
-      Erstellt am 01.10.2026 ·
+      Erstellt am 02.10.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -891,7 +896,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-01T21:57:51.969Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-01T22:09:15.317Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1977,6 +1982,7 @@
           roadSumKm: road,
           bikelaneSumKm: bike,
           bikeSharePct: pct != null ? pct : 0,
+          lowRoad,
           label,
         },
       };
@@ -2105,7 +2111,7 @@
       const sorted = [...features].sort(compareByBikeShare);
       const rankIndex = new Map();
       sorted
-        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .filter(isRanked)
         .forEach((f, i) => {
           const id = f.properties?.id;
           if (id) rankIndex.set(id, i + 1);
@@ -2220,28 +2226,35 @@
       }
     }
 
+    function gebiete(n) {
+      return n + (n === 1 ? ' Gebiet' : ' Gebiete');
+    }
+
     function updateViewMetaText(filtered, range) {
-      let metaText = viewLabelForCurrentMode() + ' · ' + filtered.length + ' Gebiete';
+      let metaText = viewLabelForCurrentMode() + ' · ' + gebiete(filtered.length);
       if (range.scaleCapped) {
         if (range.robustApplied && !getScaleCapSettings().enabled) {
           const parts = [
-            'Farben bis ' + formatUiPct(range.max) + ' %, höhere Werte gleich dunkel',
+            'Farbskala endet bei ' + formatUiPct(range.max) + ' % (höhere Werte sind gleich gefärbt)',
           ];
           if (range.dataMax > range.max) {
-            parts.push('höchster Wert ' + formatUiPct(range.dataMax) + ' %');
+            parts.push('Maximum ' + formatUiPct(range.dataMax) + ' %');
           }
           if (range.outlierCount > 0) {
-            parts.push(range.outlierCount + ' Ausreißer nicht in der Skala');
+            parts.push(
+              range.outlierCount + ' Ausreißer' +
+                ' außerhalb der Skala',
+            );
           }
           if (range.excludedLowRoadCount > 0) {
-            parts.push(range.excludedLowRoadCount + ' Gebiete mit sehr wenig Straßen');
+            parts.push(gebiete(range.excludedLowRoadCount) + ' mit sehr wenig Straßen (ohne Rang)');
           }
           metaText += ' · ' + parts.join(' · ');
         } else {
           metaText +=
-            ' · Farben bis ' +
+            ' · Farbskala endet bei ' +
             range.capPct +
-            ' %, höhere Werte gleich dunkel · höchster Wert ' +
+            ' % (höhere Werte sind gleich gefärbt) · Maximum ' +
             formatUiPct(range.dataMax) +
             ' %';
         }
@@ -2666,7 +2679,7 @@
             ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
             : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
         flag.setAttribute('aria-label', flag.title);
-        li.appendChild(flag);
+        pctEl.prepend(flag);
       }
       list.appendChild(li);
     }
@@ -2738,10 +2751,19 @@
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
+    /**
+     * Whether a region takes part in the ranking. A network of a few km makes the percentage
+     * jump with every way mapped — the top of the nationwide list used to be a 100 % forest
+     * boundary — so those are shown on the map and in the card but not ranked.
+     */
+    function isRanked(f) {
+      return typeof f.properties?.bikeSharePct === 'number' && !f.properties?.lowRoad;
+    }
+
     function rebuildRankIndex(features) {
       rankByFeatureId.clear();
       const withPct = [...features]
-        .filter((f) => typeof f.properties?.bikeSharePct === 'number')
+        .filter(isRanked)
         .sort(compareByBikeShare);
       withPct.forEach((f, i) => {
         const id = f.properties?.id;
@@ -3537,12 +3559,15 @@
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' in dieser Ansicht'
         : 'Kein Rang (ohne Straßendaten in der Zählung)';
+      const rankLine = p.lowRoad && p.roadSumKm > 0
+        ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
+        : rankText;
       const pct =
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
           ? formatUiPct(p.bikeSharePct) + ' %'
           : '–';
       regionDetailMeta.textContent =
-        rankText +
+        rankLine +
         '\n' +
         pct +
         ' · ' +
@@ -3834,7 +3859,7 @@
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByBikeShare);
-      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const withPct = sorted.filter(isRanked);
       const span = Math.max(maxPct - minPct, 0.001);
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
@@ -3866,7 +3891,7 @@
       if (withoutPct > 0) {
         const note = document.createElement('li');
         note.className = 'ranking-more';
-        note.textContent = withoutPct + ' ohne Straßendaten';
+        note.textContent = withoutPct + ' ohne Rang (weniger als 5 km Straße erfasst)';
         list.appendChild(note);
       }
       syncRankingRowHighlights();
@@ -4252,7 +4277,7 @@
     function drawRankingExportCanvas() {
       const { width, height, padding } = RankingDisplay.PORTRAIT_EXPORT;
       const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
-      const withPct = sorted.filter((f) => typeof f.properties?.bikeSharePct === 'number');
+      const withPct = sorted.filter(isRanked);
       const topN = currentRankingTopN();
       const showsAlle = RankingDisplay.rankingShowsAsAlle(withPct.length, rankingMode, topN);
       const rows = rankingExportRows(withPct);
