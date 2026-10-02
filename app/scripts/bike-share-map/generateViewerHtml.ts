@@ -547,6 +547,15 @@ export function generateViewerHtml(generatedAt: string) {
       color: #333;
     }
     .region-detail[hidden] { display: none !important; }
+    /* On a computer there is room: a wider card that runs most of the way up the screen
+       (below the zoom buttons, beside the panel) so it rarely needs scrolling. */
+    @media (min-width: 769px) {
+      .region-detail {
+        width: min(460px, calc(100vw - 460px));
+        min-width: 340px;
+        max-height: calc(100vh - 110px);
+      }
+    }
     .region-detail-header {
       display: flex; align-items: flex-start; gap: 8px;
       margin-bottom: 8px; padding-right: 24px;
@@ -2971,6 +2980,34 @@ export function generateViewerHtml(generatedAt: string) {
       else void loadRegionTrend(feature);
     }
 
+    /**
+     * The scope that looks into a region — null when there is nothing to look into: a Gemeinde
+     * has no sub-areas (the scope for it would just be its Landkreis), and a scope that is
+     * already showing it changes nothing.
+     */
+    function regionDrillScope(id, level) {
+      if (!regionIndex || String(level) === '8') return null;
+      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      if (!scope) return null;
+      const current = currentViewScope;
+      const changes =
+        scope.gebiet !== current.gebiet ||
+        (scope.untergebiet || '') !== (current.untergebiet || '') ||
+        scope.darstellung !== current.darstellung;
+      return changes ? scope : null;
+    }
+
+    function drillIntoRegion(id, level) {
+      const scope = regionDrillScope(id, level);
+      if (!scope) return false;
+      scheduleUrlSync('push');
+      exitNeighborView();
+      applyExpertScopeToUi(scope);
+      updateScaleCapDefaultForView();
+      void applyCurrentView();
+      return true;
+    }
+
     function showRegionDetail(feature, opts) {
       const freshSelection = !!(opts && opts.freshSelection);
       const p = feature.properties || {};
@@ -3029,15 +3066,10 @@ export function generateViewerHtml(generatedAt: string) {
         TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
         'bikelane-tag',
       );
-      // Drilling into a region is a deliberate click. Search used to do it implicitly and
-      // only for some levels, which is why a Landkreis search never showed a card at all.
-      const drillScope = regionIndex ? SimpleView.expertViewScopeFromFocus(p.id, regionIndex) : null;
-      const currentScope = currentViewScope;
-      const drillChangesView =
-        drillScope &&
-        (drillScope.gebiet !== currentScope.gebiet ||
-          (drillScope.untergebiet || '') !== (currentScope.untergebiet || '') ||
-          drillScope.darstellung !== currentScope.darstellung);
+      // Drilling into a region is a deliberate click (here, or a double-click on the map).
+      // Search used to do it implicitly and only for some levels, which is why a Landkreis
+      // search never showed a card at all.
+      const drillChangesView = regionDrillScope(p.id, p.level) !== null;
       // Only Landkreise and Gemeinden have neighbours worth comparing with.
       const offerNeighbors =
         (String(p.level) === '6' || String(p.level) === '8') &&
@@ -3052,11 +3084,7 @@ export function generateViewerHtml(generatedAt: string) {
           drillButton.textContent = 'Untergebiete anzeigen';
           drillButton.title = 'Die Ansicht in dieses Gebiet hineinzoomen';
           drillButton.addEventListener('click', () => {
-            scheduleUrlSync('push');
-            exitNeighborView();
-            applyExpertScopeToUi(drillScope);
-            updateScaleCapDefaultForView();
-            void applyCurrentView();
+            drillIntoRegion(p.id, p.level);
           });
           links.appendChild(drillButton);
         }
@@ -3270,10 +3298,26 @@ export function generateViewerHtml(generatedAt: string) {
       // headless-stubbed) browser. Querying once and branching on the result removes the
       // possibility of the two disagreeing.
       map.on('click', (e) => {
+        // The second click of a double-click belongs to the drill-down below; handled as a
+        // click of its own it would deselect the region the first one just selected.
+        if (e.originalEvent && e.originalEvent.detail >= 2) return;
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
         const f = hits[0];
         if (f?.properties?.id) selectRegionById(f.properties.id, f);
         else clearRegionSelection();
+      });
+      // Double-click goes one level deeper — the map twin of the breadcrumb — for regions that
+      // have sub-areas. Anywhere else it still zooms in, which is what the map's own
+      // double-click did before it was taken over here.
+      map.doubleClickZoom?.disable();
+      map.on('dblclick', (e) => {
+        const f = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] })[0];
+        const id = f?.properties?.id;
+        if (id && drillIntoRegion(id, f.properties.level)) {
+          e.preventDefault();
+          return;
+        }
+        map.easeTo({ center: e.lngLat, zoom: map.getZoom() + 1 });
       });
     }
 
