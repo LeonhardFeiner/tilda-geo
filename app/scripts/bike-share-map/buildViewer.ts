@@ -6,6 +6,7 @@ import {
   existsSync,
   lstatSync,
   mkdirSync,
+  readdirSync,
   statSync,
   symlinkSync,
   unlinkSync,
@@ -24,7 +25,7 @@ import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { methodologyPageHtml } from './methodologyPage'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
-import { stationAreasPageHtml } from './stationAreasPage'
+import { type StationAccessFiles, stationAreasPageHtml } from './stationAreasPage'
 import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
 
 type StatsGeoFeature = {
@@ -278,27 +279,49 @@ writeFileSync(
 process.stdout.write(`Methodology: ${viewerDir}/methodik.html\n`)
 
 // Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations);
-// the bike views additionally output/station-bike-*.json (routing/station_access.py).
+// the foot/bike/car views additionally output/station-access/ (routing/station_access.py).
 const stationsPath = join(outputRoot, 'stations.json')
 if (existsSync(stationsPath)) {
-  const stationsJson = await Bun.file(stationsPath).text()
-  writeFileSync(join(viewerDir, `${STATION_AREAS_PAGE_STEM}.json`), stationsJson)
-  const hasBike =
-    symlinkOutputFile(
-      join(outputRoot, 'station-bike-areas.json'),
-      join(viewerDir, 'station-bike-areas.json'),
-    ) &&
-    symlinkOutputFile(
-      join(outputRoot, 'station-bike-bands.json'),
-      join(viewerDir, 'station-bike-bands.json'),
-    )
+  const stationsData = JSON.parse(await Bun.file(stationsPath).text()) as Record<string, unknown>
+  // Departures per station (routing/station_departures.py), only when computed for this exact
+  // station list — it is matched by position in the list.
+  const departuresPath = join(outputRoot, 'station-departures.json')
+  if (existsSync(departuresPath)) {
+    const dep = JSON.parse(await Bun.file(departuresPath).text()) as {
+      date: string
+      source: string
+      stationsFetchedAt?: string
+      departures: Array<number | null>
+    }
+    if (dep.stationsFetchedAt === stationsData.fetchedAt) {
+      stationsData.departures = dep.departures
+      stationsData.departuresDate = dep.date
+    } else {
+      process.stderr.write(
+        `station-departures.json is for another stations.json – rerun routing/station_departures.py\n`,
+      )
+    }
+  }
+  writeFileSync(join(viewerDir, `${STATION_AREAS_PAGE_STEM}.json`), JSON.stringify(stationsData))
+  const accessDir = join(outputRoot, 'station-access')
+  const accessFiles: StationAccessFiles = {}
+  if (existsSync(accessDir)) {
+    symlinkOutputFile(accessDir, join(viewerDir, 'station-access'))
+    for (const name of readdirSync(accessDir).sort()) {
+      const m = /^(foot|bike|car|straight)-(areas|minutes|km)\.json$/.exec(name)
+      if (m)
+        (accessFiles[m[1] as keyof StationAccessFiles] ??= []).push(
+          m[2] as 'areas' | 'minutes' | 'km',
+        )
+    }
+  }
   writeFileSync(
     join(viewerDir, `${STATION_AREAS_PAGE_STEM}.html`),
     stationAreasPageHtml({
       dataHref: `./${STATION_AREAS_PAGE_STEM}.json`,
       dataDateLabel,
-      bikeAreasHref: hasBike ? './station-bike-areas.json' : null,
-      bikeBandsHref: hasBike ? './station-bike-bands.json' : null,
+      accessBaseHref: './station-access/',
+      accessFiles,
     }),
     'utf8',
   )
