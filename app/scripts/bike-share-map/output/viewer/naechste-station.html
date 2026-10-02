@@ -96,7 +96,7 @@
     .dot-legend { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; font-size: 12px; margin: 0 0 8px; }
     .dot-legend .title { flex-basis: 100%; color: var(--muted); }
     .dot-legend i { display: inline-block; border-radius: 50%; background: #1c1f23; border: 1px solid #fff; box-shadow: 0 0 0 1px #1c1f2333; vertical-align: middle; margin-right: 4px; }
-    .dot-legend i.unknown { background: #9aa0a6; }
+    .dot-legend i.unknown { background: #fff; border: 1.5px solid #5a6068; box-shadow: none; }
     .band-legend { display: grid; grid-template-columns: 14px 1fr; gap: 3px 6px; align-items: center; font-size: 12px; margin: 0 0 8px; }
     .band-legend i { width: 14px; height: 10px; border-radius: 2px; }
     [hidden] { display: none !important; }
@@ -187,8 +187,10 @@
     // Departures on one weekday per station (null: no timetable station matched), as s[4].
     const hasDepartures = Array.isArray(data.departures);
     if (hasDepartures) stations.forEach((s, i) => (s[4] = data.departures[i]));
-    // Dot radius at zoom 10; area grows with departures, so radius with the square root.
-    const dotRadius = (dep) => (dep == null ? 2.2 : 1.6 + Math.sqrt(dep) * 0.26);
+    // Dot radius at zoom 10, on a log scale: most stations have 30–300 departures, which a
+    // square-root scale squeezed into 3–6 px; here every tenfold step adds the same 2.6 px.
+    const dotRadius = (dep) => (dep == null ? 2.6 : 1.4 + 2.6 * Math.log10(Math.max(dep, 1)));
+    const DOT_LEGEND_STEPS = [10, 30, 100, 300, 1000];
     const departuresDay = hasDepartures
       ? new Date(data.departuresDate.slice(0, 4) + '-' + data.departuresDate.slice(4, 6) + '-' + data.departuresDate.slice(6))
           .toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric' })
@@ -404,10 +406,15 @@
             10, ['get', 'r'],
             14, ['*', 1.6, ['get', 'r']],
           ],
-          'circle-color': ['case', ['get', 'known'], '#1c1f23', '#9aa0a6'],
+          // No timetable match: a hollow ring, so it doesn't read as a small station.
+          'circle-color': ['case', ['get', 'known'], '#1c1f23', '#ffffff'],
           'circle-opacity': 0.85,
-          'circle-stroke-color': '#fff',
-          'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 5, 0, 10, 1],
+          'circle-stroke-color': ['case', ['get', 'known'], '#ffffff', '#5a6068'],
+          'circle-stroke-width': [
+            'interpolate', ['linear'], ['zoom'],
+            5, ['case', ['get', 'known'], 0, 0.8],
+            10, ['case', ['get', 'known'], 1, 1.4],
+          ],
         },
       });
       if (hasDepartures) {
@@ -416,7 +423,7 @@
         title.className = 'title';
         title.textContent = 'Punktgröße: Abfahrten am ' + departuresDay + ' (Bahn, U-Bahn, Tram, Fähre)';
         dotLegend.append(title);
-        for (const dep of [10, 100, 1000, null]) {
+        for (const dep of [...DOT_LEGEND_STEPS, null]) {
           const item = document.createElement('span');
           const dot = document.createElement('i');
           const size = 2 * dotRadius(dep);
