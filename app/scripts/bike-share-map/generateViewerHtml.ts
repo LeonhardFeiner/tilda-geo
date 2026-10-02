@@ -2823,8 +2823,6 @@ export function generateViewerHtml(generatedAt: string) {
             bundesland: String(props.bundesland_id ?? ''),
             landkreis: String(props.landkreis_id ?? ''),
             peerKey,
-            // "03:4" is urbanisation tier 03, population band 4 — the band alone is the size class.
-            sizeBand: peerKey.split(':')[1] || '',
           });
         }
         contextEntryCache.set(metric.key, entries);
@@ -2844,7 +2842,6 @@ export function generateViewerHtml(generatedAt: string) {
               (scope.type === 'country' ||
                 (scope.type === 'bundesland' && e.bundesland === scope.id) ||
                 (scope.type === 'landkreis' && e.landkreis === scope.id) ||
-                (scope.type === 'sizeclass' && e.sizeBand === scope.id) ||
                 (scope.type === 'peers' && e.peerKey === scope.id)),
           )
           .map((e) => e.v)
@@ -2857,8 +2854,8 @@ export function generateViewerHtml(generatedAt: string) {
     /**
      * The yardsticks a region can be compared within, each as a full phrase ("label", for the
      * select) and as the group it names ("group", for the tooltip). Every region has Deutschland
-     * and its Bundesland; a Gemeinde also its Landkreis, its size class (population band,
-     * whatever the urbanisation) and its demographic peer group (size class and urbanisation).
+     * and its Bundesland; a Gemeinde also its Landkreis and its demographic peer group (size class
+     * and urbanisation — the size class alone said little, so it is not offered on its own).
      */
     function contextScopesFor(p, noun) {
       const nameOf = (id) => String(regionIndex?.byId.get(id)?.properties?.name ?? id);
@@ -2874,17 +2871,6 @@ export function generateViewerHtml(generatedAt: string) {
       const peerKey = level === '8' ? peerGroupIndex?.byId[p.id] : null;
       if (peerKey) {
         const peerLabel = peerGroupIndex.groups[peerKey] || '';
-        // "ländlich geprägt, 5.000–10.000 Einwohner" -> the size part after the last comma.
-        const size = peerLabel.slice(peerLabel.lastIndexOf(',') + 1).trim();
-        if (size) {
-          const sizeText = 'Gemeinden mit ' + size.replace(/Einwohner$/, 'Einwohnern');
-          scopes.push({
-            type: 'sizeclass',
-            id: peerKey.split(':')[1],
-            label: sizeText + ' (Größenklasse)',
-            group: sizeText + ' in Deutschland',
-          });
-        }
         scopes.push({
           type: 'peers',
           id: peerKey,
