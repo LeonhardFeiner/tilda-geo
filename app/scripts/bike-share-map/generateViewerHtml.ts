@@ -1525,7 +1525,10 @@ export function generateViewerHtml(generatedAt: string) {
         { key: 'share_without_unclear_pct', header: 'Radinfra-Anteil ohne unklare Wege (%)', numeric: 'pct' },
         { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
-        { key: 'stationDistance', header: 'Ø Weg zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'stationBike', header: 'Ø mit dem Rad zur nächsten Haltestelle (min, entlang der Wege, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'station_bike_km', header: 'Ø Radweg zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
+        { key: 'station_bike_within_pct', header: 'Einwohner mit dem Rad in 10 min an einer Haltestelle (%)', numeric: 'num1' },
         { key: 'elevation', header: 'Höhenlage Ø (m)', numeric: 'num0' },
         { key: 'elevation_range', header: 'Höhenspanne (m)', numeric: 'num0' },
         { key: 'areaSlope', header: 'Geländesteigung Ø (%)', numeric: 'num1' },
@@ -1588,6 +1591,9 @@ export function generateViewerHtml(generatedAt: string) {
       }
       const range = terrainIndex?.byId[p.id]?.elevationRange;
       if (typeof range === 'number') row.elevation_range = range;
+      const transit = transitIndex?.byId[p.id];
+      if (typeof transit?.bikeKm === 'number') row.station_bike_km = transit.bikeKm;
+      if (typeof transit?.bikeWithinPct === 'number') row.station_bike_within_pct = transit.bikeWithinPct;
       for (const opt of CONFIG.roadClassOptions) {
         row['road_km_' + opt.id] = roadSums[opt.id] ?? 0;
       }
@@ -2753,7 +2759,7 @@ export function generateViewerHtml(generatedAt: string) {
         },
         {
           key: 'stationDistance',
-          label: 'Ø Weg zur nächsten Haltestelle',
+          label: 'Ø Luftlinie zur nächsten Haltestelle',
           note: 'einwohnergewichtet',
           source: transitIndex,
           get: (id) => {
@@ -2761,6 +2767,24 @@ export function generateViewerHtml(generatedAt: string) {
             return typeof v === 'number' ? v / 1000 : null;
           },
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
+        },
+        {
+          key: 'stationBike',
+          label: 'Ø mit dem Rad zur nächsten Haltestelle',
+          note: 'entlang der Wege, einwohnergewichtet',
+          source: transitIndex,
+          get: (id) => {
+            const v = transitIndex?.byId[id]?.bikeMinutes;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const km = transitIndex?.byId[id]?.bikeKm;
+            return (
+              deNumber(v, v < 10 ? 1 : 0) +
+              ' min' +
+              (typeof km === 'number' ? ' (' + deNumber(km, km < 10 ? 1 : 0) + ' km)' : '')
+            );
+          },
         },
         {
           key: 'elevation',

@@ -36,6 +36,7 @@
     "bike-share-map:share-pages": "bun ./scripts/bike-share-map/generateSharePages.ts",
     "bike-share-map:gemeinde-demographics": "bun ./scripts/bike-share-map/fetchGemeindeDemographics.ts",
     "bike-share-map:transit-stop-counts": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTransitStopCounts.ts",
+    "bike-share-map:station-access": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchStationAccess.ts",
     "bike-share-map:stations": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchStations.ts",
     "bike-share-map:terrain-flatness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTerrainFlatness.ts",
     "build": "vite build",

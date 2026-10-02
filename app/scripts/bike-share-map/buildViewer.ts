@@ -173,7 +173,7 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       `Density: ${Object.keys(densityById).length} Gemeinden → ${viewerDir}/gemeinde-density.json\n`,
     )
 
-    // gemeinde-transit.json: {id → {density?, avgDistanceToStationM?}}, from
+    // gemeinde-transit.json: {id → {density?, avgDistanceToStationM?, bike…?}}, from
     // fetchTransitStopCounts.ts's raw counts + Destatis areaKm2 (density = stopCount / areaKm2;
     // avgDistanceToStationM passes through as-is, already a population-weighted average). Same
     // experimental, ?extra=1-only treatment as density above. Absent when
@@ -185,19 +185,35 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       const counts = JSON.parse(await Bun.file(transitCountsPath).text()) as {
         byId?: Record<string, { stopCount?: number; avgDistanceToStationM?: number }>
       }
-      const transitById: Record<string, { density?: number; avgDistanceToStationM?: number }> = {}
+      // Bike time/distance to the nearest station along the network (fetchStationAccess.ts),
+      // optional: absent until routing/station_access.py has been run.
+      const bikePath = join(outputRoot, 'station-access-bike.json')
+      const bikeById = existsSync(bikePath)
+        ? ((
+            JSON.parse(await Bun.file(bikePath).text()) as {
+              byId?: Record<string, { bikeMinutes: number; bikeKm: number; bikeWithinPct: number }>
+            }
+          ).byId ?? {})
+        : {}
+      type TransitEntry = {
+        density?: number
+        avgDistanceToStationM?: number
+        bikeMinutes?: number
+        bikeKm?: number
+        bikeWithinPct?: number
+      }
+      const transitById: Record<string, TransitEntry> = {}
       for (const [id, entry] of Object.entries(counts.byId ?? {})) {
         const rs = rsById.get(id)
         const areaKm2 = rs ? areaByRs.get(rs) : undefined
-        const out: { density?: number; avgDistanceToStationM?: number } = {}
+        const out: TransitEntry = { ...bikeById[id] }
         if (typeof entry.stopCount === 'number' && typeof areaKm2 === 'number' && areaKm2 > 0) {
           out.density = entry.stopCount / areaKm2
         }
         if (typeof entry.avgDistanceToStationM === 'number') {
           out.avgDistanceToStationM = entry.avgDistanceToStationM
         }
-        if (out.density !== undefined || out.avgDistanceToStationM !== undefined)
-          transitById[id] = out
+        if (Object.keys(out).length) transitById[id] = out
       }
       writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
       process.stdout.write(
@@ -262,16 +278,28 @@ writeFileSync(
 )
 process.stdout.write(`Methodology: ${viewerDir}/methodik.html\n`)
 
-// Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations).
+// Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations);
+// the bike views additionally output/station-bike-*.json (routing/station_access.py).
 const stationsPath = join(outputRoot, 'stations.json')
 if (existsSync(stationsPath)) {
   const stationsJson = await Bun.file(stationsPath).text()
   writeFileSync(join(viewerDir, `${STATION_AREAS_PAGE_STEM}.json`), stationsJson)
+  const hasBike =
+    symlinkOutputFile(
+      join(outputRoot, 'station-bike-areas.json'),
+      join(viewerDir, 'station-bike-areas.json'),
+    ) &&
+    symlinkOutputFile(
+      join(outputRoot, 'station-bike-bands.json'),
+      join(viewerDir, 'station-bike-bands.json'),
+    )
   writeFileSync(
     join(viewerDir, `${STATION_AREAS_PAGE_STEM}.html`),
     stationAreasPageHtml({
       dataHref: `./${STATION_AREAS_PAGE_STEM}.json`,
       dataDateLabel,
+      bikeAreasHref: hasBike ? './station-bike-areas.json' : null,
+      bikeBandsHref: hasBike ? './station-bike-bands.json' : null,
     }),
     'utf8',
   )

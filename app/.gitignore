@@ -50,3 +50,8 @@ test-results/
 *.tsbuildinfo
 .eslintcache
 .node_repl_history
+
+# Bike routing to the nearest station (scripts/bike-share-map/routing/README.md) – Python env,
+# OSM extract, parsed network and per-square results stay local.
+scripts/bike-share-map/routing/.venv/
+scripts/bike-share-map/routing/cache/

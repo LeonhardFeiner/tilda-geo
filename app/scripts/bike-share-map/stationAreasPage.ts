@@ -5,19 +5,46 @@ export type StationAreasPageInput = {
   dataHref: string
   /** "Stand" of the station data. */
   dataDateLabel: string
+  /**
+   * Bike areas/time bands from routing/station_access.py (GeoJSON next to the page), or null
+   * when that step hasn't been run — the page then only offers the straight-line view.
+   */
+  bikeAreasHref: string | null
+  bikeBandsHref: string | null
 }
 
 /** Same order as STATION_CATEGORIES in fetchStations.ts. */
 const CATEGORY_LABELS = ['Bahnhof / Haltepunkt', 'U-Bahn', 'S-/Stadtbahn', 'Straßenbahn', 'Fähre']
 
+/** Upper bounds (minutes) of the bike time bands; same as BAND_MINUTES in station_access.py. */
+const BAND_MINUTES = [5, 10, 15, 20, 30, 45, 60]
+const BAND_COLOURS = [
+  '#1a9850',
+  '#66bd63',
+  '#a6d96a',
+  '#fee08b',
+  '#fdae61',
+  '#f46d43',
+  '#d73027',
+  '#762a83',
+]
+
 /**
- * Unlisted page: one coloured area per station, covering every point that is closer (straight
- * line) to that station than to any other — a Voronoi diagram, computed in the browser with
- * d3-delaunay so the category checkboxes can redraw it. Cells are computed in Web Mercator
- * metres; over the few km between neighbouring stations the scale difference is well under 1 %,
- * so the borders are the real equal-distance lines for practical purposes.
+ * Unlisted page: one coloured area per station, covering every point that is closer to that
+ * station than to any other. Two ways of measuring:
+ * - straight line ("Luftlinie"): a Voronoi diagram, computed in the browser with d3-delaunay so
+ *   the category checkboxes can redraw it. Cells are computed in Web Mercator metres; over the
+ *   few km between neighbouring stations the scale difference is well under 1 %, so the borders
+ *   are the real equal-distance lines for practical purposes.
+ * - by bike along the path network: precomputed for all stations by routing/station_access.py,
+ *   as areas per station and as travel-time bands.
  */
-export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPageInput) {
+export function stationAreasPageHtml({
+  dataHref,
+  dataDateLabel,
+  bikeAreasHref,
+  bikeBandsHref,
+}: StationAreasPageInput) {
   const style = JSON.stringify(buildBasemapStyleJson('light'))
   return `<!doctype html>
 <html lang="de">
@@ -96,6 +123,10 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
       margin-top: 4px;
     }
     #hover strong { display: block; }
+    fieldset:disabled { opacity: 0.5; }
+    .band-legend { display: grid; grid-template-columns: 14px 1fr; gap: 3px 6px; align-items: center; font-size: 12px; margin: 0 0 8px; }
+    .band-legend i { width: 14px; height: 10px; border-radius: 2px; }
+    [hidden] { display: none !important; }
     @media (max-width: 600px) {
       #panel { top: auto; bottom: 28px; left: 16px; right: 16px; width: auto; max-height: 50vh; }
     }
@@ -106,8 +137,18 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
   <details id="panel" open>
     <summary>Nächste Station</summary>
     <div class="body">
-      <p>Jede Farbfläche umfasst alle Orte, die näher an <em>ihrer</em> Station liegen als an jeder anderen. Die Grenze zwischen zwei Flächen ist überall gleich weit von beiden Stationen entfernt.</p>
-      <p class="muted">Gemessen in Luftlinie, nicht entlang von Wegen. Bushaltestellen sind nicht enthalten.</p>
+      <fieldset id="modes" hidden>
+        <legend>Messen</legend>
+        <label><input type="radio" name="modus" value="luftlinie" checked> Luftlinie</label>
+        <label><input type="radio" name="modus" value="rad"> Mit dem Rad – Einzugsgebiete</label>
+        <label><input type="radio" name="modus" value="zeit"> Mit dem Rad – Fahrzeit</label>
+      </fieldset>
+      <p id="explain-luftlinie">Jede Farbfläche umfasst alle Orte, die näher an <em>ihrer</em> Station liegen als an jeder anderen. Die Grenze zwischen zwei Flächen ist überall gleich weit von beiden Stationen entfernt – in Luftlinie, nicht entlang von Wegen.</p>
+      <p id="explain-rad" hidden>Jede Farbfläche umfasst alle Orte, von denen aus <em>ihre</em> Station mit dem Rad am schnellsten erreichbar ist – entlang von Straßen und Wegen. Wald, Flüsse und Autobahnen ohne Querung verschieben die Grenzen gegenüber der Luftlinie.</p>
+      <p id="explain-zeit" hidden>Wie viele Minuten man von jedem Ort aus mit dem Rad zur nächsten Station braucht.</p>
+      <div id="band-legend" class="band-legend" hidden></div>
+      <p id="explain-profile" class="muted" hidden>Annahmen: rund 18 km/h auf Straßen und Radwegen, langsamer auf Feldwegen und unbefestigt, Schieben (5 km/h) auf Gehwegen ohne Radfreigabe und gegen Einbahnstraßen. Keine Steigungen, keine Ampeln. Alle Stationsarten.</p>
+      <p class="muted">Bushaltestellen sind nicht enthalten.</p>
       <fieldset id="categories"><legend>Stationen</legend></fieldset>
       <div id="hover" class="muted">Über die Karte fahren oder tippen, um die nächste Station zu sehen.</div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}.</p>
@@ -121,6 +162,10 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
     const DEFAULT_CATEGORIES = [0, 1, 2, 3, 4];
     // Planar graphs colour with at most 6 colours under smallest-last ordering, so neighbours
     // never share one.
+    const BAND_MINUTES = ${JSON.stringify(BAND_MINUTES)};
+    const BAND_COLOURS = ${JSON.stringify(BAND_COLOURS)};
+    const BIKE_AREAS_HREF = ${JSON.stringify(bikeAreasHref)};
+    const BIKE_BANDS_HREF = ${JSON.stringify(bikeBandsHref)};
     const PALETTE = ['#e41a1c', '#377eb8', '#4daf4a', '#984ea3', '#ff7f00', '#c9a400', '#a65628', '#f781bf'];
     const R = 6378137;
     const D2R = Math.PI / 180;
@@ -147,6 +192,9 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
     const active = new Set(
       fromUrl === null ? DEFAULT_CATEGORIES : fromUrl.split(',').map(Number).filter(Number.isInteger),
     );
+
+    const modeParam = params.get('modus');
+    let mode = BIKE_AREAS_HREF && (modeParam === 'rad' || modeParam === 'zeit') ? modeParam : 'luftlinie';
 
     const counts = CATEGORY_LABELS.map(() => 0);
     for (const s of stations) counts[s[2]]++;
@@ -245,6 +293,12 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
       return 2 * 6371.0088 * Math.asin(Math.sqrt(h));
     }
 
+    function bandLabel(b) {
+      if (b === 0) return 'unter ' + BAND_MINUTES[0] + ' min';
+      if (b >= BAND_MINUTES.length) return 'über ' + BAND_MINUTES[BAND_MINUTES.length - 1] + ' min';
+      return BAND_MINUTES[b - 1] + '–' + BAND_MINUTES[b] + ' min';
+    }
+
     function onMapReady(fn) {
       if (map.isStyleLoaded()) fn();
       else map.once('load', fn);
@@ -252,7 +306,7 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
 
     onMapReady(() => {
       const { cells, dots } = buildCells();
-      const fillColour = ['match', ['get', 'c'], ...PALETTE.flatMap((c, i) => [i, c]), '#888'];
+      const fillColour = ['match', ['%', ['get', 'c'], PALETTE.length], ...PALETTE.flatMap((c, i) => [i, c]), '#888'];
       map.addSource('cells', { type: 'geojson', data: cells });
       map.addSource('dots', { type: 'geojson', data: dots });
       map.addSource('mask', { type: 'geojson', data: outsideMask(data.germany) });
@@ -300,32 +354,36 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
       });
 
       const hoverBox = document.getElementById('hover');
-      let hoveredId = null;
-      function setHovered(id) {
-        if (hoveredId !== null) map.setFeatureState({ source: 'cells', id: hoveredId }, { hover: false });
-        hoveredId = id;
-        if (id !== null) map.setFeatureState({ source: 'cells', id }, { hover: true });
+      let hovered = null;
+      function setHovered(next) {
+        if (hovered) map.setFeatureState(hovered, { hover: false });
+        hovered = next;
+        if (next) map.setFeatureState(next, { hover: true });
       }
-      function describe(e) {
-        const hit = map.queryRenderedFeatures(e.point, { layers: ['cells-fill'] })[0];
-        if (!hit) {
-          setHovered(null);
-          return;
-        }
-        const id = Number(hit.id);
-        setHovered(id);
-        const s = shown[id];
-        const km = distanceKm([e.lngLat.lng, e.lngLat.lat], [s[0], s[1]]);
-        const name = s[3] || 'Station ohne Namen';
+      function showStation(s, detail) {
         hoverBox.innerHTML = '';
         const strong = document.createElement('strong');
-        strong.textContent = name;
+        strong.textContent = s[3] || 'Station ohne Namen';
         hoverBox.appendChild(strong);
-        hoverBox.appendChild(
-          document.createTextNode(
-            CATEGORY_LABELS[s[2]] + ' · ' + km.toLocaleString('de-DE', { maximumFractionDigits: km < 10 ? 1 : 0 }) + ' km Luftlinie',
-          ),
-        );
+        hoverBox.appendChild(document.createTextNode(CATEGORY_LABELS[s[2]] + ' · ' + detail));
+      }
+      function describe(e) {
+        if (mode === 'luftlinie') {
+          const hit = map.queryRenderedFeatures(e.point, { layers: ['cells-fill'] })[0];
+          if (!hit) return setHovered(null);
+          setHovered({ source: 'cells', id: hit.id });
+          const s = shown[Number(hit.id)];
+          const km = distanceKm([e.lngLat.lng, e.lngLat.lat], [s[0], s[1]]);
+          showStation(s, km.toLocaleString('de-DE', { maximumFractionDigits: km < 10 ? 1 : 0 }) + ' km Luftlinie');
+          return;
+        }
+        const area = map.queryRenderedFeatures(e.point, { layers: ['bike-fill'] })[0];
+        const band = map.queryRenderedFeatures(e.point, { layers: ['bands-fill'] })[0];
+        if (!area && !band) return setHovered(null);
+        setHovered(mode === 'rad' && area ? { source: 'bike', id: area.id } : null);
+        const time = band ? 'mit dem Rad ' + bandLabel(band.properties.b) : 'mit dem Rad';
+        if (area) showStation(stations[area.properties.s], time);
+        else hoverBox.textContent = time;
       }
       map.on('mousemove', describe);
       map.on('click', describe);
@@ -344,6 +402,120 @@ export function stationAreasPageHtml({ dataHref, dataDateLabel }: StationAreasPa
         else url.searchParams.set('arten', list);
         history.replaceState(null, '', url);
       });
+
+      // ---- bike views: loaded on first use (several MB), then just toggled
+      const legend = document.getElementById('band-legend');
+      BAND_COLOURS.forEach((c, b) => {
+        const swatch = document.createElement('i');
+        swatch.style.background = c;
+        const text = document.createElement('span');
+        text.textContent = bandLabel(b);
+        legend.append(swatch, text);
+      });
+
+      let bikeLoaded = null;
+      function loadBike() {
+        bikeLoaded ||= Promise.all([
+          fetch(BIKE_AREAS_HREF).then((r) => r.json()),
+          fetch(BIKE_BANDS_HREF).then((r) => r.json()),
+        ]).then(([areas, bands]) => {
+          map.addSource('bike', { type: 'geojson', data: areas, generateId: true });
+          map.addSource('bands', { type: 'geojson', data: bands });
+          map.addLayer(
+            {
+              id: 'bands-fill',
+              type: 'fill',
+              source: 'bands',
+              paint: {
+                'fill-color': ['match', ['get', 'b'], ...BAND_COLOURS.flatMap((c, i) => [i, c]), '#888'],
+                'fill-opacity': 0,
+              },
+            },
+            'mask',
+          );
+          map.addLayer(
+            {
+              id: 'bike-fill',
+              type: 'fill',
+              source: 'bike',
+              paint: {
+                'fill-color': fillColour,
+                'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.32],
+              },
+            },
+            'mask',
+          );
+          map.addLayer(
+            {
+              id: 'bike-line',
+              type: 'line',
+              source: 'bike',
+              paint: {
+                'line-color': '#333',
+                'line-opacity': 0.55,
+                'line-width': ['interpolate', ['linear'], ['zoom'], 5, 0.3, 10, 1, 14, 1.6],
+              },
+            },
+            'mask',
+          );
+        });
+        return bikeLoaded;
+      }
+
+      const allDots = {
+        type: 'FeatureCollection',
+        features: stations.map((s, i) => ({
+          type: 'Feature',
+          id: i,
+          properties: {},
+          geometry: { type: 'Point', coordinates: [s[0], s[1]] },
+        })),
+      };
+
+      async function applyMode() {
+        setHovered(null);
+        const straight = mode === 'luftlinie';
+        for (const id of ['luftlinie', 'rad', 'zeit']) {
+          document.getElementById('explain-' + id).hidden = id !== mode;
+        }
+        legend.hidden = mode !== 'zeit';
+        document.getElementById('explain-profile').hidden = straight;
+        fieldset.disabled = !straight;
+        for (const id of ['cells-fill', 'cells-line']) {
+          map.setLayoutProperty(id, 'visibility', straight ? 'visible' : 'none');
+        }
+        if (straight) {
+          map.getSource('dots').setData(buildCells().dots);
+        } else {
+          await loadBike();
+          map.getSource('dots').setData(allDots);
+          map.setLayoutProperty('bike-fill', 'visibility', 'visible');
+          map.setPaintProperty('bike-fill', 'fill-opacity', mode === 'rad'
+            ? ['case', ['boolean', ['feature-state', 'hover'], false], 0.6, 0.32]
+            : 0);
+          map.setLayoutProperty('bike-line', 'visibility', mode === 'rad' ? 'visible' : 'none');
+          map.setPaintProperty('bands-fill', 'fill-opacity', mode === 'zeit' ? 0.55 : 0);
+        }
+        if (bikeLoaded && straight) {
+          for (const id of ['bike-fill', 'bike-line']) map.setLayoutProperty(id, 'visibility', 'none');
+          map.setPaintProperty('bands-fill', 'fill-opacity', 0);
+        }
+        const url = new URL(location.href);
+        if (straight) url.searchParams.delete('modus');
+        else url.searchParams.set('modus', mode);
+        history.replaceState(null, '', url);
+      }
+
+      const modes = document.getElementById('modes');
+      if (BIKE_AREAS_HREF && BIKE_BANDS_HREF) {
+        modes.hidden = false;
+        modes.querySelector('input[value="' + mode + '"]').checked = true;
+        modes.addEventListener('change', () => {
+          mode = modes.querySelector('input:checked').value;
+          applyMode();
+        });
+        if (mode !== 'luftlinie') applyMode();
+      }
     });
   })();
   </script>
