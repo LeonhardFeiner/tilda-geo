@@ -306,7 +306,7 @@ export function generateViewerHtml(generatedAt: string) {
     .counting-group > summary {
       cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
     }
-    .counting-count { font-weight: 400; color: #777; margin-left: 4px; }
+    .counting-count { font-weight: 400; color: #666; margin-left: 4px; }
     .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
     .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
     .settings-heading { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #222; }
@@ -413,7 +413,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
     .ranking { padding-top: 0; }
-    .ranking-hint { font-weight: normal; font-size: 11px; color: #888; }
+    .ranking-hint { font-weight: normal; font-size: 11px; color: #666; }
     .ranking-list {
       margin: 0; padding: 0;
       font-size: 11px; line-height: 1.45; color: #444;
@@ -466,7 +466,7 @@ export function generateViewerHtml(generatedAt: string) {
     .ranking-list .ranking-more,
     .ranking-list .ranking-divider {
       display: block; grid-column: 1 / -1;
-      color: #888; font-style: italic; font-size: 10px; padding: 2px 0;
+      color: #666; font-style: italic; font-size: 10px; padding: 2px 0;
     }
     .ranking-divider { text-align: center; font-style: normal; color: #aaa; }
     .ranking-toolbar {
@@ -523,7 +523,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .national-context[hidden] { display: none !important; }
     .footer {
-      font-size: 11px; color: #888; margin-top: 6px; padding-top: 6px;
+      font-size: 11px; color: #666; margin-top: 6px; padding-top: 6px;
       border-top: 1px solid #eee; line-height: 1.55;
     }
     .footer a { color: #1565c0; text-decoration: none; }
@@ -585,7 +585,7 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
     .region-detail-quality--poor,
     .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
-    .ranking-quality { margin-right: 3px; color: #ef6c00; font-size: 11px; cursor: help; }
+    .ranking-quality { margin-right: 3px; color: #b45309; font-size: 11px; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -613,8 +613,8 @@ export function generateViewerHtml(generatedAt: string) {
     #region-detail-trend-result[hidden] { display: none !important; }
     .region-detail-trend-sparkline { display: block; margin: 6px 0 4px; }
     .region-detail-trend-summary { margin: 0 0 4px; font-size: 12px; line-height: 1.4; color: #333; }
-    .region-detail-trend-note { margin: 0; font-size: 10px; line-height: 1.4; color: #888; }
-    .region-detail-trend-note a { color: #888; }
+    .region-detail-trend-note { margin: 0; font-size: 10px; line-height: 1.4; color: #666; }
+    .region-detail-trend-note a { color: #666; }
     .region-detail-trend-error { color: #b71c1c; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
@@ -692,7 +692,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-search-results li:hover,
     .region-search-results li:focus { background: #eef4fc; outline: none; }
-    .region-search-results li .region-search-result-level { color: #777; font-size: 11px; }
+    .region-search-results li .region-search-result-level { color: #666; font-size: 11px; }
     .panel-options { display: flex; flex-direction: column; }
     .region-scope-block[hidden] { display: none !important; }
     .site-title {
@@ -716,7 +716,7 @@ export function generateViewerHtml(generatedAt: string) {
       display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px;
       margin-bottom: 8px; font-size: 12px; line-height: 1.5;
     }
-    .region-breadcrumb .region-breadcrumb-sep { color: #999; }
+    .region-breadcrumb .region-breadcrumb-sep { color: #767676; }
     .region-breadcrumb button {
       font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
       cursor: pointer;
