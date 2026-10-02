@@ -75,8 +75,10 @@ MIN_COMPONENT_NODES = 200  # smaller disconnected bits (car parks, isolated path
 # station: walking, except pushing/wheeling a bike a bit faster.
 OFF_NETWORK_KMH = {'foot': 4.5, 'bike': 6.0, 'car': 4.5}
 
-# Same bands for every mode, so a colour means the same in each view.
-BAND_MINUTES = [5, 10, 15, 20, 30, 45, 60]
+# Band upper bounds. Minutes differ by mode — by car nearly everything is under 15 min, so the
+# walking/bike steps would paint the whole car map one colour. Km stay the same for all modes.
+# Each file carries its bounds ("bins"), so the page legend always matches.
+BAND_MINUTES = {'foot': [5, 10, 15, 20, 30, 45, 60], 'bike': [5, 10, 15, 20, 30, 45, 60], 'car': [2, 4, 6, 8, 10, 15, 20]}
 BAND_KM = [0.5, 1, 2, 3, 5, 10, 20]
 
 # The squares give every border a 100 m staircase; simplifying the whole coverage at once (shared
@@ -334,8 +336,17 @@ def mode_ways(net: dict[str, np.ndarray], mode: str) -> dict[str, np.ndarray]:
     way_len = np.diff(np.r_[net['way_start'], n_pts])
     keep_pt = np.repeat(keep_way, way_len)
     kept_len = way_len[keep_way]
+    # Ways only cars may use (motorways, motorroads, their slip roads) carry through traffic but
+    # are no place to start from: a field next to the A92 isn't reached via the motorway. Squares
+    # and stations don't snap to them.
+    car = MODES.index('car')
+    cars_only = (net['speeds'][:, 2 * car] + net['speeds'][:, 2 * car + 1] > 0) & np.all(
+        [net['speeds'][:, 2 * k] + net['speeds'][:, 2 * k + 1] == 0 for k in range(len(MODES)) if k != car], axis=0
+    )
+    snap_ok = np.repeat(~cars_only[keep_way], kept_len)
     log(f'{mode}: {keep_way.sum():,} ways, {keep_pt.sum():,} points')
     return {
+        'snap_ok': snap_ok,
         'node_ids': net['node_ids'][keep_pt],
         'x': net['x'][keep_pt],
         'y': net['y'][keep_pt],
@@ -429,12 +440,13 @@ def build_graph(net: dict[str, np.ndarray]):
     pt_len[last_pts] = cum[last_pts] - cum[prev_j]
     offset_in_edge[last_pts] = pt_len[last_pts]
     pt_kmh = np.maximum(net['fwd_kmh'], net['bwd_kmh'])[way_of_pt]
+    snap_ok = net['snap_ok']
 
     return {
         'x': x, 'y': y,
         'g_time': g_time, 'g_len': g_len, 'n_nodes': n_nodes,
         'pt_start': pt_start, 'pt_end': pt_end,
-        'pt_off': offset_in_edge, 'pt_len': pt_len, 'pt_kmh': pt_kmh,
+        'pt_off': offset_in_edge, 'pt_len': pt_len, 'pt_kmh': pt_kmh, 'snap_ok': snap_ok,
     }
 
 
@@ -457,7 +469,7 @@ def route(graph, station_xy, off_kmh: float):
     log(f'  {n_comp:,} components; {big_node.sum():,} of {n_nodes:,} junctions in components >= {MIN_COMPONENT_NODES}')
 
     # Points that sit on the main network, for snapping.
-    pts = np.flatnonzero(big_node[graph['pt_start']] & big_node[graph['pt_end']])
+    pts = np.flatnonzero(big_node[graph['pt_start']] & big_node[graph['pt_end']] & graph['snap_ok'])
     tree = cKDTree(np.c_[graph['x'][pts], graph['y'][pts]])
 
     # Stations attach to the nearer end of the edge they snap to (stations sit on or next to a
@@ -548,18 +560,37 @@ def square_centres(inside, origin):
     return rows, cols, x0 + (cols + 0.5) * CELL, y1 - (rows + 0.5) * CELL
 
 
+# A square tries this many nearest way points and keeps the fastest. With only the single nearest,
+# the way across a river or a railway line (unreachable on foot from here) often won, leaving
+# strips of the "wrong" station along every barrier.
+SNAP_CANDIDATES = 6
+SNAP_CHUNK = 4_000_000
+
+
 def assign_cells(graph, routed, inside, origin, off_kmh: float):
     rows, cols, cx, cy = square_centres(inside, origin)
-    d, i = routed['tree'].query(np.c_[cx, cy], workers=-1)
-    p = routed['pts'][i]
-    s, e = graph['pt_start'][p], graph['pt_end'][p]
-    off, ln, kmh = graph['pt_off'][p], graph['pt_len'][p], graph['pt_kmh'][p]
-    via_s = routed['dist'][s] + off / (kmh / 3.6)
-    via_e = routed['dist'][e] + (ln - off) / (kmh / 3.6)
-    use_s = via_s <= via_e
-    secs = np.where(use_s, via_s, via_e) + d / (off_kmh / 3.6)
-    metres = np.where(use_s, routed['metres'][s] + off, routed['metres'][e] + ln - off) + d
-    station = np.where(use_s, routed['node_station'][s], routed['node_station'][e])
+    n = len(rows)
+    secs = np.empty(n)
+    metres = np.empty(n)
+    station = np.empty(n, dtype=np.int64)
+    for a in range(0, n, SNAP_CHUNK):
+        b = min(n, a + SNAP_CHUNK)
+        d, i = routed['tree'].query(np.c_[cx[a:b], cy[a:b]], k=SNAP_CANDIDATES, workers=-1)
+        p = routed['pts'][i]
+        s, e = graph['pt_start'][p], graph['pt_end'][p]
+        off, ln, kmh = graph['pt_off'][p], graph['pt_len'][p], graph['pt_kmh'][p]
+        via_s = routed['dist'][s] + off / (kmh / 3.6)
+        via_e = routed['dist'][e] + (ln - off) / (kmh / 3.6)
+        use_s = via_s <= via_e
+        t = np.where(use_s, via_s, via_e) + d / (off_kmh / 3.6)
+        m = np.where(use_s, routed['metres'][s] + off, routed['metres'][e] + ln - off) + d
+        st = np.where(use_s, routed['node_station'][s], routed['node_station'][e])
+        t = np.where(st >= 0, t, np.inf)
+        best = np.argmin(t, axis=1)
+        pick = np.arange(b - a)
+        secs[a:b] = t[pick, best]
+        metres[a:b] = m[pick, best]
+        station[a:b] = st[pick, best]
     ok = np.isfinite(secs) & (station >= 0)
     return to_rasters(inside.shape, rows[ok], cols[ok], station[ok], secs[ok], metres[ok])
 
@@ -655,9 +686,10 @@ def band_polygons(values_r: np.ndarray, bins: list[float], origin):
     return polygons(band, valid, transform, BAND_MIN_CELLS, BAND_SIMPLIFY_M)
 
 
-def write_geojson(path: Path, features) -> None:
+def write_geojson(path: Path, features, bins: list[float] | None = None) -> None:
     fc = {
         'type': 'FeatureCollection',
+        **({'bins': bins} if bins else {}),
         'features': [{'type': 'Feature', 'properties': props, 'geometry': mapping(g)} for g, props in features],
     }
     path.write_text(json.dumps(fc, separators=(',', ':')))
@@ -731,9 +763,10 @@ def main(argv: list[str]) -> None:
             areas = polygons(station_r, station_r >= 0, transform, AREA_MIN_CELLS, AREA_SIMPLIFY_M)
             write_geojson(OUT_DIR / f'{mode}-areas.json', [(g, {'s': v, 'c': int(colour[v])}) for g, v in areas])
             write_geojson(OUT_DIR / f'{mode}-minutes.json',
-                          [(g, {'b': v}) for g, v in band_polygons(secs_r / 60, BAND_MINUTES, origin)])
+                          [(g, {'b': v}) for g, v in band_polygons(secs_r / 60, BAND_MINUTES[mode], origin)],
+                          BAND_MINUTES[mode])
         write_geojson(OUT_DIR / f'{mode}-km.json',
-                      [(g, {'b': v}) for g, v in band_polygons(metres_r / 1000, BAND_KM, origin)])
+                      [(g, {'b': v}) for g, v in band_polygons(metres_r / 1000, BAND_KM, origin)], BAND_KM)
         write_population_cells(mode, pop_cells, station_r, secs_r, metres_r, origin)
 
 

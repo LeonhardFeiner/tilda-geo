@@ -194,7 +194,9 @@ export function stationAreasPageHtml({
   (async function () {
     const CATEGORY_LABELS = ${JSON.stringify(CATEGORY_LABELS)};
     const DEFAULT_CATEGORIES = [0, 1, 2, 3, 4];
+    // Fallback band bounds; each band file carries its own ("bins" — minutes differ by mode).
     const BANDS = { minutes: ${JSON.stringify(BAND_MINUTES)}, km: ${JSON.stringify(BAND_KM)} };
+    let currentBins = null;
     const BAND_COLOURS = ${JSON.stringify(BAND_COLOURS)};
     const ACCESS_BASE = ${JSON.stringify(accessBaseHref)};
     const ACCESS_FILES = ${JSON.stringify(accessFiles)};
@@ -377,7 +379,7 @@ export function stationAreasPageHtml({
     }
 
     function bandLabel(b, k) {
-      const bounds = BANDS[k];
+      const bounds = currentBins || BANDS[k];
       const unit = k === 'minutes' ? ' min' : ' km';
       if (b === 0) return 'unter ' + deNum(bounds[0], 1) + unit;
       if (b >= bounds.length) return 'über ' + deNum(bounds[bounds.length - 1], 1) + unit;
@@ -415,7 +417,12 @@ export function stationAreasPageHtml({
         },
       });
       for (const [id, source] of [['cells', 'cells'], ['net', 'net-areas']]) {
-        map.addLayer({ id: id + '-fill', type: 'fill', source, paint: { 'fill-color': fillColour, 'fill-opacity': hoverOpacity } });
+        map.addLayer({
+          id: id + '-fill',
+          type: 'fill',
+          source,
+          paint: { 'fill-color': fillColour, 'fill-opacity': id === 'cells' ? hoverOpacity : 0.32 },
+        });
         map.addLayer({
           id: id + '-line',
           type: 'line',
@@ -427,6 +434,16 @@ export function stationAreasPageHtml({
           },
         });
       }
+      // A station's network area can be several pieces; hovering one highlights all of them.
+      const NO_STATION = ['==', ['get', 's'], -1];
+      map.addLayer({ id: 'net-highlight', type: 'fill', source: 'net-areas', filter: NO_STATION, paint: { 'fill-color': fillColour, 'fill-opacity': 0.6 } });
+      map.addLayer({
+        id: 'net-highlight-line',
+        type: 'line',
+        source: 'net-areas',
+        filter: NO_STATION,
+        paint: { 'line-color': '#1c1f23', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 2, 14, 3] },
+      });
       map.addLayer({ id: 'mask', type: 'fill', source: 'mask', paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.85 } });
       map.addLayer({ id: 'germany-line', type: 'line', source: 'mask', paint: { 'line-color': '#333', 'line-width': 1.2 } });
       map.addLayer({
@@ -470,10 +487,20 @@ export function stationAreasPageHtml({
       // ---- hover
       const hoverBox = document.getElementById('hover');
       let hovered = null;
+      let hoveredStation = -1;
       function setHovered(next) {
         if (hovered) map.setFeatureState(hovered, { hover: false });
         hovered = next;
         if (next) map.setFeatureState(next, { hover: true });
+      }
+      // All pieces of one station's network area; the fill only where areas are the view, the
+      // outline also over the time/distance bands.
+      function setHoveredStation(index) {
+        if (index === hoveredStation) return;
+        hoveredStation = index;
+        const filter = ['==', ['get', 's'], index];
+        map.setFilter('net-highlight', filter);
+        map.setFilter('net-highlight-line', filter);
       }
       function showStation(s, detail) {
         hoverBox.innerHTML = '';
@@ -504,14 +531,17 @@ export function stationAreasPageHtml({
         }
         const area = map.queryRenderedFeatures(e.point, { layers: ['net-fill'] })[0];
         const band = kind === 'areas' ? null : map.queryRenderedFeatures(e.point, { layers: ['bands-fill'] })[0];
-        if (!area && !band) return setHovered(null);
-        setHovered(kind === 'areas' && area ? { source: 'net-areas', id: area.id } : null);
+        setHoveredStation(area ? area.properties.s : -1);
+        if (!area && !band) return;
         const s = area ? stations[area.properties.s] : null;
         showStation(s, WAYS[way].phrase + (band ? ' ' + bandLabel(band.properties.b, kind) : ''));
       }
       map.on('mousemove', describe);
       map.on('click', describe);
-      map.on('mouseout', () => setHovered(null));
+      map.on('mouseout', () => {
+        setHovered(null);
+        setHoveredStation(-1);
+      });
 
       // ---- straight-line categories
       fieldset.addEventListener('change', () => {
@@ -569,6 +599,9 @@ export function stationAreasPageHtml({
         assumptions.hidden = !WAYS[way].note;
         fieldset.disabled = !(way === 'luftlinie' && kind === 'areas');
         legend.hidden = kind === 'areas';
+      }
+
+      function renderLegend() {
         if (kind !== 'areas') {
           legend.replaceChildren(
             ...BAND_COLOURS.flatMap((c, b) => {
@@ -595,13 +628,18 @@ export function stationAreasPageHtml({
           kind === 'areas' ? null : loadFile(fileWay + '-' + kind),
         ]);
         if (ticket !== applying) return; // a newer choice won while this one was loading
+        currentBins = bands?.bins || null;
+        renderLegend();
+        setHoveredStation(-1);
         const show = (id, on) => map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         show('cells-fill', straight && kind === 'areas');
         show('cells-line', straight && kind === 'areas');
         // Network areas stay queryable (invisible) under the bands, for the station in the hover.
         map.getSource('net-areas').setData(areas || EMPTY);
         show('net-fill', !straight);
-        map.setPaintProperty('net-fill', 'fill-opacity', kind === 'areas' ? hoverOpacity : 0);
+        map.setPaintProperty('net-fill', 'fill-opacity', kind === 'areas' ? 0.32 : 0);
+        show('net-highlight', !straight && kind === 'areas');
+        show('net-highlight-line', !straight);
         show('net-line', !straight && kind === 'areas');
         map.getSource('bands').setData(bands || EMPTY);
         show('bands-fill', kind !== 'areas');
