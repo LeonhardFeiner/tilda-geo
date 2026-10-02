@@ -423,7 +423,7 @@ export function stationAreasPageHtml({
           id: id + '-fill',
           type: 'fill',
           source,
-          paint: { 'fill-color': fillColour, 'fill-opacity': id === 'cells' ? hoverOpacity : 0.32 },
+          paint: { 'fill-color': fillColour, 'fill-opacity': hoverOpacity },
         });
         map.addLayer({
           id: id + '-line',
@@ -436,15 +436,17 @@ export function stationAreasPageHtml({
           },
         });
       }
-      // A station's network area can be several pieces; hovering one highlights all of them.
-      const NO_STATION = ['==', ['get', 's'], -1];
-      map.addLayer({ id: 'net-highlight', type: 'fill', source: 'net-areas', filter: NO_STATION, paint: { 'fill-color': fillColour, 'fill-opacity': 0.6 } });
+      // A station's network area can be several pieces; hovering one highlights all of them via
+      // feature state (cheap — a filter change would re-tile the whole source on every move).
       map.addLayer({
         id: 'net-highlight-line',
         type: 'line',
         source: 'net-areas',
-        filter: NO_STATION,
-        paint: { 'line-color': '#1c1f23', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 2, 14, 3] },
+        paint: {
+          'line-color': '#1c1f23',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 10, 2, 14, 3],
+          'line-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 1, 0],
+        },
       });
       map.addLayer({ id: 'mask', type: 'fill', source: 'mask', paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.85 } });
       map.addLayer({ id: 'germany-line', type: 'line', source: 'mask', paint: { 'line-color': '#333', 'line-width': 1.2 } });
@@ -500,14 +502,26 @@ export function stationAreasPageHtml({
         hovered = next;
         if (next) map.setFeatureState(next, { hover: true });
       }
-      // All pieces of one station's network area; the fill only where areas are the view, the
-      // outline also over the time/distance bands.
+      // All pieces of one station's network area (feature ids = position in the file, see
+      // generateId); the fill only where areas are the view, the outline also over the bands.
+      let piecesByStation = new Map();
+      function indexPieces(areas) {
+        piecesByStation = new Map();
+        (areas?.features || []).forEach((f, id) => {
+          const list = piecesByStation.get(f.properties.s);
+          if (list) list.push(id);
+          else piecesByStation.set(f.properties.s, [id]);
+        });
+      }
       function setHoveredStation(index) {
         if (index === hoveredStation) return;
+        for (const id of piecesByStation.get(hoveredStation) || []) {
+          map.setFeatureState({ source: 'net-areas', id }, { hover: false });
+        }
         hoveredStation = index;
-        const filter = ['==', ['get', 's'], index];
-        map.setFilter('net-highlight', filter);
-        map.setFilter('net-highlight-line', filter);
+        for (const id of piecesByStation.get(index) || []) {
+          map.setFeatureState({ source: 'net-areas', id }, { hover: true });
+        }
       }
       function showStation(s, detail) {
         hoverBox.innerHTML = '';
@@ -543,7 +557,18 @@ export function stationAreasPageHtml({
         const s = area ? stations[area.properties.s] : null;
         showStation(s, WAYS[way].phrase + (band ? ' ' + bandLabel(band.properties.b, kind) : ''));
       }
-      map.on('mousemove', describe);
+      // At most one hover update per frame; mousemove fires far more often than that.
+      let pendingMove = null;
+      map.on('mousemove', (e) => {
+        if (!pendingMove) {
+          requestAnimationFrame(() => {
+            const ev = pendingMove;
+            pendingMove = null;
+            describe(ev);
+          });
+        }
+        pendingMove = e;
+      });
       map.on('click', describe);
       map.on('mouseout', () => {
         setHovered(null);
@@ -556,7 +581,7 @@ export function stationAreasPageHtml({
         for (const box of fieldset.querySelectorAll('input:checked')) active.add(Number(box.value));
         setHovered(null);
         map.getSource('cells').setData(buildCells());
-        if (way === 'luftlinie') map.getSource('dots').setData(dotsFor(shown));
+        if (way === 'luftlinie' && kind === 'areas') map.getSource('dots').setData(dotsFor(shown));
         syncUrl();
       });
 
@@ -623,6 +648,7 @@ export function stationAreasPageHtml({
       }
 
       let applying = 0;
+      const shownFiles = { areas: '', bands: '', dots: 'shown' };
       async function apply() {
         const ticket = ++applying;
         setHovered(null);
@@ -641,16 +667,29 @@ export function stationAreasPageHtml({
         const show = (id, on) => map.setLayoutProperty(id, 'visibility', on ? 'visible' : 'none');
         show('cells-fill', straight && kind === 'areas');
         show('cells-line', straight && kind === 'areas');
+        // Only hand the map what changed: re-tiling a 13 MB file takes a noticeable moment.
         // Network areas stay queryable (invisible) under the bands, for the station in the hover.
-        map.getSource('net-areas').setData(areas || EMPTY);
+        const areasName = straight ? '' : fileWay + '-areas';
+        if (areasName !== shownFiles.areas) {
+          map.getSource('net-areas').setData(areas || EMPTY);
+          indexPieces(areas);
+          shownFiles.areas = areasName;
+        }
         show('net-fill', !straight);
-        map.setPaintProperty('net-fill', 'fill-opacity', kind === 'areas' ? 0.32 : 0);
-        show('net-highlight', !straight && kind === 'areas');
+        map.setPaintProperty('net-fill', 'fill-opacity', kind === 'areas' ? hoverOpacity : 0);
         show('net-highlight-line', !straight);
         show('net-line', !straight && kind === 'areas');
-        map.getSource('bands').setData(bands || EMPTY);
+        const bandsName = kind === 'areas' ? '' : fileWay + '-' + kind;
+        if (bandsName !== shownFiles.bands) {
+          map.getSource('bands').setData(bands || EMPTY);
+          shownFiles.bands = bandsName;
+        }
         show('bands-fill', kind !== 'areas');
-        map.getSource('dots').setData(dotsFor(straight && kind === 'areas' ? shown : stations));
+        const dotsName = straight && kind === 'areas' ? 'shown' : 'all';
+        if (dotsName !== shownFiles.dots) {
+          map.getSource('dots').setData(dotsFor(dotsName === 'shown' ? shown : stations));
+          shownFiles.dots = dotsName;
+        }
       }
 
       const anyNetwork = Object.keys(ACCESS_FILES).length > 0;
