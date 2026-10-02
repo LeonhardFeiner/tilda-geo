@@ -224,3 +224,41 @@ export function bikelaneGapKm(
   const target = (targetPct / 100) * stat.roadSumKm
   return Math.max(0, target - stat.bikelaneSumKm)
 }
+
+/**
+ * Where a value sits among a reference set, as the share of that set below it (ties count
+ * half, so a pile of zeros reads as "low", not as 0 % or 100 %). `sortedAsc` must be sorted.
+ */
+export function percentileOf(sortedAsc: number[], value: number) {
+  const n = sortedAsc.length
+  if (!n || !Number.isFinite(value)) return null
+  let lo = 0
+  let hi = n
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1
+    if (sortedAsc[mid]! < value) lo = mid + 1
+    else hi = mid
+  }
+  const below = lo
+  let equalEnd = lo
+  while (equalEnd < n && sortedAsc[equalEnd] === value) equalEnd++
+  return (below + (equalEnd - below) / 2) / n
+}
+
+export type ContextBand = 'sehr niedrig' | 'niedrig' | 'mittel' | 'hoch' | 'sehr hoch'
+
+/** Fifths of the distribution, in words: the number alone doesn't say what is a lot. */
+export function contextBand(percentile: number): ContextBand {
+  if (percentile < 0.2) return 'sehr niedrig'
+  if (percentile < 0.4) return 'niedrig'
+  if (percentile < 0.6) return 'mittel'
+  if (percentile < 0.8) return 'hoch'
+  return 'sehr hoch'
+}
+
+export function medianOfSorted(sortedAsc: number[]) {
+  const n = sortedAsc.length
+  if (!n) return null
+  const mid = Math.floor(n / 2)
+  return n % 2 ? sortedAsc[mid]! : (sortedAsc[mid - 1]! + sortedAsc[mid]!) / 2
+}

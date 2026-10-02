@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
   bikelaneGapKm,
+  contextBand,
+  medianOfSorted,
+  percentileOf,
   buildRankingExportRows,
   buildTopFlopDisplayRows,
   computeViewBenchmark,
@@ -159,5 +162,44 @@ describe('bikelaneGapKm', () => {
   test('is zero once the region already meets or beats the target', () => {
     expect(bikelaneGapKm({ roadSumKm: 100, bikelaneSumKm: 20 }, 15)).toBe(0)
     expect(bikelaneGapKm({ roadSumKm: 100, bikelaneSumKm: 15 }, 15)).toBe(0)
+  })
+})
+
+describe('percentileOf / contextBand', () => {
+  const sorted = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+  test('is the share of the reference set below the value', () => {
+    expect(percentileOf(sorted, 1)).toBeCloseTo(0.05)
+    expect(percentileOf(sorted, 5.5)).toBeCloseTo(0.5)
+    expect(percentileOf(sorted, 10)).toBeCloseTo(0.95)
+    expect(percentileOf(sorted, 100)).toBe(1)
+    expect(percentileOf(sorted, -3)).toBe(0)
+  })
+
+  test('counts ties half, so a pile of zeros reads as low rather than extreme', () => {
+    const zeros = [0, 0, 0, 0, 0, 0, 5, 6, 7, 8]
+    expect(percentileOf(zeros, 0)).toBeCloseTo(0.3)
+    expect(contextBand(percentileOf(zeros, 0)!)).toBe('niedrig')
+  })
+
+  test('has no answer for an empty set or a non-number', () => {
+    expect(percentileOf([], 3)).toBeNull()
+    expect(percentileOf(sorted, Number.NaN)).toBeNull()
+  })
+
+  test('names the fifths', () => {
+    expect([0.05, 0.25, 0.5, 0.7, 0.95].map(contextBand)).toEqual([
+      'sehr niedrig',
+      'niedrig',
+      'mittel',
+      'hoch',
+      'sehr hoch',
+    ])
+  })
+
+  test('median of an odd and an even set', () => {
+    expect(medianOfSorted([1, 3, 9])).toBe(3)
+    expect(medianOfSorted([1, 3, 5, 9])).toBe(4)
+    expect(medianOfSorted([])).toBeNull()
   })
 })

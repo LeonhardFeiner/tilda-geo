@@ -603,7 +603,23 @@ export function generateViewerHtml(generatedAt: string) {
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
-    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; white-space: pre-line; }
+    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; }
+    .ctx-caption { margin: 0 0 4px; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: #666; font-weight: 700; }
+    .ctx-row { padding: 2px 0; cursor: help; }
+    .ctx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+    .ctx-label { color: #444; }
+    .ctx-label small { color: #666; font-size: 10px; }
+    .ctx-value { font-variant-numeric: tabular-nums; color: #222; text-align: right; }
+    .ctx-band { font-style: normal; font-size: 10px; font-weight: 700; color: #1565c0; margin-left: 6px; white-space: nowrap; }
+    .ctx-track {
+      position: relative; height: 6px; margin-top: 3px; border-radius: 3px;
+      background: linear-gradient(to right, #e6edf5, #cfdcec);
+    }
+    .ctx-track i { position: absolute; top: 0; bottom: 0; width: 1px; background: #fff; }
+    .ctx-marker {
+      position: absolute; top: -3px; width: 4px; height: 12px; margin-left: -2px;
+      border-radius: 2px; background: #1565c0; box-shadow: 0 0 0 1px #fff;
+    }
     .region-detail-extra[hidden] { display: none !important; }
     .region-detail-trend { margin: 0 0 10px; }
     .region-detail-trend[hidden] { display: none !important; }
@@ -988,7 +1004,7 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
-    <p class="region-detail-extra" id="region-detail-extra" hidden></p>
+    <div class="region-detail-extra" id="region-detail-extra" hidden></div>
     <div class="region-detail-trend" id="region-detail-trend" hidden>
       <h4 id="region-detail-trend-heading"></h4>
       <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
@@ -1480,6 +1496,9 @@ export function generateViewerHtml(generatedAt: string) {
       if (!Number.isFinite(n)) return String(raw);
       if (kind === 'pct') return TildaStats.formatStatPct(n);
       if (kind === 'km') return TildaStats.formatStatKm(n);
+      if (kind === 'num0') return TildaStats.formatStatKm(n, 0);
+      if (kind === 'num1') return TildaStats.formatStatKm(n, 1);
+      if (kind === 'num2') return TildaStats.formatStatKm(n, 2);
       return String(raw);
     }
 
@@ -1494,6 +1513,17 @@ export function generateViewerHtml(generatedAt: string) {
         { key: 'road_km', header: 'Straßen (km)', numeric: 'km' },
         { key: 'bikelane_km', header: 'Radinfra (km)', numeric: 'km' },
         { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: 'pct' },
+        { key: 'data_quality', header: 'Datenlage', numeric: false },
+        { key: 'unclear_share_pct', header: 'Davon unklar getaggt (%)', numeric: 'num1' },
+        { key: 'share_without_unclear_pct', header: 'Radinfra-Anteil ohne unklare Wege (%)', numeric: 'pct' },
+        { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
+        { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
+        { key: 'stationDistance', header: 'Ø Weg zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'elevation', header: 'Höhenlage Ø (m)', numeric: 'num0' },
+        { key: 'elevation_range', header: 'Höhenspanne (m)', numeric: 'num0' },
+        { key: 'areaSlope', header: 'Geländesteigung Ø (%)', numeric: 'num1' },
+        { key: 'roadSlope', header: 'Straßensteigung Ø (%)', numeric: 'num1' },
+        { key: 'roadSteep', header: 'Steilste Straßenabschnitte P95 (%)', numeric: 'num1' },
       ];
       for (const opt of CONFIG.roadClassOptions) {
         cols.push({
@@ -1512,7 +1542,14 @@ export function generateViewerHtml(generatedAt: string) {
       return cols;
     }
 
-    function statsRowFromFeature(f, rank) {
+    const DATA_QUALITY_CSV_LABELS = {
+      good: 'gut',
+      mixed: 'mittel',
+      poor: 'unsicher',
+      sparse: 'kaum erfasst',
+    };
+
+    function statsRowFromFeature(f, rank, contextByKey) {
       const p = f.properties || {};
       const roadKm = p.roadSumKm ?? 0;
       const bikeKm = p.bikelaneSumKm ?? 0;
@@ -1529,6 +1566,21 @@ export function generateViewerHtml(generatedAt: string) {
         bikelane_km: bikeKm,
         bike_share_pct: roadKm > 0 ? (bikeKm / roadKm) * 100 : '',
       };
+      const quality = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
+      row.data_quality = quality ? DATA_QUALITY_CSV_LABELS[quality.level] : '';
+      if (quality && quality.level !== 'sparse') {
+        row.unclear_share_pct = quality.unclearShare * 100;
+        // Only a different number when the unclear ways are part of the current count.
+        if (roadKm > 0 && lengthClassFilter.bikelane.needsClarification) {
+          row.share_without_unclear_pct = Math.max(0, ((bikeKm - quality.unclearKm) / roadKm) * 100);
+        }
+      }
+      for (const [key, metric] of Object.entries(contextByKey || {})) {
+        const v = metric.get(p.id);
+        if (v != null && Number.isFinite(v)) row[key] = v;
+      }
+      const range = terrainIndex?.byId[p.id]?.elevationRange;
+      if (typeof range === 'number') row.elevation_range = range;
       for (const opt of CONFIG.roadClassOptions) {
         row['road_km_' + opt.id] = roadSums[opt.id] ?? 0;
       }
@@ -1539,6 +1591,7 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     function buildStatsCsv(features) {
+      const contextByKey = Object.fromEntries(contextMetrics().map((m) => [m.key, m]));
       const sorted = [...features].sort(compareByBikeShare);
       const rankIndex = new Map();
       sorted
@@ -1551,7 +1604,7 @@ export function generateViewerHtml(generatedAt: string) {
       const header = columns.map((c) => csvEscape(c.header)).join(CSV_SEP);
       const lines = sorted.map((f) => {
         const id = f.properties?.id;
-        const row = statsRowFromFeature(f, id ? rankIndex.get(id) : '');
+        const row = statsRowFromFeature(f, id ? rankIndex.get(id) : '', contextByKey);
         return columns
           .map((c) => {
             const raw = row[c.key];
@@ -1583,8 +1636,15 @@ export function generateViewerHtml(generatedAt: string) {
       URL.revokeObjectURL(url);
     }
 
-    function downloadCurrentViewData() {
+    /** The context figures are fetched on the first region selection; an export needs them too. */
+    async function whenRegionExtraIndexesReady() {
+      ensureRegionExtraIndexes();
+      await regionExtraIndexesPromise;
+    }
+
+    async function downloadCurrentViewData() {
       if (!rawLoaded) return;
+      await whenRegionExtraIndexesReady();
       downloadStatsCsv(currentViewFeaturesForExport(), downloadFilenameForView());
     }
 
@@ -1599,6 +1659,7 @@ export function generateViewerHtml(generatedAt: string) {
           /* export with whatever loaded rather than blocking the download entirely */
         }
       }
+      await whenRegionExtraIndexesReady();
       lengthClassFilter = readLengthClassFilterFromUi();
       downloadStatsCsv(allFeatures.map(enrichFeature), 'radinfra-gesamt.csv');
     }
@@ -2642,108 +2703,189 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailPeerGap.hidden = false;
     }
 
+    const CONTEXT_REFERENCE_NOUN = {
+      '8': 'Gemeinden',
+      '6': 'Landkreisen und kreisfreien Städten',
+      '4': 'Bundesländern',
+    };
+
+    function deNumber(value, digits) {
+      return value.toLocaleString('de-DE', { maximumFractionDigits: digits });
+    }
+
+    /** Each figure the card shows next to the bike share, and how to read it off the data. */
+    function contextMetrics() {
+      const slope = (key) => (id) => {
+        const v = terrainIndex?.byId[id]?.[key];
+        return typeof v === 'number' ? v : null;
+      };
+      return [
+        {
+          key: 'density',
+          label: 'Bevölkerungsdichte',
+          source: densityIndex,
+          get: (id) => (typeof densityIndex?.byId[id] === 'number' ? densityIndex.byId[id] : null),
+          format: (v) => deNumber(Math.round(v), 0) + ' Einw./km²',
+        },
+        {
+          key: 'stops',
+          label: 'Bahn-/Tram-/Fährhaltestellen',
+          source: transitIndex,
+          get: (id) => {
+            const v = transitIndex?.byId[id]?.density;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 2) + ' pro km²',
+        },
+        {
+          key: 'stationDistance',
+          label: 'Ø Weg zur nächsten Haltestelle',
+          note: 'einwohnergewichtet',
+          source: transitIndex,
+          get: (id) => {
+            const v = transitIndex?.byId[id]?.avgDistanceToStationM;
+            return typeof v === 'number' ? v / 1000 : null;
+          },
+          format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
+        },
+        {
+          key: 'elevation',
+          label: 'Höhenlage (Ø)',
+          source: terrainIndex,
+          get: slope('elevationMean'),
+          format: (v, id) => {
+            const range = terrainIndex?.byId[id]?.elevationRange;
+            return (
+              deNumber(Math.round(v), 0) +
+              ' m' +
+              (typeof range === 'number' ? ' (Spanne ' + deNumber(Math.round(range), 0) + ' m)' : '')
+            );
+          },
+        },
+        {
+          key: 'areaSlope',
+          label: 'Geländesteigung (Ø, Fläche)',
+          source: terrainIndex,
+          get: slope('area'),
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'roadSlope',
+          label: 'Straßensteigung (Ø)',
+          source: terrainIndex,
+          get: slope('road'),
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'roadSteep',
+          label: 'Steilste Straßenabschnitte',
+          note: 'P95',
+          source: terrainIndex,
+          get: slope('roadSteepP95'),
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+      ];
+    }
+
+    const contextReferenceCache = new Map();
+
+    /** All values of one figure among regions of one level, sorted — built once per figure. */
+    function contextReference(metric, level) {
+      let byLevel = contextReferenceCache.get(metric.key);
+      if (!byLevel) {
+        byLevel = {};
+        for (const id of Object.keys(metric.source?.byId || {})) {
+          const v = metric.get(id);
+          if (v == null || !Number.isFinite(v)) continue;
+          const lvl = String(regionIndex?.byId.get(id)?.properties?.level ?? '');
+          (byLevel[lvl] ||= []).push(v);
+        }
+        for (const values of Object.values(byLevel)) values.sort((a, b) => a - b);
+        contextReferenceCache.set(metric.key, byLevel);
+      }
+      return byLevel[level] || [];
+    }
+
     /**
      * Population density, rail/tram/ferry-stop density, and terrain flatness — context for why
-     * bike infrastructure varies between regions. Sources: gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
+     * bike infrastructure varies between regions. A bare "104 Einwohner/km²" says little, so
+     * each figure is placed among all regions of the same level in Germany: a marker on a bar
+     * (fifths of the distribution) and a word for the fifth it falls in. Sources:
+     * gemeinde-density.json (fetchGemeindeDemographics.ts), gemeinde-transit.json
      * (fetchTransitStopCounts.ts — rail/tram/ferry only, no bus stops; density is stops/km², plus
      * the population-weighted mean distance to the nearest station from the Zensus 2022 100m
-     * population grid), gemeinde-terrain.json
-     * (fetchTerrainFlatness.ts — mean local slope from Terrarium elevation tiles, sampled both
-     * over the whole Gemeinde area and along the actual road network, plus a steep-spot
-     * percentile and mean/range elevation — see that script's header for why these can diverge,
-     * e.g. a high-elevation plateau can be locally flatter than a lower-lying river valley).
+     * population grid), gemeinde-terrain.json (fetchTerrainFlatness.ts — mean local slope from
+     * Terrarium elevation tiles, sampled both over the whole Gemeinde area and along the actual
+     * road network, plus a steep-spot percentile and mean/range elevation — see that script's
+     * header for why these can diverge, e.g. a high-elevation plateau can be locally flatter than
+     * a lower-lying river valley).
      */
     function renderRegionExtra(p) {
       ensureRegionExtraIndexes();
-      const density = densityIndex ? densityIndex.byId[p.id] : null;
-      const transit = transitIndex ? transitIndex.byId[p.id] : null;
-      const slope = terrainIndex ? terrainIndex.byId[p.id] : null;
-      const lines = [];
-      if (typeof density === 'number') {
-        lines.push('Bevölkerungsdichte: ' + Math.round(density).toLocaleString('de-DE') + ' Einwohner/km²');
-      }
-      if (transit && typeof transit.density === 'number') {
-        lines.push(
-          'Bahn-/Tram-/Fährhaltestellen: ' +
-            transit.density.toLocaleString('de-DE', { maximumFractionDigits: 2 }) +
-            ' pro km²',
-        );
-      }
-      if (transit && typeof transit.avgDistanceToStationM === 'number') {
-        const km = transit.avgDistanceToStationM / 1000;
-        lines.push(
-          'Ø Entfernung zur nächsten Haltestelle (einwohnergewichtet): ' +
-            km.toLocaleString('de-DE', { maximumFractionDigits: km < 10 ? 1 : 0 }) +
-            ' km',
-        );
-      }
-      if (slope && typeof slope.elevationMean === 'number') {
-        let elevationLine = 'Höhenlage (Ø): ' + Math.round(slope.elevationMean).toLocaleString('de-DE') + ' m';
-        if (typeof slope.elevationRange === 'number') {
-          elevationLine += ' (Spanne ' + Math.round(slope.elevationRange).toLocaleString('de-DE') + ' m)';
+      const level = String(p.level ?? '');
+      const noun = CONTEXT_REFERENCE_NOUN[level] || 'Gebieten';
+      regionDetailExtra.replaceChildren();
+      for (const metric of contextMetrics()) {
+        const value = metric.get(p.id);
+        if (value == null || !Number.isFinite(value)) continue;
+        if (!regionDetailExtra.firstChild) {
+          const caption = document.createElement('p');
+          caption.className = 'ctx-caption';
+          caption.textContent = 'Zum Vergleich: unter allen ' + noun + ' in Deutschland';
+          regionDetailExtra.appendChild(caption);
         }
-        lines.push(elevationLine);
+        const row = document.createElement('div');
+        row.className = 'ctx-row';
+        const head = document.createElement('div');
+        head.className = 'ctx-head';
+        const label = document.createElement('span');
+        label.className = 'ctx-label';
+        label.textContent = metric.label;
+        if (metric.note) {
+          const note = document.createElement('small');
+          note.textContent = ' (' + metric.note + ')';
+          label.appendChild(note);
+        }
+        const valueEl = document.createElement('span');
+        valueEl.className = 'ctx-value';
+        valueEl.textContent = metric.format(value, p.id);
+        head.append(label, valueEl);
+        row.appendChild(head);
+
+        const reference = contextReference(metric, level);
+        const pct = reference.length >= 20 ? RankingDisplay.percentileOf(reference, value) : null;
+        if (pct != null) {
+          const band = RankingDisplay.contextBand(pct);
+          const bandEl = document.createElement('em');
+          bandEl.className = 'ctx-band';
+          bandEl.textContent = band;
+          valueEl.appendChild(bandEl);
+          const median = RankingDisplay.medianOfSorted(reference);
+          row.title =
+            'Höher als ' +
+            Math.round(pct * 100) +
+            ' % der ' +
+            noun +
+            ' in Deutschland (Median: ' +
+            metric.format(median, null) +
+            ')';
+          const track = document.createElement('div');
+          track.className = 'ctx-track';
+          for (const fifth of [20, 40, 60, 80]) {
+            const tick = document.createElement('i');
+            tick.style.left = fifth + '%';
+            track.appendChild(tick);
+          }
+          const marker = document.createElement('span');
+          marker.className = 'ctx-marker';
+          marker.style.left = Math.max(1, Math.min(99, pct * 100)) + '%';
+          track.appendChild(marker);
+          row.appendChild(track);
+        }
+        regionDetailExtra.appendChild(row);
       }
-      if (slope && typeof slope.area === 'number') {
-        lines.push(
-          'Mittlere Geländesteigung (Fläche): ' +
-            slope.area.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
-            ' %',
-        );
-      }
-      if (slope && typeof slope.road === 'number') {
-        lines.push(
-          'Mittlere Straßensteigung: ' +
-            slope.road.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
-            ' %',
-        );
-      }
-      if (slope && typeof slope.roadSteepP95 === 'number') {
-        lines.push(
-          'Steilste Straßenabschnitte (P95): ' +
-            slope.roadSteepP95.toLocaleString('de-DE', { maximumFractionDigits: 1 }) +
-            ' %',
-        );
-      }
-      if (!lines.length) {
-        regionDetailExtra.hidden = true;
-        regionDetailExtra.textContent = '';
-        return;
-      }
-      regionDetailExtra.textContent = lines.join('\\n');
-      regionDetailExtra.hidden = false;
+      regionDetailExtra.hidden = !regionDetailExtra.firstChild;
     }
-
-    // Live historical trend, fetched on demand from the ohsome API (HeiGIT) — an OSM full-history
-    // aggregation service. Approximate (its filter can't reach TILDA's exact bikelane
-    // classification) so it's kept opt-in and clearly labelled, rather than baked into every
-    // region's stats. Scoped to Landkreis/Gemeinde (level 6/8) to keep geometry payloads small.
-    const OHSOME_ELEMENTS_LENGTH_URL = 'https://api.ohsome.org/v1/elements/length';
-    const OHSOME_TREND_FIRST_YEAR = 2012;
-    // Verified live against TILDA's own numbers for a real region (Münchsmünster: 14.2%):
-    // plain 'highway=*' pulls in footways/paths/tracks/steps TILDA's road classes don't count
-    // (170km vs 123km there), and the old bike filter only matched cycleway=*-style tags,
-    // completely missing highway=footway/path + bicycle=yes|designated shared paths — 63% of
-    // this region's actual bike infrastructure in TILDA's own classification (3.5km vs 17.5km
-    // ohsome saw). Combined, the trend read 2.0% instead of 14.2% — a ~7x error, not just
-    // rounding noise. This still won't exactly match TILDA's fuller classification (needsClarification
-    // and similar edge cases aren't reachable by a simple tag filter), but the same region now
-    // comes back at ~16.8%, an ~18% relative error instead of ~86%.
-    const OHSOME_ROAD_FILTER =
-      'highway in (motorway, trunk, primary, secondary, tertiary, unclassified, residential, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link, living_street, service) and geometry:line';
-    const OHSOME_BIKELANE_FILTER =
-      '(highway=cycleway or cycleway=* or cycleway:both=* or cycleway:left=* or cycleway:right=* or bicycle_road=yes or (highway in (footway, path) and bicycle in (yes, designated))) and geometry:line';
-    const trendCache = new Map(); // region id -> { years, sharePct } | 'error'
-    let trendFeature = null;
-
-    // Persist successful trend fetches across visits — the underlying OSM history barely
-    // changes day to day, and each fetch is two ohsome API calls the visitor otherwise pays
-    // for again every single time they reopen the same region. Errors are not persisted (an
-    // outage shouldn't stick around after ohsome recovers).
-    // v2: bumped when OHSOME_ROAD_FILTER/OHSOME_BIKELANE_FILTER changed (2026-09) to fix a ~7x
-    // undercount — invalidates any v1 entries still sitting in a returning visitor's storage.
-    const TREND_STORAGE_PREFIX = 'bikeShareTrend:v2:';
-    const TREND_STORAGE_MAX_AGE_MS = 14 * 24 * 60 * 60 * 1000;
 
     function readTrendFromStorage(id) {
       try {
