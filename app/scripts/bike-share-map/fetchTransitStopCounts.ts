@@ -121,7 +121,9 @@ async function fetchAvgDistanceToStation(client: Client) {
   await client.query(
     `
     CREATE TEMP TABLE _population_grid_pts AS
-    SELECT ST_Transform(ST_SetSRID(ST_MakePoint(x, y), 3035), 3857) AS geom, einwohner
+    SELECT ST_Transform(ST_SetSRID(ST_MakePoint(x, y), 3035), 3857) AS geom,
+           ST_Y(ST_Transform(ST_SetSRID(ST_MakePoint(x, y), 3035), 4326)) AS lat,
+           einwohner
     FROM UNNEST($1::float8[], $2::float8[], $3::int[]) AS t(x, y, einwohner)
     `,
     [xs, ys, einwohner],
@@ -129,7 +131,8 @@ async function fetchAvgDistanceToStation(client: Client) {
   await client.query(`CREATE INDEX ON _population_grid_pts USING gist(geom)`)
   const { rows } = await client.query<{ id: string; avg_dist_m: number; population: string }>(`
     SELECT al.id,
-           SUM(nearest.dist * pt.einwohner) / SUM(pt.einwohner) AS avg_dist_m,
+           -- Web Mercator units are 1/cos(lat) metres (~1.6 in Germany); scale back to metres.
+           SUM(nearest.dist * cos(radians(pt.lat)) * pt.einwohner) / SUM(pt.einwohner) AS avg_dist_m,
            SUM(pt.einwohner) AS population
     FROM public.aggregated_lengths al
     JOIN _population_grid_pts pt ON pt.geom && al.geom
