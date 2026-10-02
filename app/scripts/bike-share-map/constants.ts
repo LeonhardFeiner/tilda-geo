@@ -83,3 +83,9 @@ export const BAYERN_SCOPES = {
     bikelanesMinZoom: 11,
   },
 } satisfies Record<string, MapScopeConfig>
+
+/**
+ * Unlisted "nearest station" map (stationAreasPage.ts) — linked from nowhere and marked
+ * noindex. Its data file uses the same stem.
+ */
+export const STATION_AREAS_PAGE_STEM = 'naechste-station'

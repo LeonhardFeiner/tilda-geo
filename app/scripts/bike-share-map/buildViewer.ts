@@ -18,12 +18,13 @@ import {
   encodeStatsRegionPack,
   splitStatsFeaturesByLevel,
 } from '../stats-export/statsRegionPack'
-import { PROJECT_LEAD, VIEWER_SOURCE_REPO_URL } from './constants'
+import { PROJECT_LEAD, STATION_AREAS_PAGE_STEM, VIEWER_SOURCE_REPO_URL } from './constants'
 import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { methodologyPageHtml } from './methodologyPage'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
+import { stationAreasPageHtml } from './stationAreasPage'
 import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
 
 type StatsGeoFeature = {
@@ -260,6 +261,22 @@ writeFileSync(
   'utf8',
 )
 process.stdout.write(`Methodology: ${viewerDir}/methodik.html\n`)
+
+// Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations).
+const stationsPath = join(outputRoot, 'stations.json')
+if (existsSync(stationsPath)) {
+  const stationsJson = await Bun.file(stationsPath).text()
+  writeFileSync(join(viewerDir, `${STATION_AREAS_PAGE_STEM}.json`), stationsJson)
+  writeFileSync(
+    join(viewerDir, `${STATION_AREAS_PAGE_STEM}.html`),
+    stationAreasPageHtml({
+      dataHref: `./${STATION_AREAS_PAGE_STEM}.json`,
+      dataDateLabel,
+    }),
+    'utf8',
+  )
+  process.stdout.write(`Nearest-station map: ${viewerDir}/${STATION_AREAS_PAGE_STEM}.html\n`)
+}
 
 const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },
