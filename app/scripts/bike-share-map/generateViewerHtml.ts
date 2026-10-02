@@ -1526,9 +1526,11 @@ export function generateViewerHtml(generatedAt: string) {
         { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
-        { key: 'stationBike', header: 'Ø mit dem Rad zur nächsten Haltestelle (min, entlang der Wege, einwohnergewichtet)', numeric: 'num1' },
-        { key: 'station_bike_km', header: 'Ø Radweg zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
-        { key: 'station_bike_within_pct', header: 'Einwohner mit dem Rad in 10 min an einer Haltestelle (%)', numeric: 'num1' },
+        ...STATION_ACCESS_MODES.flatMap((m) => [
+          { key: 'station_' + m.key + '_min', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (min, einwohnergewichtet)', numeric: 'num1' },
+          { key: 'station_' + m.key + '_km', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
+          { key: 'station_' + m.key + '_within_pct', header: 'Einwohner ' + m.csv + ' in 10 min an einer Haltestelle (%)', numeric: 'num1' },
+        ]),
         { key: 'elevation', header: 'Höhenlage Ø (m)', numeric: 'num0' },
         { key: 'elevation_range', header: 'Höhenspanne (m)', numeric: 'num0' },
         { key: 'areaSlope', header: 'Geländesteigung Ø (%)', numeric: 'num1' },
@@ -1591,9 +1593,14 @@ export function generateViewerHtml(generatedAt: string) {
       }
       const range = terrainIndex?.byId[p.id]?.elevationRange;
       if (typeof range === 'number') row.elevation_range = range;
-      const transit = transitIndex?.byId[p.id];
-      if (typeof transit?.bikeKm === 'number') row.station_bike_km = transit.bikeKm;
-      if (typeof transit?.bikeWithinPct === 'number') row.station_bike_within_pct = transit.bikeWithinPct;
+      const access = transitIndex?.byId[p.id]?.access;
+      for (const m of STATION_ACCESS_MODES) {
+        const a = access?.[m.key];
+        if (!a) continue;
+        row['station_' + m.key + '_min'] = a[0];
+        row['station_' + m.key + '_km'] = a[1];
+        row['station_' + m.key + '_within_pct'] = a[2];
+      }
       for (const opt of CONFIG.roadClassOptions) {
         row['road_km_' + opt.id] = roadSums[opt.id] ?? 0;
       }
@@ -2734,6 +2741,20 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     /** Each figure the card shows next to the bike share, and how to read it off the data. */
+    /** 7,5 min · 34 min · 2 h 10 min */
+    function formatMinutes(v) {
+      if (v < 10) return deNumber(v, 1) + ' min';
+      if (v < 60) return deNumber(Math.round(v), 0) + ' min';
+      const total = Math.round(v);
+      return Math.floor(total / 60) + ' h' + (total % 60 ? ' ' + (total % 60) + ' min' : '');
+    }
+
+    const STATION_ACCESS_MODES = [
+      { key: 'foot', label: 'zu Fuß', csv: 'zu Fuß' },
+      { key: 'bike', label: 'Rad', csv: 'mit dem Rad' },
+      { key: 'car', label: 'Auto', csv: 'mit dem Auto' },
+    ];
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -2769,21 +2790,24 @@ export function generateViewerHtml(generatedAt: string) {
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
         },
         {
-          key: 'stationBike',
-          label: 'Ø mit dem Rad zur nächsten Haltestelle',
+          // One line for all three modes, so no single position bar: the bar would have to
+          // pick one mode. Present whenever any mode has a figure.
+          key: 'stationAccess',
+          label: 'Ø zur nächsten Haltestelle',
           note: 'entlang der Wege, einwohnergewichtet',
           source: transitIndex,
+          noBar: true,
           get: (id) => {
-            const v = transitIndex?.byId[id]?.bikeMinutes;
+            const access = transitIndex?.byId[id]?.access;
+            const v = access?.bike?.[0] ?? access?.foot?.[0] ?? access?.car?.[0];
             return typeof v === 'number' ? v : null;
           },
           format: (v, id) => {
-            const km = transitIndex?.byId[id]?.bikeKm;
-            return (
-              deNumber(v, v < 10 ? 1 : 0) +
-              ' min' +
-              (typeof km === 'number' ? ' (' + deNumber(km, km < 10 ? 1 : 0) + ' km)' : '')
-            );
+            const access = id ? transitIndex?.byId[id]?.access : null;
+            if (!access) return deNumber(v, 0) + ' min';
+            return STATION_ACCESS_MODES.filter((m) => access[m.key])
+              .map((m) => m.label + ' ' + formatMinutes(access[m.key][0]))
+              .join(' · ');
           },
         },
         {
@@ -2972,7 +2996,7 @@ export function generateViewerHtml(generatedAt: string) {
         head.append(label, valueEl);
         row.appendChild(head);
 
-        const reference = contextReference(metric, level, scope);
+        const reference = metric.noBar ? [] : contextReference(metric, level, scope);
         const pct =
           reference.length >= CONTEXT_MIN_REFERENCE
             ? RankingDisplay.percentileOf(reference, value)

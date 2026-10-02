@@ -55,3 +55,4 @@ test-results/
 # OSM extract, parsed network and per-square results stay local.
 scripts/bike-share-map/routing/.venv/
 scripts/bike-share-map/routing/cache/
+scripts/bike-share-map/routing/__pycache__/
