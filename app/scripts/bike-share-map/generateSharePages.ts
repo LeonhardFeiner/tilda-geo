@@ -120,7 +120,6 @@ export async function generateSharePages() {
 
   const nameById = new Map<string, string>()
   const rsById = new Map<string, string>()
-  let deutschlandId = ''
   const regions: ShareRegionInput[] = []
   for (const f of features) {
     const p = f.properties
@@ -128,7 +127,6 @@ export async function generateSharePages() {
     const id = String(p.id ?? '')
     if (id) nameById.set(id, String(p.name ?? id))
     if (id && p.regionalschluessel) rsById.set(id, String(p.regionalschluessel))
-    if (String(p.level ?? '') === '2') deutschlandId = id
     const input = shareRegionInputFromFeature(f)
     if (input && ['4', '6', '8'].includes(input.level)) regions.push(input)
   }
@@ -183,7 +181,7 @@ export async function generateSharePages() {
     const ogImageFile = inScope ? `${slug}.png` : null
     const html = shareStubHtml(summary, {
       baseUrl: SHARE_PAGE_BASE_URL,
-      redirectQuery: shareRedirectQuery(summary, deutschlandId),
+      redirectQuery: shareRedirectQuery(summary),
       ogImageFile,
       dataDateLabel,
     })

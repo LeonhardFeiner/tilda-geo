@@ -35,8 +35,7 @@ export function viewerRegionNavScript() {
 
     function isUiMinimal() {
       const p = new URLSearchParams(location.search);
-      if (p.get('ui') === 'minimal' || p.get('embed') === '1') return true;
-      if (p.get('chrome') === '0') return true;
+      if (p.get('embed') === '1' || p.get('chrome') === '0') return true;
       const m = (p.get('minimal') ?? '').toLowerCase();
       return m === '1' || m === 'true' || m === 'yes';
     }
@@ -574,39 +573,21 @@ export function viewerRegionNavScript() {
     }
 
     /**
-     * ?focus=<id>&simple=<preset> (optionally with the old ?ui=simple). A neighbour preset
-     * becomes the neighbour view; the plain ones — what the former "simple view" listed besides
-     * neighbours, and what every old share link points at — are just a scope, so they resolve
-     * to one. Returns null when the URL names neither.
+     * ?focus=<id>&simple=<neighbour preset> — the neighbour view. Returns null when the URL
+     * doesn't name one, so the plain gebiet/untergebiet/darstellung scope applies.
      */
     function resolveFocusViewFromUrl(params) {
-      const legacySimple = params.get('ui') === 'simple' || params.get('view') === 'simple';
-      if (!legacySimple && !(params.get('focus') && params.get('simple'))) return null;
-      const gebietParam = params.get('gebiet');
-      const focusParam =
-        params.get('focus') ||
-        (legacySimple && gebietParam !== 'simple' ? gebietParam : null) ||
-        regionIndex.deutschlandId ||
-        RegionNav.DEUTSCHLAND_GEBIET;
-      const ctx = SimpleView.resolveFocusContext(focusParam, regionIndex);
-      if (!ctx) return null;
-      let preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
-      if (preset === 'lk_neighbors_kreisfrei' || preset === 'lk_neighbors_stadtstaat') {
-        preset = 'neighbors_other';
+      const ctx = SimpleView.resolveFocusContext(params.get('focus'), regionIndex);
+      const preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
+      if (!params.get('focus') || !ctx || !preset || !SimpleView.presetUsesNeighborFilter(preset)) {
+        return null;
       }
-      if (!preset) preset = SimpleView.defaultSimplePresetForFocus(ctx, regionIndex);
-      if (SimpleView.presetUsesNeighborFilter(preset)) {
-        const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
-        if (!scope) return null;
-        neighborFocus = ctx;
-        neighborPreset = preset;
-        neighborViewActive = !isUiMinimal();
-        return scope;
-      }
-      return (
-        SimpleView.simplePresetToViewScope(preset, ctx) ??
-        SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex)
-      );
+      const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
+      if (!scope) return null;
+      neighborFocus = ctx;
+      neighborPreset = preset;
+      neighborViewActive = !isUiMinimal();
+      return scope;
     }
 
     function resolveViewScopeFromUrl() {
@@ -614,12 +595,7 @@ export function viewerRegionNavScript() {
       neighborViewActive = false;
       const focusScope = resolveFocusViewFromUrl(params);
       if (focusScope) return focusScope;
-      const legacyView = params.get('view') || params.get('gebiet');
-      if (legacyView && legacyView !== 'simple' && !params.get('darstellung')) {
-        const legacy = RegionNav.viewScopeFromLegacyViewId(decodeURIComponent(legacyView), regionIndex);
-        if (legacy) return legacy;
-      }
-      const gebiet = RegionNav.parseGebietParam(params.get('gebiet') ?? legacyView, regionIndex);
+      const gebiet = RegionNav.parseGebietParam(params.get('gebiet'), regionIndex);
       const untergebiet = RegionNav.parseUntergebietParam(params.get('untergebiet'));
       let darstellung =
         RegionNav.parseDarstellungParam(params.get('darstellung')) ||
@@ -666,7 +642,6 @@ export function viewerRegionNavScript() {
     }
 
     function appendViewScopeToUrl(params) {
-      params.delete('ui');
       params.delete('gebiet');
       params.delete('untergebiet');
       params.delete('darstellung');

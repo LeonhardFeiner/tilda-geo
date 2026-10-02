@@ -334,16 +334,17 @@ process.stdout.write(`URL params (all optional):\n`)
 process.stdout.write(`  gebiet           deutschland | relation/… (Bundesland)\n`)
 process.stdout.write(`  untergebiet      rb:… | lk:… | kreisfreie:… | stadt:…\n`)
 process.stdout.write(`  darstellung      bundeslaender | landkreis_kreisfrei | gemeinden | …\n`)
-process.stdout.write(`  minimal / ui     minimal=1 or ui=minimal hides the control panel\n`)
+process.stdout.write(
+  `  minimal          minimal=1 (or embed=1, chrome=0) hides the control panel\n`,
+)
 process.stdout.write(
   `  focus + simple  neighbour view (focus= relation id, simple= neighbour preset id)\n`,
 )
 process.stdout.write(
   `  region           relation/… – preselect that region's detail card on load\n`,
 )
-process.stdout.write(`  view / gebiet    legacy view ids still supported\n`)
 process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
-process.stdout.write(`  radwege / bikelanes   1 | 0\n`)
-process.stdout.write(`  strassen / roads      1 | 0\n`)
-process.stdout.write(`  ranking          open | 1 | 0\n`)
-process.stdout.write(`  colors / palette / farbskala   traffic (default) | green | colorblind\n`)
+process.stdout.write(`  radwege          1 | 0\n`)
+process.stdout.write(`  strassen         1 | 0\n`)
+process.stdout.write(`  ranking          1 | 0\n`)
+process.stdout.write(`  colors           traffic (default) | green | colorblind\n`)

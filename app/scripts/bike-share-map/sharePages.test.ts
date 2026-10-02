@@ -188,50 +188,40 @@ describe('slugForId / shareRedirectParams', () => {
     expect(slugForId('relation/396557')).toBe('relation-396557')
   })
 
-  test('a Gemeinde focuses itself; a Landkreis and Bundesland focus their parent', () => {
+  test('each region opens among its comparison group', () => {
     expect(
-      shareRedirectParams(
-        {
-          id: 'relation/396557',
-          groupKind: 'gemeinden_in_landkreis',
-          bundeslandId: 'relation/2145268',
-        },
-        'relation/51477',
-      ),
+      shareRedirectParams({
+        id: 'relation/396557',
+        groupKind: 'gemeinden_in_landkreis',
+        bundeslandId: 'relation/2145268',
+        landkreisId: 'relation/62371',
+      }),
     ).toEqual({
-      ui: 'simple',
-      focus: 'relation/396557',
-      simple: 'lk_gemeinden',
+      gebiet: 'relation/2145268',
+      untergebiet: 'lk:relation/62371',
+      darstellung: 'gemeinden',
       region: 'relation/396557',
     })
 
     expect(
-      shareRedirectParams(
-        {
-          id: 'relation/62371',
-          groupKind: 'landkreise_in_bundesland',
-          bundeslandId: 'relation/2145268',
-        },
-        'relation/51477',
-      ),
+      shareRedirectParams({
+        id: 'relation/62371',
+        groupKind: 'landkreise_in_bundesland',
+        bundeslandId: 'relation/2145268',
+      }),
     ).toEqual({
-      ui: 'simple',
-      focus: 'relation/2145268',
-      simple: 'bl_landkreis_kreisfrei',
+      gebiet: 'relation/2145268',
+      darstellung: 'landkreis_kreisfrei',
       region: 'relation/62371',
     })
 
     expect(
-      shareRedirectParams(
-        { id: 'relation/2145268', groupKind: 'bundeslaender_in_deutschland', bundeslandId: '' },
-        'relation/51477',
-      ),
-    ).toEqual({
-      ui: 'simple',
-      focus: 'relation/51477',
-      simple: 'de_bundeslaender',
-      region: 'relation/2145268',
-    })
+      shareRedirectParams({
+        id: 'relation/2145268',
+        groupKind: 'bundeslaender_in_deutschland',
+        bundeslandId: '',
+      }),
+    ).toEqual({ darstellung: 'bundeslaender', region: 'relation/2145268' })
   })
 })
 

@@ -190,30 +190,33 @@ export function slugForId(id: string) {
   return id.replace(/[^a-zA-Z0-9]+/g, '-')
 }
 
-/** URL params for the live viewer that focus the region's comparison group and open its card. */
+/**
+ * URL params for the live viewer that show the region's comparison group and open its card:
+ * a Gemeinde among the Gemeinden of its Landkreis, a Landkreis among those of its Bundesland,
+ * a Bundesland among all Bundesländer.
+ */
 export function shareRedirectParams(
-  s: Pick<ShareRegionSummary, 'id' | 'groupKind' | 'bundeslandId'>,
-  deutschlandId: string,
+  s: Pick<ShareRegionSummary, 'id' | 'groupKind' | 'bundeslandId' | 'landkreisId'>,
 ): Record<string, string> {
+  const params: Record<string, string> = {}
   if (s.groupKind === 'gemeinden_in_landkreis') {
-    return { ui: 'simple', focus: s.id, simple: 'lk_gemeinden', region: s.id }
+    if (s.bundeslandId) params.gebiet = s.bundeslandId
+    if (s.landkreisId) params.untergebiet = `lk:${s.landkreisId}`
+    params.darstellung = 'gemeinden'
+  } else if (s.groupKind === 'landkreise_in_bundesland') {
+    if (s.bundeslandId) params.gebiet = s.bundeslandId
+    params.darstellung = 'landkreis_kreisfrei'
+  } else {
+    params.darstellung = 'bundeslaender'
   }
-  if (s.groupKind === 'landkreise_in_bundesland') {
-    return {
-      ui: 'simple',
-      focus: s.bundeslandId || deutschlandId,
-      simple: 'bl_landkreis_kreisfrei',
-      region: s.id,
-    }
-  }
-  return { ui: 'simple', focus: deutschlandId, simple: 'de_bundeslaender', region: s.id }
+  params.region = s.id
+  return params
 }
 
 export function shareRedirectQuery(
-  s: Pick<ShareRegionSummary, 'id' | 'groupKind' | 'bundeslandId'>,
-  deutschlandId: string,
+  s: Pick<ShareRegionSummary, 'id' | 'groupKind' | 'bundeslandId' | 'landkreisId'>,
 ) {
-  return new URLSearchParams(shareRedirectParams(s, deutschlandId)).toString()
+  return new URLSearchParams(shareRedirectParams(s)).toString()
 }
 
 function escapeHtml(text: string) {

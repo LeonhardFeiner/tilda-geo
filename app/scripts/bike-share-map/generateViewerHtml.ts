@@ -4757,13 +4757,13 @@ export function generateViewerHtml(generatedAt: string) {
         map.setStyle(CONFIG.basemapStyles[basemap]);
       }
 
-      const radwege = params.get('radwege') ?? params.get('bikelanes');
+      const radwege = params.get('radwege');
       if (radwege != null && radwege !== '') {
         toggleBikelanes.checked = parseBoolParam(radwege, true);
       } else if (live) {
         toggleBikelanes.checked = true;
       }
-      const strassen = params.get('strassen') ?? params.get('roads');
+      const strassen = params.get('strassen');
       if (strassen != null && strassen !== '') {
         toggleRoads.checked = parseBoolParam(strassen, false);
       } else if (live) {
@@ -4772,7 +4772,7 @@ export function generateViewerHtml(generatedAt: string) {
 
       const ranking = params.get('ranking');
       if (ranking != null && ranking !== '') {
-        rankingDetails.open = parseBoolParam(ranking, true) || ranking === 'open';
+        rankingDetails.open = parseBoolParam(ranking, true);
       } else {
         rankingDetails.open = true;
       }
@@ -4786,7 +4786,7 @@ export function generateViewerHtml(generatedAt: string) {
       }
       lastRankingViewAvailable = true;
 
-      const colors = params.get('colors') ?? params.get('palette') ?? params.get('farbskala');
+      const colors = params.get('colors');
       let scaleFromUrl = null;
       if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
         colorScaleSelect.value = colors;
@@ -4796,14 +4796,14 @@ export function generateViewerHtml(generatedAt: string) {
         scaleFromUrl = CONFIG.defaultColorScale;
       }
 
-      const cap = params.get('cap') ?? params.get('kappung');
+      const cap = params.get('cap');
       if (cap != null && cap !== '') {
         const capNum = Number(cap);
         if (Number.isFinite(capNum)) scaleCapPctInput.value = String(capNum);
       } else if (live) {
         scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
       }
-      const capEnabled = params.get('capEnabled') ?? params.get('kappungEnabled');
+      const capEnabled = params.get('capEnabled');
       if (capEnabled != null && capEnabled !== '') {
         scaleCapEnabledCb.checked = parseBoolParam(
           capEnabled,
@@ -4813,7 +4813,7 @@ export function generateViewerHtml(generatedAt: string) {
       } else {
         updateScaleCapDefaultForView();
       }
-      const robustScale = params.get('robustScale') ?? params.get('ausreisser');
+      const robustScale = params.get('robustScale');
       if (robustScale != null && robustScale !== '') {
         scaleRobustEnabledCb.checked = parseBoolParam(
           robustScale,

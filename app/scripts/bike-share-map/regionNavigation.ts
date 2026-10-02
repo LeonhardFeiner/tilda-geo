@@ -81,13 +81,6 @@ export const DISPLAY_PRESETS = [
 ] satisfies DisplayPreset[]
 
 /** Old preset ids from URLs/bookmarks → current presets. */
-const DARSTELLUNG_ALIASES: Record<string, DisplayPresetId> = {
-  regierungsbezirke_und_stadtstaaten: 'regierungsbezirke',
-  landkreise_und_stadtstaaten: 'landkreis_kreisfrei',
-  gemeindeverbaende_und_stadtstaaten: 'gemeindeverbaende_kreisfrei',
-  gemeinden_und_stadtstaaten: 'gemeinden_kreisfrei',
-}
-
 export type RegionRef = { id: string; name: string; level: string }
 
 export type RegionFeatureProps = {
@@ -741,16 +734,6 @@ export function computeLazyDarstellungPresence(
   return presence
 }
 
-/** @deprecated Use {@link listDarstellungPresetsForScope} – coverage groups are no longer shown in the UI. */
-export function listDarstellungPresetGroupsForScope(
-  view: ViewScope,
-  index: RegionIndex,
-  features: StatsFeature[],
-) {
-  const presets = listDarstellungPresetsForScope(view, index, features)
-  return presets.length ? [{ coverage: 'full' as const, label: '', presets }] : []
-}
-
 export function preferredDarstellungPresetForScope(
   gebiet: GebietValue,
   untergebiet: UntergebietValue,
@@ -1053,7 +1036,7 @@ export function parseUntergebietParam(value: string | null): UntergebietValue {
 }
 
 export function parseGebietParam(value: string | null, index: RegionIndex): GebietValue {
-  if (!value || value === 'deutschland' || value === 'de') return DEUTSCHLAND_GEBIET
+  if (!value || value === DEUTSCHLAND_GEBIET) return DEUTSCHLAND_GEBIET
   const decoded = decodeURIComponent(value)
   if (index.byId.has(decoded)) return decoded
   return DEUTSCHLAND_GEBIET
@@ -1061,59 +1044,8 @@ export function parseGebietParam(value: string | null, index: RegionIndex): Gebi
 
 export function parseDarstellungParam(value: string | null): DisplayPresetId | null {
   if (!value) return null
-  const raw = decodeURIComponent(value)
-  const id = (DARSTELLUNG_ALIASES[raw] ?? raw) as DisplayPresetId
+  const id = decodeURIComponent(value) as DisplayPresetId
   return DISPLAY_PRESETS.some((p) => p.id === id) ? id : null
-}
-
-/** Legacy view= URLs → ViewScope */
-export function viewScopeFromLegacyViewId(viewId: string, index: RegionIndex): ViewScope | null {
-  if (viewId === 'bayern-landkreise-kreisfreie' || viewId === 'bayern-landkreise') {
-    const bayern = 'relation/2145268'
-    return {
-      gebiet: bayern,
-      untergebiet: '',
-      darstellung:
-        viewId.includes('kreisfrei') && !viewId.includes('landkreise-kreisfreie')
-          ? 'landkreise'
-          : 'landkreis_kreisfrei',
-    }
-  }
-  if (viewId === 'bayern-gemeinden-kreisfreie') {
-    return { gebiet: 'relation/2145268', untergebiet: '', darstellung: 'gemeinden_kreisfrei' }
-  }
-  if (viewId === 'bayern-gemeinden') {
-    return { gebiet: 'relation/2145268', untergebiet: '', darstellung: 'gemeinden' }
-  }
-  if (viewId === 'bayern-kreisfreie-staedte') {
-    return { gebiet: 'relation/2145268', untergebiet: '', darstellung: 'kreisfreie' }
-  }
-  if (viewId.startsWith('landkreis:')) {
-    return {
-      gebiet: 'relation/2145268',
-      untergebiet: `lk:${viewId.slice('landkreis:'.length)}`,
-      darstellung: 'gemeinden',
-    }
-  }
-  if (viewId.startsWith('kreisfrei:')) {
-    return {
-      gebiet: 'relation/2145268',
-      untergebiet: `kreisfrei:${viewId.slice('kreisfrei:'.length)}`,
-      darstellung: 'gemeinden_kreisfrei',
-    }
-  }
-  if (index.byId.has(viewId)) {
-    const f = index.byId.get(viewId)!
-    const level = regionLevel(f)
-    if (level === '4') {
-      return {
-        gebiet: viewId,
-        untergebiet: '',
-        darstellung: defaultDarstellungForScope(viewId, '', index),
-      }
-    }
-  }
-  return null
 }
 
 export function scopeBoundsFeatures(

@@ -11,7 +11,6 @@ import {
   isStandaloneGemeinde,
   listAllBundeslaender,
   listDarstellungPresetsForScope,
-  parseDarstellungParam,
   preferredDarstellungPresetForScope,
   presetCoverageForScope,
   presetIncludesStadtstaatenUnits,
@@ -275,11 +274,6 @@ describe('regionNavigation', () => {
     expect(presetLabelForScope(gemeinden, 'relation/BY', '')).toBe(
       'Gemeinden und kreisfreie Städte',
     )
-  })
-
-  test('darstellung aliases from old urls', () => {
-    expect(parseDarstellungParam('landkreise_und_stadtstaaten')).toBe('landkreis_kreisfrei')
-    expect(parseDarstellungParam('gemeinden_und_stadtstaaten')).toBe('gemeinden_kreisfrei')
   })
 
   test('unit level hierarchy: coarser before finer mixed presets', () => {
