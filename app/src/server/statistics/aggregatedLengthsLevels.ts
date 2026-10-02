@@ -12,5 +12,8 @@ export function levelKeyForAdminLevel(level: string | null) {
   if (level === '7') return 'verwaltungsgemeinschaft'
   if (level === '8') return 'gemeinde'
   if (level === '9') return 'gemeindebezirk'
+  if (level === '10') return 'stadtteil'
+  if (level === '11') return 'quartier'
+  if (level === '12') return 'admin12'
   return ''
 }

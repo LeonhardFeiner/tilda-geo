@@ -122,9 +122,10 @@ SELECT
   atlas_aggregate_roads(geom)
 FROM boundaries
 -- Upstream production aggregates admin levels 4 & 6 only. Local bike-share-map
--- builds also need 7-9 (Gemeinde/Gemeindebezirk); keep the wider net here since
--- this only runs against the local processing DB.
-WHERE (tags->>'admin_level')::TEXT IN ('2', '3', '4', '5', '6', '7', '8', '9')
+-- builds also need 7-9 (Gemeinde/Gemeindebezirk) and the finer city levels 10-12
+-- (Stadtteile, Quartiere); keep the wider net here since this only runs against the
+-- local processing DB. The viewer export decides which of these levels get shipped.
+WHERE (tags->>'admin_level')::TEXT IN ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12')
 ON CONFLICT (id)
   DO UPDATE SET
     name = EXCLUDED.name,
