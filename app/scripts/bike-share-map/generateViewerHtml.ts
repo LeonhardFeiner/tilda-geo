@@ -476,6 +476,7 @@ export function generateViewerHtml(generatedAt: string) {
     .ranking-mode {
       display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
     }
+    .ranking-mode[hidden] { display: none; }
     .ranking-mode-btn {
       font-size: 11px; padding: 3px 8px; border: none; background: #f5f5f5;
       color: #444; cursor: pointer;
@@ -943,7 +944,7 @@ export function generateViewerHtml(generatedAt: string) {
     <details class="panel-section ranking" id="ranking-details" open>
         <summary>Rangliste <span class="ranking-hint" id="ranking-summary"></span></summary>
         <div class="ranking-toolbar" id="ranking-toolbar">
-          <div class="ranking-mode" role="group" aria-label="Ranglisten-Ansicht">
+          <div class="ranking-mode" id="ranking-mode" role="group" aria-label="Ranglisten-Ansicht">
             <button type="button" class="ranking-mode-btn" data-ranking-mode="topflop" aria-pressed="true">Top &amp; Flop</button>
             <button type="button" class="ranking-mode-btn" data-ranking-mode="all" aria-pressed="false">Alle</button>
           </div>
@@ -3619,6 +3620,17 @@ export function generateViewerHtml(generatedAt: string) {
       rebuildRankIndex(sorted);
 
       const topN = currentRankingTopN() ?? DEFAULT_RANKING_TOP_N;
+      // Top & Flop and Alle show the same rows for a short list, so the switch would do nothing.
+      const modeSwitch = document.getElementById('ranking-mode');
+      if (modeSwitch) {
+        const topFlopN =
+          RankingDisplay.effectiveRankingTopN({
+            mode: 'topflop',
+            items: withPct.map((f) => ({ id: String(f.properties?.id ?? '') })),
+            focusChainIds: rankingFocusChainIds(),
+          }) ?? DEFAULT_RANKING_TOP_N;
+        modeSwitch.hidden = withPct.length <= topFlopN * 2;
+      }
       const modeHint =
         rankingMode === 'topflop' && withPct.length > topN * 2
           ? ' · Top & Flop je ' + topN
