@@ -305,6 +305,64 @@ export type ClassLengthRow = {
   id: string
   label: string
   km: number
+  /** The raw OSM / TILDA key behind a readable label, for a tooltip. */
+  key?: string
+}
+
+/** German names for the OSM highway values the road lengths are keyed by. */
+export const ROAD_TAG_LABELS: Record<string, string> = {
+  motorway: 'Autobahn',
+  motorway_link: 'Autobahn (Zu-/Abfahrt)',
+  trunk: 'Kraftfahrstraße',
+  trunk_link: 'Kraftfahrstraße (Zu-/Abfahrt)',
+  primary: 'Bundesstraße',
+  primary_link: 'Bundesstraße (Zu-/Abfahrt)',
+  secondary: 'Landesstraße',
+  secondary_link: 'Landesstraße (Zu-/Abfahrt)',
+  tertiary: 'Kreisstraße',
+  tertiary_link: 'Kreisstraße (Zu-/Abfahrt)',
+  unclassified: 'Sonstige Straße',
+  service_road: 'Erschließungsweg',
+  service_uncategorized: 'Sonstiger Betriebsweg',
+  service_alley: 'Gasse / Hinterhofzufahrt',
+  service_driveway: 'Grundstückszufahrt',
+  service_emergency_access: 'Rettungszufahrt',
+  residential: 'Wohnstraße',
+  residential_priority_road: 'Vorfahrtstraße im Wohngebiet',
+  bicycle_road: 'Fahrradstraße',
+  living_street: 'Verkehrsberuhigter Bereich',
+  pedestrian: 'Fußgängerzone (mit Kfz-Verkehr)',
+  unspecified_road: 'Straße (nicht näher bestimmt)',
+}
+
+/** German names for the TILDA bikelane categories the bike lengths are keyed by. */
+export const BIKELANE_TAG_LABELS: Record<string, string> = {
+  needsClarification: 'Klärung nötig',
+  footwayBicycleYes_isolated: 'Gehweg, Rad frei (eigenständig)',
+  footwayBicycleYes_adjoining: 'Gehweg, Rad frei (straßenbegleitend)',
+  footwayBicycleYes_adjoiningOrIsolated: 'Gehweg, Rad frei',
+  pedestrianAreaBicycleYes: 'Fußgängerzone, Rad frei',
+  sharedMotorVehicleLane: 'Gemeinsame Fahrspur mit Kfz',
+  bicycleRoad_vehicleDestination: 'Fahrradstraße (Anlieger frei)',
+  sharedBusLaneBusWithBike: 'Busspur, Rad frei',
+  sharedBusLaneBikeWithBus: 'Radspur, Bus frei',
+  footAndCyclewayShared_isolated: 'Gemeinsamer Geh- und Radweg (eigenständig)',
+  footAndCyclewayShared_adjoining: 'Gemeinsamer Geh- und Radweg (straßenbegleitend)',
+  footAndCyclewayShared_adjoiningOrIsolated: 'Gemeinsamer Geh- und Radweg',
+  cyclewayOnHighway_exclusive: 'Radfahrstreifen',
+  cyclewayOnHighwayBetweenLanes: 'Radfahrstreifen zwischen Fahrspuren',
+  cyclewayOnHighway_advisory: 'Schutzstreifen',
+  cyclewayOnHighway_advisoryOrExclusive: 'Schutz- oder Radfahrstreifen',
+  cyclewayLink: 'Radweg-Verbindung',
+  crossing: 'Querung (Radfurt)',
+  footAndCyclewaySegregated_adjoining: 'Getrennter Geh- und Radweg (straßenbegleitend)',
+  footAndCyclewaySegregated_isolated: 'Getrennter Geh- und Radweg (eigenständig)',
+  footAndCyclewaySegregated_adjoiningOrIsolated: 'Getrennter Geh- und Radweg',
+  cycleway_isolated: 'Radweg (eigenständig)',
+  cycleway_adjoining: 'Radweg (straßenbegleitend)',
+  cycleway_adjoiningOrIsolated: 'Radweg',
+  bicycleRoad: 'Fahrradstraße',
+  cyclewayOnHighwayProtected: 'Geschützter Radfahrstreifen',
 }
 
 export function listFilteredRoadClassLengths(road_length: unknown, filter: LengthClassFilter) {
@@ -345,7 +403,7 @@ export function listFilteredHighwayTagLengths(road_length: unknown, filter: Leng
     if (!(km > 0)) continue
     const roadClass = roadClassForKey(tag)
     if (!filter.road[roadClass]) continue
-    rows.push({ id: tag, label: tag, km })
+    rows.push({ id: tag, label: ROAD_TAG_LABELS[tag] ?? tag, km, key: tag })
   }
   rows.sort((a, b) => b.km - a.km)
   return rows
@@ -361,7 +419,7 @@ export function listFilteredBikelaneTagLengths(
     if (!(km > 0)) continue
     const cls = bikelaneTagToClass.get(tag)
     if (!cls || !filter.bikelane[cls]) continue
-    rows.push({ id: tag, label: tag, km })
+    rows.push({ id: tag, label: BIKELANE_TAG_LABELS[tag] ?? tag, km, key: tag })
   }
   rows.sort((a, b) => b.km - a.km)
   return rows

@@ -605,6 +605,11 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; }
     .ctx-caption { margin: 0 0 4px; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: #666; font-weight: 700; }
+    .ctx-scope {
+      font: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0;
+      text-transform: none; color: #333; padding: 2px 4px; margin: 2px 0 0; display: block;
+      border: 1px solid #c8d3e0; border-radius: 4px; background: #fff; width: 100%;
+    }
     .ctx-row { padding: 2px 0; cursor: help; }
     .ctx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .ctx-label { color: #444; }
@@ -665,13 +670,15 @@ export function generateViewerHtml(generatedAt: string) {
       height: 6px; border-radius: 3px; background: #eee; overflow: hidden;
     }
     .region-detail-bar-fill { height: 100%; border-radius: 3px; }
-    .region-detail-tags {
-      margin-top: 4px; font-size: 11px;
+    .detail-mode {
+      display: inline-flex; margin: 6px 0 0; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
     }
-    .region-detail-tags summary {
-      cursor: pointer; color: #1565c0; user-select: none;
+    .detail-mode-btn {
+      font: inherit; font-size: 11px; padding: 3px 9px; border: none; background: #f5f5f5;
+      color: #444; cursor: pointer;
     }
-    .region-detail-tags[open] summary { margin-bottom: 4px; }
+    .detail-mode-btn:hover { background: #ebebeb; }
+    .detail-mode-btn[aria-pressed="true"] { background: #e3f2fd; color: #1565c0; font-weight: 600; }
     #load-error {
       display: none; margin: 0 0 8px; padding: 8px 10px;
       border: 1px solid #f5c6c0; border-radius: 6px; background: #fdecea;
@@ -2323,35 +2330,39 @@ export function generateViewerHtml(generatedAt: string) {
           li.appendChild(track);
         }
         if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
+        if (row.key) li.title = (li.title ? li.title + ' · ' : '') + row.key;
         ul.appendChild(li);
       }
       section.appendChild(ul);
       parent.appendChild(section);
     }
 
-    function appendTagLengthDetails(parent, title, rows, highlightKind) {
-      if (!rows.length) return;
-      const details = document.createElement('details');
-      details.className = 'region-detail-tags';
-      const summary = document.createElement('summary');
-      summary.textContent = title + ' (' + rows.length + ')';
-      details.appendChild(summary);
-      const ul = document.createElement('ul');
-      ul.className = 'region-detail-rows';
-      for (const row of rows) {
-        const li = document.createElement('li');
-        const label = document.createElement('span');
-        label.textContent = row.label;
-        const km = document.createElement('span');
-        km.className = 'km';
-        km.textContent =
-          TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
-        li.append(label, km);
-        if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
-        ul.appendChild(li);
+    // Summary (by class) is what the card opens with; "Detailliert" swaps the same bar rows for
+    // the individual OSM street types and bike-infrastructure types. Kept across regions.
+    let regionBreakdownMode = 'summary';
+
+    function appendBreakdownToggle(parent, onChange) {
+      const group = document.createElement('div');
+      group.className = 'detail-mode';
+      group.setAttribute('role', 'group');
+      group.setAttribute('aria-label', 'Aufschlüsselung');
+      for (const [mode, label] of [
+        ['summary', 'Zusammengefasst'],
+        ['detail', 'Detailliert'],
+      ]) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'detail-mode-btn';
+        btn.textContent = label;
+        btn.setAttribute('aria-pressed', String(regionBreakdownMode === mode));
+        btn.addEventListener('click', () => {
+          if (regionBreakdownMode === mode) return;
+          regionBreakdownMode = mode;
+          onChange();
+        });
+        group.appendChild(btn);
       }
-      details.appendChild(ul);
-      parent.appendChild(details);
+      parent.appendChild(group);
     }
 
     function selectedRegionGeometry() {
@@ -2703,6 +2714,9 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailPeerGap.hidden = false;
     }
 
+    /** Fewer than this and a fifth of the distribution is a single region: no bar. */
+    const CONTEXT_MIN_REFERENCE = 8;
+
     const CONTEXT_REFERENCE_NOUN = {
       '8': 'Gemeinden',
       '6': 'Landkreisen und kreisfreien Städten',
@@ -2788,22 +2802,97 @@ export function generateViewerHtml(generatedAt: string) {
     }
 
     const contextReferenceCache = new Map();
+    const contextEntryCache = new Map();
+    // Which yardstick the card compares against; kept across regions so clicking through
+    // Gemeinden of one Landkreis keeps comparing within it.
+    let contextScopeChoice = 'country';
 
-    /** All values of one figure among regions of one level, sorted — built once per figure. */
-    function contextReference(metric, level) {
-      let byLevel = contextReferenceCache.get(metric.key);
-      if (!byLevel) {
-        byLevel = {};
+    /** Every value of one figure with where it belongs — built once per figure. */
+    function contextEntries(metric) {
+      let entries = contextEntryCache.get(metric.key);
+      if (!entries) {
+        entries = [];
         for (const id of Object.keys(metric.source?.byId || {})) {
           const v = metric.get(id);
           if (v == null || !Number.isFinite(v)) continue;
-          const lvl = String(regionIndex?.byId.get(id)?.properties?.level ?? '');
-          (byLevel[lvl] ||= []).push(v);
+          const props = regionIndex?.byId.get(id)?.properties || {};
+          const peerKey = peerGroupIndex?.byId[id] || '';
+          entries.push({
+            v,
+            level: String(props.level ?? ''),
+            bundesland: String(props.bundesland_id ?? ''),
+            landkreis: String(props.landkreis_id ?? ''),
+            peerKey,
+            // "03:4" is urbanisation tier 03, population band 4 — the band alone is the size class.
+            sizeBand: peerKey.split(':')[1] || '',
+          });
         }
-        for (const values of Object.values(byLevel)) values.sort((a, b) => a - b);
-        contextReferenceCache.set(metric.key, byLevel);
+        contextEntryCache.set(metric.key, entries);
       }
-      return byLevel[level] || [];
+      return entries;
+    }
+
+    /** Sorted values of one figure among regions of one level inside the chosen yardstick. */
+    function contextReference(metric, level, scope) {
+      const key = metric.key + '|' + level + '|' + scope.type + '|' + (scope.id || '');
+      let values = contextReferenceCache.get(key);
+      if (!values) {
+        values = contextEntries(metric)
+          .filter(
+            (e) =>
+              e.level === level &&
+              (scope.type === 'country' ||
+                (scope.type === 'bundesland' && e.bundesland === scope.id) ||
+                (scope.type === 'landkreis' && e.landkreis === scope.id) ||
+                (scope.type === 'sizeclass' && e.sizeBand === scope.id) ||
+                (scope.type === 'peers' && e.peerKey === scope.id)),
+          )
+          .map((e) => e.v)
+          .sort((a, b) => a - b);
+        contextReferenceCache.set(key, values);
+      }
+      return values;
+    }
+
+    /**
+     * The yardsticks a region can be compared within, each as a full phrase ("label", for the
+     * select) and as the group it names ("group", for the tooltip). Every region has Deutschland
+     * and its Bundesland; a Gemeinde also its Landkreis, its size class (population band,
+     * whatever the urbanisation) and its demographic peer group (size class and urbanisation).
+     */
+    function contextScopesFor(p, noun) {
+      const nameOf = (id) => String(regionIndex?.byId.get(id)?.properties?.name ?? id);
+      const inPlace = (place) => ({ label: 'Alle ' + noun + ' in ' + place, group: noun + ' in ' + place });
+      const scopes = [{ type: 'country', ...inPlace('Deutschland') }];
+      const level = String(p.level ?? '');
+      if (level !== '4' && p.bundesland_id) {
+        scopes.push({ type: 'bundesland', id: String(p.bundesland_id), ...inPlace(nameOf(p.bundesland_id)) });
+      }
+      if (level === '8' && p.landkreis_id) {
+        scopes.push({ type: 'landkreis', id: String(p.landkreis_id), ...inPlace(nameOf(p.landkreis_id)) });
+      }
+      const peerKey = level === '8' ? peerGroupIndex?.byId[p.id] : null;
+      if (peerKey) {
+        const peerLabel = peerGroupIndex.groups[peerKey] || '';
+        // "ländlich geprägt, 5.000–10.000 Einwohner" -> the size part after the last comma.
+        const size = peerLabel.slice(peerLabel.lastIndexOf(',') + 1).trim();
+        if (size) {
+          const sizeText = 'Gemeinden mit ' + size.replace(/Einwohner$/, 'Einwohnern');
+          scopes.push({
+            type: 'sizeclass',
+            id: peerKey.split(':')[1],
+            label: sizeText + ' (Größenklasse)',
+            group: sizeText + ' in Deutschland',
+          });
+        }
+        scopes.push({
+          type: 'peers',
+          id: peerKey,
+          label: 'Ähnliche Gemeinden (' + peerLabel + ')',
+          group: 'ähnlichen Gemeinden (' + peerLabel + ')',
+        });
+      }
+      return scopes;
     }
 
     /**
@@ -2824,6 +2913,8 @@ export function generateViewerHtml(generatedAt: string) {
       ensureRegionExtraIndexes();
       const level = String(p.level ?? '');
       const noun = CONTEXT_REFERENCE_NOUN[level] || 'Gebieten';
+      const scopes = contextScopesFor(p, noun);
+      const scope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
       regionDetailExtra.replaceChildren();
       for (const metric of contextMetrics()) {
         const value = metric.get(p.id);
@@ -2831,7 +2922,26 @@ export function generateViewerHtml(generatedAt: string) {
         if (!regionDetailExtra.firstChild) {
           const caption = document.createElement('p');
           caption.className = 'ctx-caption';
-          caption.textContent = 'Zum Vergleich: unter allen ' + noun + ' in Deutschland';
+          caption.append('Zum Vergleich: ');
+          if (scopes.length > 1) {
+            const pick = document.createElement('select');
+            pick.className = 'ctx-scope';
+            pick.setAttribute('aria-label', 'Vergleichsgruppe');
+            for (const sc of scopes) {
+              const option = document.createElement('option');
+              option.value = sc.type;
+              option.textContent = sc.label;
+              pick.appendChild(option);
+            }
+            pick.value = scope.type;
+            pick.addEventListener('change', () => {
+              contextScopeChoice = pick.value;
+              renderRegionExtra(p);
+            });
+            caption.appendChild(pick);
+          } else {
+            caption.append(scope.label);
+          }
           regionDetailExtra.appendChild(caption);
         }
         const row = document.createElement('div');
@@ -2852,8 +2962,11 @@ export function generateViewerHtml(generatedAt: string) {
         head.append(label, valueEl);
         row.appendChild(head);
 
-        const reference = contextReference(metric, level);
-        const pct = reference.length >= 20 ? RankingDisplay.percentileOf(reference, value) : null;
+        const reference = contextReference(metric, level, scope);
+        const pct =
+          reference.length >= CONTEXT_MIN_REFERENCE
+            ? RankingDisplay.percentileOf(reference, value)
+            : null;
         if (pct != null) {
           const band = RankingDisplay.contextBand(pct);
           const bandEl = document.createElement('em');
@@ -2865,8 +2978,10 @@ export function generateViewerHtml(generatedAt: string) {
             'Höher als ' +
             Math.round(pct * 100) +
             ' % der ' +
-            noun +
-            ' in Deutschland (Median: ' +
+            deNumber(reference.length, 0) +
+            ' ' +
+            scope.group +
+            ' (Median: ' +
             metric.format(median, null) +
             ')';
           const track = document.createElement('div');
@@ -3183,30 +3298,25 @@ export function generateViewerHtml(generatedAt: string) {
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       const filter = readLengthClassFilterFromUi();
+      appendBreakdownToggle(regionDetailBody, () => showRegionDetail(feature));
+      const detailed = regionBreakdownMode === 'detail';
       appendLengthRows(
         regionDetailBody,
-        'Straßen nach Klasse',
-        TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
+        detailed ? 'Straßen nach Typ' : 'Straßen nach Klasse',
+        detailed
+          ? TildaStats.listFilteredHighwayTagLengths(p.road_length, filter)
+          : TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
         null,
         overlayRoadColorInput.value,
       );
-      appendTagLengthDetails(
-        regionDetailBody,
-        'Einzelne Straßentypen',
-        TildaStats.listFilteredHighwayTagLengths(p.road_length, filter),
-      );
       appendLengthRows(
         regionDetailBody,
-        'Radinfrastruktur nach Klasse',
-        TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
-        'bikelane-class',
+        detailed ? 'Radinfrastruktur nach Typ' : 'Radinfrastruktur nach Klasse',
+        detailed
+          ? TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter)
+          : TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
+        detailed ? 'bikelane-tag' : 'bikelane-class',
         overlayBikelaneColorInput.value,
-      );
-      appendTagLengthDetails(
-        regionDetailBody,
-        'Einzelne Radweg-Typen',
-        TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter),
-        'bikelane-tag',
       );
       // Drilling into a region is a deliberate click (here, or a double-click on the map).
       // Search used to do it implicitly and only for some levels, which is why a Landkreis

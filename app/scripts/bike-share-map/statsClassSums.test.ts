@@ -1,5 +1,14 @@
 import { describe, expect, it } from 'vitest'
-import { assessBikeDataQuality } from './statsClassSums'
+import {
+  assessBikeDataQuality,
+  BIKELANE_TAG_LABELS,
+  bikelaneCategoryTags,
+  highwayClassDefinition,
+  listFilteredBikelaneTagLengths,
+  listFilteredHighwayTagLengths,
+  RADINFRA_DEFAULT_FILTER,
+  ROAD_TAG_LABELS,
+} from './statsClassSums'
 
 const road = (km: number) => ({ residential: km })
 
@@ -32,5 +41,29 @@ describe('assessBikeDataQuality', () => {
 
   it('leaves a tiny network without bike infrastructure alone', () => {
     expect(assessBikeDataQuality(road(5), null)).toBeNull()
+  })
+})
+
+describe('readable type labels', () => {
+  it('names every highway value and every bikelane category the classes are built from', () => {
+    for (const tag of Object.keys(highwayClassDefinition))
+      expect(ROAD_TAG_LABELS[tag], tag).toBeTruthy()
+    for (const tags of Object.values(bikelaneCategoryTags)) {
+      for (const tag of tags) expect(BIKELANE_TAG_LABELS[tag], tag).toBeTruthy()
+    }
+  })
+
+  it('keeps the raw key next to the readable label', () => {
+    const [road] = listFilteredHighwayTagLengths({ service_alley: 2 }, RADINFRA_DEFAULT_FILTER)
+    expect(road).toMatchObject({
+      id: 'service_alley',
+      label: 'Gasse / Hinterhofzufahrt',
+      key: 'service_alley',
+    })
+    const [bike] = listFilteredBikelaneTagLengths(
+      { cyclewayOnHighway_advisory: 3 },
+      RADINFRA_DEFAULT_FILTER,
+    )
+    expect(bike).toMatchObject({ label: 'Schutzstreifen', key: 'cyclewayOnHighway_advisory' })
   })
 })
