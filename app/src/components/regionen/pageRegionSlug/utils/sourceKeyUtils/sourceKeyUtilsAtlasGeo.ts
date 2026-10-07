@@ -1,17 +1,10 @@
 import type { MapDataCategoryId } from '../../mapData/mapDataCategories/MapDataCategoryId'
 import type { SourcesId } from '../../mapData/mapDataSources/sources.const'
-import type { LegendId, StyleId, SubcategoryId } from '../../mapData/typeId'
+import type { StyleId, SubcategoryId } from '../../mapData/typeId'
 
 type SubcatStyleKey = `${SubcategoryId}-${StyleId}`
 export const createSubcatStyleKey = (subcatId: SubcategoryId, styleId: StyleId) =>
   `${subcatId}-${styleId}` satisfies SubcatStyleKey
-
-type SubcatStyleLegendKey = `${SubcatStyleKey}-${LegendId}`
-export const createSubcatStyleLegendKey = (
-  subCat: SubcategoryId,
-  styleId: StyleId,
-  legendId: LegendId,
-) => `${subCat}-${styleId}-${legendId}` satisfies SubcatStyleLegendKey
 
 function createKey(obj: Record<string, string>) {
   return Object.entries(obj)
@@ -58,8 +51,8 @@ export function createSourceKeyAtlasGeo(
 }
 
 export function parseSourceKeyAtlasGeo(sourceKey: string) {
-  // source: "cat:mapillary--source:mapillary_coverage--subcat:mapillaryCoverage"
-  // returns: { categoryId: 'mapillary', sourceId: 'mapillary_coverage', subcategoryId: 'mapillaryCoverage' }
+  // source: "cat:bikelanes--source:atlas_bikelanes--subcat:bikelanes"
+  // returns: { categoryId: 'bikelanes', sourceId: 'atlas_bikelanes', subcategoryId: 'bikelanes' }
   return parseKey(sourceKey, {
     cat: 'categoryId',
     source: 'sourceId',

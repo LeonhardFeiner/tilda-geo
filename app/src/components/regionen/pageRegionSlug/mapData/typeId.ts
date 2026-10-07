@@ -1,8 +1,4 @@
 import type {
-  SubcatAccidentsId,
-  SubcatAccidentsStyleIds,
-} from './mapDataSubcategories/subcat_accidents.const'
-import type {
   SubcatBicycleParkingId,
   SubcatBicycleParkingStyleIds,
 } from './mapDataSubcategories/subcat_bicycleParking'
@@ -35,18 +31,21 @@ import type {
   SubcatBikelanesPlusWidthTextStyleIds,
 } from './mapDataSubcategories/subcat_bikelanes_plus_width_text.const'
 import type {
-  SubcatBikelanesStatsId,
-  SubcatBikelanesStatsStyleIds,
-} from './mapDataSubcategories/subcat_bikelanesStatistics.const'
-import type { SubcatLitId, SubcatLitStyleIds } from './mapDataSubcategories/subcat_lit.const'
+  SubcatLitBikelanesId,
+  SubcatLitBikelanesStyleIds,
+} from './mapDataSubcategories/subcat_lit_bikelanes.const'
 import type {
-  SubcatLitPlusCompletenessId,
-  SubcatLitPlusCompletenessStyleIds,
-} from './mapDataSubcategories/subcat_lit_plus_completeness.const'
+  SubcatLitHighwayAreasId,
+  SubcatLitHighwayAreasStyleIds,
+} from './mapDataSubcategories/subcat_lit_highway_areas.const'
 import type {
-  SubcatMapillaryCoverageId,
-  SubcatMapillaryCoverageStyleIds,
-} from './mapDataSubcategories/subcat_mapillaryCoverage.const'
+  SubcatLitPathClassesId,
+  SubcatLitPathClassesStyleIds,
+} from './mapDataSubcategories/subcat_lit_path_classes.const'
+import type {
+  SubcatLitRoadsId,
+  SubcatLitRoadsStyleIds,
+} from './mapDataSubcategories/subcat_lit_roads.const'
 import type {
   SubcatMaxspeedId,
   SubcatMaxspeedStyleIds,
@@ -72,10 +71,6 @@ import type {
   SubcatParkingLarsDebugStyleIds,
 } from './mapDataSubcategories/subcat_parkingLarsDebug.const'
 import type {
-  SubcatParkingLarsPointsId,
-  SubcatParkingLarsPointsStyleIds,
-} from './mapDataSubcategories/subcat_parkingLarsPoints.const'
-import type {
   SubcatParkingLarsStatsId,
   SubcatParkingLarsStatsStyleIds,
 } from './mapDataSubcategories/subcat_parkingLarsStats.const'
@@ -87,10 +82,6 @@ import type {
   SubcatParkingTildaOffStreetId,
   SubcatParkingTildaOffStreetStyleIds,
 } from './mapDataSubcategories/subcat_parkingTilda_offStreet_public.const'
-import type {
-  SubcatParkingTildaQuantizedOffStreetId,
-  SubcatParkingTildaQuantizedOffStreetStyleIds,
-} from './mapDataSubcategories/subcat_parkingTilda_offStreet_quantized.const'
 import type {
   SubcatParkingTildaCompletenessId,
   SubcatParkingTildaCompletenessStyleIds,
@@ -111,10 +102,6 @@ import type {
   SubcatParkingTildaId,
   SubcatParkingTildaStyleIds,
 } from './mapDataSubcategories/subcat_parkingTilda_street_public.const'
-import type {
-  SubcatParkingTildaQuantizedId,
-  SubcatParkingTildaQuantizedStyleIds,
-} from './mapDataSubcategories/subcat_parkingTilda_street_quantized.const'
 import type { SubcatPoiId, SubcatPoiStyleIds } from './mapDataSubcategories/subcat_poi.const'
 import type {
   SubcatPoiBoundariesId,
@@ -141,13 +128,9 @@ import type {
   SubcatRadinfraCampaignStyleIds,
 } from './mapDataSubcategories/subcat_radinfra_campaigns.const'
 import type {
-  SubcatRadinfraPlusMapillaryId,
-  SubcatRadinfraPlusMapillaryStyleIds,
-} from './mapDataSubcategories/subcat_radinfra_plus_mapillary.const'
-import type {
-  SubcatRadinfraStatsId,
-  SubcatRadinfraStatsStyleIds,
-} from './mapDataSubcategories/subcat_radinfra_stats'
+  SubcatRadinfraLitBikelanesId,
+  SubcatRadinfraLitBikelanesStyleIds,
+} from './mapDataSubcategories/subcat_radinfra_lit_bikelanes.const'
 import type { SubcatRoadsId, SubcatRoadsStyleIds } from './mapDataSubcategories/subcat_roads.const'
 import type {
   SubcatRoadsPlusFootwaysId,
@@ -167,13 +150,20 @@ import type {
   SubcatSurfaceBikelaneStyleIds,
 } from './mapDataSubcategories/subcat_surface_bikelane'
 import type {
+  SubcatSurfaceHighwayAreasId,
+  SubcatSurfaceHighwayAreasStyleIds,
+} from './mapDataSubcategories/subcat_surface_highway_areas.const'
+import type {
+  SubcatSurfacePathClassesId,
+  SubcatSurfacePathClassesStyleIds,
+} from './mapDataSubcategories/subcat_surface_path_classes.const'
+import type {
   SubcatSurfaceRoadsId,
   SubcatSurfaceRoadsStyleIds,
 } from './mapDataSubcategories/subcat_surface_roads.const'
 import type { StaticMapDataCategory } from './types'
 
 export type SubcategoryId =
-  | SubcatAccidentsId
   | SubcatBicycleParkingId
   | SubcatBikelanesId
   | SubcatBikelanesPlusBikeSuitabilityId
@@ -182,17 +172,16 @@ export type SubcategoryId =
   | SubcatBikelanesPlusSignsId
   | SubcatBikelanesPlusSurfaceId
   | SubcatBikelanesPlusWidthTextId
-  | SubcatBikelanesStatsId
-  | SubcatLitId
-  | SubcatLitPlusCompletenessId
-  | SubcatMapillaryCoverageId
+  | SubcatLitRoadsId
+  | SubcatLitBikelanesId
+  | SubcatLitHighwayAreasId
+  | SubcatLitPathClassesId
   | SubcatMaxspeedId
   | SubcatMaxspeedPlusPresenceId
   | SubcatParkingLarsAreasId
   | SubcatParkingLarsBoundariesId
   | SubcatParkingLarsDebugId
   | SubcatParkingLarsId
-  | SubcatParkingLarsPointsId
   | SubcatParkingLarsStatsId
   | SubcatParkingTildaCutoutsId
   | SubcatParkingTildaId
@@ -201,8 +190,6 @@ export type SubcategoryId =
   | SubcatParkingTildaOffStreetId
   | SubcatParkingTildaOffStreetPrivateId
   | SubcatParkingTildaPrivateId
-  | SubcatParkingTildaQuantizedId
-  | SubcatParkingTildaQuantizedOffStreetId
   | SubcatPoiBoundariesId
   | SubcatPoiId
   | SubcatPoiPlacesId
@@ -210,23 +197,23 @@ export type SubcategoryId =
   | SubcatPoiPlusLanduseId
   | SubcatPoiPlusPublicTransportId
   | SubcatRadinfraCampaignId
-  | SubcatRadinfraPlusMapillaryId
-  | SubcatRadinfraStatsId
-  | SubcatRadinfraStatsId
+  | SubcatRadinfraLitBikelanesId
   | SubcatRoadsId
   | SubcatRoadsPlusFootwaysId
   | SubcatRoadsPlusLabelId
   | SubcatRoadsPlusOnewayId
   | SubcatSignsId
   | SubcatSurfaceBikelaneId
+  | SubcatSurfaceHighwayAreasId
+  | SubcatSurfacePathClassesId
   | SubcatSurfaceRoadsId
+  | 'lit-completeness' // LEGACY id kept for decoding old ?config= URLs
   | 'parking' // LEGACY id kept for decoding old ?config= URLs stored in RegionConfigTemplate
 
 type StyleIdDefaults = StaticMapDataCategory['subcategories'][number]['defaultStyle']
 
 export type StyleId =
   | StyleIdDefaults
-  | SubcatAccidentsStyleIds
   | SubcatBicycleParkingStyleIds
   | SubcatBikelanesPlusBikeSuitabilityStyleIds
   | SubcatBikelanesPlusPresenceStyleIds
@@ -234,17 +221,16 @@ export type StyleId =
   | SubcatBikelanesPlusSignsStyleIds
   | SubcatBikelanesPlusSurfaceStyleIds
   | SubcatBikelanesPlusWidthTextStyleIds
-  | SubcatBikelanesStatsStyleIds
   | SubcatBikelanesStyleIds
-  | SubcatLitPlusCompletenessStyleIds
-  | SubcatLitStyleIds
-  | SubcatMapillaryCoverageStyleIds
+  | SubcatLitBikelanesStyleIds
+  | SubcatLitHighwayAreasStyleIds
+  | SubcatLitPathClassesStyleIds
+  | SubcatLitRoadsStyleIds
   | SubcatMaxspeedPlusPresenceStyleIds
   | SubcatMaxspeedStyleIds
   | SubcatParkingLarsAreasStyleIds
   | SubcatParkingLarsBoundariesStyleIds
   | SubcatParkingLarsDebugStyleIds
-  | SubcatParkingLarsPointsStyleIds
   | SubcatParkingLarsStatsStyleIds
   | SubcatParkingLarsStyleIds
   | SubcatParkingTildaCutoutsStyleIds
@@ -253,8 +239,6 @@ export type StyleId =
   | SubcatParkingTildaOffStreetStyleIds
   | SubcatParkingTildaOffStreetPrivateStyleIds
   | SubcatParkingTildaPrivateStyleIds
-  | SubcatParkingTildaQuantizedStyleIds
-  | SubcatParkingTildaQuantizedOffStreetStyleIds
   | SubcatParkingTildaStyleIds
   | SubcatPoiBoundariesStyleIds
   | SubcatPoiPlacesStyleIds
@@ -263,15 +247,14 @@ export type StyleId =
   | SubcatPoiPlusPublicTransportStyleIds
   | SubcatPoiStyleIds
   | SubcatRadinfraCampaignStyleIds
-  | SubcatRadinfraPlusMapillaryStyleIds
-  | SubcatRadinfraStatsStyleIds
-  | SubcatRadinfraStatsStyleIds
+  | SubcatRadinfraLitBikelanesStyleIds
   | SubcatRoadsPlusFootwaysStyleIds
   | SubcatRoadsPlusLabelStyleIds
   | SubcatRoadsPlusOnewayStyleIds
   | SubcatRoadsStyleIds
   | SubcatSignsStyleIds
   | SubcatSurfaceBikelaneStyleIds
+  | SubcatSurfaceHighwayAreasStyleIds
+  | SubcatSurfacePathClassesStyleIds
   | SubcatSurfaceRoadsStyleIds
-
-export type LegendId = string // TODO: We can make this more precise later
+  | 'lit' // LEGACY style id kept for decoding old ?config= URLs

@@ -20,6 +20,16 @@ type MapDataSubcategoryParam = {
   }[]
 }
 
+/**
+ * A stored template of an old `?config=` (`RegionConfigTemplate`): the same shape, but it may
+ * hold categories, subcategories and styles that no longer exist.
+ */
+export type LegacyMapDataCategoryParam = {
+  id: string
+  active: boolean
+  subcategories: { id: string; styles: { id: string; active: boolean }[] }[]
+}
+
 // ========
 // Category config als object — what is returned by `parse`
 // ========
@@ -31,7 +41,7 @@ export type MapDataCategoryConfig = Omit<StaticMapDataCategory, 'subcategories'>
 }
 
 type MergeSubcategory = StaticMapDataCategory['subcategories'][number]
-export type MapDataSubcategoryConfig = Omit<MergeSubcategory, 'styles'> & {
+type MapDataSubcategoryConfig = Omit<MergeSubcategory, 'styles'> & {
   styles: MapDataSubcategoryStyleConfig[]
 }
 

@@ -19,11 +19,10 @@ SELECT
     tags || jsonb_build_object(
       'area', ROUND(NULLIF(tags ->> 'area', '')::NUMERIC, 2),
       'length', ROUND(length::NUMERIC, 2),
-      'capacity', tilda_round_capacity ((tags ->> 'capacity')::NUMERIC),
-      'condition_category_primary', tilda_condition_category_primary (tags ->> 'condition_category')
+      'capacity', tilda_round_capacity ((tags ->> 'capacity')::NUMERIC)
     )
   ),
-  '{}'::jsonb,
+  meta,
   ST_Transform (geom, 3857),
   14 -- on-street parking lines are tiled from z14; zoomed-out view uses parkings_edges
 FROM

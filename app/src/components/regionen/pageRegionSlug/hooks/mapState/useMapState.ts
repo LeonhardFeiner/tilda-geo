@@ -2,6 +2,9 @@ import type { LngLatBounds } from 'maplibre-gl'
 import type { MapGeoJSONFeature } from 'react-map-gl/maplibre'
 import { create } from 'zustand'
 import { useShallow } from 'zustand/react/shallow'
+import { filterInspectorFeaturesForMode } from '@/components/regionen/pageRegionSlug/modes/modeScopedSelection'
+import { useCurrentMode } from '@/components/regionen/pageRegionSlug/modes/useCurrentMode'
+import { useLayerControlsOpen } from '@/components/regionen/pageRegionSlug/SidebarLayerControls/layer-controls-store'
 
 const boundsEqual = (current: LngLatBounds | null, next: LngLatBounds | null) => {
   if (current === null && next === null) return true
@@ -44,6 +47,8 @@ type StoreSizes = {
 export type StoreFeaturesInspector = {
   // https://visgl.github.io/react-map-gl/docs/api-reference/types#mapgeojsonfeature
   inspectorFeatures: MapGeoJSONFeature[]
+  // Where the map was clicked to pick `inspectorFeatures`; `null` when they come from the URL.
+  inspectorClickLngLat: [lng: number, lat: number] | null
 }
 
 export type StoreCalculator = {
@@ -51,9 +56,6 @@ export type StoreCalculator = {
     key: string
     features: MapGeoJSONFeature[]
   }[]
-  // True while the Calculator draw tool is mounted/active. Used to suppress the
-  // feature inspector on map clicks so drawing/editing areas doesn't open an overlay.
-  calculatorDrawActive: boolean
 }
 
 type StoreInspectorUI = {
@@ -70,12 +72,14 @@ type Actions = {
     updateMapBounds: (mapBounds: Store['mapBounds']) => void
     updateInspectorSize: (inspectorSize: Store['inspectorSize']) => void
     updateSidebarSize: (sidebarSize: Store['sidebarSize']) => void
-    replaceInspectorFeatures: (inspectObject: Store['inspectorFeatures']) => void
+    replaceInspectorFeatures: (args: {
+      features: Store['inspectorFeatures']
+      clickLngLat: Store['inspectorClickLngLat']
+    }) => void
     clearInspectorFeatures: () => void
     updateCalculatorAreasWithFeatures: (
       calculatorAreasWithFeatures: Store['calculatorAreasWithFeatures'],
     ) => void
-    setCalculatorDrawActive: (active: Store['calculatorDrawActive']) => void
     setInspectorOtherPropertiesVisibility: (open: Store['inspectorOtherPropertiesOpen']) => void
   }
 }
@@ -90,10 +94,9 @@ const useMapStore = create<Store>()((set) => {
     setFeatureStateLoading: false,
     // Data for <Inspector> AND <LayerHighlight>
     inspectorFeatures: [],
+    inspectorClickLngLat: null,
     // Data for <Inspector> AND <LayerHighlight>
     calculatorAreasWithFeatures: [],
-    // True while the Calculator draw tool is active (suppresses inspector clicks)
-    calculatorDrawActive: false,
     mapBounds: null,
     inspectorSize: { width: 0, height: 0 },
     sidebarSize: { width: 0, height: 0 },
@@ -110,15 +113,16 @@ const useMapStore = create<Store>()((set) => {
         set((state) =>
           state.setFeatureStateLoading === false ? state : { setFeatureStateLoading: false },
         ),
-      replaceInspectorFeatures: (inspectorFeatures) => set({ inspectorFeatures }),
+      replaceInspectorFeatures: ({ features, clickLngLat }) =>
+        set({ inspectorFeatures: features, inspectorClickLngLat: clickLngLat }),
       clearInspectorFeatures: () =>
-        set((state) => (state.inspectorFeatures.length === 0 ? state : { inspectorFeatures: [] })),
+        set((state) =>
+          state.inspectorFeatures.length === 0
+            ? state
+            : { inspectorFeatures: [], inspectorClickLngLat: null },
+        ),
       updateCalculatorAreasWithFeatures: (calculatorAreasWithFeatures) =>
         set({ calculatorAreasWithFeatures }),
-      setCalculatorDrawActive: (active) =>
-        set((state) =>
-          state.calculatorDrawActive === active ? state : { calculatorDrawActive: active },
-        ),
       updateMapBounds: (bounds) =>
         set((state) => (boundsEqual(state.mapBounds, bounds) ? state : { mapBounds: bounds })),
       updateInspectorSize: (size) =>
@@ -140,13 +144,23 @@ const useMapStore = create<Store>()((set) => {
 export const useMapLoaded = () => useMapStore((state) => state.mapLoaded)
 export const useShowMapLoadingIndicator = () =>
   useMapStore((state) => state.mapDataLoading || state.setFeatureStateLoading)
-export const useMapInspectorFeatures = () => useMapStore((state) => state.inspectorFeatures)
+export const useMapInspectorFeatures = () => {
+  const features = useMapStore((state) => state.inspectorFeatures)
+  const { mode } = useCurrentMode()
+  return filterInspectorFeaturesForMode(features, mode)
+}
 export const useMapCalculatorAreasWithFeatures = () =>
   useMapStore((state) => state.calculatorAreasWithFeatures)
-export const useMapCalculatorDrawActive = () => useMapStore((state) => state.calculatorDrawActive)
 export const useMapBounds = () => useMapStore((state) => state.mapBounds)
 export const useMapInspectorSize = () => useMapStore((state) => state.inspectorSize)
-export const useMapSidebarSize = () => useMapStore((state) => state.sidebarSize)
+const CLOSED_SIDEBAR_SIZE = { width: 0, height: 0 }
+
+export const useMapSidebarSize = () => {
+  const size = useMapStore((state) => state.sidebarSize)
+  const open = useLayerControlsOpen()
+  return open ? size : CLOSED_SIDEBAR_SIZE
+}
+export const useMapInspectorClickLngLat = () => useMapStore((state) => state.inspectorClickLngLat)
 export const useMapInspectorOtherPropertiesOpen = () =>
   useMapStore((state) => state.inspectorOtherPropertiesOpen)
 
@@ -161,7 +175,6 @@ export const useMapDebugSnapshot = () =>
       sidebarSize: state.sidebarSize,
       inspectorFeatures: state.inspectorFeatures,
       calculatorAreasWithFeatures: state.calculatorAreasWithFeatures,
-      calculatorDrawActive: state.calculatorDrawActive,
       inspectorOtherPropertiesOpen: state.inspectorOtherPropertiesOpen,
     })),
   )

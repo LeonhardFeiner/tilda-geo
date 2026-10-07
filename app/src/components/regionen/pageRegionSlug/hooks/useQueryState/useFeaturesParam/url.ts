@@ -1,5 +1,3 @@
-import { internalNotesSourceId } from '../../../Map/SourcesAndLayers/SourcesLayersInternalNotes'
-import { osmNotesSourceId } from '../../../Map/SourcesAndLayers/SourcesLayersOsmNotes'
 import type { SourcesId } from '../../../mapData/mapDataSources/sources.const'
 
 // ABOUT:
@@ -10,20 +8,27 @@ import type { SourcesId } from '../../../mapData/mapDataSources/sources.const'
 // Initially generated with:
 // `const numericSourceIds= {...{1: 'osm-notes'}, ...Object.fromEntries(sources.map((s, i) => [i+2, s.id]))}`
 //
-// useFeatureParams supports sources that are not specified in sources.const which we have to list here
-export const additionalSourceKeys = [osmNotesSourceId, internalNotesSourceId] as const
+// useFeatureParams supports sources that are not specified in sources.const which we have to list here.
+// String literals (not imports from SourcesLayers*) so this module can load before those layers,
+// which import useFeaturesParam and would otherwise cycle back into this file.
+export const additionalSourceKeys = [
+  'osm-notes-source',
+  'internal-notes-source',
+  'review-entries-source',
+  'qa-source',
+] as const
 type AdditionalSourceId = (typeof additionalSourceKeys)[number]
 type SourceNames = SourcesId | AdditionalSourceId
 export const numericSourceIds: Record<number, SourceNames> = {
-  1: osmNotesSourceId,
+  1: 'osm-notes-source',
   2: 'lars_parking',
   3: 'lars_parking_debug',
-  4: 'lars_parking_points',
+  // 4: 'lars_parking_points', // the community points were only summed; discontinued
   5: 'lars_parking_areas',
   6: 'lars_parking_stats',
   7: 'atlas_boundaries',
-  8: 'atlas_presenceStats',
-  9: 'accidents_unfallatlas',
+  // 8: 'atlas_presenceStats', // the old Statistik category was removed; processing no longer builds this table
+  // 9: 'accidents_unfallatlas', // the Unfallatlas category was removed; discontinued
   10: 'atlas_bikelanes',
   11: 'atlas_bikeroutes',
   12: 'atlas_roads',
@@ -35,11 +40,11 @@ export const numericSourceIds: Record<number, SourceNames> = {
   18: 'atlas_landuse',
   19: 'atlas_bicycleParking',
   20: 'atlas_trafficSigns',
-  21: 'mapillary_coverage',
+  // 21: 'mapillary_coverage', // photos are not inspector features anymore, see `?photos=`
   22: 'atlas_bikelanesPresence',
   23: 'atlas_bikeSuitability',
   24: 'atlas_todos_lines',
-  25: 'atlas_aggregated_lengths',
+  // 25: 'atlas_aggregated_lengths', // the radinfra Statistik category was removed; the table stays for /api/stats
   26: 'tilda_parkings',
   27: 'tilda_parkings_cutouts',
   28: 'tilda_parkings_quantized',
@@ -47,7 +52,10 @@ export const numericSourceIds: Record<number, SourceNames> = {
   30: 'tilda_parkings_no',
   31: 'tilda_parkings_off_street',
   32: 'tilda_parkings_off_street_quantized',
-  33: internalNotesSourceId,
+  33: 'internal-notes-source',
+  34: 'review-entries-source',
+  35: 'qa-source',
+  36: 'tilda_highwayAreas',
 }
 
 export const persistableSourceKeys = new Set(Object.values(numericSourceIds))

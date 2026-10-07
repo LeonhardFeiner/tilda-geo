@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { optionalSearchString } from '@/lib/searchParamsSchema'
 import { applyAuthResponseCookies } from '@/server/auth/applyAuthResponseCookies.server'
 import { auth } from '@/server/auth/auth.server'
+import { getSafeSignInCallbackURL } from '@/shared/auth/safeSignInCallbackURL'
 
 const searchSchema = z.object({
   callbackURL: optionalSearchString(),
@@ -32,7 +33,7 @@ function toSafeCallbackURL(rawCallbackURL: string | null, requestUrl: string) {
 
     // Better Auth validates callback targets against configured origins.
     // Passing a relative app path avoids host/canonical-domain drift between environments.
-    return `${normalized.pathname}${normalized.search}${normalized.hash}`
+    return getSafeSignInCallbackURL(`${normalized.pathname}${normalized.search}`)
   } catch {
     return fallback
   }
