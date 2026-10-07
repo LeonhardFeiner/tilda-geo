@@ -2870,7 +2870,6 @@ export function generateViewerHtml(generatedAt: string) {
             id,
             v,
             name: props.name || id,
-            bikeSharePct: typeof props.bikeSharePct === 'number' ? props.bikeSharePct : null,
             level: String(props.level ?? ''),
             bundesland: String(props.bundesland_id ?? ''),
             landkreis: String(props.landkreis_id ?? ''),
@@ -3061,9 +3060,19 @@ export function generateViewerHtml(generatedAt: string) {
         openPlot.remove();
       }
 
-      const entries = contextFullReference(metric, level, scope).filter(
-        (e) => typeof e.bikeSharePct === 'number',
-      );
+      // The share depends on the counting filter, so it is computed here, not cached.
+      const entries = [];
+      for (const e of contextFullReference(metric, level, scope)) {
+        const props = regionIndex?.byId.get(e.id)?.properties;
+        if (!props) continue;
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
+          props.road_length,
+          props.bikelane_length,
+          lengthClassFilter,
+        );
+        if (!(roadKm > 0)) continue;
+        entries.push({ ...e, bikeSharePct: (bikeKm / roadKm) * 100 });
+      }
 
       if (entries.length < 3) return;
 
