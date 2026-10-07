@@ -2867,7 +2867,10 @@ export function generateViewerHtml(generatedAt: string) {
           const props = regionIndex?.byId.get(id)?.properties || {};
           const peerKey = peerGroupIndex?.byId[id] || '';
           entries.push({
+            id,
             v,
+            name: props.name || id,
+            bikeSharePct: typeof props.bikeSharePct === 'number' ? props.bikeSharePct : null,
             level: String(props.level ?? ''),
             bundesland: String(props.bundesland_id ?? ''),
             landkreis: String(props.landkreis_id ?? ''),
@@ -2879,20 +2882,23 @@ export function generateViewerHtml(generatedAt: string) {
       return entries;
     }
 
+    function contextFullReference(metric, level, scope) {
+      return contextEntries(metric).filter(
+        (e) =>
+          e.level === level &&
+          (scope.type === 'country' ||
+            (scope.type === 'bundesland' && e.bundesland === scope.id) ||
+            (scope.type === 'landkreis' && e.landkreis === scope.id) ||
+            (scope.type === 'peers' && e.peerKey === scope.id)),
+      );
+    }
+
     /** Sorted values of one figure among regions of one level inside the chosen yardstick. */
     function contextReference(metric, level, scope) {
       const key = metric.key + '|' + level + '|' + scope.type + '|' + (scope.id || '');
       let values = contextReferenceCache.get(key);
       if (!values) {
-        values = contextEntries(metric)
-          .filter(
-            (e) =>
-              e.level === level &&
-              (scope.type === 'country' ||
-                (scope.type === 'bundesland' && e.bundesland === scope.id) ||
-                (scope.type === 'landkreis' && e.landkreis === scope.id) ||
-                (scope.type === 'peers' && e.peerKey === scope.id)),
-          )
+        values = contextFullReference(metric, level, scope)
           .map((e) => e.v)
           .sort((a, b) => a - b);
         contextReferenceCache.set(key, values);
@@ -3032,9 +3038,110 @@ export function generateViewerHtml(generatedAt: string) {
           track.appendChild(marker);
           row.appendChild(track);
         }
+        if (!metric.noBar) {
+          row.style.cursor = 'pointer';
+          row.addEventListener('click', () => {
+            toggleMetricPlot(row, metric, level, scope, p);
+          });
+        }
         regionDetailExtra.appendChild(row);
       }
       regionDetailExtra.hidden = !regionDetailExtra.firstChild;
+    }
+
+    function toggleMetricPlot(row, metric, level, scope, selectedRegion) {
+      let plotDiv = row.querySelector('.ctx-plot');
+      if (plotDiv) {
+        plotDiv.remove();
+        return;
+      }
+
+      // Close other open plots
+      for (const openPlot of row.parentElement.querySelectorAll('.ctx-plot')) {
+        openPlot.remove();
+      }
+
+      const entries = contextFullReference(metric, level, scope).filter(
+        (e) => typeof e.bikeSharePct === 'number',
+      );
+
+      if (entries.length < 3) return;
+
+      plotDiv = document.createElement('div');
+      plotDiv.className = 'ctx-plot';
+      plotDiv.style.marginTop = '12px';
+      plotDiv.style.paddingTop = '12px';
+      plotDiv.style.borderTop = '1px dashed var(--gray-300)';
+      plotDiv.style.cursor = 'default';
+
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
+      for (const e of entries) {
+        sumX += e.v;
+        sumY += e.bikeSharePct;
+        sumXY += e.v * e.bikeSharePct;
+        sumX2 += e.v * e.v;
+        sumY2 += e.bikeSharePct * e.bikeSharePct;
+      }
+      const n = entries.length;
+      const divisor = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
+      const r = divisor === 0 ? 0 : (n * sumXY - sumX * sumY) / divisor;
+
+      const title = document.createElement('div');
+      title.style.fontSize = '0.85em';
+      title.style.color = 'var(--gray-600)';
+      title.style.marginBottom = '8px';
+      title.innerHTML = '<strong>' + metric.label + '</strong> vs Radinfra-Anteil<br>Korrelation (r): ' + deNumber(r, 2);
+      plotDiv.appendChild(title);
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const svg = document.createElementNS(svgNs, 'svg');
+      svg.setAttribute('viewBox', '0 0 300 150');
+      svg.style.width = '100%';
+      svg.style.height = '150px';
+      svg.style.overflow = 'visible';
+
+      const minX = Math.min(...entries.map((e) => e.v));
+      const maxX = Math.max(...entries.map((e) => e.v));
+      const minY = Math.min(...entries.map((e) => e.bikeSharePct));
+      const maxY = Math.max(...entries.map((e) => e.bikeSharePct));
+
+      const padX = (maxX - minX) * 0.05 || 1;
+      const padY = (maxY - minY) * 0.05 || 1;
+      const scaleX = (x) => ((x - (minX - padX)) / (maxX - minX + 2 * padX)) * 300;
+      const scaleY = (y) => 150 - ((y - (minY - padY)) / (maxY - minY + 2 * padY)) * 150;
+
+      const yAxis = document.createElementNS(svgNs, 'line');
+      yAxis.setAttribute('x1', '0'); yAxis.setAttribute('y1', '0');
+      yAxis.setAttribute('x2', '0'); yAxis.setAttribute('y2', '150');
+      yAxis.setAttribute('stroke', 'currentColor'); yAxis.setAttribute('stroke-opacity', '0.2');
+      svg.appendChild(yAxis);
+
+      const xAxis = document.createElementNS(svgNs, 'line');
+      xAxis.setAttribute('x1', '0'); xAxis.setAttribute('y1', '150');
+      xAxis.setAttribute('x2', '300'); xAxis.setAttribute('y2', '150');
+      xAxis.setAttribute('stroke', 'currentColor'); xAxis.setAttribute('stroke-opacity', '0.2');
+      svg.appendChild(xAxis);
+
+      for (const e of entries) {
+        const isSelected = e.id === selectedRegion.id;
+        const pt = document.createElementNS(svgNs, 'circle');
+        pt.setAttribute('cx', String(scaleX(e.v)));
+        pt.setAttribute('cy', String(scaleY(e.bikeSharePct)));
+        pt.setAttribute('r', isSelected ? '4' : '2');
+        pt.setAttribute('fill', isSelected ? '#e20613' : 'currentColor');
+        pt.setAttribute('fill-opacity', isSelected ? '1' : '0.4');
+
+        const titleEl = document.createElementNS(svgNs, 'title');
+        titleEl.textContent = e.name + '\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %';
+        pt.appendChild(titleEl);
+
+        if (isSelected) svg.appendChild(pt);
+        else svg.insertBefore(pt, svg.firstChild);
+      }
+
+      plotDiv.appendChild(svg);
+      plotDiv.addEventListener('click', (ev) => ev.stopPropagation());
+      row.appendChild(plotDiv);
     }
 
     function readTrendFromStorage(id) {
