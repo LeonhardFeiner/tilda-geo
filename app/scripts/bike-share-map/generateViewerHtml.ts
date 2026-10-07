@@ -3132,7 +3132,7 @@ export function generateViewerHtml(generatedAt: string) {
         pt.setAttribute('fill-opacity', isSelected ? '1' : '0.4');
 
         const titleEl = document.createElementNS(svgNs, 'title');
-        titleEl.textContent = e.name + '\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %';
+        titleEl.textContent = e.name + '\\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %';
         pt.appendChild(titleEl);
 
         if (isSelected) svg.appendChild(pt);
