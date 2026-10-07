@@ -627,6 +627,16 @@ export function generateViewerHtml(generatedAt: string) {
       border-radius: 2px; background: #1565c0; box-shadow: 0 0 0 1px #fff;
     }
     .region-detail-extra[hidden] { display: none !important; }
+    .ctx-plot { margin: 8px 0 6px; padding-top: 8px; border-top: 1px dashed #ccc; cursor: default; }
+    .ctx-plot-title { font-size: 11px; color: #666; margin-bottom: 4px; }
+    .ctx-plot-chart { width: 100%; }
+    .ctx-plot-chart svg { display: block; font-size: 10px; }
+    .ctx-plot-chart text { fill: #666; }
+    .ctx-plot-chart .grid { stroke: #e6e6e6; }
+    .ctx-plot-chart .axis-title { fill: #333; font-weight: 600; }
+    .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: 0.25; }
+    .ctx-plot-chart .selected { fill: #e20613; stroke: #fff; stroke-width: 2; }
+    .ctx-plot-chart .selected-label { fill: #e20613; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
     .region-detail-trend { margin: 0 0 10px; }
     .region-detail-trend[hidden] { display: none !important; }
     #region-detail-trend-heading {
@@ -3070,18 +3080,12 @@ export function generateViewerHtml(generatedAt: string) {
           props.bikelane_length,
           lengthClassFilter,
         );
-        if (!(roadKm > 0)) continue;
+        // Same rule as the colour scale: a few km of road give meaningless shares (often >100 %).
+        if (TildaStats.isLowRoadNetworkForScale(roadKm)) continue;
         entries.push({ ...e, bikeSharePct: (bikeKm / roadKm) * 100 });
       }
 
       if (entries.length < 3) return;
-
-      plotDiv = document.createElement('div');
-      plotDiv.className = 'ctx-plot';
-      plotDiv.style.marginTop = '12px';
-      plotDiv.style.paddingTop = '12px';
-      plotDiv.style.borderTop = '1px dashed var(--gray-300)';
-      plotDiv.style.cursor = 'default';
 
       let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
       for (const e of entries) {
@@ -3095,62 +3099,125 @@ export function generateViewerHtml(generatedAt: string) {
       const divisor = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
       const r = divisor === 0 ? 0 : (n * sumXY - sumX * sumY) / divisor;
 
+      plotDiv = document.createElement('div');
+      plotDiv.className = 'ctx-plot';
       const title = document.createElement('div');
-      title.style.fontSize = '0.85em';
-      title.style.color = 'var(--gray-600)';
-      title.style.marginBottom = '8px';
-      title.innerHTML = '<strong>' + metric.label + '</strong> vs Radinfra-Anteil<br>Korrelation (r): ' + deNumber(r, 2);
-      plotDiv.appendChild(title);
-
-      const svgNs = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(svgNs, 'svg');
-      svg.setAttribute('viewBox', '0 0 300 150');
-      svg.style.width = '100%';
-      svg.style.height = '150px';
-      svg.style.overflow = 'visible';
-
-      const minX = Math.min(...entries.map((e) => e.v));
-      const maxX = Math.max(...entries.map((e) => e.v));
-      const minY = Math.min(...entries.map((e) => e.bikeSharePct));
-      const maxY = Math.max(...entries.map((e) => e.bikeSharePct));
-
-      const padX = (maxX - minX) * 0.05 || 1;
-      const padY = (maxY - minY) * 0.05 || 1;
-      const scaleX = (x) => ((x - (minX - padX)) / (maxX - minX + 2 * padX)) * 300;
-      const scaleY = (y) => 150 - ((y - (minY - padY)) / (maxY - minY + 2 * padY)) * 150;
-
-      const yAxis = document.createElementNS(svgNs, 'line');
-      yAxis.setAttribute('x1', '0'); yAxis.setAttribute('y1', '0');
-      yAxis.setAttribute('x2', '0'); yAxis.setAttribute('y2', '150');
-      yAxis.setAttribute('stroke', 'currentColor'); yAxis.setAttribute('stroke-opacity', '0.2');
-      svg.appendChild(yAxis);
-
-      const xAxis = document.createElementNS(svgNs, 'line');
-      xAxis.setAttribute('x1', '0'); xAxis.setAttribute('y1', '150');
-      xAxis.setAttribute('x2', '300'); xAxis.setAttribute('y2', '150');
-      xAxis.setAttribute('stroke', 'currentColor'); xAxis.setAttribute('stroke-opacity', '0.2');
-      svg.appendChild(xAxis);
-
-      for (const e of entries) {
-        const isSelected = e.id === selectedRegion.id;
-        const pt = document.createElementNS(svgNs, 'circle');
-        pt.setAttribute('cx', String(scaleX(e.v)));
-        pt.setAttribute('cy', String(scaleY(e.bikeSharePct)));
-        pt.setAttribute('r', isSelected ? '4' : '2');
-        pt.setAttribute('fill', isSelected ? '#e20613' : 'currentColor');
-        pt.setAttribute('fill-opacity', isSelected ? '1' : '0.4');
-
-        const titleEl = document.createElementNS(svgNs, 'title');
-        titleEl.textContent = e.name + '\\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %';
-        pt.appendChild(titleEl);
-
-        if (isSelected) svg.appendChild(pt);
-        else svg.insertBefore(pt, svg.firstChild);
-      }
-
-      plotDiv.appendChild(svg);
+      title.className = 'ctx-plot-title';
+      const strong = document.createElement('strong');
+      strong.textContent = metric.label;
+      title.append(
+        strong,
+        ' und Radinfra-Anteil · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
+      );
+      const chart = document.createElement('div');
+      chart.className = 'ctx-plot-chart';
+      plotDiv.append(title, chart);
       plotDiv.addEventListener('click', (ev) => ev.stopPropagation());
       row.appendChild(plotDiv);
+      // Drawn after insertion so it can take the card's real pixel width.
+      renderMetricPlot(chart, metric, entries, selectedRegion.id);
+    }
+
+    /** Roughly five round tick values spanning [min, max]. */
+    function niceTicks(min, max) {
+      const span = max - min || 1;
+      const mag = Math.pow(10, Math.floor(Math.log10(span / 5)));
+      const step = [1, 2, 2.5, 5, 10].map((f) => f * mag).find((st) => span / st <= 6) || 10 * mag;
+      const ticks = [];
+      for (let t = Math.ceil(min / step) * step; t <= max + step * 1e-9; t += step) {
+        ticks.push(Math.abs(t) < step * 1e-9 ? 0 : t);
+      }
+      return ticks;
+    }
+
+    function renderMetricPlot(chart, metric, entries, selectedId) {
+      const width = Math.max(200, chart.clientWidth);
+      const height = Math.round(Math.min(320, Math.max(180, width * 0.7)));
+      const m = { top: 18, right: 10, bottom: 34, left: 40 };
+      const plotW = width - m.left - m.right;
+      const plotH = height - m.top - m.bottom;
+
+      // Axes end at the 1st/99th percentile so a handful of outliers don't squash the cloud;
+      // points beyond are pinned to the edge.
+      const quantile = (sorted, q) => sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))];
+      const xs = entries.map((e) => e.v).sort((a, b) => a - b);
+      const ys = entries.map((e) => e.bikeSharePct).sort((a, b) => a - b);
+      const minX = quantile(xs, 0.01), maxX = quantile(xs, 0.99);
+      const padX = (maxX - minX) * 0.03 || 1;
+      const x0 = minX - padX, x1 = maxX + padX;
+      const y1 = quantile(ys, 0.99) * 1.03 || 1;
+      const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+      const scaleX = (x) => m.left + ((clamp(x, x0, x1) - x0) / (x1 - x0)) * plotW;
+      const scaleY = (y) => m.top + plotH - (clamp(y, 0, y1) / y1) * plotH;
+      // Tick labels are bare numbers; the unit goes into the axis title.
+      const unitMatch = /^[−\\-]?[\\d.,]+\\s*([^\\d]*)$/.exec(metric.format(maxX, null));
+      const xUnit = unitMatch ? unitMatch[1].trim() : '';
+      const tickLabel = (t, ticks) => {
+        const step = ticks.length > 1 ? ticks[1] - ticks[0] : 1;
+        return deNumber(t, step >= 1 ? 0 : step >= 0.1 ? 1 : 2);
+      };
+
+      const svgNs = 'http://www.w3.org/2000/svg';
+      const el = (tag, attrs, text) => {
+        const node = document.createElementNS(svgNs, tag);
+        for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+        if (text != null) node.textContent = text;
+        return node;
+      };
+      const svg = el('svg', { viewBox: '0 0 ' + width + ' ' + height, width, height });
+
+      const xTicks = niceTicks(x0, x1);
+      // Thin out x labels when the card is narrow, so they don't collide.
+      const xLabelEvery = width / xTicks.length < 40 ? 2 : 1;
+      xTicks.forEach((t, i) => {
+        const x = scaleX(t);
+        svg.appendChild(el('line', { x1: x, x2: x, y1: m.top, y2: m.top + plotH, class: 'grid' }));
+        if (i % xLabelEvery === 0) {
+          svg.appendChild(el('text', { x, y: m.top + plotH + 13, 'text-anchor': 'middle' }, tickLabel(t, xTicks)));
+        }
+      });
+      const yTicks = niceTicks(0, y1);
+      for (const t of yTicks) {
+        const y = scaleY(t);
+        svg.appendChild(el('line', { x1: m.left, x2: m.left + plotW, y1: y, y2: y, class: 'grid' }));
+        svg.appendChild(el('text', { x: m.left - 4, y: y + 3, 'text-anchor': 'end' }, tickLabel(t, yTicks) + ' %'));
+      }
+      svg.appendChild(
+        el(
+          'text',
+          { x: m.left + plotW / 2, y: height - 4, 'text-anchor': 'middle', class: 'axis-title' },
+          metric.label + (xUnit ? ' (' + xUnit + ')' : ''),
+        ),
+      );
+      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra-Anteil'));
+
+      let selected = null;
+      const dots = el('g', { class: 'dots' });
+      for (const e of entries) {
+        if (e.id === selectedId) {
+          selected = e;
+          continue;
+        }
+        const pt = el('circle', { cx: scaleX(e.v), cy: scaleY(e.bikeSharePct), r: 2 });
+        pt.appendChild(
+          el('title', {}, e.name + '\\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %'),
+        );
+        dots.appendChild(pt);
+      }
+      svg.appendChild(dots);
+      if (selected) {
+        const sx = scaleX(selected.v), sy = scaleY(selected.bikeSharePct);
+        svg.appendChild(el('circle', { cx: sx, cy: sy, r: 5, class: 'selected' }));
+        const onRight = sx < m.left + plotW * 0.6;
+        svg.appendChild(
+          el(
+            'text',
+            { x: sx + (onRight ? 8 : -8), y: sy - 7, 'text-anchor': onRight ? 'start' : 'end', class: 'selected-label' },
+            selected.name + ' (' + formatUiPct(selected.bikeSharePct) + ' %)',
+          ),
+        );
+      }
+      chart.replaceChildren(svg);
     }
 
     function readTrendFromStorage(id) {
