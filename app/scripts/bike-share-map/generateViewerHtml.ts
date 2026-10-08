@@ -630,6 +630,13 @@ export function generateViewerHtml(generatedAt: string) {
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .region-detail-role-model {
+      display: block; margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+    .region-detail-role-model-link {
+      padding: 0; border: 0; background: none; cursor: pointer;
+      font: inherit; font-weight: 700; color: inherit; text-decoration: underline;
+    }
     .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; }
     .ctx-caption { margin: 0 0 4px; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: #666; font-weight: 700; }
     .ctx-scope {
@@ -2722,11 +2729,11 @@ export function generateViewerHtml(generatedAt: string) {
       if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
       const key = peerGroupIndex.byId[p.id];
       if (!key) return null;
-      const peers = allFeatures
+      const peerFeatures = allFeatures
         .filter((f) => peerGroupIndex.byId[f.properties?.id] === key)
         .map(enrichFeature)
-        .map((f) => f.properties)
-        .filter((q) => q.roadSumKm > 0 && typeof q.bikeSharePct === 'number');
+        .filter((f) => f.properties.roadSumKm > 0 && typeof f.properties.bikeSharePct === 'number');
+      const peers = peerFeatures.map((f) => f.properties);
       if (peers.length < MIN_BENCHMARK_REGIONS) return null;
       const bench = RankingDisplay.computeViewBenchmark(peers);
       if (!bench) return null;
@@ -2740,7 +2747,47 @@ export function generateViewerHtml(generatedAt: string) {
         medianPct: bench.medianPct,
         gapKm: RankingDisplay.bikelaneGapKm(p, bench.medianPct),
         behind: p.bikeSharePct < bench.medianPct - 0.05,
+        roleModel: nearestRoleModel(p, peerFeatures, bench.medianPct),
       };
+    }
+
+    const featureCenterCache = new Map();
+    function featureCenter(f) {
+      const id = f.properties?.id;
+      if (featureCenterCache.has(id)) return featureCenterCache.get(id);
+      const [w, s, e, n] = turf.bbox(f);
+      const center = [(w + e) / 2, (s + n) / 2];
+      featureCenterCache.set(id, center);
+      return center;
+    }
+
+    /** Points of a peer that has to clearly beat the region to be worth naming. */
+    const ROLE_MODEL_MIN_LEAD_PCT = 2;
+    /** Beyond this, "in der Nähe" stops being true and the comparison loses its pull. */
+    const ROLE_MODEL_MAX_KM = 60;
+
+    /**
+     * The closest Gemeinde of the same profile that does clearly better (at least the group
+     * median and ROLE_MODEL_MIN_LEAD_PCT points ahead): "Moos, 9 km away, manages 17 %" is
+     * harder to wave away than a rank among 800 places nobody knows.
+     */
+    function nearestRoleModel(p, peerFeatures, medianPct) {
+      const self = allFeatures.find((f) => f.properties?.id === p.id);
+      if (!self?.geometry) return null;
+      const minPct = Math.max(medianPct, p.bikeSharePct + ROLE_MODEL_MIN_LEAD_PCT);
+      const origin = featureCenter(self);
+      let best = null;
+      for (const f of peerFeatures) {
+        const q = f.properties;
+        if (q.id === p.id || q.lowRoad || q.bikeSharePct < minPct || !f.geometry) continue;
+        const km = turf.distance(origin, featureCenter(f), { units: 'kilometers' });
+        if (km > ROLE_MODEL_MAX_KM || (best && km >= best.km)) continue;
+        // A lead that rests on unclear tagging is exactly what a critic would point at.
+        const quality = TildaStats.assessBikeDataQuality(q.road_length, q.bikelane_length);
+        if (quality && quality.level !== 'good') continue;
+        best = { id: q.id, name: q.name || q.id, pct: q.bikeSharePct, km };
+      }
+      return best;
     }
 
     /**
@@ -2775,6 +2822,26 @@ export function generateViewerHtml(generatedAt: string) {
             (s.behind ? ' %.' : ' %).'),
         ),
       );
+      if (s.roleModel) {
+        const line = document.createElement('span');
+        line.className = 'region-detail-role-model';
+        const link = document.createElement('button');
+        link.type = 'button';
+        link.className = 'region-detail-role-model-link';
+        link.textContent = s.roleModel.name;
+        link.title = s.roleModel.name + ' anzeigen';
+        link.addEventListener('click', () => jumpToRegionBySearch(s.roleModel.id));
+        line.append(
+          'Vorbild in der Nähe: ',
+          link,
+          ' (' +
+            Math.max(1, Math.round(s.roleModel.km)) +
+            ' km entfernt, gleiches Profil) schafft ' +
+            formatUiPct(s.roleModel.pct) +
+            ' %.',
+        );
+        regionDetailPeerGap.appendChild(line);
+      }
       regionDetailPeerGap.hidden = false;
     }
 
@@ -4827,13 +4894,26 @@ export function generateViewerHtml(generatedAt: string) {
             (behind ? 'nur ' : '') +
             formatUiPct(p.bikeSharePct) +
             ' % der Straßen mit Radinfrastruktur';
-          if (rankInfo) msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total;
+          if (rankInfo) {
+            msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
+          }
           msg += '.';
           if (behind) {
             msg +=
-              ' Es fehlen rund ' +
+              ' Bis ins Mittelfeld fehlen rund ' +
               TildaStats.formatStatKm(g.medianGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-              ' km bis ins Mittelfeld dieser Auswahl.';
+              ' km.';
+          }
+          const model = demographicPeerSummary(p)?.roleModel;
+          if (model) {
+            msg +=
+              ' ' +
+              model.name +
+              ' (' +
+              Math.max(1, Math.round(model.km)) +
+              ' km entfernt, ähnlich groß) schafft ' +
+              formatUiPct(model.pct) +
+              ' %.';
           }
           return msg;
         }
