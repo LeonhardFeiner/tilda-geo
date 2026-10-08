@@ -587,7 +587,16 @@ export function generateViewerHtml(generatedAt: string) {
       color: #666; cursor: pointer; padding: 2px 6px;
     }
     .region-detail-close:hover { color: #111; }
-    .region-detail-meta { margin: 0 0 8px; color: #555; line-height: 1.45; white-space: pre-line; }
+    .region-detail-meta { margin: 0 0 10px; color: #555; line-height: 1.45; }
+    .region-detail-pct { font-size: 28px; font-weight: 800; line-height: 1.1; color: #111; }
+    .region-detail-pct-label { font-size: 13px; color: #333; }
+    .region-detail-rank { display: block; margin-top: 2px; font-weight: 600; color: #333; }
+    .region-detail-km { display: block; font-size: 12px; }
+    .region-detail-more { margin: 4px 0 0; border-top: 1px solid #e8e8e8; }
+    .region-detail-more > summary {
+      cursor: pointer; padding: 8px 0; font-size: 12px; font-weight: 600; color: #1565c0;
+    }
+    .region-detail-more[open] > summary { margin-bottom: 6px; }
     .region-detail-gap {
       margin: 0 0 10px; padding: 8px 10px; border-radius: 6px;
       font-size: 12px; line-height: 1.45;
@@ -600,7 +609,7 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-gap--ahead {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
-    #region-detail-peer-gap + .region-detail-gap { margin-top: -4px; }
+    #region-detail-gap + #region-detail-peer-gap { margin-top: -4px; }
     .region-detail-quality {
       margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
       font-size: 11px; line-height: 1.45; color: #555;
@@ -1062,16 +1071,20 @@ export function generateViewerHtml(generatedAt: string) {
       <h3 id="region-detail-title"></h3>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
-    <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
+    <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
-    <div class="region-detail-extra" id="region-detail-extra" hidden></div>
-    <div class="region-detail-trend" id="region-detail-trend" hidden>
-      <h4 id="region-detail-trend-heading"></h4>
-      <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
-      <div id="region-detail-trend-result" hidden></div>
-    </div>
-    <div id="region-detail-body"></div>
+    <div id="region-detail-actions"></div>
+    <details class="region-detail-more" id="region-detail-more">
+      <summary>Mehr Zahlen: Umfeld, Entwicklung, Aufschlüsselung</summary>
+      <div class="region-detail-extra" id="region-detail-extra" hidden></div>
+      <div class="region-detail-trend" id="region-detail-trend" hidden>
+        <h4 id="region-detail-trend-heading"></h4>
+        <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
+        <div id="region-detail-trend-result" hidden></div>
+      </div>
+      <div id="region-detail-body"></div>
+    </details>
   </div>
   <script src="./statsClassSums.js"></script>
   <script src="./regionNavigation.js"></script>
@@ -1297,6 +1310,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
     const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
+    const regionDetailActions = document.getElementById('region-detail-actions');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
     // Anchor marking the card's home spot (floating card, desktop) so it can be moved back.
@@ -2616,7 +2630,8 @@ export function generateViewerHtml(generatedAt: string) {
     function renderRegionQuality(p) {
       const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
       regionDetailQuality.replaceChildren();
-      if (!q) {
+      // Good data needs no sentence; the card only speaks up when the number is shaky.
+      if (!q || q.level === 'good') {
         regionDetailQuality.hidden = true;
         regionDetailQuality.className = 'region-detail-quality';
         return;
@@ -2635,30 +2650,22 @@ export function generateViewerHtml(generatedAt: string) {
           'OpenStreetMap noch fehlt.';
       } else {
         const share = Math.round(q.unclearShare * 100) + ' %';
-        if (q.level === 'good') {
-          head.textContent = 'Datenlage: gut. ';
-          text =
-            q.unclearShare < 0.005
-              ? 'Die erfasste Radinfrastruktur ist eindeutig getaggt.'
-              : 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
-        } else {
-          head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
-          text =
-            share +
-            ' (' +
-            km(q.unclearKm) +
-            ' km) der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig ' +
-            'getaggt („Klärung nötig“).';
-          const counted = readLengthClassFilterFromUi().bikelane.needsClarification;
-          if (counted && p.roadSumKm > 0) {
-            const conservative = ((p.bikelaneSumKm - q.unclearKm) / p.roadSumKm) * 100;
-            text +=
-              ' Ohne diese Wege läge der Anteil bei ' +
-              formatUiPct(Math.max(0, conservative)) +
-              ' % statt ' +
-              formatUiPct(p.bikeSharePct) +
-              ' %.';
-          }
+        head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
+        text =
+          share +
+          ' (' +
+          km(q.unclearKm) +
+          ' km) der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig ' +
+          'getaggt („Klärung nötig“).';
+        const counted = readLengthClassFilterFromUi().bikelane.needsClarification;
+        if (counted && p.roadSumKm > 0) {
+          const conservative = ((p.bikelaneSumKm - q.unclearKm) / p.roadSumKm) * 100;
+          text +=
+            ' Ohne diese Wege läge der Anteil bei ' +
+            formatUiPct(Math.max(0, conservative)) +
+            ' % statt ' +
+            formatUiPct(p.bikeSharePct) +
+            ' %.';
         }
       }
       regionDetailQuality.append(head, document.createTextNode(text));
@@ -2688,15 +2695,10 @@ export function generateViewerHtml(generatedAt: string) {
           ' Radinfrastruktur.',
         );
         if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
-          appendGapText(
-            regionDetailGap,
-            ' Bis zur Spitze (' +
-              g.leaderName +
-              ', ' +
-              formatUiPct(g.leaderPct) +
-              ' %): ',
-            kmBike(g.leaderGapKm) + ' km',
-            '.',
+          regionDetailGap.appendChild(
+            document.createTextNode(
+              ' Spitze: ' + g.leaderName + ' mit ' + formatUiPct(g.leaderPct) + ' %.',
+            ),
           );
         }
       } else {
@@ -2754,7 +2756,6 @@ export function generateViewerHtml(generatedAt: string) {
         regionDetailPeerGap.className = 'region-detail-gap region-detail-gap--peer';
         return;
       }
-      const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
       regionDetailPeerGap.className =
         'region-detail-gap region-detail-gap--peer ' +
         (s.behind ? 'region-detail-gap--behind' : 'region-detail-gap--ahead');
@@ -2767,20 +2768,13 @@ export function generateViewerHtml(generatedAt: string) {
           'unter Gemeinden mit ähnlichem Profil (' + s.groupLabel + ').',
         ),
       );
-      if (s.behind) {
-        appendGapText(
-          regionDetailPeerGap,
-          ' Zum Median der Gruppe (' + formatUiPct(s.medianPct) + ' %) fehlen rund ',
-          kmBike(s.gapKm) + ' km',
-          ' Radinfrastruktur.',
-        );
-      } else {
-        regionDetailPeerGap.appendChild(
-          document.createTextNode(
-            ' Über dem Median der Gruppe (' + formatUiPct(s.medianPct) + ' %).',
-          ),
-        );
-      }
+      regionDetailPeerGap.appendChild(
+        document.createTextNode(
+          (s.behind ? ' Median der Gruppe: ' : ' Über dem Median der Gruppe (') +
+            formatUiPct(s.medianPct) +
+            (s.behind ? ' %.' : ' %).'),
+        ),
+      );
       regionDetailPeerGap.hidden = false;
     }
 
@@ -3546,21 +3540,30 @@ export function generateViewerHtml(generatedAt: string) {
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
           ? formatUiPct(p.bikeSharePct) + ' %'
           : '–';
-      regionDetailMeta.textContent =
-        rankLine +
-        '\\n' +
-        pct +
-        ' · ' +
+      const pctEl = document.createElement('span');
+      pctEl.className = 'region-detail-pct';
+      pctEl.textContent = pct;
+      const pctLabel = document.createElement('span');
+      pctLabel.className = 'region-detail-pct-label';
+      pctLabel.textContent = ' der Straßen mit Radinfrastruktur';
+      const rankEl = document.createElement('span');
+      rankEl.className = 'region-detail-rank';
+      rankEl.textContent = rankLine;
+      const kmEl = document.createElement('span');
+      kmEl.className = 'region-detail-km';
+      kmEl.textContent =
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-        ' km Rad / ' +
+        ' km Radinfrastruktur bei ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
         ' km Straße';
+      regionDetailMeta.replaceChildren(pctEl, pctLabel, rankEl, kmEl);
       renderRegionPeerGap(p);
       renderRegionGap(p);
       renderRegionQuality(p);
       renderRegionExtra(p);
       setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
+      regionDetailActions.replaceChildren();
       const filter = readLengthClassFilterFromUi();
       appendBreakdownToggle(regionDetailBody, () => showRegionDetail(feature));
       const detailed = regionBreakdownMode === 'detail';
@@ -3619,7 +3622,7 @@ export function generateViewerHtml(generatedAt: string) {
           });
           links.appendChild(neighborButton);
         }
-        regionDetailBody.appendChild(links);
+        regionDetailActions.appendChild(links);
       }
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
