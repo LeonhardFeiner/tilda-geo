@@ -684,6 +684,21 @@
       cursor: pointer; text-align: left;
     }
     .region-detail-drill:hover { text-decoration: underline; }
+    /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
+    @media (pointer: coarse) {
+      .panel select, #region-search-input {
+        min-height: 44px; font-size: 16px;
+      }
+      .panel input[type="checkbox"], .panel input[type="radio"] { width: 20px; height: 20px; }
+      .panel .row label { min-height: 44px; }
+      .panel-body summary { padding-top: 12px; padding-bottom: 12px; }
+      .ranking-row-clickable { min-height: 40px; }
+      #view-csv-btn-toolbar { min-height: 36px; padding-left: 12px; padding-right: 12px; }
+      .ranking-mode-btn { min-height: 36px; padding-left: 12px; padding-right: 12px; }
+      .region-locate { display: inline-flex; align-items: center; min-height: 44px; }
+      .hint { font-size: 12px; }
+      #share-fab::after { content: ''; position: absolute; inset: -7px; }
+    }
   </style>
 </head>
 <body>
@@ -914,7 +929,7 @@
     </div>
     </div>
     <p class="footer">
-      Erstellt am 07.10.2026 ·
+      Erstellt am 08.10.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -950,7 +965,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-07T17:03:34.504Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-08T09:09:47.096Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -3101,7 +3116,7 @@
 
     function viewComparisonLabel() {
       const name = currentViewScopeName();
-      return name ? 'der Region ' + name : 'dieser Ansicht';
+      return name ? 'in ' + name : 'in dieser Ansicht';
     }
 
     function viewBenchmark() {
@@ -3170,7 +3185,10 @@
         const share = Math.round(q.unclearShare * 100) + ' %';
         if (q.level === 'good') {
           head.textContent = 'Datenlage: gut. ';
-          text = 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
+          text =
+            q.unclearShare < 0.005
+              ? 'Die erfasste Radinfrastruktur ist eindeutig getaggt.'
+              : 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
         } else {
           head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
           text =
@@ -3209,13 +3227,13 @@
         regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
         appendGapText(
           regionDetailGap,
-          'Um den Mittelwert (Median) ' +
+          'Bis ins Mittelfeld ' +
             viewLabel +
-            ' (' +
+            ' (Median ' +
             formatUiPct(g.medianPct) +
-            ' %) zu erreichen, müssten rund ',
+            ' %) fehlen rund ',
           kmBike(g.medianGapKm) + ' km',
-          ' Radinfrastruktur dazukommen.',
+          ' Radinfrastruktur.',
         );
         if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
           appendGapText(
@@ -3233,7 +3251,7 @@
         regionDetailGap.className = 'region-detail-gap region-detail-gap--ahead';
         regionDetailGap.textContent = g.atMedian
           ? 'Liegt im Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).'
-          : 'Liegt über dem Median ' + viewLabel + ' (' + formatUiPct(g.medianPct) + ' %).';
+          : 'Liegt über dem Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).';
       }
       regionDetailGap.hidden = false;
     }
@@ -4067,7 +4085,7 @@
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
       const rankText = rankInfo
-        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' in dieser Ansicht'
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
         : 'Kein Rang (ohne Straßendaten in der Zählung)';
       const rankLine = p.lowRoad && p.roadSumKm > 0
         ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
@@ -5360,7 +5378,7 @@
             msg +=
               ' Es fehlen rund ' +
               TildaStats.formatStatKm(g.medianGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-              ' km bis zum Mittelwert dieser Auswahl.';
+              ' km bis ins Mittelfeld dieser Auswahl.';
           }
           return msg;
         }

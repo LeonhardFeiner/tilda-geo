@@ -181,7 +181,7 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const peerSentence = peerGroupSentence(s)
   if (s.behind) {
     const gapKm = formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)
-    return `${base} Bis zum Mittelwert (${median} %) fehlen rund ${gapKm} km.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm} km.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
   }
   return `${base} Median: ${median} %.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
 }
@@ -307,7 +307,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const bg = s.behind ? '#3a1414' : '#0d3b2e'
   const rankLineText = `${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
   const subLineText = s.behind
-    ? `Es fehlen rund ${formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)} km bis zum Mittelwert (${formatStatPctUi(s.medianPct)} %)`
+    ? `Es fehlen rund ${formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)} km bis ins Mittelfeld (Median ${formatStatPctUi(s.medianPct)} %)`
     : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
   const peer = s.peerGroup
   const peerLineText = peer

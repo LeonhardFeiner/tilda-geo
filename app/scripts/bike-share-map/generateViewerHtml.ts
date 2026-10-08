@@ -773,6 +773,21 @@ export function generateViewerHtml(generatedAt: string) {
       cursor: pointer; text-align: left;
     }
     .region-detail-drill:hover { text-decoration: underline; }
+    /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
+    @media (pointer: coarse) {
+      .panel select, #region-search-input {
+        min-height: 44px; font-size: 16px;
+      }
+      .panel input[type="checkbox"], .panel input[type="radio"] { width: 20px; height: 20px; }
+      .panel .row label { min-height: 44px; }
+      .panel-body summary { padding-top: 12px; padding-bottom: 12px; }
+      .ranking-row-clickable { min-height: 40px; }
+      #view-csv-btn-toolbar { min-height: 36px; padding-left: 12px; padding-right: 12px; }
+      .ranking-mode-btn { min-height: 36px; padding-left: 12px; padding-right: 12px; }
+      .region-locate { display: inline-flex; align-items: center; min-height: 44px; }
+      .hint { font-size: 12px; }
+      #share-fab::after { content: ''; position: absolute; inset: -7px; }
+    }
   </style>
 </head>
 <body>
@@ -2525,7 +2540,7 @@ export function generateViewerHtml(generatedAt: string) {
 
     function viewComparisonLabel() {
       const name = currentViewScopeName();
-      return name ? 'der Region ' + name : 'dieser Ansicht';
+      return name ? 'in ' + name : 'in dieser Ansicht';
     }
 
     function viewBenchmark() {
@@ -2594,7 +2609,10 @@ export function generateViewerHtml(generatedAt: string) {
         const share = Math.round(q.unclearShare * 100) + ' %';
         if (q.level === 'good') {
           head.textContent = 'Datenlage: gut. ';
-          text = 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
+          text =
+            q.unclearShare < 0.005
+              ? 'Die erfasste Radinfrastruktur ist eindeutig getaggt.'
+              : 'Nur ' + share + ' der erfassten Radinfrastruktur ist nicht eindeutig getaggt.';
         } else {
           head.textContent = q.level === 'mixed' ? 'Datenlage: mittel. ' : 'Datenlage: unsicher. ';
           text =
@@ -2633,13 +2651,13 @@ export function generateViewerHtml(generatedAt: string) {
         regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
         appendGapText(
           regionDetailGap,
-          'Um den Mittelwert (Median) ' +
+          'Bis ins Mittelfeld ' +
             viewLabel +
-            ' (' +
+            ' (Median ' +
             formatUiPct(g.medianPct) +
-            ' %) zu erreichen, müssten rund ',
+            ' %) fehlen rund ',
           kmBike(g.medianGapKm) + ' km',
-          ' Radinfrastruktur dazukommen.',
+          ' Radinfrastruktur.',
         );
         if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
           appendGapText(
@@ -2657,7 +2675,7 @@ export function generateViewerHtml(generatedAt: string) {
         regionDetailGap.className = 'region-detail-gap region-detail-gap--ahead';
         regionDetailGap.textContent = g.atMedian
           ? 'Liegt im Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).'
-          : 'Liegt über dem Median ' + viewLabel + ' (' + formatUiPct(g.medianPct) + ' %).';
+          : 'Liegt über dem Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).';
       }
       regionDetailGap.hidden = false;
     }
@@ -3491,7 +3509,7 @@ export function generateViewerHtml(generatedAt: string) {
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
       const rankText = rankInfo
-        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' in dieser Ansicht'
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
         : 'Kein Rang (ohne Straßendaten in der Zählung)';
       const rankLine = p.lowRoad && p.roadSumKm > 0
         ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
@@ -4784,7 +4802,7 @@ export function generateViewerHtml(generatedAt: string) {
             msg +=
               ' Es fehlen rund ' +
               TildaStats.formatStatKm(g.medianGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-              ' km bis zum Mittelwert dieser Auswahl.';
+              ' km bis ins Mittelfeld dieser Auswahl.';
           }
           return msg;
         }
