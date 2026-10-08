@@ -27,7 +27,11 @@ import {
   slugForId,
   type ShareRegionInput,
 } from './sharePages'
-import { RADINFRA_DEFAULT_FILTER, computeFilteredLengths } from './statsClassSums'
+import {
+  RADINFRA_DEFAULT_FILTER,
+  computeFilteredLengths,
+  mainRoadBreakdown,
+} from './statsClassSums'
 
 const scriptDir = import.meta.dir
 const outDir = join(scriptDir, 'output')
@@ -94,6 +98,8 @@ function shareRegionInputFromFeature(f: StatsFeature): ShareRegionInput | null {
     bikeSharePct: roadKm > 0 ? (bikeKm / roadKm) * 100 : null,
     bundeslandId: p.bundesland_id ? String(p.bundesland_id) : undefined,
     landkreisId: p.landkreis_id ? String(p.landkreis_id) : undefined,
+    mainRoadPct:
+      mainRoadBreakdown(p.road_length_by_authority, p.bikelane_length_by_road)?.pct ?? null,
   }
 }
 
@@ -183,7 +189,9 @@ export async function generateSharePages() {
     writeFileSync(join(shareDir, `${slug}.html`), html, 'utf8')
     if (inScope) {
       const png = await sharp(Buffer.from(shareOgSvg(summary)))
-        .png({ compressionLevel: 9 })
+        // Flat colours and text: a palette PNG is ~2.5x smaller and looks the same, which is what
+        // makes images for all ~11k regions fit comfortably in the Pages size limit.
+        .png({ palette: true, quality: 90, compressionLevel: 9 })
         .toBuffer()
       writeFileSync(join(shareDir, `${slug}.png`), png)
       imageCount++

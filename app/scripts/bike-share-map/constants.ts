@@ -28,14 +28,14 @@ export const SHARE_PAGE_BASE_URL =
 
 /**
  * Bundesländer (OSM relation ids) that get a rendered per-region Open Graph image on their
- * share pages; regions elsewhere fall back to the generic card. Rendering every German region
- * is ~10k images per build, so this stays scoped by default. Override with a comma-separated
- * `BIKE_SHARE_OG_BUNDESLAENDER` (or `all`).
+ * share pages; regions elsewhere fall back to the generic card. Default `all`: every German
+ * region (~11k palette PNGs, ~250 MB, a few minutes per build). Narrow it with a comma-separated
+ * `BIKE_SHARE_OG_BUNDESLAENDER`, e.g. the Bayern id for quick local builds.
  */
 export const SHARE_PAGE_OG_IMAGE_BUNDESLAENDER: readonly string[] =
   process.env.BIKE_SHARE_OG_BUNDESLAENDER?.split(',')
     .map((s) => s.trim())
-    .filter(Boolean) ?? [BAYERN_ID]
+    .filter(Boolean) ?? ['all']
 
 /** Values above this % use the max choropleth color; gradient runs 0 → this when data exceeds it. */
 export const BIKE_SHARE_COLOR_CAP_PCT = 50

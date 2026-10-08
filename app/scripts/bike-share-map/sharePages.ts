@@ -18,6 +18,8 @@ export type ShareRegionInput = {
   bikeSharePct: number | null
   bundeslandId?: string
   landkreisId?: string
+  /** Share of main roads with bike infra along them (per-road aggregation); absent on old data. */
+  mainRoadPct?: number | null
 }
 
 export type ShareGroupKind =
@@ -177,7 +179,11 @@ function peerGroupSentence(s: ShareRegionSummary): string {
 export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const pct = formatStatPctUi(s.bikeSharePct)
   const median = formatStatPctUi(s.medianPct)
-  const base = `${pct} % der Straßen in ${s.name} haben Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).`
+  const mainRoads =
+    typeof s.mainRoadPct === 'number'
+      ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} %.`
+      : ''
+  const base = `${pct} % der Straßen in ${s.name} haben Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
   if (s.behind) {
     const gapKm = formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)
@@ -329,7 +335,11 @@ export function shareOgSvg(s: ShareRegionSummary) {
   <rect width="1200" height="630" fill="${bg}" />
   <text x="60" y="110" font-family="Arial, sans-serif" font-size="${nameSize}" font-weight="700" fill="#ffffff">${name}</text>
   <text x="60" y="280" font-family="Arial, sans-serif" font-size="150" font-weight="800" fill="${accent}">${pct} %</text>
-  <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur an Straßen (km)</text>
+  <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur an Straßen (km)${
+    typeof s.mainRoadPct === 'number'
+      ? ` · an Hauptverkehrsstraßen: ${escapeHtml(formatStatPctUi(s.mainRoadPct))} %`
+      : ''
+  }</text>
   <text x="60" y="410" font-family="Arial, sans-serif" font-size="${rankSize}" font-weight="600" fill="#ffffff">${rankLine}</text>
   <text x="60" y="458" font-family="Arial, sans-serif" font-size="${subSize}" fill="#cfe8dd">${subLine}</text>
   ${peerLine}
