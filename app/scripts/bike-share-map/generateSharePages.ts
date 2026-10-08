@@ -9,10 +9,11 @@
  * Run standalone via `bun run bike-share-map:share-pages`, or automatically at the end of
  * `bike-share-map:viewer`.
  */
-import { existsSync, mkdirSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import sharp from 'sharp'
 import { SHARE_PAGE_BASE_URL, SHARE_PAGE_OG_IMAGE_BUNDESLAENDER } from './constants'
+import { readDataDateLabel } from './dataDate'
 import {
   buildDemographicPeerSummaries,
   type DemographicPeerSummary,
@@ -149,13 +150,7 @@ export async function generateSharePages() {
 
   mkdirSync(shareDir, { recursive: true })
 
-  const dataDateLabel = existsSync(geojsonPath)
-    ? statSync(geojsonPath).mtime.toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-      })
-    : ''
+  const dataDateLabel = readDataDateLabel(outDir)
 
   writeFileSync(
     join(shareDir, 'og-default.png'),

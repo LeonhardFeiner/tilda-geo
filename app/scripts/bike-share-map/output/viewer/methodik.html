@@ -36,7 +36,7 @@
   <h1>Methodik &amp; Datenquellen</h1>
   <p class="sub">Was die Zahlen sagen – und was nicht.</p>
 
-  <p class="lead">Bundesweit haben rund <strong>12,2&nbsp;%</strong> der Straßen (nach Länge) eine straßenbegleitende Radinfrastruktur – Stand der OpenStreetMap-Daten: 02.10.2026.</p>
+  <p class="lead">Bundesweit haben rund <strong>12,2&nbsp;%</strong> der Straßen (nach Länge) eine straßenbegleitende Radinfrastruktur – Stand der OpenStreetMap-Daten: 30.09.2026.</p>
 
   <h2>Was zeigt die Karte?</h2>
   <p>Für jede Verwaltungseinheit den <strong>Anteil der Straßen (nach Länge in km), an denen eine
@@ -48,7 +48,7 @@
   und ausschließen.</p>
 
   <h2>Datenquellen</h2>
-  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 02.10.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
+  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 30.09.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
 
   <h2>Wie werden Straßen gezählt?</h2>
   <p>Aus den OSM-Straßentypen (<code>highway=*</code>) werden vier Gruppen gebildet:</p>
@@ -58,11 +58,28 @@
 
   <h2>Wie wird Radinfrastruktur gezählt?</h2>
   <p>Die Klassifizierung folgt dem Schema von <a href="https://radinfra.de">radinfra.de</a> bzw. TILDA
-  (<a href="https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur">OSM-Radverkehrs-Tagging</a>). Ein Straßenabschnitt gilt als mit
-  Radinfrastruktur, wenn parallel eine der folgenden Kategorien erfasst ist:</p>
+  (<a href="https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur">OSM-Radverkehrs-Tagging</a>). Gezählt wird die Länge aller Wege
+  dieser Kategorien:</p>
   <ul><li><strong>Klärung nötig</strong></li><li><strong>Rad mit Fußverkehr</strong></li><li><strong>Rad mit Kfz-Verkehr</strong></li><li><strong>Rad neben Fußverkehr</strong></li><li><strong>Rad neben Kfz-Verkehr</strong></li><li><strong>Getrennter Radverkehr</strong></li></ul>
-  <p>Beidseitige Radinfrastruktur wird als solche berücksichtigt; die Länge bezieht sich auf die
-  Straße, nicht auf die Summe beider Seiten.</p>
+  <p>Der Hauptwert setzt die <strong>gesamte</strong> Länge der Radinfrastruktur ins Verhältnis zur
+  Straßenlänge – auch selbstständige Wege abseits von Straßen (z.&nbsp;B. durch Felder oder Parks)
+  zählen mit. Längen werden je Fahrtrichtung gezählt: Eine Straße mit Gegenverkehr zählt doppelt,
+  ebenso ein Zweirichtungsradweg; ein Radfahrstreifen auf jeder Seite zählt je Seite einfach.
+  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%.</p>
+
+  <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
+  <p>Weil der Hauptwert auch Wege abseits von Straßen mitzählt, zeigt die Detailkarte zusätzlich den
+  Anteil der <strong>Hauptverkehrsstraßen</strong> (OSM <code>trunk</code>, <code>primary</code>,
+  <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
+  jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
+  Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa
+  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht.</p>
+  <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
+  L/S/St → Land, K oder Kreiskürzel (z.&nbsp;B. „RO&nbsp;35“) → Landkreis, ohne Nummer → Gemeinde.
+  Das ist eine Näherung: Ortsdurchfahrten von Bundes- und Landesstraßen liegen in größeren Städten
+  meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.
+  Die Spalte „fehlt“ verteilt die Kilometer bis zum Median der aktuellen Ansicht anteilig nach dem
+  Rückstand jedes Baulastträgers.</p>
 
   <h2>Vergleich mit ähnlichen Gemeinden</h2>
 <p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit „wir sind halt ländlich“ nicht

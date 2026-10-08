@@ -7,7 +7,6 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
-  statSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
@@ -20,6 +19,7 @@ import {
   splitStatsFeaturesByLevel,
 } from '../stats-export/statsRegionPack'
 import { PROJECT_LEAD, STATION_AREAS_PAGE_STEM, VIEWER_SOURCE_REPO_URL } from './constants'
+import { readDataDateLabel } from './dataDate'
 import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
@@ -257,13 +257,7 @@ if (existsSync(terrainPath)) {
   }
 }
 
-const dataDateLabel = existsSync(geojsonPath)
-  ? statSync(geojsonPath).mtime.toLocaleDateString('de-DE', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-    })
-  : ''
+const dataDateLabel = readDataDateLabel(outputRoot)
 writeFileSync(
   join(viewerDir, 'methodik.html'),
   methodologyPageHtml({
@@ -369,7 +363,11 @@ for (const workerEntry of [
   }
 }
 
-writeFileSync(join(viewerDir, 'index.html'), generateViewerHtml(new Date().toISOString()), 'utf8')
+writeFileSync(
+  join(viewerDir, 'index.html'),
+  generateViewerHtml(new Date().toISOString(), dataDateLabel),
+  'utf8',
+)
 
 const sharePages = await generateSharePages()
 process.stdout.write(
