@@ -152,7 +152,7 @@ export function generateViewerHtml(generatedAt: string) {
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
     /* Floating share button: phone only (see media query); desktop shares via the panel toolbar. */
-    .share-fab { display: none; }
+    .share-fab, .search-fab { display: none; }
     @media (max-width: 768px) {
       body { --sheet-peek: 4.9rem; }
 
@@ -252,6 +252,23 @@ export function generateViewerHtml(generatedAt: string) {
       #share-fab:active { background: #f2f2f2; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
+
+      /* Search pill over the map: the search field itself sits inside the collapsed sheet. */
+      #search-fab {
+        display: flex; align-items: center; gap: 8px;
+        position: fixed; z-index: 5;
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 50px; right: 50px;
+        height: 40px; padding: 0 14px;
+        border: none; border-radius: 999px;
+        background: #fff; color: #444; cursor: pointer;
+        font: inherit; font-size: 15px; text-align: left;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+      }
+      #search-fab svg { flex: none; width: 20px; height: 20px; fill: #1565c0; }
+      #search-fab span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      body[data-sheet="half"] #search-fab,
+      body[data-sheet="full"] #search-fab,
+      body[data-region-detail] #search-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
       .panel-actions { margin-top: 0; }
       #copy-view-link-feedback {
@@ -703,25 +720,29 @@ export function generateViewerHtml(generatedAt: string) {
     }
     .load-error-retry:hover { background: #fff5f4; }
     #load-status { color: #555; font-size: 13px; margin: 0 0 8px; display: none; }
-    body.ui-minimal #panel-main { display: none !important; }
+    body.ui-minimal #panel-main, body.ui-minimal #search-fab { display: none !important; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
     .region-locate {
-      margin: 6px 0 0; padding: 0; border: 0; background: none; cursor: pointer;
-      font: inherit; font-size: 12px; color: #1565c0;
+      display: inline-flex; align-items: center; gap: 4px;
+      margin: 8px 0 0; padding: 4px 10px 4px 7px; cursor: pointer;
+      border: 1px solid #c5d7ee; border-radius: 999px; background: #f3f8fe;
+      font: inherit; font-size: 12px; font-weight: 600; color: #1565c0;
     }
-    .region-locate:hover { text-decoration: underline; }
+    .region-locate svg { width: 14px; height: 14px; fill: currentColor; }
+    .region-locate:hover { background: #e6f0fc; }
     .region-locate[hidden], .region-locate-status[hidden] { display: none !important; }
     .region-locate-status { margin: 4px 0 0; font-size: 11px; color: #8a1c11; }
     .region-search-results li.region-search-empty { cursor: default; color: #666; }
     .region-search-results li.region-search-empty:hover { background: none; }
-    .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
+    .region-search-block label { display: block; font-size: 14px; font-weight: 700; color: #222; margin: 4px 0 6px; }
     #region-search-input {
-      width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
-      border-radius: 4px; border: 1px solid #ccc;
+      width: 100%; box-sizing: border-box; font-size: 14px; padding: 8px 10px;
+      border-radius: 6px; border: 1.5px solid #1565c0;
     }
+    #region-search-input:focus { outline: 3px solid rgba(21, 101, 192, 0.25); outline-offset: 0; }
     .region-search-results {
       position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
       padding: 4px 0; list-style: none;
@@ -796,6 +817,10 @@ export function generateViewerHtml(generatedAt: string) {
   <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
   </button>
+  <button type="button" id="search-fab" class="search-fab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
+    <span>Wie steht deine Gemeinde da?</span>
+  </button>
   <details class="panel" id="panel-main" open>
     <summary>
       <h1 class="site-title">Radinfra-Vergleich</h1>
@@ -811,15 +836,18 @@ export function generateViewerHtml(generatedAt: string) {
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
     <div class="region-search-block" id="region-search-block">
-      <label for="region-search-input">Gebiet suchen</label>
+      <label for="region-search-input">Wie steht deine Gemeinde da?</label>
       <input
         type="text"
         id="region-search-input"
         autocomplete="off"
-        placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
+        placeholder="Gemeinde, Stadt oder Landkreis – z. B. Erding"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
-      <button type="button" id="region-locate" class="region-locate" hidden>Mein Standort verwenden</button>
+      <button type="button" id="region-locate" class="region-locate" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>
+        Mein Standort verwenden
+      </button>
       <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
@@ -5609,6 +5637,13 @@ export function generateViewerHtml(generatedAt: string) {
         );
       });
     }
+    document.getElementById('search-fab')?.addEventListener('click', () => {
+      setSheetState('full');
+      if (!regionSearchInput) return;
+      // Focus inside the tap itself, otherwise iOS won't raise the keyboard.
+      regionSearchInput.focus({ preventScroll: true });
+      regionSearchInput.scrollIntoView({ block: 'start' });
+    });
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {
         renderRegionSearchResults(regionSearchInput.value.trim());

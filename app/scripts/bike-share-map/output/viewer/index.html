@@ -63,7 +63,7 @@
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
     /* Floating share button: phone only (see media query); desktop shares via the panel toolbar. */
-    .share-fab { display: none; }
+    .share-fab, .search-fab { display: none; }
     @media (max-width: 768px) {
       body { --sheet-peek: 4.9rem; }
 
@@ -163,6 +163,23 @@
       #share-fab:active { background: #f2f2f2; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
+
+      /* Search pill over the map: the search field itself sits inside the collapsed sheet. */
+      #search-fab {
+        display: flex; align-items: center; gap: 8px;
+        position: fixed; z-index: 5;
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 50px; right: 50px;
+        height: 40px; padding: 0 14px;
+        border: none; border-radius: 999px;
+        background: #fff; color: #444; cursor: pointer;
+        font: inherit; font-size: 15px; text-align: left;
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
+      }
+      #search-fab svg { flex: none; width: 20px; height: 20px; fill: #1565c0; }
+      #search-fab span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+      body[data-sheet="half"] #search-fab,
+      body[data-sheet="full"] #search-fab,
+      body[data-region-detail] #search-fab { display: none; }
       .panel-actions .share-toolbar { display: none; }
       .panel-actions { margin-top: 0; }
       #copy-view-link-feedback {
@@ -614,25 +631,29 @@
     }
     .load-error-retry:hover { background: #fff5f4; }
     #load-status { color: #555; font-size: 13px; margin: 0 0 8px; display: none; }
-    body.ui-minimal #panel-main { display: none !important; }
+    body.ui-minimal #panel-main, body.ui-minimal #search-fab { display: none !important; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
     .region-locate {
-      margin: 6px 0 0; padding: 0; border: 0; background: none; cursor: pointer;
-      font: inherit; font-size: 12px; color: #1565c0;
+      display: inline-flex; align-items: center; gap: 4px;
+      margin: 8px 0 0; padding: 4px 10px 4px 7px; cursor: pointer;
+      border: 1px solid #c5d7ee; border-radius: 999px; background: #f3f8fe;
+      font: inherit; font-size: 12px; font-weight: 600; color: #1565c0;
     }
-    .region-locate:hover { text-decoration: underline; }
+    .region-locate svg { width: 14px; height: 14px; fill: currentColor; }
+    .region-locate:hover { background: #e6f0fc; }
     .region-locate[hidden], .region-locate-status[hidden] { display: none !important; }
     .region-locate-status { margin: 4px 0 0; font-size: 11px; color: #8a1c11; }
     .region-search-results li.region-search-empty { cursor: default; color: #666; }
     .region-search-results li.region-search-empty:hover { background: none; }
-    .region-search-block label { display: block; font-size: 12px; color: #555; margin-bottom: 2px; }
+    .region-search-block label { display: block; font-size: 14px; font-weight: 700; color: #222; margin: 4px 0 6px; }
     #region-search-input {
-      width: 100%; box-sizing: border-box; font-size: 13px; padding: 5px 8px;
-      border-radius: 4px; border: 1px solid #ccc;
+      width: 100%; box-sizing: border-box; font-size: 14px; padding: 8px 10px;
+      border-radius: 6px; border: 1.5px solid #1565c0;
     }
+    #region-search-input:focus { outline: 3px solid rgba(21, 101, 192, 0.25); outline-offset: 0; }
     .region-search-results {
       position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
       padding: 4px 0; list-style: none;
@@ -707,6 +728,10 @@
   <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
   </button>
+  <button type="button" id="search-fab" class="search-fab">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
+    <span>Wie steht deine Gemeinde da?</span>
+  </button>
   <details class="panel" id="panel-main" open>
     <summary>
       <h1 class="site-title">Radinfra-Vergleich</h1>
@@ -722,15 +747,18 @@
     <p id="load-error"></p>
     <div class="panel-options" id="panel-options">
     <div class="region-search-block" id="region-search-block">
-      <label for="region-search-input">Gebiet suchen</label>
+      <label for="region-search-input">Wie steht deine Gemeinde da?</label>
       <input
         type="text"
         id="region-search-input"
         autocomplete="off"
-        placeholder="z. B. München, Alb-Donau-Kreis, Bayern …"
+        placeholder="Gemeinde, Stadt oder Landkreis – z. B. Erding"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
-      <button type="button" id="region-locate" class="region-locate" hidden>Mein Standort verwenden</button>
+      <button type="button" id="region-locate" class="region-locate" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>
+        Mein Standort verwenden
+      </button>
       <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
@@ -965,7 +993,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-08T09:13:51.615Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-08T09:20:06.990Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Bundes- und Landesstraßen"},{"id":"secondary_like","label":"Kreis- und Nebenstraßen"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -6185,6 +6213,13 @@
         );
       });
     }
+    document.getElementById('search-fab')?.addEventListener('click', () => {
+      setSheetState('full');
+      if (!regionSearchInput) return;
+      // Focus inside the tap itself, otherwise iOS won't raise the keyboard.
+      regionSearchInput.focus({ preventScroll: true });
+      regionSearchInput.scrollIntoView({ block: 'start' });
+    });
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {
         renderRegionSearchResults(regionSearchInput.value.trim());
