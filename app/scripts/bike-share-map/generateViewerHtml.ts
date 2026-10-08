@@ -810,6 +810,26 @@ export function generateViewerHtml(generatedAt: string) {
       cursor: pointer; text-align: left;
     }
     .region-detail-drill:hover { text-decoration: underline; }
+    .print-sheet { display: none; }
+    @media print {
+      @page { size: A4; margin: 15mm; }
+      body.printing > :not(#print-sheet) { display: none !important; }
+      body.printing { overflow: visible !important; background: #fff; }
+      body.printing #print-sheet { display: block; }
+    }
+    .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 11pt; line-height: 1.4; }
+    .print-sheet .ps-kicker { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; margin: 0; }
+    .print-sheet h1 { font-size: 22pt; margin: 2pt 0 8pt; }
+    .print-sheet .ps-pct { font-size: 40pt; font-weight: 800; line-height: 1; margin: 0; }
+    .print-sheet .ps-pct small { font-size: 12pt; font-weight: 400; }
+    .print-sheet .ps-rank { font-size: 13pt; font-weight: 600; margin: 4pt 0 2pt; }
+    .print-sheet .ps-box { margin: 8pt 0; padding: 6pt 9pt; border: 1pt solid #bbb; border-radius: 4pt; white-space: pre-line; }
+    .print-sheet .ps-box--behind { border-color: #c62828; }
+    .print-sheet img { display: block; width: 100%; max-height: 95mm; object-fit: contain; margin: 8pt 0; border: 1pt solid #ddd; }
+    .print-sheet h2 { font-size: 12pt; margin: 10pt 0 4pt; }
+    .print-sheet ol { margin: 0; padding-left: 16pt; }
+    .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
+    .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
     .region-detail-osm-edit:hover { text-decoration: underline; }
     /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
@@ -1074,6 +1094,7 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
   </details>
   <div id="tooltip"></div>
+  <div id="print-sheet" class="print-sheet"></div>
   <div id="region-detail" class="region-detail" hidden>
     <button type="button" class="region-detail-close" id="region-detail-close" aria-label="Schließen">×</button>
     <div class="region-detail-header">
@@ -2660,6 +2681,74 @@ export function generateViewerHtml(generatedAt: string) {
       return a;
     }
 
+    /**
+     * One A4 page for the selected region — something to hand round in a council meeting or
+     * attach to a letter. Text is read off the card (already rendered for this region, so the
+     * two can't disagree); the map is the live canvas.
+     */
+    async function printRegionSheet(feature) {
+      const p = feature.properties || {};
+      const sheet = document.getElementById('print-sheet');
+      if (!sheet) return;
+      const el = (tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text != null) node.textContent = text;
+        return node;
+      };
+      const visibleText = (node) => (node && !node.hidden ? node.innerText.trim() : '');
+      sheet.replaceChildren();
+      sheet.append(el('p', 'ps-kicker', 'Radinfrastruktur im Vergleich'), el('h1', null, p.name || p.id));
+      const pctLine = el('p', 'ps-pct', document.querySelector('#region-detail-meta .region-detail-pct')?.textContent || '–');
+      pctLine.append(el('small', null, ' der Straßen haben Radinfrastruktur'));
+      sheet.append(
+        pctLine,
+        el('p', 'ps-rank', document.querySelector('#region-detail-meta .region-detail-rank')?.textContent || ''),
+        el('p', null, document.querySelector('#region-detail-meta .region-detail-km')?.textContent || ''),
+      );
+      for (const node of [regionDetailGap, regionDetailPeerGap, regionDetailQuality]) {
+        const text = visibleText(node);
+        if (!text) continue;
+        const box = el('div', 'ps-box', text);
+        if (node.classList.contains('region-detail-gap--behind')) box.classList.add('ps-box--behind');
+        sheet.appendChild(box);
+      }
+      try {
+        const img = el('img');
+        img.alt = 'Karte: ' + (p.name || '');
+        img.src = (await captureLiveMapCanvas()).toDataURL('image/png');
+        await raceTimeout(img.decode(), 1500);
+        sheet.appendChild(img);
+      } catch (e) {
+        console.error('[radinfra-viewer] print map', e);
+      }
+      const model = demographicPeerSummary(p)?.roleModel;
+      const questions = [
+        'An welchen Straßen ohne Radinfrastruktur plant die Gemeinde als Nächstes – und bis wann?',
+        model
+          ? 'Was macht ' + model.name + ' (' + formatUiPct(model.pct) + ' %) anders, und was lässt sich übernehmen?'
+          : 'Welche vergleichbaren Gemeinden sind weiter, und was lässt sich von ihnen übernehmen?',
+        'Wie ist der Ausbau an Bundes-, Landes- und Kreisstraßen mit den zuständigen Straßenbaulastträgern abgestimmt?',
+      ];
+      const list = el('ol');
+      for (const q of questions) list.appendChild(el('li', null, q));
+      sheet.append(el('h2', null, 'Fragen für die nächste Sitzung'), list);
+      const foot = el(
+        'p',
+        'ps-foot',
+        'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen, ' +
+          (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
+          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${generatedDateLabel}. ' +
+          'Unvollständige OpenStreetMap-Daten können den Wert drücken. Online mit Methodik: ',
+      );
+      foot.appendChild(el('span', 'ps-url', buildShareUrl()));
+      sheet.appendChild(foot);
+      const done = () => document.body.classList.remove('printing');
+      window.addEventListener('afterprint', done, { once: true });
+      document.body.classList.add('printing');
+      window.print();
+    }
+
     function renderRegionQuality(p) {
       const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
       regionDetailQuality.replaceChildren();
@@ -3687,41 +3776,46 @@ export function generateViewerHtml(generatedAt: string) {
         (String(p.level) === '6' || String(p.level) === '8') &&
         !(isNeighborView() && neighborFocus.focusId === p.id);
       const offerOsmEdit = String(p.level) === '8' || String(p.level) === '9';
-      if (drillChangesView || offerNeighbors || offerOsmEdit) {
-        const links = document.createElement('p');
-        links.className = 'region-detail-view-link region-detail-actions';
-        if (drillChangesView) {
-          const drillButton = document.createElement('button');
-          drillButton.type = 'button';
-          drillButton.className = 'region-detail-drill';
-          drillButton.textContent = 'Untergebiete anzeigen';
-          drillButton.title = 'Die Ansicht in dieses Gebiet hineinzoomen';
-          drillButton.addEventListener('click', () => {
-            drillIntoRegion(p.id, p.level);
-          });
-          links.appendChild(drillButton);
-        }
-        if (offerNeighbors) {
-          const neighborButton = document.createElement('button');
-          neighborButton.type = 'button';
-          neighborButton.id = 'region-detail-neighbors';
-          neighborButton.className = 'region-detail-drill';
-          neighborButton.textContent = 'Mit Nachbarn vergleichen';
-          neighborButton.title = 'Dieses Gebiet zusammen mit den angrenzenden anzeigen';
-          neighborButton.addEventListener('click', async () => {
-            neighborButton.disabled = true;
-            const shown = await showWithNeighbors(p.id);
-            if (!shown) neighborButton.textContent = 'Keine Nachbarn gefunden';
-            else neighborButton.disabled = false;
-          });
-          links.appendChild(neighborButton);
-        }
-        if (offerOsmEdit) {
-          const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
-          if (edit) links.appendChild(edit);
-        }
-        regionDetailActions.appendChild(links);
+      const links = document.createElement('p');
+      links.className = 'region-detail-view-link region-detail-actions';
+      if (drillChangesView) {
+        const drillButton = document.createElement('button');
+        drillButton.type = 'button';
+        drillButton.className = 'region-detail-drill';
+        drillButton.textContent = 'Untergebiete anzeigen';
+        drillButton.title = 'Die Ansicht in dieses Gebiet hineinzoomen';
+        drillButton.addEventListener('click', () => {
+          drillIntoRegion(p.id, p.level);
+        });
+        links.appendChild(drillButton);
       }
+      if (offerNeighbors) {
+        const neighborButton = document.createElement('button');
+        neighborButton.type = 'button';
+        neighborButton.id = 'region-detail-neighbors';
+        neighborButton.className = 'region-detail-drill';
+        neighborButton.textContent = 'Mit Nachbarn vergleichen';
+        neighborButton.title = 'Dieses Gebiet zusammen mit den angrenzenden anzeigen';
+        neighborButton.addEventListener('click', async () => {
+          neighborButton.disabled = true;
+          const shown = await showWithNeighbors(p.id);
+          if (!shown) neighborButton.textContent = 'Keine Nachbarn gefunden';
+          else neighborButton.disabled = false;
+        });
+        links.appendChild(neighborButton);
+      }
+      const printButton = document.createElement('button');
+      printButton.type = 'button';
+      printButton.className = 'region-detail-drill';
+      printButton.textContent = 'Drucken / PDF';
+      printButton.title = 'Eine A4-Seite zu diesem Gebiet, z. B. für die Gemeinderatssitzung';
+      printButton.addEventListener('click', () => void printRegionSheet(feature));
+      links.appendChild(printButton);
+      if (offerOsmEdit) {
+        const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
+        if (edit) links.appendChild(edit);
+      }
+      regionDetailActions.appendChild(links);
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
       placeRegionDetail();
