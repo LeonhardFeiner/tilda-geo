@@ -48,12 +48,6 @@ export function viewerRegionNavScript() {
       neighborViewActive = false;
     }
 
-    // Undocumented, unlinked toggle for features not ready for public display (currently the
-    // ohsome trend chart) — reachable only by URL, never surfaced in the UI itself.
-    function extraFeaturesEnabled() {
-      return new URLSearchParams(location.search).get('extra') === '1';
-    }
-
     function applyUiModeClass() {
       document.body.classList.toggle('ui-minimal', isUiMinimal());
     }

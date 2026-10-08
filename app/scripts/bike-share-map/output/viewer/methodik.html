@@ -52,7 +52,7 @@
 
   <h2>Wie werden Straßen gezählt?</h2>
   <p>Aus den OSM-Straßentypen (<code>highway=*</code>) werden vier Gruppen gebildet:</p>
-  <ul><li><strong>Autobahn & Kraftfahrstraßen</strong> – Autobahnen, Kraftfahrstraßen und ihre Zu-/Abfahrten</li><li><strong>Bundes- und Landesstraßen</strong> – Bundes-, Land- und Kreisstraßen sowie wichtige innerörtliche Straßen (OSM <code>primary</code>–<code>tertiary</code>)</li><li><strong>Kreis- und Nebenstraßen</strong> – nicht klassifizierte und Erschließungswege (OSM <code>unclassified</code>, <code>service</code>)</li><li><strong>Wohn- und Erschließungsstraßen</strong> – Wohn-, Spiel- und Fahrradstraßen, Fußgängerzonen mit Kfz-Verkehr</li></ul>
+  <ul><li><strong>Autobahn & Kraftfahrstraßen</strong> – Autobahnen, Kraftfahrstraßen und ihre Zu-/Abfahrten</li><li><strong>Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)</strong> – Bundes-, Land- und Kreisstraßen sowie wichtige innerörtliche Straßen (OSM <code>primary</code>–<code>tertiary</code>)</li><li><strong>Sonstige Straßen und Zufahrten</strong> – nicht klassifizierte und Erschließungswege (OSM <code>unclassified</code>, <code>service</code>)</li><li><strong>Wohn- und Erschließungsstraßen</strong> – Wohn-, Spiel- und Fahrradstraßen, Fußgängerzonen mit Kfz-Verkehr</li></ul>
   <p>Reine Fuß- und Radwege ohne begleitende Fahrbahn zählen <strong>nicht</strong> zur
   Straßenlänge – sonst würde ein gut ausgebautes Radnetz den eigenen Nenner vergrößern.</p>
 
@@ -68,8 +68,9 @@
   Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%.</p>
 
   <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
-  <p>Weil der Hauptwert auch Wege abseits von Straßen mitzählt, zeigt die Detailkarte zusätzlich den
-  Anteil der <strong>Hauptverkehrsstraßen</strong> (OSM <code>trunk</code>, <code>primary</code>,
+  <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
+  die angenehmere Verbindung. Ergänzend zeigt die Detailkarte, wie gut die
+  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: den Anteil der Hauptverkehrsstraßen (OSM <code>trunk</code>, <code>primary</code>,
   <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
   jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
   Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa

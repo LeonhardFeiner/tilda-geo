@@ -689,26 +689,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: 0.25; }
     .ctx-plot-chart .selected { fill: #e20613; stroke: #fff; stroke-width: 2; }
     .ctx-plot-chart .selected-label { fill: #e20613; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
-    .region-detail-trend { margin: 0 0 10px; }
-    .region-detail-trend[hidden] { display: none !important; }
-    #region-detail-trend-heading {
-      margin: 0 0 4px; font-size: 11px; font-weight: 600;
-      text-transform: uppercase; letter-spacing: 0.02em; color: #666;
-    }
-    .region-detail-trend-btn {
-      font-size: 11px; font-weight: 600; color: #1565c0;
-      background: #eef4fb; border: 1px solid #cfe0f3; border-radius: 6px;
-      padding: 5px 9px; cursor: pointer;
-    }
-    .region-detail-trend-btn:hover { background: #e2edfa; }
-    .region-detail-trend-btn:disabled { cursor: default; opacity: 0.7; }
-    .region-detail-trend-btn[hidden] { display: none !important; }
-    #region-detail-trend-result[hidden] { display: none !important; }
-    .region-detail-trend-sparkline { display: block; margin: 6px 0 4px; }
-    .region-detail-trend-summary { margin: 0 0 4px; font-size: 12px; line-height: 1.4; color: #333; }
-    .region-detail-trend-note { margin: 0; font-size: 10px; line-height: 1.4; color: #666; }
-    .region-detail-trend-note a { color: #666; }
-    .region-detail-trend-error { color: #b71c1c; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
       margin: 0 0 4px; font-size: 11px; font-weight: 600;
@@ -836,18 +816,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       body.printing { overflow: visible !important; background: #fff; }
       body.printing #print-sheet { display: block; }
     }
-    .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 10.5pt; line-height: 1.35; }
+    .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 10pt; line-height: 1.35; }
     .print-sheet .ps-kicker { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; margin: 0; }
-    .print-sheet h1 { font-size: 20pt; margin: 2pt 0 6pt; }
-    .print-sheet .ps-pct { font-size: 34pt; font-weight: 800; line-height: 1; margin: 0; }
-    .print-sheet .ps-pct small { font-size: 12pt; font-weight: 400; }
-    .print-sheet .ps-rank { font-size: 13pt; font-weight: 600; margin: 4pt 0 2pt; }
-    .print-sheet .ps-box { margin: 6pt 0; padding: 5pt 9pt; border: 1pt solid #bbb; border-radius: 4pt; white-space: pre-line; }
-    .print-sheet .ps-box--behind { border-color: #c62828; }
-    .print-sheet img { display: block; width: 100%; max-height: 50mm; object-fit: contain; margin: 8pt 0; border: 1pt solid #ddd; }
-    .print-sheet h2 { font-size: 12pt; margin: 10pt 0 4pt; }
-    .print-sheet ol { margin: 0; padding-left: 16pt; }
-    .print-sheet .ps-authority { white-space: normal; font-size: 10pt; }
+    .print-sheet h1 { font-size: 20pt; margin: 2pt 0 0; }
+    .print-sheet .ps-sub { margin: 0 0 8pt; color: #555; }
+    .print-sheet h2 { font-size: 11.5pt; margin: 10pt 0 4pt; padding-bottom: 2pt; border-bottom: 1pt solid #ddd; }
+    .print-sheet .ps-section { break-inside: avoid; }
+    .print-sheet .ps-section .region-detail-gap,
+    .print-sheet .ps-section .region-detail-quality { margin: 4pt 0; }
+    .print-sheet img { display: block; width: 100%; max-height: 85mm; object-fit: contain; border: 1pt solid #ddd; }
+    .print-sheet .ps-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14pt; margin-bottom: 6pt; }
+    .print-sheet .region-detail-section { break-inside: avoid; }
+    .print-sheet .region-detail-section h4 { margin: 4pt 0 2pt; font-size: 10pt; }
+    .print-sheet .region-detail-rows { margin: 0; padding: 0; list-style: none; }
+    .print-sheet .region-detail-rows li { margin: 0 0 3pt; }
     .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
     .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
@@ -1130,13 +1112,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <div id="region-detail-actions"></div>
     <details class="region-detail-more" id="region-detail-more">
-      <summary>Mehr Zahlen: Umfeld, Entwicklung, Aufschlüsselung</summary>
+      <summary>Mehr Zahlen: Umfeld und Aufschlüsselung</summary>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
-      <div class="region-detail-trend" id="region-detail-trend" hidden>
-        <h4 id="region-detail-trend-heading"></h4>
-        <button type="button" class="region-detail-trend-btn" id="region-detail-trend-btn" hidden></button>
-        <div id="region-detail-trend-result" hidden></div>
-      </div>
       <div id="region-detail-body"></div>
     </details>
   </div>
@@ -1359,10 +1336,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
     const regionDetailQuality = document.getElementById('region-detail-quality');
-    const regionDetailTrend = document.getElementById('region-detail-trend');
-    const regionDetailTrendHeading = document.getElementById('region-detail-trend-heading');
-    const regionDetailTrendBtn = document.getElementById('region-detail-trend-btn');
-    const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
     const regionDetailAuthority = document.getElementById('region-detail-authority');
@@ -2751,35 +2724,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     /**
-     * One A4 page for the selected region — something to hand round in a council meeting or
-     * attach to a letter. Text is read off the card (already rendered for this region, so the
-     * two can't disagree); the map is the live canvas.
+     * Printable fact sheet (Drucken / PDF): every figure the viewer has for the region, no
+     * commentary. The card parts are cloned from the rendered card (so sheet and card can't
+     * disagree), the folded "Mehr Zahlen" content included; the length breakdown is printed both
+     * by class and by type; the map is the live canvas.
      */
-    const AUTHORITY_ASK = {
-      bund: 'an Bundesstraßen – was ist mit dem Bund bzw. der Landesstraßenbauverwaltung vereinbart?',
-      land: 'an Landesstraßen – was ist mit dem Land vereinbart?',
-      kreis: 'an Kreisstraßen – was plant der Landkreis, und wie bringt sich die Gemeinde ein?',
-      gemeinde: 'an Straßen in Gemeindehand – was ist bis wann geplant?',
-    };
-    /** The main-road question, aimed at whoever owns the largest share of the gap. */
-    function mainRoadQuestion(p) {
-      const breakdown = mainRoadBreakdownFor(p);
-      const medianPct = viewMainRoadMedianPct();
-      if (breakdown && medianPct != null && breakdown.pct < medianPct) {
-        const gap = TildaStats.mainRoadGapByAuthority(breakdown, medianPct);
-        const top = gap.byAuthority.slice().sort((a, b) => b.gapKm - a.gapKm)[0];
-        if (top && top.gapKm >= 0.5) {
-          return (
-            'Rund ' +
-            TildaStats.formatStatKm(top.gapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-            ' km Radinfrastruktur fehlen ' +
-            AUTHORITY_ASK[top.authority]
-          );
-        }
-      }
-      return 'Wie ist der Ausbau an Bundes-, Landes- und Kreisstraßen mit den zuständigen Straßenbaulastträgern abgestimmt?';
-    }
-
     async function printRegionSheet(feature) {
       const p = feature.properties || {};
       const sheet = document.getElementById('print-sheet');
@@ -2790,61 +2739,87 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (text != null) node.textContent = text;
         return node;
       };
-      const visibleText = (node) => (node && !node.hidden ? node.innerText.trim() : '');
+      /** Static copy of a card part: no ids, no buttons/links/selects, folded parts left out. */
+      const printable = (node) => {
+        if (!node || node.hidden) return null;
+        const copy = node.cloneNode(true);
+        copy.removeAttribute('id');
+        for (const n of copy.querySelectorAll('[id]')) n.removeAttribute('id');
+        for (const sel of copy.querySelectorAll('select')) {
+          sel.replaceWith(el('span', null, sel.selectedOptions[0]?.textContent || ''));
+        }
+        for (const n of copy.querySelectorAll('.ctx-plot, [hidden]')) n.remove();
+        // Inline buttons (e.g. the nearby example's name) carry text the sentence needs.
+        for (const btn of copy.querySelectorAll('button')) btn.replaceWith(el('strong', null, btn.textContent));
+        return copy;
+      };
+      const section = (title, ...nodes) => {
+        const parts = nodes.filter(Boolean);
+        if (!parts.length) return;
+        const wrap = el('section', 'ps-section');
+        if (title) wrap.appendChild(el('h2', null, title));
+        wrap.append(...parts);
+        sheet.appendChild(wrap);
+      };
+
       sheet.replaceChildren();
-      sheet.append(el('p', 'ps-kicker', 'Radinfrastruktur im Vergleich'), el('h1', null, p.name || p.id));
-      const pctLine = el('p', 'ps-pct', document.querySelector('#region-detail-meta .region-detail-pct')?.textContent || '–');
-      pctLine.append(el('small', null, ' ' + metricNoun() + ' haben Radinfrastruktur'));
+      const parentNames = [p.landkreis_id, p.bundesland_id]
+        .map((id) => (id && id !== p.id ? regionIndex?.byId.get(id)?.properties?.name : null))
+        .filter(Boolean);
       sheet.append(
-        pctLine,
-        el('p', 'ps-rank', document.querySelector('#region-detail-meta .region-detail-rank')?.textContent || ''),
-        el('p', null, document.querySelector('#region-detail-meta .region-detail-km')?.textContent || ''),
+        el('p', 'ps-kicker', 'Radinfrastruktur – Datenblatt'),
+        el('h1', null, p.name || p.id),
+        el(
+          'p',
+          'ps-sub',
+          [RegionSearch.regionSearchLevelLabel(String(p.level ?? ''), p.id, regionIndex), ...parentNames].join(
+            ' · ',
+          ),
+        ),
       );
-      const mainRoadLine = document.querySelector('#region-detail-meta .region-detail-main-road');
-      if (mainRoadLine) sheet.appendChild(el('p', 'ps-rank', mainRoadLine.textContent));
-      for (const node of [regionDetailGap, regionDetailPeerGap, regionDetailQuality]) {
-        const text = visibleText(node);
-        if (!text) continue;
-        const box = el('div', 'ps-box', text);
-        if (node.classList.contains('region-detail-gap--behind')) box.classList.add('ps-box--behind');
-        sheet.appendChild(box);
-      }
-      if (!regionDetailAuthority.hidden) {
-        const authority = regionDetailAuthority.cloneNode(true);
-        authority.removeAttribute('id');
-        authority.classList.add('ps-box', 'ps-authority');
-        sheet.appendChild(authority);
-      }
+      section(null, printable(regionDetailMeta));
+      section(
+        'Vergleich',
+        printable(regionDetailGap),
+        printable(regionDetailPeerGap),
+        printable(regionDetailQuality),
+      );
+      section(null, printable(regionDetailAuthority));
       try {
         const img = el('img');
         img.alt = 'Karte: ' + (p.name || '');
         img.src = (await captureLiveMapCanvas()).toDataURL('image/png');
         await raceTimeout(img.decode(), 1500);
-        sheet.appendChild(img);
+        section('Karte', img);
       } catch (e) {
         console.error('[radinfra-viewer] print map', e);
       }
-      const model = demographicPeerSummary(p)?.roleModel;
-      const questions = [
-        'An welchen Straßen ohne Radinfrastruktur plant die Gemeinde als Nächstes – und bis wann?',
-        model
-          ? 'Was macht ' + model.name + ' (' + formatUiPct(model.pct) + ' %) anders, und was lässt sich übernehmen?'
-          : 'Welche vergleichbaren Gemeinden sind weiter, und was lässt sich von ihnen übernehmen?',
-        mainRoadQuestion(p),
-      ];
-      const list = el('ol');
-      for (const q of questions) list.appendChild(el('li', null, q));
-      sheet.append(el('h2', null, 'Fragen für die nächste Sitzung'), list);
+      // The context rows render with the card even while "Mehr Zahlen" is folded.
+      section('Umfeld', printable(regionDetailExtra));
+
+      const filter = readLengthClassFilterFromUi();
+      const byClass = el('div', 'ps-columns');
+      appendLengthRows(byClass, 'Straßen nach Klasse', TildaStats.listFilteredRoadClassLengths(p.road_length, filter), null, overlayRoadColorInput.value);
+      appendLengthRows(byClass, 'Radinfrastruktur nach Klasse', TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+      const byType = el('div', 'ps-columns');
+      appendLengthRows(byType, 'Straßen nach Typ', TildaStats.listFilteredHighwayTagLengths(p.road_length, filter), null, overlayRoadColorInput.value);
+      appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+      section('Längen', byClass, byType);
+
       const foot = el(
         'p',
         'ps-foot',
-        'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen, ' +
-          (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
+        'Kennzahl: ' +
+          (document.getElementById('metric-definition-text')?.textContent || '').trim() +
+          (shareMetric === 'haupt'
+            ? ''
+            : ' ' + (document.getElementById('metric-definition-counting')?.textContent || '')) +
           '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${dataDateLabel || generatedDateLabel}. ' +
-          'Unvollständige OpenStreetMap-Daten können den Wert drücken. Online mit Methodik: ',
+          'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
       );
       foot.appendChild(el('span', 'ps-url', buildShareUrl()));
       sheet.appendChild(foot);
+
       const done = () => document.body.classList.remove('printing');
       window.addEventListener('afterprint', done, { once: true });
       document.body.classList.add('printing');
@@ -2941,7 +2916,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (independent > 0 && allBikeKm > 0) {
         notes.push(
           Math.round((independent / allBikeKm) * 100) +
-            ' % der Radinfrastruktur hier verläuft abseits von Straßen.',
+            ' % der Radinfrastruktur hier sind eigenständige Wege abseits von Straßen; sie zählen ' +
+            'im Wert über alle Straßen, nicht in dieser Tabelle.',
         );
       }
       note.textContent = notes.join(' ');
@@ -3638,241 +3614,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       chart.replaceChildren(svg);
     }
 
-    function readTrendFromStorage(id) {
-      try {
-        const raw = localStorage.getItem(TREND_STORAGE_PREFIX + id);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed.cachedAt !== 'number' || !parsed.data) return null;
-        if (Date.now() - parsed.cachedAt > TREND_STORAGE_MAX_AGE_MS) return null;
-        return parsed.data;
-      } catch {
-        return null;
-      }
-    }
-
-    function writeTrendToStorage(id, data) {
-      try {
-        localStorage.setItem(
-          TREND_STORAGE_PREFIX + id,
-          JSON.stringify({ cachedAt: Date.now(), data }),
-        );
-      } catch {
-        // Private browsing / quota exceeded / disabled storage — the in-memory cache still works.
-      }
-    }
-
-    function regionSupportsTrend(feature) {
-      const level = String(feature?.properties?.level ?? '');
-      return (level === '6' || level === '8') && !!feature?.geometry;
-    }
-
-    // ohsome's underlying OSM-history snapshot trails behind the current date by some weeks —
-    // requesting a range up to "today" 404s once that gap is crossed. Ask once per session what
-    // the snapshot actually covers and cap the request to it; fall back to "today" if that probe
-    // fails (worst case the same 404 we'd have gotten anyway, surfaced as the existing retry UI).
-    let ohsomeSnapshotEndPromise = null;
-    function ohsomeSnapshotEnd() {
-      if (!ohsomeSnapshotEndPromise) {
-        ohsomeSnapshotEndPromise = fetch('https://api.ohsome.org/v1/metadata')
-          .then((res) => (res.ok ? res.json() : null))
-          .then((json) => json?.extractRegion?.temporalExtent?.toTimestamp || null)
-          .catch(() => null);
-      }
-      return ohsomeSnapshotEndPromise;
-    }
-
-    async function fetchOhsomeSeries(bpolys, filter, signal) {
-      const snapshotEnd = await ohsomeSnapshotEnd();
-      const today = new Date().toISOString().slice(0, 10);
-      const end = snapshotEnd && snapshotEnd < today ? snapshotEnd.slice(0, 10) : today;
-      const body = new URLSearchParams({
-        // ohsome's bpolys requires a FeatureCollection, even for a single boundary.
-        bpolys: JSON.stringify({ type: 'FeatureCollection', features: [bpolys] }),
-        filter,
-        time: OHSOME_TREND_FIRST_YEAR + '-01-01/' + end + '/P1Y',
-      });
-      const res = await fetch(OHSOME_ELEMENTS_LENGTH_URL, { method: 'POST', body, signal });
-      if (!res.ok) throw new Error('ohsome ' + res.status);
-      const json = await res.json();
-      return Array.isArray(json.result) ? json.result : [];
-    }
-
-    function buildTrendSparkline(values) {
-      const w = 220;
-      const h = 36;
-      const pad = 2;
-      const defined = values.filter((v) => v != null);
-      const min = Math.min(...defined);
-      const max = Math.max(...defined);
-      const range = max - min || 1;
-      const step = (w - pad * 2) / Math.max(1, values.length - 1);
-      const points = values
-        .map((v, i) => {
-          if (v == null) return null;
-          const x = pad + i * step;
-          const y = h - pad - ((v - min) / range) * (h - pad * 2);
-          return x.toFixed(1) + ',' + y.toFixed(1);
-        })
-        .filter((p) => p != null)
-        .join(' ');
-      const svgNs = 'http://www.w3.org/2000/svg';
-      const svg = document.createElementNS(svgNs, 'svg');
-      svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
-      svg.setAttribute('width', String(w));
-      svg.setAttribute('height', String(h));
-      svg.setAttribute('class', 'region-detail-trend-sparkline');
-      const poly = document.createElementNS(svgNs, 'polyline');
-      poly.setAttribute('points', points);
-      poly.setAttribute('fill', 'none');
-      poly.setAttribute('stroke', '#1b6e4b');
-      poly.setAttribute('stroke-width', '2');
-      poly.setAttribute('stroke-linecap', 'round');
-      poly.setAttribute('stroke-linejoin', 'round');
-      svg.appendChild(poly);
-      return svg;
-    }
-
-    function appendTrendNote(container) {
-      const note = document.createElement('p');
-      note.className = 'region-detail-trend-note';
-      const ohsomeLink = document.createElement('a');
-      ohsomeLink.href = 'https://api.ohsome.org';
-      ohsomeLink.target = '_blank';
-      ohsomeLink.rel = 'noopener noreferrer';
-      ohsomeLink.textContent = 'ohsome API';
-      const heigitLink = document.createElement('a');
-      heigitLink.href = 'https://heigit.org';
-      heigitLink.target = '_blank';
-      heigitLink.rel = 'noopener noreferrer';
-      heigitLink.textContent = 'HeiGIT';
-      note.append(
-        'Näherungswert aus dem OSM-Verlauf, nicht identisch mit der Zählung oben · ',
-        ohsomeLink,
-        ', ',
-        heigitLink,
-      );
-      container.appendChild(note);
-    }
-
-    function renderRegionTrend(data, container) {
-      const { years, sharePct } = data;
-      regionDetailTrendBtn.hidden = true;
-      container.hidden = false;
-      container.replaceChildren();
-      const valid = sharePct.filter((v) => v != null);
-      if (valid.length < 2) {
-        const p = document.createElement('p');
-        p.className = 'region-detail-trend-note';
-        p.textContent = 'Für dieses Gebiet liegen keine auswertbaren Verlaufsdaten vor.';
-        container.appendChild(p);
-        return;
-      }
-      container.appendChild(buildTrendSparkline(sharePct));
-      const first = valid[0];
-      const last = valid[valid.length - 1];
-      const change = last - first;
-      const dir = change > 0.2 ? 'gestiegen' : change < -0.2 ? 'gesunken' : 'kaum verändert';
-      const summary = document.createElement('p');
-      summary.className = 'region-detail-trend-summary';
-      summary.textContent =
-        'Grober Radinfra-Anteil ' +
-        years[0] +
-        '–' +
-        years[years.length - 1] +
-        ': ' +
-        formatUiPct(first) +
-        ' % → ' +
-        formatUiPct(last) +
-        ' % (' +
-        dir +
-        ').';
-      container.appendChild(summary);
-      appendTrendNote(container);
-    }
-
-    function renderTrendLoading(container) {
-      regionDetailTrendBtn.hidden = true;
-      container.hidden = false;
-      container.replaceChildren();
-      const p = document.createElement('p');
-      p.className = 'region-detail-trend-note';
-      p.textContent = 'Lädt …';
-      container.appendChild(p);
-    }
-
-    function renderTrendError(container) {
-      regionDetailTrendBtn.hidden = false;
-      regionDetailTrendBtn.disabled = false;
-      regionDetailTrendBtn.textContent = 'Erneut versuchen';
-      container.hidden = false;
-      container.replaceChildren();
-      const p = document.createElement('p');
-      p.className = 'region-detail-trend-note region-detail-trend-error';
-      p.textContent = 'Verlauf konnte nicht geladen werden (ohsome API nicht erreichbar).';
-      container.appendChild(p);
-    }
-
-    async function loadRegionTrend(feature) {
-      const id = String(feature.properties?.id ?? '');
-      if (!id) return;
-      regionDetailTrendBtn.hidden = true;
-      renderTrendLoading(regionDetailTrendResult);
-      const controller = typeof AbortController === 'function' ? new AbortController() : null;
-      const timeoutId = controller && setTimeout(() => controller.abort(), 12000);
-      try {
-        const bpolys = { type: 'Feature', properties: {}, geometry: feature.geometry };
-        const signal = controller ? controller.signal : undefined;
-        const [roadSeries, bikeSeries] = await Promise.all([
-          fetchOhsomeSeries(bpolys, OHSOME_ROAD_FILTER, signal),
-          fetchOhsomeSeries(bpolys, OHSOME_BIKELANE_FILTER, signal),
-        ]);
-        const years = roadSeries.map((r) => Number(String(r.timestamp).slice(0, 4)));
-        const sharePct = roadSeries.map((r, i) => {
-          const road = r.value;
-          const bike = bikeSeries[i] ? bikeSeries[i].value : 0;
-          return road > 0 ? (bike / road) * 100 : null;
-        });
-        const data = { years, sharePct };
-        trendCache.set(id, data);
-        writeTrendToStorage(id, data);
-        if (trendFeature === feature) renderRegionTrend(data, regionDetailTrendResult);
-      } catch {
-        trendCache.set(id, 'error');
-        if (trendFeature === feature) renderTrendError(regionDetailTrendResult);
-      } finally {
-        if (timeoutId) clearTimeout(timeoutId);
-      }
-    }
-
-    // Loads automatically (no click needed) — the button only reappears as a manual retry
-    // if the ohsome fetch fails. Gated behind ?extra=1: ohsome's numbers don't line up closely
-    // enough with TILDA's own bikelane classification to show by default.
-    function setupRegionTrend(feature) {
-      trendFeature = feature;
-      if (!extraFeaturesEnabled() || !regionSupportsTrend(feature)) {
-        regionDetailTrend.hidden = true;
-        return;
-      }
-      regionDetailTrend.hidden = false;
-      regionDetailTrendHeading.textContent = 'Entwicklung seit ' + OHSOME_TREND_FIRST_YEAR;
-      regionDetailTrendBtn.hidden = true;
-      regionDetailTrendBtn.disabled = false;
-      regionDetailTrendBtn.textContent = 'Erneut versuchen';
-      const id = String(feature.properties?.id ?? '');
-      let cached = trendCache.get(id);
-      if (!cached) {
-        const stored = readTrendFromStorage(id);
-        if (stored) {
-          trendCache.set(id, stored);
-          cached = stored;
-        }
-      }
-      if (cached === 'error') renderTrendError(regionDetailTrendResult);
-      else if (cached) renderRegionTrend(cached, regionDetailTrendResult);
-      else void loadRegionTrend(feature);
-    }
-
     /**
      * The scope that looks into a region — null when there is nothing to look into: a Gemeinde
      * has no sub-areas (the scope for it would just be its Landkreis), and a scope that is
@@ -3965,7 +3706,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       renderRegionGap(p);
       renderRegionQuality(p);
       renderRegionExtra(p);
-      setupRegionTrend(feature);
       regionDetailBody.replaceChildren();
       regionDetailActions.replaceChildren();
       const filter = readLengthClassFilterFromUi();
@@ -4216,9 +3956,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionDetailClose.addEventListener('click', () => {
         if (typeof sheetEnabled === 'function' && sheetEnabled()) setSheetState('peek');
         else clearRegionSelection();
-      });
-      regionDetailTrendBtn.addEventListener('click', () => {
-        if (trendFeature) loadRegionTrend(trendFeature);
       });
       // A single hit-test per click, not two: this used to be a layer-filtered map.on('click',
       // 'regions-fill', ...) selecting the region, PLUS a separate generic map.on('click', ...)
@@ -5112,10 +4849,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     /**
      * Read live from the address bar rather than rebuilt from UI state, so they have to be
-     * carried over by hand on every rewrite: the minimal-chrome switches and the unlinked
-     * ?extra=1 toggle. Share links deliberately drop them (buildShareUrl starts from empty).
+     * carried over by hand on every rewrite: the minimal-chrome switches. Share links
+     * deliberately drop them (buildShareUrl starts from empty).
      */
-    const PRESERVED_URL_PARAMS = ['chrome', 'embed', 'extra'];
+    const PRESERVED_URL_PARAMS = ['chrome', 'embed'];
 
     function currentStateUrl() {
       const params = new URLSearchParams();

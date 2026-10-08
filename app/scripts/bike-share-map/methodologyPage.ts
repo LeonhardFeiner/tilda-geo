@@ -157,8 +157,9 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
   Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%.</p>
 
   <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
-  <p>Weil der Hauptwert auch Wege abseits von Straßen mitzählt, zeigt die Detailkarte zusätzlich den
-  Anteil der <strong>Hauptverkehrsstraßen</strong> (OSM <code>trunk</code>, <code>primary</code>,
+  <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
+  die angenehmere Verbindung. Ergänzend zeigt die Detailkarte, wie gut die
+  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: den Anteil der Hauptverkehrsstraßen (OSM <code>trunk</code>, <code>primary</code>,
   <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
   jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
   Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa

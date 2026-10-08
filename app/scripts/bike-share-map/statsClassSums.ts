@@ -11,8 +11,8 @@ export type RoadClass = (typeof ROAD_CLASS_ORDER)[number]
 
 export const ROAD_CLASS_LABELS: Record<RoadClass, string> = {
   motorway_like: 'Autobahn & Kraftfahrstraßen',
-  primary_like: 'Bundes- und Landesstraßen',
-  secondary_like: 'Kreis- und Nebenstraßen',
+  primary_like: 'Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)',
+  secondary_like: 'Sonstige Straßen und Zufahrten',
   residential_like: 'Wohn- und Erschließungsstraßen',
 }
 
