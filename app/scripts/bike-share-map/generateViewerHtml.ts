@@ -308,6 +308,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .panel-section > summary::-webkit-details-marker { color: #666; }
     .panel-section[open] > :not(summary) { padding-bottom: 8px; }
     .map-legend-section .map-legend { padding: 0; }
+    /* Main-road metric: the counting filter doesn't apply, so it is shown greyed and inert. */
+    .counting-inactive > :not(.settings-heading):not(.counting-inactive-note) { opacity: 0.45; }
+    .counting-inactive-note { color: #8a4b00; }
+    .counting-inactive-note[hidden] { display: none !important; }
     .counting-state {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
       margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
@@ -915,6 +919,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <summary>Einstellungen</summary>
       <div class="settings-group" id="count-classes-details">
         <h3 class="settings-heading">Was zählt als Radinfrastruktur?</h3>
+        <p class="hint counting-inactive-note" id="counting-inactive-note" hidden>
+          Gilt nur für die Kennzahl „Alle Straßen“. Der Anteil der Hauptverkehrsstraßen zählt immer
+          alle Arten von Radinfrastruktur an Bundes-, Landes- und Kreisstraßen.
+        </p>
         <p class="counting-state">
           <span id="counting-state-label">Radinfra.de-Standard</span>
           <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
@@ -1400,6 +1408,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       // Custom counting only applies to the all-roads share.
       if (counting) counting.hidden = shareMetric === 'haupt';
+      const countingGroup = document.getElementById('count-classes-details');
+      const inactiveNote = document.getElementById('counting-inactive-note');
+      if (countingGroup) {
+        countingGroup.classList.toggle('counting-inactive', shareMetric === 'haupt');
+        for (const child of countingGroup.children) {
+          if (child !== inactiveNote && !child.classList.contains('settings-heading')) {
+            child.inert = shareMetric === 'haupt';
+          }
+        }
+      }
+      if (inactiveNote) inactiveNote.hidden = shareMetric !== 'haupt';
     }
 
     function setShareMetric(next) {
