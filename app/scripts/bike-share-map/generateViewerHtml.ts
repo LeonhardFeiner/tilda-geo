@@ -404,6 +404,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .overlay-layer-hint { margin: 2px 0 0; }
     .choropleth-legend { margin: 0; }
+    .metric-switch { display: flex; margin: 0 0 8px; border: 1px solid #c5d7ee; border-radius: 6px; overflow: hidden; }
+    .metric-switch-btn {
+      flex: 1; padding: 6px 8px; border: 0; background: #fff; cursor: pointer;
+      font: inherit; font-size: 12px; font-weight: 600; color: #1565c0;
+    }
+    .metric-switch-btn + .metric-switch-btn { border-left: 1px solid #c5d7ee; }
+    .metric-switch-btn[aria-pressed="true"] { background: #1565c0; color: #fff; }
+    @media (pointer: coarse) { .metric-switch-btn { min-height: 40px; } }
     .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
     .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0 0; }
     /* Tick labels sit at their value's own position on the bar, so a mid-tone can be read off
@@ -1018,10 +1026,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
+          <div class="metric-switch" role="group" aria-label="Kennzahl">
+            <button type="button" class="metric-switch-btn" data-metric="all" aria-pressed="true">Alle Straßen</button>
+            <button type="button" class="metric-switch-btn" data-metric="haupt" aria-pressed="false">Hauptverkehrsstraßen</button>
+          </div>
           <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
           <p class="metric-definition" id="metric-definition">
-            Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
-            <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
+            <span id="metric-definition-text">Länge der Radinfrastruktur ÷ Länge aller Straßen (km), </span><span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
             <a href="./methodik.html">So wird gezählt</a>
           </p>
           <div class="legend-bar" id="legend-bar"></div>
@@ -1385,6 +1396,47 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     let lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
+    /** 'all' = every road (Radinfra.de headline), 'haupt' = main roads and the bike infra along them. */
+    let shareMetric = 'all';
+
+    /** Road and bike km behind the share for the active metric. */
+    function metricLengths(p) {
+      if (shareMetric === 'haupt') {
+        const mr = mainRoadBreakdownFor(p);
+        return { roadKm: mr ? mr.roadKm : 0, bikeKm: mr ? mr.bikeKm : 0 };
+      }
+      return TildaStats.computeFilteredLengths(p.road_length, p.bikelane_length, lengthClassFilter);
+    }
+
+    /** "der Straßen" / "der Hauptverkehrsstraßen" — what the percentage is a share of. */
+    function metricNoun() {
+      return shareMetric === 'haupt' ? 'der Hauptverkehrsstraßen' : 'der Straßen';
+    }
+
+    function syncMetricUi() {
+      for (const btn of document.querySelectorAll('.metric-switch-btn')) {
+        btn.setAttribute('aria-pressed', String(btn.dataset.metric === shareMetric));
+      }
+      const text = document.getElementById('metric-definition-text');
+      const counting = document.getElementById('metric-definition-counting');
+      if (text) {
+        text.textContent =
+          shareMetric === 'haupt'
+            ? 'Länge der Radinfrastruktur an Hauptverkehrsstraßen ÷ Länge der Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen; km)'
+            : 'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ';
+      }
+      // Custom counting only applies to the all-roads share.
+      if (counting) counting.hidden = shareMetric === 'haupt';
+    }
+
+    function setShareMetric(next) {
+      const metric = next === 'haupt' ? 'haupt' : 'all';
+      if (metric === shareMetric) return;
+      shareMetric = metric;
+      syncMetricUi();
+      if (rawLoaded) repaintRegionsFromCounting();
+      updateNationalContext();
+    }
 
     function readLengthClassFilterFromUi() {
       const road = {};
@@ -1520,11 +1572,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function enrichFeature(f) {
       const p = f.properties || {};
-      const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(
-        p.road_length,
-        p.bikelane_length,
-        lengthClassFilter,
-      );
+      const { roadKm: road, bikeKm: bike } = metricLengths(p);
       const pct = road > 0 ? (bike / road) * 100 : null;
       const lowRoad = TildaStats.isLowRoadNetworkForScale(road);
       let label =
@@ -1690,6 +1738,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         bikelane_km: bikeKm,
         bike_share_pct: roadKm > 0 ? (bikeKm / roadKm) * 100 : '',
       };
+      const mainRoads = mainRoadBreakdownFor(p);
+      if (mainRoads) {
+        row.main_road_km = mainRoads.roadKm;
+        row.main_road_bikelane_km = mainRoads.bikeKm;
+        row.main_road_share_pct = mainRoads.pct;
+        for (const a of mainRoads.byAuthority) row['main_road_share_pct_' + a.authority] = a.pct;
+      }
       const quality = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
       row.data_quality = quality ? DATA_QUALITY_CSV_LABELS[quality.level] : '';
       if (quality && quality.level !== 'sparse') {
@@ -1899,7 +1954,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return;
       }
       el.textContent =
-        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % der Straßen mit Radinfrastruktur';
+        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % ' + metricNoun() + ' mit Radinfrastruktur';
       el.hidden = false;
     }
 
@@ -2739,7 +2794,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       sheet.replaceChildren();
       sheet.append(el('p', 'ps-kicker', 'Radinfrastruktur im Vergleich'), el('h1', null, p.name || p.id));
       const pctLine = el('p', 'ps-pct', document.querySelector('#region-detail-meta .region-detail-pct')?.textContent || '–');
-      pctLine.append(el('small', null, ' der Straßen haben Radinfrastruktur'));
+      pctLine.append(el('small', null, ' ' + metricNoun() + ' haben Radinfrastruktur'));
       sheet.append(
         pctLine,
         el('p', 'ps-rank', document.querySelector('#region-detail-meta .region-detail-rank')?.textContent || ''),
@@ -3442,11 +3497,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       for (const e of contextFullReference(metric, level, scope)) {
         const props = regionIndex?.byId.get(e.id)?.properties;
         if (!props) continue;
-        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-          props.road_length,
-          props.bikelane_length,
-          lengthClassFilter,
-        );
+        const { roadKm, bikeKm } = metricLengths(props);
         // Same rule as the colour scale: a few km of road give meaningless shares (often >100 %).
         if (TildaStats.isLowRoadNetworkForScale(roadKm)) continue;
         entries.push({ ...e, bikeSharePct: (bikeKm / roadKm) * 100 });
@@ -3872,7 +3923,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       pctEl.textContent = pct;
       const pctLabel = document.createElement('span');
       pctLabel.className = 'region-detail-pct-label';
-      pctLabel.textContent = ' der Straßen mit Radinfrastruktur';
+      pctLabel.textContent = ' ' + metricNoun() + ' mit Radinfrastruktur';
       const rankEl = document.createElement('span');
       rankEl.className = 'region-detail-rank';
       rankEl.textContent = rankLine;
@@ -3882,15 +3933,31 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
         ' km Radinfrastruktur bei ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
-        ' km Straße';
+        (shareMetric === 'haupt' ? ' km Hauptverkehrsstraßen' : ' km Straße');
       regionDetailMeta.replaceChildren(pctEl, pctLabel, rankEl, kmEl);
       const mainRoads = mainRoadBreakdownFor(p);
-      if (mainRoads) {
+      // The other metric as a second line, so switching never hides a number.
+      const otherPct =
+        shareMetric === 'haupt'
+          ? (() => {
+              const all = TildaStats.computeFilteredLengths(
+                p.road_length,
+                p.bikelane_length,
+                lengthClassFilter,
+              );
+              return all.roadKm > 0 ? (all.bikeKm / all.roadKm) * 100 : null;
+            })()
+          : mainRoads?.pct;
+      if (otherPct != null) {
         const line = document.createElement('span');
         line.className = 'region-detail-main-road';
         const strong = document.createElement('strong');
-        strong.textContent = formatUiPct(mainRoads.pct) + ' %';
-        line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur daneben oder darauf');
+        strong.textContent = formatUiPct(otherPct) + ' %';
+        line.append(
+          shareMetric === 'haupt' ? 'Alle Straßen: ' : 'Hauptverkehrsstraßen: ',
+          strong,
+          ' mit Radinfrastruktur',
+        );
         regionDetailMeta.appendChild(line);
       }
       renderRegionAuthority(p, mainRoads);
@@ -4973,6 +5040,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       else params.delete('ranking');
       if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
       else params.delete('rankingMode');
+      if (shareMetric === 'haupt') params.set('kennzahl', 'haupt');
+      else params.delete('kennzahl');
       if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
         params.set('colors', colorScaleSelect.value);
       } else {
@@ -5173,7 +5242,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             ': ' +
             (behind ? 'nur ' : '') +
             formatUiPct(p.bikeSharePct) +
-            ' % der Straßen mit Radinfrastruktur';
+            ' % ' +
+            metricNoun() +
+            ' mit Radinfrastruktur';
           if (rankInfo) {
             msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
           }
@@ -5435,6 +5506,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       } else if (live && rankingMode !== 'topflop') {
         rankingMode = 'topflop';
         syncRankingModeButtons();
+      }
+      const kennzahl = params.get('kennzahl') === 'haupt' ? 'haupt' : 'all';
+      if (kennzahl !== shareMetric) {
+        shareMetric = kennzahl;
+        syncMetricUi();
       }
       lastRankingViewAvailable = true;
 
@@ -6047,6 +6123,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       btn.addEventListener('click', () => setRankingMode(btn.dataset.rankingMode));
     }
     syncRankingModeButtons();
+    for (const btn of document.querySelectorAll('.metric-switch-btn')) {
+      btn.addEventListener('click', () => {
+        setShareMetric(btn.dataset.metric);
+        scheduleUrlSync('replace');
+      });
+    }
+    syncMetricUi();
     syncRankingScrollLayout();
     if (typeof navigator.share === 'function' && shareNativeBtn) {
       shareNativeBtn.hidden = false;
