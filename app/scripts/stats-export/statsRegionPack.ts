@@ -85,11 +85,12 @@ function mapDepth(value: unknown, depth: number, fn: (line: never) => unknown): 
 
 function packGeometry(geometry: unknown) {
   const g = geometry as { type?: string; coordinates?: unknown } | null | undefined
-  const depth = g?.type ? LINE_DEPTH[g.type] : undefined
-  if (!g || depth === undefined) return geometry
+  const type = g?.type
+  const depth = type ? LINE_DEPTH[type] : undefined
+  if (!g || !type || depth === undefined) return geometry
   const coords = g.type === 'Point' ? [g.coordinates] : g.coordinates
   const lines = mapDepth(coords, Math.max(depth, 1) - 1, (line: Position[]) => encodeLine(line))
-  return { type: g.type, lines } satisfies PackedGeometry
+  return { type, lines } satisfies PackedGeometry
 }
 
 function unpackGeometry(packed: unknown) {

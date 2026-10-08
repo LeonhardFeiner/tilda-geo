@@ -68,7 +68,9 @@ describe('statsRegionPack', () => {
         geometry: null,
       },
     ]
-    const p = decodeStatsRegionPack(encodeStatsRegionPack(features))[0]?.properties
+    const p = decodeStatsRegionPack(encodeStatsRegionPack(features))[0]?.properties as
+      | Record<string, unknown>
+      | undefined
     expect(p?.road_length).toEqual({ secondary: 13.017 })
     expect(p?.bikelane_length).toEqual({ needsClarification: 2.896 })
     expect(p?.name).toBe('A')
