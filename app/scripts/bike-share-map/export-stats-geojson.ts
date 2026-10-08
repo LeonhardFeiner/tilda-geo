@@ -15,6 +15,7 @@ import { fetchPrecomputedRegionNeighbors } from '../stats-export/regionNeighbors
 import { encodeStatsRegionPack } from '../stats-export/statsRegionPack'
 import { buildRegionIndex } from './regionNavigation'
 import { encodeNeighborsPack } from './regionNeighbors'
+import { MAIN_ROAD_CLASS, roadClassForKey } from './statsClassSums'
 
 const outDir = join(import.meta.dir, 'output')
 const msgpackPath = join(outDir, 'stats.msgpack')
@@ -73,7 +74,29 @@ async function fetchGeometries() {
   }
 }
 
-const [rows, geoms] = await Promise.all([fetchAggregatedLengthRows(), fetchGeometries()])
+/**
+ * The viewer only reads the main-road entries (plus 'independent') of the per-road columns;
+ * the residential/service ones would add ~0.8 MB gzip to the first load for nothing.
+ */
+function mainRoadEntriesOnly(value: unknown) {
+  if (!value || typeof value !== 'object') return value
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>).filter(
+      ([key]) =>
+        key === 'independent' || roadClassForKey(key.split('|')[0] ?? '') === MAIN_ROAD_CLASS,
+    ),
+  )
+}
+
+const [rows, geoms, osmDataFrom] = await Promise.all([
+  fetchAggregatedLengthRows(),
+  fetchGeometries(),
+  geoDataClient.$queryRaw<
+    { osm_data_from: Date | null }[]
+  >`SELECT max(osm_data_from) AS osm_data_from FROM public.meta`
+    .then((r) => r[0]?.osm_data_from?.toISOString() ?? null)
+    .catch(() => null),
+])
 
 const geometryById = new Map(geoms.map((g) => [g.id, g.geometry]))
 
@@ -91,6 +114,12 @@ const features = rows
       ...(row.landkreis_id ? { landkreis_id: row.landkreis_id } : {}),
       road_length: row.road_length,
       bikelane_length: row.bikelane_length,
+      ...(row.road_length_by_authority
+        ? { road_length_by_authority: mainRoadEntriesOnly(row.road_length_by_authority) }
+        : {}),
+      ...(row.bikelane_length_by_road
+        ? { bikelane_length_by_road: mainRoadEntriesOnly(row.bikelane_length_by_road) }
+        : {}),
     })
   })
   .filter((f) => f != null)
@@ -110,6 +139,7 @@ writeFileSync(
       kreisfreieStaedteIds: [...index.kreisfreieIds],
       stadtstaatIds: index.stadtstaaten.map((s) => s.id),
       featureCount: features.length,
+      ...(osmDataFrom ? { osmDataFrom } : {}),
     },
     null,
     2,

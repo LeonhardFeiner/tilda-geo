@@ -6,6 +6,9 @@ import {
   highwayClassDefinition,
   listFilteredBikelaneTagLengths,
   listFilteredHighwayTagLengths,
+  mainRoadBreakdown,
+  mainRoadGapByAuthority,
+  independentBikeKm,
   RADINFRA_DEFAULT_FILTER,
   ROAD_TAG_LABELS,
 } from './statsClassSums'
@@ -65,5 +68,64 @@ describe('readable type labels', () => {
       RADINFRA_DEFAULT_FILTER,
     )
     expect(bike).toMatchObject({ label: 'Schutzstreifen', key: 'cyclewayOnHighway_advisory' })
+  })
+})
+
+describe('mainRoadBreakdown', () => {
+  const roads = {
+    'primary|bund': 10,
+    'secondary|land': 20,
+    'tertiary|kreis': 30,
+    'tertiary|gemeinde': 10,
+    'residential|gemeinde': 200,
+    'trunk|autobahn': 5,
+  }
+  const bikes = {
+    'primary|bund': 5,
+    'secondary|land': 2,
+    'residential|gemeinde': 40,
+    independent: 100,
+  }
+
+  it('counts only main roads and bike km along them', () => {
+    const b = mainRoadBreakdown(roads, bikes)
+    expect(b?.roadKm).toBe(75)
+    expect(b?.bikeKm).toBe(7)
+    expect(b?.pct).toBeCloseTo((7 / 75) * 100)
+    expect(b?.byAuthority.map((r) => [r.authority, r.roadKm, r.bikeKm])).toEqual([
+      ['bund', 15, 5],
+      ['land', 20, 2],
+      ['kreis', 30, 0],
+      ['gemeinde', 10, 0],
+    ])
+  })
+
+  it('is null without the per-road columns or without main roads', () => {
+    expect(mainRoadBreakdown(undefined, undefined)).toBeNull()
+    expect(mainRoadBreakdown({ 'residential|gemeinde': 5 }, {})).toBeNull()
+  })
+
+  it('splits the gap by each authority’s own shortfall', () => {
+    const b = mainRoadBreakdown(roads, bikes)!
+    const g = mainRoadGapByAuthority(b, 40)
+    expect(g.totalGapKm).toBeCloseTo(0.4 * 75 - 7)
+    // shortfalls: bund 1, land 6, kreis 12, gemeinde 4 → 23
+    const byA = Object.fromEntries(g.byAuthority.map((r) => [r.authority, r.gapKm]))
+    expect(byA.kreis).toBeCloseTo((23 * 12) / 23)
+    expect(Object.values(byA).reduce((a, x) => a + x, 0)).toBeCloseTo(g.totalGapKm)
+  })
+
+  it('never reports a road as more than fully covered', () => {
+    const b = mainRoadBreakdown(
+      { 'primary|land': 0.01, 'tertiary|kreis': 10 },
+      { 'primary|land': 1 },
+    )
+    expect(b?.byAuthority[0]).toMatchObject({ authority: 'land', bikeKm: 0.01, pct: 100 })
+    expect(b?.bikeKm).toBeCloseTo(0.01)
+  })
+
+  it('reports bike km away from roads', () => {
+    expect(independentBikeKm(bikes)).toBe(100)
+    expect(independentBikeKm(null)).toBe(0)
   })
 })

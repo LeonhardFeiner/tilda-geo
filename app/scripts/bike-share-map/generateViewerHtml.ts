@@ -23,7 +23,7 @@ import {
 } from './statsClassSums'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
 
-export function generateViewerHtml(generatedAt: string) {
+export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
   )
@@ -592,6 +592,17 @@ export function generateViewerHtml(generatedAt: string) {
     .region-detail-pct-label { font-size: 13px; color: #333; }
     .region-detail-rank { display: block; margin-top: 2px; font-weight: 600; color: #333; }
     .region-detail-km { display: block; font-size: 12px; }
+    .region-detail-main-road { display: block; margin-top: 4px; font-size: 13px; color: #333; }
+    .region-detail-main-road strong { font-size: 16px; color: #111; }
+    .region-detail-authority { margin: 0 0 10px; font-size: 12px; color: #333; }
+    .region-detail-authority[hidden] { display: none !important; }
+    .ra-title { font-weight: 700; margin: 0 0 4px; }
+    .ra-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    .ra-table th { font-size: 10px; font-weight: 600; color: #666; text-align: right; padding: 2px 0 2px 6px; }
+    .ra-table th:first-child, .ra-table td:first-child { text-align: left; padding-left: 0; }
+    .ra-table td { text-align: right; padding: 3px 0 3px 6px; border-top: 1px solid #eee; }
+    .ra-table td.ra-gap { font-weight: 700; color: #8a1c11; }
+    .ra-note { margin: 4px 0 0; font-size: 10.5px; line-height: 1.4; color: #666; }
     .region-detail-more { margin: 4px 0 0; border-top: 1px solid #e8e8e8; }
     .region-detail-more > summary {
       cursor: pointer; padding: 8px 0; font-size: 12px; font-weight: 600; color: #1565c0;
@@ -817,17 +828,18 @@ export function generateViewerHtml(generatedAt: string) {
       body.printing { overflow: visible !important; background: #fff; }
       body.printing #print-sheet { display: block; }
     }
-    .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 11pt; line-height: 1.4; }
+    .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 10.5pt; line-height: 1.35; }
     .print-sheet .ps-kicker { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; margin: 0; }
-    .print-sheet h1 { font-size: 22pt; margin: 2pt 0 8pt; }
-    .print-sheet .ps-pct { font-size: 40pt; font-weight: 800; line-height: 1; margin: 0; }
+    .print-sheet h1 { font-size: 20pt; margin: 2pt 0 6pt; }
+    .print-sheet .ps-pct { font-size: 34pt; font-weight: 800; line-height: 1; margin: 0; }
     .print-sheet .ps-pct small { font-size: 12pt; font-weight: 400; }
     .print-sheet .ps-rank { font-size: 13pt; font-weight: 600; margin: 4pt 0 2pt; }
-    .print-sheet .ps-box { margin: 8pt 0; padding: 6pt 9pt; border: 1pt solid #bbb; border-radius: 4pt; white-space: pre-line; }
+    .print-sheet .ps-box { margin: 6pt 0; padding: 5pt 9pt; border: 1pt solid #bbb; border-radius: 4pt; white-space: pre-line; }
     .print-sheet .ps-box--behind { border-color: #c62828; }
-    .print-sheet img { display: block; width: 100%; max-height: 95mm; object-fit: contain; margin: 8pt 0; border: 1pt solid #ddd; }
+    .print-sheet img { display: block; width: 100%; max-height: 50mm; object-fit: contain; margin: 8pt 0; border: 1pt solid #ddd; }
     .print-sheet h2 { font-size: 12pt; margin: 10pt 0 4pt; }
     .print-sheet ol { margin: 0; padding-left: 16pt; }
+    .print-sheet .ps-authority { white-space: normal; font-size: 10pt; }
     .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
     .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
@@ -1084,7 +1096,7 @@ export function generateViewerHtml(generatedAt: string) {
     </div>
     </div>
     <p class="footer">
-      Erstellt am ${generatedDateLabel} ·
+      ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -1103,6 +1115,7 @@ export function generateViewerHtml(generatedAt: string) {
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <div class="region-detail-authority" id="region-detail-authority" hidden></div>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <div id="region-detail-actions"></div>
     <details class="region-detail-more" id="region-detail-more">
@@ -1341,6 +1354,7 @@ export function generateViewerHtml(generatedAt: string) {
     const regionDetailTrendResult = document.getElementById('region-detail-trend-result');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
+    const regionDetailAuthority = document.getElementById('region-detail-authority');
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
     // Anchor marking the card's home spot (floating card, desktop) so it can be moved back.
@@ -2686,6 +2700,31 @@ export function generateViewerHtml(generatedAt: string) {
      * attach to a letter. Text is read off the card (already rendered for this region, so the
      * two can't disagree); the map is the live canvas.
      */
+    const AUTHORITY_ASK = {
+      bund: 'an Bundesstraßen – was ist mit dem Bund bzw. der Landesstraßenbauverwaltung vereinbart?',
+      land: 'an Landesstraßen – was ist mit dem Land vereinbart?',
+      kreis: 'an Kreisstraßen – was plant der Landkreis, und wie bringt sich die Gemeinde ein?',
+      gemeinde: 'an Straßen in Gemeindehand – was ist bis wann geplant?',
+    };
+    /** The main-road question, aimed at whoever owns the largest share of the gap. */
+    function mainRoadQuestion(p) {
+      const breakdown = mainRoadBreakdownFor(p);
+      const medianPct = viewMainRoadMedianPct();
+      if (breakdown && medianPct != null && breakdown.pct < medianPct) {
+        const gap = TildaStats.mainRoadGapByAuthority(breakdown, medianPct);
+        const top = gap.byAuthority.slice().sort((a, b) => b.gapKm - a.gapKm)[0];
+        if (top && top.gapKm >= 0.5) {
+          return (
+            'Rund ' +
+            TildaStats.formatStatKm(top.gapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+            ' km Radinfrastruktur fehlen ' +
+            AUTHORITY_ASK[top.authority]
+          );
+        }
+      }
+      return 'Wie ist der Ausbau an Bundes-, Landes- und Kreisstraßen mit den zuständigen Straßenbaulastträgern abgestimmt?';
+    }
+
     async function printRegionSheet(feature) {
       const p = feature.properties || {};
       const sheet = document.getElementById('print-sheet');
@@ -2706,12 +2745,20 @@ export function generateViewerHtml(generatedAt: string) {
         el('p', 'ps-rank', document.querySelector('#region-detail-meta .region-detail-rank')?.textContent || ''),
         el('p', null, document.querySelector('#region-detail-meta .region-detail-km')?.textContent || ''),
       );
+      const mainRoadLine = document.querySelector('#region-detail-meta .region-detail-main-road');
+      if (mainRoadLine) sheet.appendChild(el('p', 'ps-rank', mainRoadLine.textContent));
       for (const node of [regionDetailGap, regionDetailPeerGap, regionDetailQuality]) {
         const text = visibleText(node);
         if (!text) continue;
         const box = el('div', 'ps-box', text);
         if (node.classList.contains('region-detail-gap--behind')) box.classList.add('ps-box--behind');
         sheet.appendChild(box);
+      }
+      if (!regionDetailAuthority.hidden) {
+        const authority = regionDetailAuthority.cloneNode(true);
+        authority.removeAttribute('id');
+        authority.classList.add('ps-box', 'ps-authority');
+        sheet.appendChild(authority);
       }
       try {
         const img = el('img');
@@ -2728,7 +2775,7 @@ export function generateViewerHtml(generatedAt: string) {
         model
           ? 'Was macht ' + model.name + ' (' + formatUiPct(model.pct) + ' %) anders, und was lässt sich übernehmen?'
           : 'Welche vergleichbaren Gemeinden sind weiter, und was lässt sich von ihnen übernehmen?',
-        'Wie ist der Ausbau an Bundes-, Landes- und Kreisstraßen mit den zuständigen Straßenbaulastträgern abgestimmt?',
+        mainRoadQuestion(p),
       ];
       const list = el('ol');
       for (const q of questions) list.appendChild(el('li', null, q));
@@ -2738,7 +2785,7 @@ export function generateViewerHtml(generatedAt: string) {
         'ps-foot',
         'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen, ' +
           (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
-          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${generatedDateLabel}. ' +
+          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${dataDateLabel || generatedDateLabel}. ' +
           'Unvollständige OpenStreetMap-Daten können den Wert drücken. Online mit Methodik: ',
       );
       foot.appendChild(el('span', 'ps-url', buildShareUrl()));
@@ -2747,6 +2794,104 @@ export function generateViewerHtml(generatedAt: string) {
       window.addEventListener('afterprint', done, { once: true });
       document.body.classList.add('printing');
       window.print();
+    }
+
+    const mainRoadBreakdownCache = new Map();
+    /** Per-region main-road figures (fixed by the data, so cached by id). */
+    function mainRoadBreakdownFor(p) {
+      if (!p?.id) return null;
+      if (!mainRoadBreakdownCache.has(p.id)) {
+        mainRoadBreakdownCache.set(
+          p.id,
+          TildaStats.mainRoadBreakdown(p.road_length_by_authority, p.bikelane_length_by_road),
+        );
+      }
+      return mainRoadBreakdownCache.get(p.id);
+    }
+
+    /** Median main-road share of the regions in the current view (same pool as the ranking). */
+    function viewMainRoadMedianPct() {
+      const pcts = lastRankingSorted
+        .map((f) => mainRoadBreakdownFor(f.properties)?.pct)
+        .filter((v) => typeof v === 'number' && Number.isFinite(v))
+        .sort((a, b) => a - b);
+      if (pcts.length < MIN_BENCHMARK_REGIONS) return null;
+      const mid = Math.floor(pcts.length / 2);
+      return pcts.length % 2 ? pcts[mid] : (pcts[mid - 1] + pcts[mid]) / 2;
+    }
+
+    /**
+     * "Who has to build it": the main-road gap split by road authority. Turns one percentage
+     * into an address — Kreistag, Landesbauamt or Gemeinderat.
+     */
+    function renderRegionAuthority(p, mainRoads) {
+      regionDetailAuthority.replaceChildren();
+      const medianPct = viewMainRoadMedianPct();
+      if (!mainRoads || !mainRoads.byAuthority.length) {
+        regionDetailAuthority.hidden = true;
+        return;
+      }
+      const km = (v, d) => TildaStats.formatStatKm(v, d);
+      const gap =
+        medianPct != null && mainRoads.pct < medianPct
+          ? TildaStats.mainRoadGapByAuthority(mainRoads, medianPct)
+          : null;
+      const gapById = new Map((gap?.byAuthority || []).map((r) => [r.authority, r.gapKm]));
+      const title = document.createElement('p');
+      title.className = 'ra-title';
+      title.textContent = 'Hauptverkehrsstraßen – wer ist zuständig?';
+      const table = document.createElement('table');
+      table.className = 'ra-table';
+      const head = table.insertRow();
+      for (const text of ['Baulastträger', 'Straße', 'mit Radinfra', gap ? 'fehlt' : '']) {
+        const th = document.createElement('th');
+        th.textContent = text;
+        head.appendChild(th);
+      }
+      for (const row of mainRoads.byAuthority) {
+        // A few metres of a road the boundary just clips: noise, not a responsibility.
+        if (row.roadKm < 0.5) continue;
+        const tr = table.insertRow();
+        tr.insertCell().textContent = TildaStats.ROAD_AUTHORITY_LABELS[row.authority];
+        tr.insertCell().textContent = km(row.roadKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) + ' km';
+        tr.insertCell().textContent = formatUiPct(row.pct) + ' %';
+        const gapCell = tr.insertCell();
+        const g = gapById.get(row.authority) || 0;
+        if (gap && g >= 0.05) {
+          gapCell.className = 'ra-gap';
+          gapCell.textContent = km(g, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
+        }
+      }
+      const note = document.createElement('p');
+      note.className = 'ra-note';
+      const notes = [];
+      if (gap) {
+        notes.push(
+          '„fehlt“: Anteil an den rund ' +
+            km(gap.totalGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+            ' km bis zum Median der Hauptverkehrsstraßen ' +
+            viewComparisonLabel() +
+            ' (' +
+            formatUiPct(medianPct) +
+            ' %).',
+        );
+      }
+      notes.push(
+        'Zuständigkeit aus der Straßennummer abgeleitet; Ortsdurchfahrten größerer Städte ' +
+          'liegen oft bei der Stadt.',
+      );
+      // Both sides unfiltered: the per-road split doesn't know about custom counting.
+      const independent = TildaStats.independentBikeKm(p.bikelane_length_by_road);
+      const allBikeKm = TildaStats.sumLengthRecord(p.bikelane_length);
+      if (independent > 0 && allBikeKm > 0) {
+        notes.push(
+          Math.round((independent / allBikeKm) * 100) +
+            ' % der Radinfrastruktur hier verläuft abseits von Straßen.',
+        );
+      }
+      note.textContent = notes.join(' ');
+      regionDetailAuthority.append(title, table, note);
+      regionDetailAuthority.hidden = false;
     }
 
     function renderRegionQuality(p) {
@@ -3739,6 +3884,16 @@ export function generateViewerHtml(generatedAt: string) {
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
         ' km Straße';
       regionDetailMeta.replaceChildren(pctEl, pctLabel, rankEl, kmEl);
+      const mainRoads = mainRoadBreakdownFor(p);
+      if (mainRoads) {
+        const line = document.createElement('span');
+        line.className = 'region-detail-main-road';
+        const strong = document.createElement('strong');
+        strong.textContent = formatUiPct(mainRoads.pct) + ' %';
+        line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur daneben oder darauf');
+        regionDetailMeta.appendChild(line);
+      }
+      renderRegionAuthority(p, mainRoads);
       renderRegionPeerGap(p);
       renderRegionGap(p);
       renderRegionQuality(p);

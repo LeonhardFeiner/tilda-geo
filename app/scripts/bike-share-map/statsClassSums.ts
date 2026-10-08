@@ -229,6 +229,90 @@ export function getBikelaneSums(bikelane_length: Record<string, number> | null) 
   }
 }
 
+/** Who builds and maintains a road, read off its number (B/L/K …) during aggregation. */
+export const ROAD_AUTHORITY_ORDER = ['bund', 'land', 'kreis', 'gemeinde'] as const
+export type RoadAuthority = (typeof ROAD_AUTHORITY_ORDER)[number]
+export const ROAD_AUTHORITY_LABELS: Record<RoadAuthority, string> = {
+  bund: 'Bund (B-Straßen)',
+  land: 'Land (L-/S-/St-Straßen)',
+  kreis: 'Landkreis (K-Straßen)',
+  gemeinde: 'Gemeinde (ohne Straßennummer)',
+}
+
+/** Roads where separate bike infrastructure is the expectation, not a bonus. */
+export const MAIN_ROAD_CLASS: RoadClass = 'primary_like'
+
+export type MainRoadAuthorityRow = {
+  authority: RoadAuthority
+  roadKm: number
+  bikeKm: number
+  pct: number
+}
+
+/**
+ * Share of main roads (MAIN_ROAD_CLASS) with bike infrastructure along them, overall and per
+ * road authority. Unlike the headline share, bike km only count when they run along such a
+ * road, so paths through fields or residential streets can't flatter it. Null when the region
+ * has no main roads or predates the per-road aggregation.
+ */
+export function mainRoadBreakdown(roadLengthByAuthority: unknown, bikelaneLengthByRoad: unknown) {
+  const roads = asLengthRecord(roadLengthByAuthority)
+  const bikes = asLengthRecord(bikelaneLengthByRoad)
+  if (!Object.keys(roads).length) return null
+  const road = new Map<RoadAuthority, number>()
+  const bike = new Map<RoadAuthority, number>()
+  const add = (target: Map<RoadAuthority, number>, key: string, km: number) => {
+    const [roadKey = '', rawAuthority = ''] = key.split('|')
+    if (roadClassForKey(roadKey) !== MAIN_ROAD_CLASS) return
+    // A trunk road with an A number is federal like any B road.
+    const authority = (rawAuthority === 'autobahn' ? 'bund' : rawAuthority) as RoadAuthority
+    if (!ROAD_AUTHORITY_ORDER.includes(authority)) return
+    target.set(authority, (target.get(authority) ?? 0) + km)
+  }
+  for (const [key, km] of Object.entries(roads)) add(road, key, km)
+  for (const [key, km] of Object.entries(bikes)) add(bike, key, km)
+  const roadKm = sum([...road.values()])
+  if (!(roadKm > 0)) return null
+  const byAuthority: MainRoadAuthorityRow[] = []
+  for (const authority of ROAD_AUTHORITY_ORDER) {
+    const r = road.get(authority) ?? 0
+    if (!(r > 0)) continue
+    // The aggregation caps bike km per road, but a region boundary can still cut a road so that
+    // its bike samples land inside and its road samples outside: never more than fully covered.
+    const b = Math.min(bike.get(authority) ?? 0, r)
+    byAuthority.push({ authority, roadKm: r, bikeKm: b, pct: (b / r) * 100 })
+  }
+  const bikeKm = sum(byAuthority.map((row) => row.bikeKm))
+  return { roadKm, bikeKm, pct: (bikeKm / roadKm) * 100, byAuthority }
+}
+
+/**
+ * Splits the km missing to reach `targetPct` on main roads across the authorities, in proportion
+ * to each one's own shortfall against that target. Authorities already at the target get 0.
+ */
+export function mainRoadGapByAuthority(
+  breakdown: NonNullable<ReturnType<typeof mainRoadBreakdown>>,
+  targetPct: number,
+) {
+  const totalGap = Math.max(0, (targetPct / 100) * breakdown.roadKm - breakdown.bikeKm)
+  const shortfalls = breakdown.byAuthority.map((row) =>
+    Math.max(0, (targetPct / 100) * row.roadKm - row.bikeKm),
+  )
+  const shortfallSum = sum(shortfalls)
+  return {
+    totalGapKm: totalGap,
+    byAuthority: breakdown.byAuthority.map((row, i) => ({
+      authority: row.authority,
+      gapKm: shortfallSum > 0 ? (totalGap * (shortfalls[i] ?? 0)) / shortfallSum : 0,
+    })),
+  }
+}
+
+/** Bike km not along any road (field/forest/park paths); 0 when not aggregated. */
+export function independentBikeKm(bikelaneLengthByRoad: unknown) {
+  return asLengthRecord(bikelaneLengthByRoad).independent ?? 0
+}
+
 export function computeFilteredLengths(
   road_length: unknown,
   bikelane_length: unknown,

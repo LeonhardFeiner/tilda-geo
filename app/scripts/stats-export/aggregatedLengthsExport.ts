@@ -14,6 +14,9 @@ export type AggregatedLengthExportRow = {
   landkreis_name: string | null
   road_length: unknown
   bikelane_length: unknown
+  /** Fork-only columns from processing/steps/afterthoughts/sql/aggregate_lengths_by_road.sql. */
+  road_length_by_authority: unknown
+  bikelane_length_by_road: unknown
 }
 
 export { levelKeyForAdminLevel as levelKeyFor }
@@ -36,7 +39,9 @@ export async function fetchAggregatedLengthRows() {
       lk.id AS landkreis_id,
       lk.name AS landkreis_name,
       a.road_length,
-      a.bikelane_length
+      a.bikelane_length,
+      a.road_length_by_authority,
+      a.bikelane_length_by_road
     FROM public.aggregated_lengths a
     LEFT JOIN LATERAL (
       SELECT b.id, b.name

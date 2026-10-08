@@ -16,7 +16,12 @@ export type StatsRegionPack = {
 }
 
 const COORD_SCALE = 1e5
-const LENGTH_PROP_KEYS = ['road_length', 'bikelane_length'] as const
+const LENGTH_PROP_KEYS = [
+  'road_length',
+  'bikelane_length',
+  'road_length_by_authority',
+  'bikelane_length_by_road',
+] as const
 /** Nesting depth of the position arrays per geometry type (Point is stored as a 1-point line). */
 const LINE_DEPTH: Record<string, number> = {
   Point: 0,

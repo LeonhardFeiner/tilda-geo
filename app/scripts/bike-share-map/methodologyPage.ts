@@ -147,11 +147,28 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
 
   <h2>Wie wird Radinfrastruktur gezählt?</h2>
   <p>Die Klassifizierung folgt dem Schema von <a href="${RADINFRA_URL}">radinfra.de</a> bzw. TILDA
-  (<a href="${OSM_TAGGING_URL}">OSM-Radverkehrs-Tagging</a>). Ein Straßenabschnitt gilt als mit
-  Radinfrastruktur, wenn parallel eine der folgenden Kategorien erfasst ist:</p>
+  (<a href="${OSM_TAGGING_URL}">OSM-Radverkehrs-Tagging</a>). Gezählt wird die Länge aller Wege
+  dieser Kategorien:</p>
   ${bikelaneClassList()}
-  <p>Beidseitige Radinfrastruktur wird als solche berücksichtigt; die Länge bezieht sich auf die
-  Straße, nicht auf die Summe beider Seiten.</p>
+  <p>Der Hauptwert setzt die <strong>gesamte</strong> Länge der Radinfrastruktur ins Verhältnis zur
+  Straßenlänge – auch selbstständige Wege abseits von Straßen (z.&nbsp;B. durch Felder oder Parks)
+  zählen mit. Längen werden je Fahrtrichtung gezählt: Eine Straße mit Gegenverkehr zählt doppelt,
+  ebenso ein Zweirichtungsradweg; ein Radfahrstreifen auf jeder Seite zählt je Seite einfach.
+  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%.</p>
+
+  <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
+  <p>Weil der Hauptwert auch Wege abseits von Straßen mitzählt, zeigt die Detailkarte zusätzlich den
+  Anteil der <strong>Hauptverkehrsstraßen</strong> (OSM <code>trunk</code>, <code>primary</code>,
+  <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
+  jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
+  Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa
+  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht.</p>
+  <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
+  L/S/St → Land, K oder Kreiskürzel (z.&nbsp;B. „RO&nbsp;35“) → Landkreis, ohne Nummer → Gemeinde.
+  Das ist eine Näherung: Ortsdurchfahrten von Bundes- und Landesstraßen liegen in größeren Städten
+  meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.
+  Die Spalte „fehlt“ verteilt die Kilometer bis zum Median der aktuellen Ansicht anteilig nach dem
+  Rückstand jedes Baulastträgers.</p>
 
   ${peerSection}
 

@@ -12,11 +12,14 @@ const LOG_PREFIX = '[Afterthoughts][Statistics]'
  */
 export async function aggregateLengths() {
   const sqlFile = join(import.meta.dir, 'sql', 'aggregate_lengths.sql')
+  // Fork-only (bike-share-map): bike infra per road class / road authority.
+  const byRoadSqlFile = join(import.meta.dir, 'sql', 'aggregate_lengths_by_road.sql')
   const start = new Date()
 
   try {
     logStart('Afterthoughts: Statistics')
     await $`psql -v ON_ERROR_STOP=1 -f ${sqlFile}`
+    await $`psql -v ON_ERROR_STOP=1 -f ${byRoadSqlFile}`
     logEnd('Afterthoughts: Statistics')
     return toIsoWindow(start, new Date())
   } catch (error) {
