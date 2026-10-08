@@ -834,6 +834,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet .region-detail-section h4 { margin: 4pt 0 2pt; font-size: 10pt; }
     .print-sheet .region-detail-rows { margin: 0; padding: 0; list-style: none; }
     .print-sheet .region-detail-rows li { margin: 0 0 3pt; }
+    .print-sheet .ps-plot-page { break-before: page; }
+    .print-sheet .ps-plots { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt 14pt; }
+    .print-sheet .ps-plots .ctx-plot { margin: 0; padding-top: 0; border-top: 0; break-inside: avoid; }
     .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
     .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
@@ -2748,6 +2751,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * disagree), the folded "Mehr Zahlen" content included; the length breakdown is printed both
      * by class and by type; the map is the live canvas.
      */
+    /** Two plots side by side across the A4 content width (~180 mm at 96 dpi). */
+    const PRINT_PLOT_WIDTH_PX = 330;
+    /** Short enough for all eight plots (4 rows) to share one page. */
+    const PRINT_PLOT_HEIGHT_PX = 180;
+
     async function printRegionSheet(feature) {
       const p = feature.properties || {};
       const sheet = document.getElementById('print-sheet');
@@ -2824,6 +2832,26 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       appendLengthRows(byType, 'Straßen nach Typ', TildaStats.listFilteredHighwayTagLengths(p.road_length, filter), null, overlayRoadColorInput.value);
       appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
       section('Längen', byClass, byType);
+
+      // One small scatter per context metric, same comparison group as the card.
+      const level = String(p.level ?? '');
+      const scopes = contextScopesFor(p, CONTEXT_REFERENCE_NOUN[level] || 'Gebieten');
+      const plotScope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
+      const plots = el('div', 'ps-plots');
+      for (const metric of contextMetrics()) {
+        const value = metric.get(p.id);
+        if (value == null || !Number.isFinite(value) || !plotScope) continue;
+        const plot = buildMetricPlot(metric, level, plotScope);
+        if (!plot) continue;
+        renderMetricPlot(plot.chart, metric, plot.entries, p.id, PRINT_PLOT_WIDTH_PX, PRINT_PLOT_HEIGHT_PX);
+        plots.appendChild(plot.plotDiv);
+      }
+      if (plots.childElementCount) {
+        const heading = el('h2', null, 'Zusammenhänge – Vergleich: ' + plotScope.label);
+        const wrap = el('section', 'ps-section ps-plot-page');
+        wrap.append(heading, plots);
+        sheet.appendChild(wrap);
+      }
 
       const foot = el(
         'p',
@@ -3476,9 +3504,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function toggleMetricPlot(row, metric, level, scope, selectedRegion) {
-      let plotDiv = row.querySelector('.ctx-plot');
-      if (plotDiv) {
-        plotDiv.remove();
+      const open = row.querySelector('.ctx-plot');
+      if (open) {
+        open.remove();
         return;
       }
 
@@ -3487,6 +3515,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         openPlot.remove();
       }
 
+      const plot = buildMetricPlot(metric, level, scope);
+      if (!plot) return;
+      plot.plotDiv.addEventListener('click', (ev) => ev.stopPropagation());
+      row.appendChild(plot.plotDiv);
+      // Drawn after insertion so it can take the card's real pixel width.
+      renderMetricPlot(plot.chart, metric, plot.entries, selectedRegion.id);
+    }
+
+    /** Scatter of one context metric against the share, for the regions of the given scope. */
+    function buildMetricPlot(metric, level, scope) {
       // The share depends on the counting filter, so it is computed here, not cached.
       const entries = [];
       for (const e of contextFullReference(metric, level, scope)) {
@@ -3498,7 +3536,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         entries.push({ ...e, bikeSharePct: (bikeKm / roadKm) * 100 });
       }
 
-      if (entries.length < 3) return;
+      if (entries.length < 3) return null;
 
       let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0, sumY2 = 0;
       for (const e of entries) {
@@ -3512,7 +3550,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const divisor = Math.sqrt((n * sumX2 - sumX * sumX) * (n * sumY2 - sumY * sumY));
       const r = divisor === 0 ? 0 : (n * sumXY - sumX * sumY) / divisor;
 
-      plotDiv = document.createElement('div');
+      const plotDiv = document.createElement('div');
       plotDiv.className = 'ctx-plot';
       const title = document.createElement('div');
       title.className = 'ctx-plot-title';
@@ -3525,10 +3563,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const chart = document.createElement('div');
       chart.className = 'ctx-plot-chart';
       plotDiv.append(title, chart);
-      plotDiv.addEventListener('click', (ev) => ev.stopPropagation());
-      row.appendChild(plotDiv);
-      // Drawn after insertion so it can take the card's real pixel width.
-      renderMetricPlot(chart, metric, entries, selectedRegion.id);
+      return { plotDiv, chart, entries };
     }
 
     /** Roughly five round tick values spanning [min, max]. */
@@ -3543,9 +3578,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return ticks;
     }
 
-    function renderMetricPlot(chart, metric, entries, selectedId) {
-      const width = Math.max(200, chart.clientWidth);
-      const height = Math.round(Math.min(320, Math.max(180, width * 0.7)));
+    function renderMetricPlot(chart, metric, entries, selectedId, fixedWidth, fixedHeight) {
+      const width = fixedWidth || Math.max(200, chart.clientWidth);
+      const height = fixedHeight || Math.round(Math.min(320, Math.max(180, width * 0.7)));
       const m = { top: 18, right: 10, bottom: 34, left: 40 };
       const plotW = width - m.left - m.right;
       const plotH = height - m.top - m.bottom;
