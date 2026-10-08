@@ -810,6 +810,8 @@ export function generateViewerHtml(generatedAt: string) {
       cursor: pointer; text-align: left;
     }
     .region-detail-drill:hover { text-decoration: underline; }
+    .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
+    .region-detail-osm-edit:hover { text-decoration: underline; }
     /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
     @media (pointer: coarse) {
       .panel select, #region-search-input {
@@ -2634,6 +2636,30 @@ export function generateViewerHtml(generatedAt: string) {
      * range — shown only when those ways are part of the count, since otherwise they don't
      * move the number.
      */
+    /**
+     * Opens the OSM editor (iD) on the region. The figure is only as complete as the map, so
+     * "the data is wrong" becomes something anyone can fix, not a reason to dismiss it.
+     */
+    function osmEditLink(feature, text) {
+      if (!feature?.geometry) return null;
+      const [w, s, e, n] = turf.bbox(feature);
+      const span = Math.max(e - w, (n - s) * 1.5, 1e-4);
+      const zoom = Math.min(16, Math.max(12, Math.round(Math.log2(360 / span))));
+      const a = document.createElement('a');
+      a.className = 'region-detail-osm-edit';
+      a.href =
+        'https://www.openstreetmap.org/edit?editor=id#map=' +
+        zoom +
+        '/' +
+        ((s + n) / 2).toFixed(5) +
+        '/' +
+        ((w + e) / 2).toFixed(5);
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.textContent = text;
+      return a;
+    }
+
     function renderRegionQuality(p) {
       const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
       regionDetailQuality.replaceChildren();
@@ -3660,7 +3686,8 @@ export function generateViewerHtml(generatedAt: string) {
       const offerNeighbors =
         (String(p.level) === '6' || String(p.level) === '8') &&
         !(isNeighborView() && neighborFocus.focusId === p.id);
-      if (drillChangesView || offerNeighbors) {
+      const offerOsmEdit = String(p.level) === '8' || String(p.level) === '9';
+      if (drillChangesView || offerNeighbors || offerOsmEdit) {
         const links = document.createElement('p');
         links.className = 'region-detail-view-link region-detail-actions';
         if (drillChangesView) {
@@ -3688,6 +3715,10 @@ export function generateViewerHtml(generatedAt: string) {
             else neighborButton.disabled = false;
           });
           links.appendChild(neighborButton);
+        }
+        if (offerOsmEdit) {
+          const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
+          if (edit) links.appendChild(edit);
         }
         regionDetailActions.appendChild(links);
       }
