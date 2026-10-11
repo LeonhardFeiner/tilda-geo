@@ -162,4 +162,26 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('const pitch = map.getPitch();')
     expect(html).toContain('map.jumpTo({ center, zoom, bearing, pitch });')
   })
+
+  test('renders 1200x630 social share scorecard canvas with key metrics and benchmark bar', () => {
+    expect(html).toContain('function drawRegionScorecardCanvas(')
+    expect(html).toContain('const width = 1200;')
+    expect(html).toContain('const height = 630;')
+    expect(html).toContain('RADINFRA-VERGLEICH 2026')
+    expect(html).toContain('RADWEGE-ANTEIL')
+    expect(html).toContain('Hauptverkehrsstraßen')
+    expect(html).toContain('barGrad.addColorStop(0,')
+  })
+
+  test('normalizes scorecard PNG filename from region name', () => {
+    expect(html).toContain('function scorecardFilename(')
+    expect(html).toContain("'-scorecard.png'")
+  })
+
+  test('provides Scorecard export in toolbar and region detail actions with native share support', () => {
+    expect(html).toContain('id="share-scorecard-image"')
+    expect(html).toContain("scorecardButton.textContent = 'Scorecard (Bild)'")
+    expect(html).toContain('function shareRegionScorecard(')
+    expect(html).toContain('shareScorecardImageBtn?.addEventListener')
+  })
 })
