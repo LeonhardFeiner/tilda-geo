@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
        browser only discovers it once the inline controller script runs, after every script tag
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
@@ -42,6 +42,7 @@
       background: rgba(255, 255, 255, 0.95);
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
       font-size: 14px; line-height: 1.45;
+      touch-action: pan-y;
     }
     .panel > summary {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -72,8 +73,8 @@
         background: rgba(0, 0, 0, 0.32);
         opacity: 0; pointer-events: none;
         transition: opacity 0.25s ease;
+        touch-action: none;
       }
-      body[data-sheet="half"] #sheet-scrim,
       body[data-sheet="full"] #sheet-scrim { opacity: 1; pointer-events: auto; }
 
       /* #panel-main becomes a bottom sheet with peek / half / full snap states. */
@@ -88,6 +89,7 @@
         transition: height 0.28s cubic-bezier(0.32, 0.72, 0, 1);
         overscroll-behavior: contain;
         box-shadow: 0 -3px 18px rgba(0, 0, 0, 0.18);
+        touch-action: pan-y;
       }
       /* --vph is set from window.innerHeight in JS; the 1vh fallback keeps this valid
          before JS runs and on browsers without it. (dvh can't be used — the formatter
@@ -177,9 +179,26 @@
       }
       #search-fab svg { flex: none; width: 20px; height: 20px; fill: #1565c0; }
       #search-fab span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-      body[data-sheet="half"] #search-fab,
-      body[data-sheet="full"] #search-fab,
-      body[data-region-detail] #search-fab { display: none; }
+      body[data-sheet="full"] #search-fab { display: none; }
+      .exit-neighbor-view {
+        top: 56px; font-size: 12px; padding: 6px 14px;
+      }
+      body[data-sheet="full"] .exit-neighbor-view {
+        display: none !important;
+      }
+      .canvas-mini-legend {
+        left: 10px;
+        bottom: calc(var(--sheet-peek) + 12px);
+      }
+      body[data-sheet="half"] .canvas-mini-legend,
+      body[data-sheet="full"] .canvas-mini-legend {
+        opacity: 0;
+      }
+      .region-search-results {
+        max-height: min(220px, calc(100dvh - 320px));
+      }
+      .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-in,
+      .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-out { display: none; }
       .panel-actions .share-toolbar { display: none; }
       .panel-actions { margin-top: 0; }
       #copy-view-link-feedback {
@@ -362,7 +381,9 @@
       margin-left: -4px;
       margin-right: -4px;
     }
-    .ranking-list li.ranking-row-clickable:hover { background: #f5f5f5; }
+    .ranking-list li.ranking-row-clickable:hover,
+    .ranking-list li.ranking-row-hovered { background: #eef4fc; }
+    .ranking-list li.ranking-row-hovered .ranking-name { color: #1565c0; font-weight: 600; }
     .ranking-list li.ranking-row-clickable:focus-visible {
       outline: 2px solid #1565c0;
       outline-offset: 1px;
@@ -474,6 +495,7 @@
       padding: 10px 12px 12px;
       font-size: 12px;
       color: #333;
+      touch-action: pan-y;
     }
     .region-detail[hidden] { display: none !important; }
     /* On a computer there is room: a wider card that runs most of the way up the screen
@@ -643,6 +665,38 @@
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
+    @media (min-width: 769px) {
+      .region-search-block {
+        position: sticky; top: -12px; z-index: 5;
+        background: rgba(255, 255, 255, 0.98);
+        margin: -12px -14px 10px;
+        padding: 10px 14px 8px;
+        border-bottom: 1px solid #e5e5e5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+    }
+    .maplibregl-ctrl-scale {
+      background-color: rgba(255, 255, 255, 0.9);
+      border-color: #555;
+      color: #333;
+      font-size: 11px;
+      font-weight: 600;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+    }
+    @media (min-width: 769px) {
+      body[data-region-detail] .maplibregl-ctrl-bottom-right {
+        margin-right: min(480px, calc(100vw - 440px));
+        transition: margin-right 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      }
+    }
+    @media (max-width: 768px) {
+      .maplibregl-ctrl-bottom-right {
+        margin-bottom: calc(var(--sheet-peek) + 8px);
+      }
+      body[data-sheet="full"] .maplibregl-ctrl-bottom-right {
+        display: none;
+      }
+    }
     .region-locate {
       display: inline-flex; align-items: center; gap: 4px;
       margin: 8px 0 0; padding: 4px 10px 4px 7px; cursor: pointer;
@@ -667,6 +721,8 @@
       background: #fff; border: 1px solid #ccc; border-radius: 6px;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       max-height: 220px; overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
     .region-search-results[hidden] { display: none !important; }
     .region-search-results li {
@@ -688,12 +744,15 @@
     .site-tagline a { color: #1565c0; text-decoration: none; }
     .site-tagline a:hover { text-decoration: underline; }
     .region-detail-view-link {
-      margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;
+      margin: 0; padding: 0; border: none;
       font-size: 11px;
     }
     .region-detail-view-link a { color: #1565c0; text-decoration: none; }
     .region-detail-view-link a:hover { text-decoration: underline; }
-    .region-detail-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+    .region-detail-actions {
+      display: flex; flex-wrap: wrap; gap: 6px 8px;
+      margin: 8px 0 10px;
+    }
     .region-breadcrumb {
       display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px;
       margin-bottom: 8px; font-size: 12px; line-height: 1.5;
@@ -708,10 +767,143 @@
     .region-breadcrumb .region-breadcrumb-current { color: #333; font-weight: 600; }
     .region-breadcrumb .region-breadcrumb-up { margin-left: auto; color: #555; }
     .region-detail-drill {
-      font: inherit; color: #1565c0; background: none; border: 0; padding: 0;
-      cursor: pointer; text-align: left;
+      display: inline-flex; align-items: center; gap: 5px;
+      font: inherit; font-size: 12px; font-weight: 500;
+      color: #1565c0; background: #f0f6ff;
+      border: 1px solid #c8ddf6; border-radius: 5px;
+      padding: 5px 10px; cursor: pointer; text-align: left;
+      transition: background 0.15s, border-color 0.15s;
     }
-    .region-detail-drill:hover { text-decoration: underline; }
+    .region-detail-drill:hover {
+      background: #e1efff; border-color: #9ec5f3; text-decoration: none;
+    }
+    .region-detail-drill:active {
+      background: #c8ddf6;
+    }
+    .canvas-mini-legend {
+      position: fixed; z-index: 2;
+      left: 428px; bottom: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+      width: 140px; padding: 7px 10px;
+      background: rgba(255, 255, 255, 0.92);
+      -webkit-backdrop-filter: blur(6px);
+      backdrop-filter: blur(6px);
+      border-radius: 6px;
+      box-shadow: 0 1px 6px rgba(0, 0, 0, 0.16);
+      pointer-events: none;
+      transition: opacity 0.2s ease, left 0.2s ease, bottom 0.2s ease;
+    }
+    .panel:not([open]) ~ .canvas-mini-legend {
+      left: 16px;
+    }
+    .cml-title {
+      font-size: 10px; font-weight: 600; color: #555;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .cml-bar {
+      height: 6px; border-radius: 3px; width: 100%;
+    }
+    .cml-labels {
+      display: flex; justify-content: space-between;
+      font-size: 10px; font-weight: 600; color: #444;
+    }
+    .exit-neighbor-view {
+      position: fixed; z-index: 5;
+      top: 16px; left: 50%; transform: translateX(-50%);
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #fff; color: #1565c0;
+      border: 1px solid #bbdefb; border-radius: 999px;
+      padding: 7px 16px; font: inherit; font-size: 13px; font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
+      cursor: pointer; white-space: nowrap;
+      transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
+    }
+    .exit-neighbor-view:hover {
+      background: #e3f2fd; box-shadow: 0 3px 12px rgba(0, 0, 0, 0.22);
+    }
+    .exit-neighbor-view:active {
+      background: #bbdefb; transform: translateX(-50%) scale(0.97);
+    }
+    .exit-neighbor-view[hidden] { display: none !important; }
+    dialog.methodology-dialog {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      width: min(720px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      background: #fff;
+      color: #1f2421;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    dialog.methodology-dialog:not([open]) {
+      display: none;
+    }
+    dialog.methodology-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.45);
+      backdrop-filter: blur(2px);
+    }
+    .methodology-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid #e2e4e0;
+      background: #f8faf8;
+    }
+    .methodology-dialog-header h3 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1f2421;
+    }
+    .methodology-dialog-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .methodology-dialog-actions a {
+      font-size: 12px;
+      color: #1565c0;
+      text-decoration: none;
+    }
+    .methodology-dialog-actions a:hover {
+      text-decoration: underline;
+    }
+    .methodology-close {
+      border: none;
+      background: none;
+      font-size: 22px;
+      line-height: 1;
+      color: #555;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .methodology-close:hover {
+      background: #e0e0e0;
+      color: #111;
+    }
+    .methodology-dialog-body {
+      padding: 20px 24px;
+      overflow-y: auto;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    @media (max-width: 768px) {
+      dialog.methodology-dialog {
+        width: 100vw;
+        max-height: 85vh;
+        border-radius: 16px 16px 0 0;
+        margin-top: auto;
+        margin-bottom: 0;
+      }
+      .methodology-dialog-body {
+        padding: 16px;
+      }
+    }
     .print-sheet { display: none; }
     @media print {
       @page { size: A4; margin: 15mm; }
@@ -767,6 +959,15 @@
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
     <span>Wie steht deine Gemeinde da?</span>
   </button>
+  <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
+  <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
+    <div class="cml-title">Radinfrastruktur-Anteil</div>
+    <div class="cml-bar" id="cml-bar"></div>
+    <div class="cml-labels">
+      <span id="cml-min">0 %</span>
+      <span id="cml-max">20 %</span>
+    </div>
+  </div>
   <details class="panel" id="panel-main" open>
     <summary>
       <h1 class="site-title">Radinfra-Vergleich</h1>
@@ -784,9 +985,10 @@
     <div class="region-search-block" id="region-search-block">
       <label for="region-search-input">Wie steht deine Gemeinde da?</label>
       <input
-        type="text"
+        type="search"
         id="region-search-input"
         autocomplete="off"
+        enterkeyhint="search"
         placeholder="Gemeinde, Stadt oder Landkreis – z. B. Erding"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
@@ -992,7 +1194,7 @@
     </div>
     </div>
     <p class="footer">
-      OSM-Daten vom 30.09.2026 · Erstellt am 08.10.2026 ·
+      Erstellt am 11.10.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -1009,17 +1211,29 @@
       <h3 id="region-detail-title"></h3>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
+    <div id="region-detail-actions"></div>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <div class="region-detail-authority" id="region-detail-authority" hidden></div>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
-    <div id="region-detail-actions"></div>
     <details class="region-detail-more" id="region-detail-more">
       <summary>Mehr Zahlen: Umfeld und Aufschlüsselung</summary>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
       <div id="region-detail-body"></div>
     </details>
   </div>
+  <dialog id="methodology-dialog" class="methodology-dialog">
+    <div class="methodology-dialog-header">
+      <h3>Methodik &amp; Datenquellen</h3>
+      <div class="methodology-dialog-actions">
+        <a href="./methodik.html" target="_blank" rel="noopener noreferrer" class="methodology-external-link" title="In neuem Tab öffnen">In neuem Tab ↗</a>
+        <button type="button" class="methodology-close" id="methodology-close" aria-label="Schließen">×</button>
+      </div>
+    </div>
+    <div class="methodology-dialog-body" id="methodology-dialog-body">
+      <p>Lade Methodik …</p>
+    </div>
+  </dialog>
   <script src="./statsClassSums.js"></script>
   <script src="./regionNavigation.js"></script>
   <script src="./statsMsgpack.js"></script>
@@ -1029,7 +1243,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-08T18:40:20.541Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-11T21:00:38.415Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -2377,6 +2591,10 @@
     function updateLegendRange(min, max) {
       const labels = document.getElementById('legend-labels');
       const ticks = document.getElementById('legend-ticks');
+      const cmlMin = document.getElementById('cml-min');
+      const cmlMax = document.getElementById('cml-max');
+      if (cmlMin) cmlMin.textContent = formatUiPct(min) + ' %';
+      if (cmlMax) cmlMax.textContent = formatUiPct(max) + ' %';
       if (!labels) return;
       const span = max - min;
       const count = span > 0 ? LEGEND_TICK_COUNT : 2;
@@ -2792,10 +3010,72 @@
       }
     }
 
+    let hoveredRegionId = null;
+
+    function hoverHighlightGeojson() {
+      if (!hoveredRegionId || hoveredRegionId === selectedFeatureId) {
+        return { type: 'FeatureCollection', features: [] };
+      }
+      return highlightGeojsonForIds([hoveredRegionId], lastRankingFeatures);
+    }
+
+    function ensureHoverHighlightLayer() {
+      const beforeId = highlightLayerBeforeId();
+      const data = hoverHighlightGeojson();
+      if (!map.getSource('regions-hover')) {
+        map.addSource('regions-hover', { type: 'geojson', data });
+        map.addLayer(
+          {
+            id: 'regions-hover-fill',
+            type: 'fill',
+            source: 'regions-hover',
+            paint: { 'fill-color': '#1565c0', 'fill-opacity': 0.14 },
+          },
+          beforeId,
+        );
+        map.addLayer(
+          {
+            id: 'regions-hover-outline',
+            type: 'line',
+            source: 'regions-hover',
+            paint: {
+              'line-color': '#0d47a1',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 6, 2, 9, 3, 11, 4, 13, 5],
+            },
+          },
+          beforeId,
+        );
+      } else {
+        map.getSource('regions-hover').setData(data);
+      }
+    }
+
+    function setHoveredRegionId(id) {
+      if (hoveredRegionId === id) return;
+      hoveredRegionId = id;
+      if (map?.getSource('regions-hover')) {
+        map.getSource('regions-hover').setData(hoverHighlightGeojson());
+      }
+      syncRankingRowHover();
+    }
+
+    function syncRankingRowHover() {
+      const list = document.getElementById('ranking-list');
+      if (!list) return;
+      for (const li of list.querySelectorAll('li[data-ranking-id]')) {
+        const isHover = li.dataset.rankingId === hoveredRegionId;
+        li.classList.toggle('ranking-row-hovered', isHover);
+        if (isHover && !li.matches(':hover')) {
+          li.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+    }
+
     function updateMapHighlights() {
       if (!map.getSource('regions')) return;
       ensureSimpleFocusHighlightLayer();
       ensureSelectedHighlightLayer();
+      ensureHoverHighlightLayer();
     }
 
     function appendRankingRow(list, rank, f, minPct, maxPct, span) {
@@ -2818,6 +3098,10 @@
         );
         li.title = 'Auf der Karte auswählen';
         li.addEventListener('click', () => selectRegionById(featureId, null, true));
+        li.addEventListener('mouseenter', () => setHoveredRegionId(featureId));
+        li.addEventListener('mouseleave', () => {
+          if (hoveredRegionId === featureId) setHoveredRegionId(null);
+        });
         li.addEventListener('keydown', (event) => {
           if (event.key !== 'Enter' && event.key !== ' ' && event.key !== 'Spacebar') return;
           event.preventDefault(); // Space would scroll the ranking instead of selecting.
@@ -3361,7 +3645,7 @@
         'ps-foot',
         'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
           (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
-          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand 30.09.2026. ' +
+          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand 11.10.2026. ' +
           'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
       );
       foot.appendChild(el('span', 'ps-url', buildShareUrl()));
@@ -4323,15 +4607,17 @@
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
       placeRegionDetail();
+      updatePanelSummaryPreview();
       if (typeof sheetEnabled === 'function' && sheetEnabled()) {
         const wasPeek = sheetState() === 'peek';
+        const wasFull = sheetState() === 'full';
         // setSheetState() always re-syncs the map itself; when the sheet is already open
         // (switching between regions without a peek->half transition) nothing else would.
-        if (wasPeek) setSheetState('half');
+        if (wasPeek || (wasFull && freshSelection)) setSheetState('half');
         else syncMapViewport(true);
         // On a new selection show the card from its top (region name first), not wherever
         // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
-        if ((wasPeek || freshSelection) && panelMain) panelMain.scrollTop = 0;
+        if ((wasPeek || wasFull || freshSelection) && panelMain) panelMain.scrollTop = 0;
       } else if (freshSelection) {
         regionDetailEl.scrollIntoView?.({ block: 'nearest' });
       }
@@ -4340,9 +4626,10 @@
     function setSelectedFeatureId(id, feature) {
       selectedFeatureId = id;
       selectedFeatureOverride =
-        id && feature?.geometry && feature.properties?.id === id ? feature : null;
+        id && feature?.properties?.id === id ? feature : null;
       updateMapHighlights();
       syncRankingRowHighlights();
+      updatePanelSummaryPreview();
       // A selection is a step the Back button should be able to undo.
       scheduleUrlSync(implicitSelectionClear ? undefined : 'push');
     }
@@ -4379,42 +4666,78 @@
       const bbox = turf.bbox(feature);
       if (!bbox.every(Number.isFinite)) return;
       if (!(opts && opts.force) && featureBboxInMapView(bbox)) return;
-      const inset = mapBottomInset();
-      const maxZoom = opts && opts.zoomIn ? Math.max(map.getZoom(), 12) : map.getZoom();
+      // map.setPadding({ bottom: mapBottomInset() }) already reserves space for the bottom sheet
+      // on mobile. fitBounds padding only adds margin around the visible canvas.
+      const maxZoom = opts && opts.maxZoom != null ? opts.maxZoom : 12;
       map.fitBounds(
         [
           [bbox[0], bbox[1]],
           [bbox[2], bbox[3]],
         ],
         {
-          padding: { top: 56, right: 40, bottom: Math.max(40, inset + 28), left: 40 },
+          padding: { top: 56, right: 36, bottom: 36, left: 36 },
           duration: opts && typeof opts.duration === 'number' ? opts.duration : 400,
           maxZoom,
         },
       );
     }
 
+    /** Desktop padding reserving room for left panel (400px) and right card (460px). */
+    function desktopMapPadding() {
+      if (typeof sheetEnabled === 'function' && sheetEnabled()) return null;
+      const leftPanel = document.getElementById('panel-main');
+      const isPanelOpen = Boolean(leftPanel && leftPanel.open);
+      const isDetailOpen = Boolean(document.body.dataset.regionDetail);
+      const left = isPanelOpen ? Math.min(416, Math.round(window.innerWidth * 0.35)) : 24;
+      const right = isDetailOpen ? Math.min(480, Math.round(window.innerWidth * 0.35)) : 24;
+      return { top: 32, right, bottom: 32, left };
+    }
+
     /**
      * While a region is selected on the phone the sheet covers the lower part of the map:
      * pad the map's bottom by the sheet height and re-frame the selected region into the
      * strip that is still visible. Resets to 0 when nothing is selected.
+     * On desktop: offsets the visible map center between the left panel and right card.
      */
-    function syncMapViewport(animate) {
+    function syncMapViewport(animate, forceFit) {
       if (!map || typeof map.setPadding !== 'function') return;
+      const isMobile = typeof sheetEnabled === 'function' && sheetEnabled();
       const selected = document.body.dataset.regionDetail
         ? selectedFeatureOverride || currentSelectedFeature()
         : null;
-      // The sheet (even at peek) always occupies this much of the screen on mobile, so the
-      // inset applies whether or not a region is selected — not doing so left regions under
-      // the peek bar (e.g. southern Bavaria on a Deutschland view) untappable.
-      const bottom = mapBottomInset();
+
+      let targetPadding = { top: 0, right: 0, bottom: 0, left: 0 };
+      if (isMobile) {
+        targetPadding.bottom = mapBottomInset();
+      } else {
+        const desk = desktopMapPadding();
+        if (desk) targetPadding = desk;
+      }
+
       const currentPadding = typeof map.getPadding === 'function' ? map.getPadding() : null;
-      const paddingChanged = !currentPadding || Math.abs((currentPadding.bottom || 0) - bottom) >= 2;
-      if (paddingChanged) map.setPadding({ top: 0, right: 0, bottom, left: 0 });
+      const paddingChanged =
+        !currentPadding ||
+        Math.abs((currentPadding.bottom || 0) - targetPadding.bottom) >= 2 ||
+        Math.abs((currentPadding.left || 0) - targetPadding.left) >= 2 ||
+        Math.abs((currentPadding.right || 0) - targetPadding.right) >= 2;
+
+      if (paddingChanged) map.setPadding(targetPadding);
+
       if (selected) {
-        fitMapToFeature(selected, { force: true, zoomIn: true, duration: animate ? 420 : 0 });
+        if (forceFit) {
+          fitMapToFeature(selected, { force: true, duration: animate ? 420 : 0 });
+        } else {
+          // Smooth glide: center the selected region within the visible upper viewport without
+          // violent zoom changes.
+          try {
+            const center = turf.center(selected).geometry.coordinates;
+            map.easeTo({ center, duration: animate ? 360 : 0 });
+          } catch {
+            fitMapToFeature(selected, { force: true, duration: animate ? 420 : 0 });
+          }
+        }
       } else if (paddingChanged && animate && typeof map.easeTo === 'function') {
-        map.easeTo({ padding: { top: 0, right: 0, bottom, left: 0 }, duration: 260 });
+        map.easeTo({ padding: targetPadding, duration: 260 });
       }
     }
 
@@ -4438,10 +4761,8 @@
       if (!feature) return;
       clearOverlayLineHighlight();
       showRegionDetail(feature, { freshSelection: true });
-      // Desktop: only recentre when asked (ranking click) — showRegionDetail doesn't sync the
-      // map itself there (sheetEnabled() is false). Phone: showRegionDetail already synced.
-      if (panToMap && !(typeof sheetEnabled === 'function' && sheetEnabled())) {
-        syncMapViewport(true);
+      if (panToMap) {
+        syncMapViewport(true, true);
       }
     }
 
@@ -4453,6 +4774,8 @@
       regionDetailEl.hidden = true;
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
+      setHoveredRegionId(null);
+      updatePanelSummaryPreview();
       // Clearing (tapping the same region again, the map background, …) should collapse an
       // open sheet back to peek too — otherwise it's left open over an empty region card.
       // setSheetState() re-syncs the map itself; skip the redundant extra call in that case.
@@ -4496,8 +4819,7 @@
       if (regionClickBound) return;
       regionClickBound = true;
       regionDetailClose.addEventListener('click', () => {
-        if (typeof sheetEnabled === 'function' && sheetEnabled()) setSheetState('peek');
-        else clearRegionSelection();
+        clearRegionSelection();
       });
       // A single hit-test per click, not two: this used to be a layer-filtered map.on('click',
       // 'regions-fill', ...) selecting the region, PLUS a separate generic map.on('click', ...)
@@ -4594,10 +4916,34 @@
       preserveDrawingBuffer: true,
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.addControl(
+      new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }),
+      'bottom-right',
+    );
 
     function updatePanelSummaryPreview() {
-      if (!panelSummaryPreview || !regionIndex) return;
-      panelSummaryPreview.textContent = viewLabelForCurrentMode();
+      if (!panelSummaryPreview) return;
+      if (selectedFeatureId) {
+        const feat = selectedFeatureOverride || regionIndex?.byId?.get(selectedFeatureId);
+        const p = feat?.properties;
+        if (p) {
+          const name = p.name || p.id || '';
+          const pct =
+            typeof p.bikeSharePct === 'number' && p.roadSumKm > 0
+              ? formatUiPct(p.bikeSharePct) + ' %'
+              : '';
+          if (name && pct) {
+            panelSummaryPreview.textContent = name + ' · ' + pct;
+            return;
+          } else if (name) {
+            panelSummaryPreview.textContent = name;
+            return;
+          }
+        }
+      }
+      if (regionIndex) {
+        panelSummaryPreview.textContent = viewLabelForCurrentMode();
+      }
     }
 
     function imageFilename(suffix) {
@@ -5109,15 +5455,6 @@
         panelMain.open = true;
         if (state === 'peek') panelMain.scrollTop = 0;
       }
-      // Invariant: peek = just the map. Collapsing the sheet drops any region selection,
-      // so swipe-down / scrim-tap / Esc all double as "close the region stats".
-      if (
-        state === 'peek' &&
-        document.body.dataset.regionDetail &&
-        typeof clearRegionSelection === 'function'
-      ) {
-        clearRegionSelection();
-      }
       notifyMapResize();
       // The sheet occupies a different amount of the screen at every state (even peek, even
       // with nothing selected) — always re-sync the map's padding/fit to match, not just when
@@ -5172,6 +5509,7 @@
     if (panelMain) {
       const panelSummary = panelMain.querySelector(':scope > summary');
       let sheetDrag = null;
+      let uiPinch = null;
       let suppressSummaryClick = false;
 
       panelSummary?.addEventListener('click', (event) => {
@@ -5192,18 +5530,39 @@
         setSheetState(next);
       });
 
-      panelSummary?.addEventListener('pointerdown', (event) => {
-        if (!sheetEnabled() || (event.button != null && event.button > 0)) return;
+      function isSheetDragTarget(event) {
+        if (!sheetEnabled() || (event.button != null && event.button > 0)) return false;
+        const target = event.target;
+        if (target.closest('button, a, input, select, label')) return false;
+        if (target.closest('.panel > summary')) return true;
+        if (sheetState() === 'peek') return true;
+        if (target.closest('#region-detail-mount .region-detail-header')) return true;
+        return false;
+      }
+
+      panelMain?.addEventListener('pointerdown', (event) => {
+        if (!isSheetDragTarget(event)) return;
         sheetDrag = {
           startY: event.clientY,
           startH: panelMain.getBoundingClientRect().height,
+          lastY: event.clientY,
+          lastTime: performance.now(),
+          velocityY: 0,
           moved: false,
+          startState: sheetState(),
         };
         panelMain.classList.add('is-dragging');
-        panelSummary.setPointerCapture?.(event.pointerId);
+        try { panelMain.setPointerCapture?.(event.pointerId); } catch {}
       });
-      panelSummary?.addEventListener('pointermove', (event) => {
-        if (!sheetDrag) return;
+      panelMain?.addEventListener('pointermove', (event) => {
+        if (!sheetDrag || uiPinch) return;
+        const now = performance.now();
+        const dt = now - sheetDrag.lastTime;
+        if (dt > 8) {
+          sheetDrag.velocityY = (sheetDrag.lastY - event.clientY) / dt;
+          sheetDrag.lastY = event.clientY;
+          sheetDrag.lastTime = now;
+        }
         const dy = sheetDrag.startY - event.clientY; // drag up => taller
         if (Math.abs(dy) > 4) sheetDrag.moved = true;
         const h = Math.min(window.innerHeight * 0.94, Math.max(52, sheetDrag.startH + dy));
@@ -5212,17 +5571,34 @@
       const endSheetDrag = (event) => {
         if (!sheetDrag) return;
         panelMain.classList.remove('is-dragging');
-        panelSummary.releasePointerCapture?.(event.pointerId);
+        try { panelMain.releasePointerCapture?.(event.pointerId); } catch {}
         const wasDrag = sheetDrag.moved;
         const frac = panelMain.getBoundingClientRect().height / window.innerHeight;
+        const vy = sheetDrag.velocityY;
+        const startState = sheetDrag.startState;
         panelMain.style.height = '';
         sheetDrag = null;
         if (!wasDrag) return; // a tap — handled by the click listener
         suppressSummaryClick = true;
-        setSheetState(frac > 0.75 ? 'full' : frac > 0.2 ? 'half' : 'peek');
+
+        let target = 'peek';
+        if (vy > 0.4) {
+          target = startState === 'half' || frac > 0.65 ? 'full' : 'half';
+        } else if (vy < -0.4) {
+          target = startState === 'full' && frac > 0.35 ? 'half' : 'peek';
+        } else {
+          if (startState === 'peek') {
+            target = frac > 0.72 ? 'full' : frac > 0.18 ? 'half' : 'peek';
+          } else if (startState === 'half') {
+            target = frac > 0.72 ? 'full' : frac < 0.35 ? 'peek' : 'half';
+          } else {
+            target = frac < 0.35 ? 'peek' : frac < 0.75 ? 'half' : 'full';
+          }
+        }
+        setSheetState(target);
       };
-      panelSummary?.addEventListener('pointerup', endSheetDrag);
-      panelSummary?.addEventListener('pointercancel', endSheetDrag);
+      panelMain?.addEventListener('pointerup', endSheetDrag);
+      panelMain?.addEventListener('pointercancel', endSheetDrag);
 
       // Keep <details> open on mobile (sheet height is driven by data-sheet, not [open]);
       // a stray native toggle (keyboard, etc.) just collapses the sheet to peek.
@@ -5230,18 +5606,181 @@
         if (sheetEnabled() && !panelMain.open) {
           panelMain.open = true;
           setSheetState('peek');
+        } else if (!sheetEnabled()) {
+          syncMapViewport(true);
         }
         notifyMapResize();
       });
 
-      sheetScrim?.addEventListener('click', () => setSheetState('peek'));
+      sheetScrim?.addEventListener('click', () => {
+        if (document.body.dataset.regionDetail) {
+          setSheetState('half');
+        } else {
+          setSheetState('peek');
+        }
+      });
       document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape' || !sheetEnabled()) return;
-        if (sheetState() !== 'peek' || document.body.dataset.regionDetail) setSheetState('peek');
+        if (event.key !== 'Escape') return;
+        if (typeof closeMethodologyModal === 'function' && methodologyDialog?.open) {
+          closeMethodologyModal();
+          return;
+        }
+        if (sheetEnabled()) {
+          if (sheetState() === 'full') setSheetState('half');
+          else if (sheetState() === 'half') setSheetState('peek');
+          else if (document.body.dataset.regionDetail) clearRegionSelection();
+        } else if (document.body.dataset.regionDetail) {
+          clearRegionSelection();
+        }
       });
 
       panelMobileMq.addEventListener('change', applyPanelViewportMode);
       applyPanelViewportMode();
+
+      panelMain.addEventListener('dblclick', (event) => {
+        event.preventDefault();
+      });
+
+      // Prevent mobile browsers from zooming the page / UI overlays on pinch,
+      // and redirect any pinch touching the sheet / context menu into zooming the map.
+      for (const eventName of ['gesturestart', 'gesturechange', 'gestureend']) {
+        window.addEventListener(
+          eventName,
+          (event) => {
+            event.preventDefault();
+          },
+          { passive: false },
+        );
+      }
+
+      let pinchEndTime = 0;
+
+      function isTouchOnMapCanvas(touch) {
+        try {
+          return touch.target === map.getCanvas();
+        } catch {
+          return false;
+        }
+      }
+
+      function getPinchMetrics(event) {
+        if (!event.touches || event.touches.length < 2) return null;
+        const t1 = event.touches[0];
+        const t2 = event.touches[1];
+        const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+        const midX = (t1.clientX + t2.clientX) / 2;
+        const midY = (t1.clientY + t2.clientY) / 2;
+        return { dist, midX, midY };
+      }
+
+      function startUiPinch(event) {
+        const metrics = getPinchMetrics(event);
+        if (!metrics || metrics.dist < 5) return;
+
+        if (sheetDrag) {
+          panelMain?.classList.remove('is-dragging');
+          if (sheetDrag.pointerId != null) {
+            try {
+              panelSummary?.releasePointerCapture?.(sheetDrag.pointerId);
+            } catch {}
+          }
+          if (panelMain) panelMain.style.height = '';
+          sheetDrag = null;
+        }
+
+        let anchorLocation = null;
+        try {
+          anchorLocation = map.unproject([metrics.midX, metrics.midY]);
+        } catch {
+          anchorLocation = map.getCenter();
+        }
+
+        uiPinch = {
+          startDist: metrics.dist,
+          startZoom: map.getZoom(),
+          anchorLocation,
+        };
+      }
+
+      function applyUiPinch(event) {
+        const metrics = getPinchMetrics(event);
+        if (!metrics || metrics.dist < 5) return;
+
+        if (!uiPinch) {
+          startUiPinch(event);
+          return;
+        }
+        if (uiPinch.startDist < 5) return;
+
+        const scale = metrics.dist / uiPinch.startDist;
+        const deltaZoom = Math.log2(scale);
+        const minZoom = typeof map.getMinZoom === 'function' ? map.getMinZoom() : 0;
+        const maxZoom = typeof map.getMaxZoom === 'function' ? map.getMaxZoom() : 22;
+        const targetZoom = Math.max(minZoom, Math.min(maxZoom, uiPinch.startZoom + deltaZoom));
+
+        if (typeof map.calculateAnchoredCameraOptions === 'function' && uiPinch.anchorLocation) {
+          try {
+            const camOpts = map.calculateAnchoredCameraOptions({
+              anchorLocation: uiPinch.anchorLocation,
+              anchorScreenPoint: [metrics.midX, metrics.midY],
+              zoom: targetZoom,
+            });
+            map.jumpTo(camOpts);
+          } catch {
+            map.setZoom(targetZoom);
+          }
+        } else {
+          map.setZoom(targetZoom);
+        }
+      }
+
+      window.addEventListener(
+        'touchstart',
+        (event) => {
+          if (event.touches.length >= 2) {
+            const allOnCanvas = Array.from(event.touches).every(isTouchOnMapCanvas);
+            if (allOnCanvas) {
+              uiPinch = null;
+              return;
+            }
+            event.preventDefault();
+            startUiPinch(event);
+          }
+        },
+        { capture: true, passive: false },
+      );
+
+      window.addEventListener(
+        'touchmove',
+        (event) => {
+          if (event.touches.length >= 2) {
+            const allOnCanvas = Array.from(event.touches).every(isTouchOnMapCanvas);
+            if (allOnCanvas && !uiPinch) {
+              return;
+            }
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            applyUiPinch(event);
+          } else if (Date.now() - pinchEndTime < 100) {
+            event.preventDefault();
+          }
+        },
+        { capture: true, passive: false },
+      );
+
+      const endUiPinch = (event) => {
+        if (event.touches.length < 2 && uiPinch) {
+          uiPinch = null;
+          pinchEndTime = Date.now();
+          suppressSummaryClick = true;
+          setTimeout(() => {
+            suppressSummaryClick = false;
+          }, 300);
+        }
+      };
+
+      window.addEventListener('touchend', endUiPinch, { capture: true });
+      window.addEventListener('touchcancel', endUiPinch, { capture: true });
     }
 
     function urlParams() {
@@ -6027,6 +6566,8 @@
     function updateLegendBar(scaleId) {
       const scale = colorScaleById(scaleId);
       legendBar.style.background = scale.legendGradient;
+      const cmlBar = document.getElementById('cml-bar');
+      if (cmlBar) cmlBar.style.background = scale.legendGradient;
     }
 
     function updateColorScaleHint() {
@@ -6112,10 +6653,12 @@
             tooltip.textContent = f.properties.label;
             tooltip.style.left = e.point.x + 12 + 'px';
             tooltip.style.top = e.point.y + 12 + 'px';
+            if (f.properties?.id) setHoveredRegionId(f.properties.id);
           });
           map.on('mouseleave', 'regions-fill', () => {
             map.getCanvas().style.cursor = '';
             tooltip.style.display = 'none';
+            setHoveredRegionId(null);
           });
         } else {
           map.on('mouseenter', 'regions-fill', () => {
@@ -6167,6 +6710,10 @@
       updateRanking(filtered, min, max);
       updateViewMetaText(filtered, range);
       updatePanelSummaryPreview();
+      const exitNeighborBtn = document.getElementById('exit-neighbor-view');
+      if (exitNeighborBtn) {
+        exitNeighborBtn.hidden = !isNeighborView();
+      }
       scheduleUrlSync();
       refreshSelectedRegionIfNeeded();
       const geojson = { type: 'FeatureCollection', features: filtered };
@@ -6246,7 +6793,18 @@
     function hideRegionSearchResults() {
       if (!regionSearchResults) return;
       regionSearchResults.hidden = true;
+      regionSearchResults.style.maxHeight = '';
       regionSearchResults.replaceChildren();
+    }
+    function updateSearchResultsPosition() {
+      if (!regionSearchResults || regionSearchResults.hidden || !regionSearchInput) return;
+      if (window.visualViewport) {
+        const rect = regionSearchInput.getBoundingClientRect();
+        const availableHeight = window.visualViewport.height - rect.bottom - 12;
+        if (availableHeight > 60) {
+          regionSearchResults.style.maxHeight = Math.min(220, Math.floor(availableHeight)) + 'px';
+        }
+      }
     }
     function jumpToRegionBySearch(id) {
       if (!regionIndex) return;
@@ -6280,6 +6838,7 @@
         none.textContent = 'Keine Treffer – Gemeinde, Landkreis oder Bundesland eingeben.';
         regionSearchResults.appendChild(none);
         regionSearchResults.hidden = false;
+        updateSearchResultsPosition();
         return;
       }
       for (const m of matches) {
@@ -6298,6 +6857,7 @@
         const pick = () => {
           hideRegionSearchResults();
           regionSearchInput.value = '';
+          regionSearchInput.blur();
           jumpToRegionBySearch(m.id);
         };
         li.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus, avoid blur-hide racing the click
@@ -6308,6 +6868,7 @@
         regionSearchResults.appendChild(li);
       }
       regionSearchResults.hidden = false;
+      updateSearchResultsPosition();
     }
     // "Where am I": the position is matched against the geometries already in the page, so it
     // never leaves the device. Only offered where the browser has a geolocation API at all.
@@ -6351,11 +6912,15 @@
       if (!regionSearchInput) return;
       // Focus inside the tap itself, otherwise iOS won't raise the keyboard.
       regionSearchInput.focus({ preventScroll: true });
-      regionSearchInput.scrollIntoView({ block: 'start' });
+      regionSearchInput.select?.();
+      regionSearchInput.scrollIntoView({ block: 'start', behavior: 'smooth' });
     });
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {
         renderRegionSearchResults(regionSearchInput.value.trim());
+      });
+      regionSearchInput.addEventListener('search', () => {
+        if (!regionSearchInput.value) hideRegionSearchResults();
       });
       regionSearchInput.addEventListener('blur', () => {
         setTimeout(hideRegionSearchResults, 150);
@@ -6369,6 +6934,79 @@
         }
       });
     }
+    window.visualViewport?.addEventListener('resize', updateSearchResultsPosition);
+    window.visualViewport?.addEventListener('scroll', updateSearchResultsPosition);
+
+    document.getElementById('exit-neighbor-view')?.addEventListener('click', () => {
+      exitNeighborView();
+      scheduleUrlSync('push');
+      updateScaleCapDefaultForView();
+      void applyCurrentView();
+    });
+
+    const methodologyDialog = document.getElementById('methodology-dialog');
+    const methodologyBody = document.getElementById('methodology-dialog-body');
+    const methodologyClose = document.getElementById('methodology-close');
+    let methodologyLoaded = false;
+
+    async function openMethodologyModal() {
+      if (!methodologyDialog) return;
+      if (typeof methodologyDialog.showModal === 'function') {
+        methodologyDialog.showModal();
+      } else {
+        methodologyDialog.hidden = false;
+      }
+      if (!methodologyLoaded) {
+        try {
+          const resp = await fetch('./methodik.html');
+          if (resp.ok) {
+            const text = await resp.text();
+            const doc = new DOMParser().parseFromString(text, 'text/html');
+            const main = doc.querySelector('main');
+            if (main) {
+              main.querySelector('.back')?.remove();
+              methodologyBody?.replaceChildren(main);
+              methodologyLoaded = true;
+              return;
+            }
+          }
+        } catch {
+          // fallback to iframe on fetch error
+        }
+        if (methodologyBody) {
+          const iframe = document.createElement('iframe');
+          iframe.src = './methodik.html';
+          iframe.title = 'Methodik & Datenquellen';
+          iframe.style.width = '100%';
+          iframe.style.height = '70vh';
+          iframe.style.border = 'none';
+          methodologyBody.replaceChildren(iframe);
+          methodologyLoaded = true;
+        }
+      }
+    }
+
+    function closeMethodologyModal() {
+      if (!methodologyDialog) return;
+      if (typeof methodologyDialog.close === 'function') {
+        methodologyDialog.close();
+      } else {
+        methodologyDialog.hidden = true;
+      }
+    }
+
+    methodologyClose?.addEventListener('click', closeMethodologyModal);
+    methodologyDialog?.addEventListener('click', (e) => {
+      if (e.target === methodologyDialog) closeMethodologyModal();
+    });
+
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href$="methodik.html"]');
+      if (link) {
+        e.preventDefault();
+        openMethodologyModal();
+      }
+    });
     const panelOptions = document.getElementById('panel-options');
     if (panelOptions) {
       panelOptions.addEventListener('change', () => scheduleUrlSync());
