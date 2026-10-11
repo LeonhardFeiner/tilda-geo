@@ -111,4 +111,55 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('openMethodologyModal')
     expect(html).toContain('a[href$="methodik.html"]')
   })
+
+  test('parses exact map position, bearing, and pitch from URL hash and parameters', () => {
+    expect(html).toContain('function parseMapString(')
+    expect(html).toContain('function getMapPositionFromUrl()')
+    expect(html).toContain("clean.startsWith('map=')")
+    expect(html).toContain('parts.length >= 3')
+  })
+
+  test('initializes map with explicit camera position when present in URL', () => {
+    expect(html).toContain('const initialMapPos = getMapPositionFromUrl();')
+    expect(html).toContain('center: initialMapPos ? initialMapPos.center : [11.5, 48.9],')
+    expect(html).toContain('zoom: initialMapPos ? initialMapPos.zoom : 7,')
+    expect(html).toContain('bearing: initialMapPos ? initialMapPos.bearing : 0,')
+    expect(html).toContain('pitch: initialMapPos ? initialMapPos.pitch : 0,')
+  })
+
+  test('listens to map moveend event to schedule URL state synchronization', () => {
+    expect(html).toContain("map.on('moveend', () => {")
+    expect(html).toContain('scheduleUrlSync();')
+  })
+
+  test('formats current map position with bearing and pitch into URL hash', () => {
+    expect(html).toContain('function currentMapHash()')
+    expect(html).toContain("return '#map=' + z + '/' + lat + '/' + lng + '/' + b + '/' + p;")
+    expect(html).toContain("return '#map=' + z + '/' + lat + '/' + lng;")
+    expect(html).toContain('buildShareUrl()')
+    expect(html).toContain('+ currentMapHash()')
+  })
+
+  test('preserves explicit camera coordinates from being overwritten on boot', () => {
+    expect(html).toContain('if (explicitMapPositionPending) {')
+    expect(html).toContain('!explicitMapPositionPending')
+    expect(html).toContain('explicitMapPositionPending = false;')
+  })
+
+  test('listens to hashchange and popstate to smoothly ease map to target position', () => {
+    expect(html).toContain("window.addEventListener('hashchange',")
+    expect(html).toContain('function isMapAtPosition(')
+    expect(html).toContain('map.easeTo({')
+  })
+
+  test('region detail actions provide an in-place Ansicht teilen button with instant feedback', () => {
+    expect(html).toContain("shareButton.textContent = 'Ansicht teilen'")
+    expect(html).toContain("shareButton.textContent = '✓ Link kopiert!'")
+  })
+
+  test('basemap switching preserves user camera bearing and pitch', () => {
+    expect(html).toContain('const bearing = map.getBearing();')
+    expect(html).toContain('const pitch = map.getPitch();')
+    expect(html).toContain('map.jumpTo({ center, zoom, bearing, pitch });')
+  })
 })

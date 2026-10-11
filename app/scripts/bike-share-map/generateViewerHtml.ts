@@ -4029,6 +4029,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       printButton.title = 'Eine A4-Seite zu diesem Gebiet, z. B. für die Gemeinderatssitzung';
       printButton.addEventListener('click', () => void printRegionSheet(feature));
       links.appendChild(printButton);
+      const shareButton = document.createElement('button');
+      shareButton.type = 'button';
+      shareButton.className = 'region-detail-drill';
+      shareButton.textContent = 'Ansicht teilen';
+      shareButton.title = 'Link zu diesem Gebiet und der aktuellen Kartenausrichtung kopieren';
+      shareButton.addEventListener('click', async () => {
+        await copyShareLink();
+        const prev = shareButton.textContent;
+        shareButton.textContent = '✓ Link kopiert!';
+        setTimeout(() => {
+          shareButton.textContent = prev;
+        }, 2200);
+      });
+      links.appendChild(shareButton);
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
         if (edit) links.appendChild(edit);
@@ -4242,7 +4256,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const regionId = urlParams().get('region');
       if (!regionId) return;
       const feature = lastRankingFeatures.find((f) => f.properties?.id === regionId);
-      if (feature) selectRegionById(regionId, null, true);
+      if (feature) selectRegionById(regionId, null, !explicitMapPositionPending);
     }
 
     function bindRegionMapInteraction() {
@@ -4338,11 +4352,108 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       syncRankingRowHighlights();
     }
 
+    function urlParams() {
+      return new URLSearchParams(location.search);
+    }
+
+    function parseMapString(str) {
+      if (!str) return null;
+      let clean = str.trim();
+      if (clean.startsWith('#')) clean = clean.slice(1).trim();
+      if (clean.startsWith('map=')) clean = clean.slice(4).trim();
+      const parts = clean.split(/[/,]/).map((s) => parseFloat(s.trim()));
+      if (parts.length >= 3 && parts.slice(0, 3).every((n) => Number.isFinite(n))) {
+        const [zoom, lat, lng, rawBearing = 0, rawPitch = 0] = parts;
+        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
+        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
+        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && zoom >= 0 && zoom <= 24) {
+          return { zoom, center: [lng, lat], bearing, pitch };
+        }
+      }
+      return null;
+    }
+
+    function getMapPositionFromUrl() {
+      if (location.hash) {
+        const fromHash = parseMapString(location.hash);
+        if (fromHash) return fromHash;
+      }
+      const params = urlParams();
+      const qMap = params.get('map');
+      if (qMap) {
+        const fromQMap = parseMapString(qMap);
+        if (fromQMap) return fromQMap;
+      }
+      const latStr = params.get('lat');
+      const lngStr = params.get('lng') || params.get('lon');
+      const zoomStr = params.get('zoom') || params.get('z');
+      if (latStr && lngStr) {
+        const lat = parseFloat(latStr);
+        const lng = parseFloat(lngStr);
+        const zoom = zoomStr ? parseFloat(zoomStr) : 10;
+        const rawBearing = parseFloat(params.get('bearing') || '0');
+        const rawPitch = parseFloat(params.get('pitch') || '0');
+        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
+        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
+        if (
+          Number.isFinite(lat) &&
+          Number.isFinite(lng) &&
+          Number.isFinite(zoom) &&
+          lat >= -90 &&
+          lat <= 90 &&
+          lng >= -180 &&
+          lng <= 180 &&
+          zoom >= 0 &&
+          zoom <= 24
+        ) {
+          return { zoom, center: [lng, lat], bearing, pitch };
+        }
+      }
+      return null;
+    }
+
+    function isMapAtPosition(pos) {
+      if (!map || !pos) return false;
+      const c = map.getCenter();
+      const z = map.getZoom();
+      const b = map.getBearing();
+      const p = map.getPitch();
+      const dLng = Math.abs(c.lng - pos.center[0]);
+      const dLat = Math.abs(c.lat - pos.center[1]);
+      const dZoom = Math.abs(z - pos.zoom);
+      const dBearing = Math.abs(b - pos.bearing);
+      const dPitch = Math.abs(p - pos.pitch);
+      return dLng < 0.0001 && dLat < 0.0001 && dZoom < 0.05 && dBearing < 1 && dPitch < 1;
+    }
+
+    function currentMapHash() {
+      if (!map) return '';
+      const center = map.getCenter();
+      const zoom = map.getZoom();
+      const bearing = map.getBearing();
+      const pitch = map.getPitch();
+      if (!center || !Number.isFinite(zoom)) return '';
+      const z = Math.round(zoom * 100) / 100;
+      const lat = Math.round(center.lat * 100000) / 100000;
+      const lng = Math.round(center.lng * 100000) / 100000;
+      const b = Math.round(bearing * 10) / 10;
+      const p = Math.round(pitch * 10) / 10;
+      if (Math.abs(b) > 0.5 || p > 0.5) {
+        return '#map=' + z + '/' + lat + '/' + lng + '/' + b + '/' + p;
+      }
+      return '#map=' + z + '/' + lat + '/' + lng;
+    }
+
+    const initialMapPos = getMapPositionFromUrl();
+    let explicitMapPositionPending = Boolean(initialMapPos);
+
     const map = new maplibregl.Map({
       container: 'map',
       style: CONFIG.basemapStyles[CONFIG.basemap],
-      center: [11.5, 48.9],
-      zoom: 7,
+      center: initialMapPos ? initialMapPos.center : [11.5, 48.9],
+      zoom: initialMapPos ? initialMapPos.zoom : 7,
+      bearing: initialMapPos ? initialMapPos.bearing : 0,
+      pitch: initialMapPos ? initialMapPos.pitch : 0,
       preserveDrawingBuffer: true,
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
@@ -4350,6 +4461,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }),
       'bottom-right',
     );
+    map.on('moveend', () => {
+      scheduleUrlSync();
+    });
 
     function updatePanelSummaryPreview() {
       if (!panelSummaryPreview) return;
@@ -5213,10 +5327,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       window.addEventListener('touchcancel', endUiPinch, { capture: true });
     }
 
-    function urlParams() {
-      return new URLSearchParams(location.search);
-    }
-
     function parseBoolParam(value, defaultValue) {
       if (value == null || value === '') return defaultValue;
       const v = value.toLowerCase();
@@ -5353,7 +5463,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       appendViewerOptionsToUrl(params);
       if (selectedFeatureId) params.set('region', selectedFeatureId);
       const qs = params.toString();
-      return location.origin + location.pathname + (qs ? '?' + qs : '');
+      return location.origin + location.pathname + (qs ? '?' + qs : '') + currentMapHash();
     }
 
     /**
@@ -5374,7 +5484,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       appendViewerOptionsToUrl(params);
       if (selectedFeatureId) params.set('region', selectedFeatureId);
       const qs = params.toString();
-      return location.pathname + (qs ? '?' + qs : '');
+      return location.pathname + (qs ? '?' + qs : '') + currentMapHash();
     }
 
     // The address bar mirrors the view, the selected region and the display options, so reload,
@@ -5407,7 +5517,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         urlSyncPushPending = false;
         if (!urlSyncEnabled || applyingUrlState || !regionIndex) return;
         const next = currentStateUrl();
-        if (next === location.pathname + location.search) return;
+        if (next === location.pathname + location.search + location.hash) return;
         if (urlSyncBaseline !== null && next === urlSyncBaseline) return;
         urlSyncBaseline = null;
         if (push) history.pushState(null, '', next);
@@ -5426,13 +5536,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       try {
         applyUiModeClass();
         applyUrlOptions({ live: true });
+        const mapPos = getMapPositionFromUrl();
         await applyCurrentView();
         const wantedRegion = urlParams().get('region') || null;
         if (wantedRegion !== (selectedFeatureId || null)) {
           if (selectedFeatureId) clearRegionSelection();
           if (wantedRegion && lastRankingFeatures.some((f) => f.properties?.id === wantedRegion)) {
-            selectRegionById(wantedRegion, null, true);
+            selectRegionById(wantedRegion, null, !mapPos);
           }
+        }
+        if (mapPos && !isMapAtPosition(mapPos)) {
+          map.easeTo({
+            center: mapPos.center,
+            zoom: mapPos.zoom,
+            bearing: mapPos.bearing,
+            pitch: mapPos.pitch,
+            duration: 350,
+          });
         }
       } finally {
         applyingUrlState = false;
@@ -5441,6 +5561,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     window.addEventListener('popstate', () => {
       void applyStateFromUrl();
+    });
+
+    window.addEventListener('hashchange', () => {
+      if (applyingUrlState || !map) return;
+      const mapPos = getMapPositionFromUrl();
+      if (mapPos && !isMapAtPosition(mapPos)) {
+        map.easeTo({
+          center: mapPos.center,
+          zoom: mapPos.zoom,
+          bearing: mapPos.bearing,
+          pitch: mapPos.pitch,
+          duration: 350,
+        });
+      }
     });
 
     let copyViewLinkFeedbackTimer = null;
@@ -6155,7 +6289,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         // re-applies the view once its neighbor index finishes loading, a basemap swap
         // re-adds the layers, …). Re-fit to that region instead of the whole scope, or the
         // refit silently undoes the focus that was just put on it.
-        if (document.body.dataset.regionDetail) {
+        if (explicitMapPositionPending) {
+          // Explicit map coordinates were supplied via URL hash/params on initial load; do not override
+        } else if (applyingUrlState && getMapPositionFromUrl()) {
+          // Handled by applyStateFromUrl easing to explicit camera coordinates
+        } else if (document.body.dataset.regionDetail) {
           syncMapViewport(false);
         } else {
           fitMapToCurrentView();
@@ -6188,9 +6326,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       scheduleUrlSync();
       const center = map.getCenter();
       const zoom = map.getZoom();
+      const bearing = map.getBearing();
+      const pitch = map.getPitch();
       map.setStyle(CONFIG.basemapStyles[id]);
       map.once('idle', () => {
-        map.jumpTo({ center, zoom });
+        map.jumpTo({ center, zoom, bearing, pitch });
         overlaysBound = false;
         void applyCurrentView();
       });
@@ -6700,6 +6840,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         applyUrlOptions();
         await applyCurrentView();
         applySelectedRegionFromUrl();
+        explicitMapPositionPending = false;
         urlSyncEnabled = true;
         urlSyncBaseline = currentStateUrl();
       } catch (e) {
