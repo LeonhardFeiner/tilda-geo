@@ -11,6 +11,7 @@ import {
   TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
   PROJECT_LEAD,
   VIEWER_SOURCE_REPO_URL,
+  SHARE_PAGE_BASE_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
 } from './constants'
@@ -92,6 +93,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#1e293b" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚲</text></svg>" />
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
        browser only discovers it once the inline controller script runs, after every script tag
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
@@ -99,6 +102,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
   <link rel="preload" href="./stats-core.msgpack" as="fetch" crossorigin="anonymous" />
   <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="canonical" href="${SHARE_PAGE_BASE_URL}" />
   <title>Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?</title>
   <meta
     name="description"
@@ -106,21 +110,27 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Radinfra-Vergleich" />
+  <meta property="og:url" content="${SHARE_PAGE_BASE_URL}" />
   <meta property="og:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     property="og:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
-  <meta name="twitter:card" content="summary" />
+  <meta property="og:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     name="twitter:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
+  <meta name="twitter:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
+    #app-root { display: block; width: 100%; height: 100%; position: relative; }
     #map { position: absolute; inset: 0; }
     .panel {
       position: absolute; z-index: 2; top: 12px; left: 12px;
@@ -600,7 +610,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: flex; align-items: flex-start; gap: 8px;
       margin-bottom: 8px; padding-right: 24px;
     }
-    .region-detail-header h3 {
+    .region-detail-header h2 {
       margin: 0; font-size: 14px; line-height: 1.3; color: #111;
     }
     .region-detail-close {
@@ -942,7 +952,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       border-bottom: 1px solid #e2e4e0;
       background: #f8faf8;
     }
-    .methodology-dialog-header h3 {
+    .methodology-dialog-header h2 {
       margin: 0;
       font-size: 16px;
       font-weight: 700;
@@ -1039,8 +1049,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   </style>
 </head>
 <body>
-  <div id="map"></div>
-  <div id="sheet-scrim" aria-hidden="true"></div>
+  <main id="app-root">
+    <div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur"></div>
+    <div id="sheet-scrim" aria-hidden="true"></div>
   <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
   </button>
@@ -1111,7 +1122,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <details class="panel-section settings-drawer" id="settings-drawer">
       <summary>Einstellungen</summary>
       <div class="settings-group" id="count-classes-details">
-        <h3 class="settings-heading">Was zählt als Radinfrastruktur?</h3>
+        <h2 class="settings-heading">Was zählt als Radinfrastruktur?</h2>
         <p class="counting-state">
           <span id="counting-state-label">Radinfra.de-Standard</span>
           <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
@@ -1127,7 +1138,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         </details>
       </div>
       <div class="settings-group" id="color-options-details">
-        <h3 class="settings-heading">Karte</h3>
+        <h2 class="settings-heading">Karte</h2>
         <label for="basemap-select">Hintergrundkarte</label>
         <select id="basemap-select"></select>
         <p class="hint" id="basemap-hint"></p>
@@ -1300,7 +1311,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <div id="region-detail" class="region-detail" hidden>
     <button type="button" class="region-detail-close" id="region-detail-close" aria-label="Schließen">×</button>
     <div class="region-detail-header">
-      <h3 id="region-detail-title"></h3>
+      <h2 id="region-detail-title"></h2>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <div id="region-detail-actions"></div>
@@ -1314,9 +1325,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <div id="region-detail-body"></div>
     </details>
   </div>
-  <dialog id="methodology-dialog" class="methodology-dialog">
+  </main>
+  <dialog id="methodology-dialog" class="methodology-dialog" aria-labelledby="methodology-title">
     <div class="methodology-dialog-header">
-      <h3>Methodik &amp; Datenquellen</h3>
+      <h2 id="methodology-title">Methodik &amp; Datenquellen</h2>
       <div class="methodology-dialog-actions">
         <a href="./methodik.html" target="_blank" rel="noopener noreferrer" class="methodology-external-link" title="In neuem Tab öffnen">In neuem Tab ↗</a>
         <button type="button" class="methodology-close" id="methodology-close" aria-label="Schließen">×</button>

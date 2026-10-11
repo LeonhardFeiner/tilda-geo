@@ -184,4 +184,29 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('function shareRegionScorecard(')
     expect(html).toContain('shareScorecardImageBtn?.addEventListener')
   })
+
+  test('includes social sharing cards, favicon, theme-color, and canonical URL in head', () => {
+    expect(html).toContain('<meta name="theme-color" content="#1e293b" />')
+    expect(html).toContain('<link rel="icon"')
+    expect(html).toContain('<link rel="canonical"')
+    expect(html).toContain('<meta property="og:image"')
+    expect(html).toContain('<meta property="og:image:width" content="1200" />')
+    expect(html).toContain('<meta property="og:image:height" content="630" />')
+    expect(html).toContain('<meta name="twitter:card" content="summary_large_image" />')
+    expect(html).toContain('<meta name="twitter:image"')
+  })
+
+  test('wraps primary app layout in semantic main element and establishes valid WCAG heading hierarchy', () => {
+    expect(html).toContain('<main id="app-root">')
+    expect(html).toContain('</main>')
+    expect(html).toContain(
+      '<div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur">',
+    )
+    expect(html).toContain('<h2 class="settings-heading">Was zählt als Radinfrastruktur?</h2>')
+    expect(html).toContain('<h2 class="settings-heading">Karte</h2>')
+    expect(html).toContain('<h2 id="region-detail-title"></h2>')
+    expect(html).toContain('<h2 id="methodology-title">Methodik &amp; Datenquellen</h2>')
+    expect(html).toContain('aria-labelledby="methodology-title"')
+    expect(html).not.toContain('<h3')
+  })
 })
