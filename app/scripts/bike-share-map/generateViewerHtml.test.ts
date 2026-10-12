@@ -1,3 +1,4 @@
+import { Script } from 'node:vm'
 import { describe, expect, test } from 'vitest'
 import { generateViewerHtml } from './generateViewerHtml'
 
@@ -258,5 +259,22 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('Ansicht teilen')
     expect(html).toContain('✓ Geteilt!')
     expect(html).toContain('✓ Link kopiert!')
+  })
+})
+
+describe('generateViewerHtml inline script', () => {
+  // The page script is a TS template literal: a JS '\n' written as '\n' (not '\\n') becomes a
+  // real line break inside a string literal, the whole script fails to parse and the site is
+  // blank. Happened twice; parse every inline script so it can't ship again.
+  test('every inline <script> parses', () => {
+    const html = generateViewerHtml('2026-10-11T00:00:00.000Z', '11.10.2026')
+    const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)]
+      .map((m) => m[1] ?? '')
+      .filter((code) => code.trim())
+    expect(scripts.length).toBeGreaterThan(0)
+    for (const code of scripts) {
+      // Compiles only; nothing runs.
+      expect(() => new Script(code)).not.toThrow()
+    }
   })
 })

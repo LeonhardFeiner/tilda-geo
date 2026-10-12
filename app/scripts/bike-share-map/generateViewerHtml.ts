@@ -4249,7 +4249,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const shareText =
           (p.name || 'Gebiet') +
           (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
-          '\n' +
+          '\\n' +
           url;
 
         if (typeof navigator.share === 'function') {
