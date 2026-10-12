@@ -1026,6 +1026,130 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         padding: 16px;
       }
     }
+    dialog.scorecard-dialog {
+      border: none;
+      border-radius: 16px;
+      padding: 0;
+      width: min(720px, calc(100vw - 24px));
+      max-height: calc(100vh - 40px);
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
+      background: #0f172a;
+      color: #f8fafc;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    dialog.scorecard-dialog:not([open]) {
+      display: none;
+    }
+    dialog.scorecard-dialog::backdrop {
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+    }
+    .scorecard-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      background: #0b1120;
+    }
+    .scorecard-dialog-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .scorecard-close {
+      position: relative;
+      border: none;
+      background: none;
+      font-size: 24px;
+      line-height: 1;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px 8px;
+      min-width: 36px;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 6px;
+    }
+    .scorecard-close:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+    }
+    .scorecard-dialog-body {
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+    .scorecard-img {
+      width: 100%;
+      height: auto;
+      max-width: 660px;
+      border-radius: 12px;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+      display: block;
+    }
+    .scorecard-dialog-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+    }
+    .scorecard-action-btn {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.08);
+      color: #f8fafc;
+      transition: background 0.15s;
+    }
+    .scorecard-action-btn:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+    .scorecard-action-btn--primary {
+      background: #0284c7;
+      border-color: #38bdf8;
+      color: #fff;
+    }
+    .scorecard-action-btn--primary:hover {
+      background: #0369a1;
+    }
+    .scorecard-tip {
+      margin: 0;
+      font-size: 12px;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.4;
+    }
+    @media (max-width: 768px) {
+      dialog.scorecard-dialog {
+        width: 100vw;
+        max-height: 92vh;
+        border-radius: 16px 16px 0 0;
+        margin-top: auto;
+        margin-bottom: 0;
+      }
+      .scorecard-dialog-body {
+        padding: 12px;
+      }
+      .scorecard-action-btn {
+        flex: 1;
+        min-height: 44px;
+        text-align: center;
+      }
+    }
     .print-sheet { display: none; }
     @media print {
       @page { size: A4; margin: 15mm; }
@@ -1369,6 +1493,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <p>Lade Methodik …</p>
     </div>
   </dialog>
+  <dialog id="scorecard-dialog" class="scorecard-dialog" aria-labelledby="scorecard-dialog-title">
+    <div class="scorecard-dialog-header">
+      <h2 id="scorecard-dialog-title">Scorecard</h2>
+      <button type="button" class="scorecard-close" id="scorecard-close" aria-label="Schließen">×</button>
+    </div>
+    <div class="scorecard-dialog-body" id="scorecard-dialog-body">
+      <img id="scorecard-img" alt="Scorecard" class="scorecard-img" />
+      <div class="scorecard-dialog-actions">
+        <button type="button" id="scorecard-share-btn" class="scorecard-action-btn scorecard-action-btn--primary">Teilen</button>
+        <button type="button" id="scorecard-download-btn" class="scorecard-action-btn">Herunterladen</button>
+      </div>
+      <p class="scorecard-tip" id="scorecard-tip">Tipp: Bild lange gedrückt halten, um es direkt in Fotos zu speichern.</p>
+    </div>
+  </dialog>
   <script src="./statsClassSums.js"></script>
   <script src="./regionNavigation.js"></script>
   <script src="./statsMsgpack.js"></script>
@@ -1650,15 +1788,25 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function onLengthClassFilterChange() {
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       lengthClassFilter = readLengthClassFilterFromUi();
       clearOverlayLineHighlight();
       updateOverlayLayerFilters();
       if (rawLoaded) repaintRegionsFromCounting();
       syncCountingUi();
       applyOverlayLineColors();
+      if (panelMain) {
+        panelMain.scrollTop = prevScrollTop;
+        requestAnimationFrame(() => {
+          if (panelMain && panelMain.scrollTop !== prevScrollTop) {
+            panelMain.scrollTop = prevScrollTop;
+          }
+        });
+      }
     }
 
     function applyRadinfraDefaultCounting() {
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       lengthClassFilter = structuredClone(CONFIG.radinfraDefaultFilter);
       applyLengthClassFilterToUi(lengthClassFilter);
       clearOverlayLineHighlight();
@@ -1666,6 +1814,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (rawLoaded) repaintRegionsFromCounting();
       syncCountingUi();
       applyOverlayLineColors();
+      if (panelMain) {
+        panelMain.scrollTop = prevScrollTop;
+        requestAnimationFrame(() => {
+          if (panelMain && panelMain.scrollTop !== prevScrollTop) {
+            panelMain.scrollTop = prevScrollTop;
+          }
+        });
+      }
     }
 
     function listExcludedCountingClasses(filter) {
@@ -2266,12 +2422,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function setRankingMode(mode) {
       if (mode !== 'topflop' && mode !== 'all') return;
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       rankingMode = mode;
       scheduleUrlSync();
       syncRankingModeButtons();
       syncRankingScrollLayout();
       if (lastRankingSorted.length) {
         updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct);
+      }
+      if (panelMain) {
+        panelMain.scrollTop = prevScrollTop;
       }
     }
 
@@ -2375,7 +2535,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return finestVisibleIdsRelatingToUnit(selectedFeatureId, lastRankingFeatures);
     }
 
-    function syncRankingRowHighlights() {
+    function syncRankingRowHighlights(opts) {
       const list = document.getElementById('ranking-list');
       if (!list) return;
       const focusIds =
@@ -2391,10 +2551,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           focusIds.has(id) && id !== selectedFeatureId,
         );
       }
-      const selectedLi = selectedFeatureId
-        ? list.querySelector('li[data-ranking-id="' + selectedFeatureId + '"]')
-        : null;
-      if (selectedLi) selectedLi.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      if (opts && opts.scrollIntoView) {
+        const selectedLi = selectedFeatureId
+          ? list.querySelector('li[data-ranking-id="' + selectedFeatureId + '"]')
+          : null;
+        if (selectedLi) selectedLi.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
     }
 
     function highlightGeojsonForIds(ids, visibleFeatures) {
@@ -4080,8 +4242,34 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       shareButton.type = 'button';
       shareButton.className = 'region-detail-drill';
       shareButton.textContent = 'Ansicht teilen';
-      shareButton.title = 'Link zu diesem Gebiet und der aktuellen Kartenausrichtung kopieren';
+      shareButton.title = 'Link zu diesem Gebiet und der aktuellen Kartenausrichtung teilen oder kopieren';
       shareButton.addEventListener('click', async () => {
+        const url = buildShareUrl();
+        const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
+        const shareText =
+          (p.name || 'Gebiet') +
+          (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
+          '\n' +
+          url;
+
+        if (typeof navigator.share === 'function') {
+          try {
+            await navigator.share({
+              title: (p.name || 'Gebiet') + ' – Radinfra-Vergleich',
+              text: shareText,
+              url: url,
+            });
+            const prev = shareButton.textContent;
+            shareButton.textContent = '✓ Geteilt!';
+            setTimeout(() => {
+              shareButton.textContent = prev;
+            }, 2200);
+            showCopyViewLinkFeedback('Ansicht geteilt.');
+            return;
+          } catch (err) {
+            if (err?.name === 'AbortError') return;
+          }
+        }
         await copyShareLink();
         const prev = shareButton.textContent;
         shareButton.textContent = '✓ Link kopiert!';
@@ -4094,11 +4282,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       scorecardButton.type = 'button';
       scorecardButton.className = 'region-detail-drill';
       scorecardButton.textContent = 'Scorecard (Bild)';
-      scorecardButton.title = 'Scorecard als Infografik (PNG) speichern oder teilen';
-      scorecardButton.addEventListener('click', async () => {
-        scorecardButton.disabled = true;
-        await shareRegionScorecard(feature);
-        scorecardButton.disabled = false;
+      scorecardButton.title = 'Scorecard als Infografik (PNG) ansehen, speichern oder teilen';
+      scorecardButton.addEventListener('click', () => {
+        openScorecardModal(feature);
       });
       links.appendChild(scorecardButton);
       if (offerOsmEdit) {
@@ -4115,11 +4301,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const wasFull = sheetState() === 'full';
         // setSheetState() always re-syncs the map itself; when the sheet is already open
         // (switching between regions without a peek->half transition) nothing else would.
-        if (wasPeek || (wasFull && freshSelection)) setSheetState('half');
-        else syncMapViewport(true);
+        if (freshSelection && (wasPeek || wasFull)) setSheetState('half');
+        else if (freshSelection) syncMapViewport(true);
         // On a new selection show the card from its top (region name first), not wherever
         // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
-        if ((wasPeek || wasFull || freshSelection) && panelMain) panelMain.scrollTop = 0;
+        if (freshSelection && panelMain) panelMain.scrollTop = 0;
       } else if (freshSelection) {
         regionDetailEl.scrollIntoView?.({ block: 'nearest' });
       }
@@ -5304,7 +5490,31 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return canvas;
     }
 
-    async function shareRegionScorecard(feature) {
+    function dataUrlToFile(dataUrl, filename) {
+      const parts = dataUrl.split(',');
+      const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
+      const bstr = atob(parts[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      try {
+        return new File([u8arr], filename, { type: mime });
+      } catch {
+        return new Blob([u8arr], { type: mime });
+      }
+    }
+
+    const scorecardDialog = document.getElementById('scorecard-dialog');
+    const scorecardImg = document.getElementById('scorecard-img');
+    const scorecardClose = document.getElementById('scorecard-close');
+    const scorecardShareBtn = document.getElementById('scorecard-share-btn');
+    const scorecardDownloadBtn = document.getElementById('scorecard-download-btn');
+    const scorecardDialogTitle = document.getElementById('scorecard-dialog-title');
+    let currentScorecardData = null;
+
+    function openScorecardModal(feature) {
       const feat = feature || selectedFeatureOverride || currentSelectedFeature() || lastRankingFeatures[0];
       if (!feat) {
         showCopyViewLinkFeedback('Bitte zuerst ein Gebiet auswählen.', true);
@@ -5312,33 +5522,85 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       try {
         const canvas = drawRegionScorecardCanvas(feat);
+        const dataUrl = canvas.toDataURL('image/png');
+        const filename = scorecardFilename(feat);
         const p = feat.properties || {};
         const name = p.name || p.id || 'Gebiet';
-        const filename = scorecardFilename(feat);
+        currentScorecardData = { dataUrl, filename, feat, name, p };
 
-        // Check if Web Share API with files is available on mobile/supported browser
-        if (typeof navigator.share === 'function' && typeof navigator.canShare === 'function') {
-          const file = await canvasToPngFile(canvas, filename);
-          const shareData = {
-            files: [file],
-            title: name + ' – Radinfra-Scorecard',
-            text: name + ': ' + (p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '') +
-              ' der Straßen mit Radinfrastruktur. Mehr unter ' + buildShareUrl(),
-          };
-          if (navigator.canShare(shareData)) {
-            await navigator.share(shareData);
-            showCopyViewLinkFeedback('Scorecard geteilt.');
-            return;
-          }
+        if (scorecardImg) scorecardImg.src = dataUrl;
+        if (scorecardDialogTitle) scorecardDialogTitle.textContent = 'Scorecard: ' + name;
+        if (scorecardShareBtn) {
+          scorecardShareBtn.hidden = typeof navigator.share !== 'function';
         }
 
-        // Fallback: download PNG directly
-        triggerImageDownload(canvas.toDataURL('image/png'), filename);
-        showCopyViewLinkFeedback('Scorecard als Bild gespeichert.');
+        if (scorecardDialog) {
+          if (typeof scorecardDialog.showModal === 'function') {
+            scorecardDialog.showModal();
+          } else {
+            scorecardDialog.hidden = false;
+          }
+        }
       } catch (err) {
-        if (err?.name === 'AbortError') return;
+        console.error('Scorecard error:', err);
         showCopyViewLinkFeedback('Scorecard konnte nicht erstellt werden.', true);
       }
+    }
+
+    function closeScorecardModal() {
+      if (!scorecardDialog) return;
+      if (typeof scorecardDialog.close === 'function') {
+        scorecardDialog.close();
+      } else {
+        scorecardDialog.hidden = true;
+      }
+    }
+
+    scorecardClose?.addEventListener('click', closeScorecardModal);
+    scorecardDialog?.addEventListener('click', (e) => {
+      if (e.target === scorecardDialog) closeScorecardModal();
+    });
+
+    scorecardShareBtn?.addEventListener('click', async () => {
+      if (!currentScorecardData) return;
+      const { dataUrl, filename, name, p } = currentScorecardData;
+      const file = dataUrlToFile(dataUrl, filename);
+      const text =
+        name +
+        ': ' +
+        (p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '') +
+        ' der Straßen mit Radinfrastruktur. ' +
+        buildShareUrl();
+
+      if (typeof navigator.share === 'function') {
+        const attempts = [
+          { files: [file], title: name + ' – Radinfra-Scorecard', text },
+          { files: [file], text },
+          { files: [file] },
+        ];
+        for (const data of attempts) {
+          if (navigator.canShare && !navigator.canShare(data)) continue;
+          try {
+            await navigator.share(data);
+            showCopyViewLinkFeedback('Scorecard geteilt.');
+            return;
+          } catch (err) {
+            if (err?.name === 'AbortError') return;
+          }
+        }
+      }
+      triggerImageDownload(dataUrl, filename);
+      showCopyViewLinkFeedback('Scorecard als Bild gespeichert.');
+    });
+
+    scorecardDownloadBtn?.addEventListener('click', () => {
+      if (!currentScorecardData) return;
+      triggerImageDownload(currentScorecardData.dataUrl, currentScorecardData.filename);
+      showCopyViewLinkFeedback('Scorecard als Bild gespeichert.');
+    });
+
+    function shareRegionScorecard(feature) {
+      openScorecardModal(feature);
     }
 
     function notifyMapResize() {
@@ -5988,12 +6250,21 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function copyTextFallback(text) {
       const ta = document.createElement('textarea');
       ta.value = text;
-      ta.setAttribute('readonly', '');
       ta.style.position = 'fixed';
-      ta.style.left = '-9999px';
+      ta.style.left = '0';
+      ta.style.top = '0';
+      ta.style.opacity = '0';
+      ta.style.fontSize = '16px';
       document.body.appendChild(ta);
+      ta.focus();
       ta.select();
-      const ok = document.execCommand('copy');
+      ta.setSelectionRange(0, text.length);
+      let ok = false;
+      try {
+        ok = document.execCommand('copy');
+      } catch {
+        ok = false;
+      }
       document.body.removeChild(ta);
       return ok;
     }
@@ -6735,6 +7006,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     basemapSelect?.addEventListener('change', () => setBasemap(basemapSelect.value));
     colorScaleSelect?.addEventListener('change', () => {
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       updateLegendBar(colorScaleSelect.value);
       updateColorScaleHint();
       syncOverlayColorInputsFromScale(colorScaleSelect.value);
@@ -6742,6 +7014,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       updateRegionColors(lastPctRange.min, lastPctRange.max);
       if (lastRankingFeatures.length) {
         updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
+      }
+      if (panelMain) {
+        panelMain.scrollTop = prevScrollTop;
+        requestAnimationFrame(() => {
+          if (panelMain && panelMain.scrollTop !== prevScrollTop) {
+            panelMain.scrollTop = prevScrollTop;
+          }
+        });
       }
     });
     gebietSelect?.addEventListener('change', onGebietChange);

@@ -236,4 +236,27 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('<link rel="preconnect" href="https://tiles.tilda-geo.de"')
     expect(html).toContain('<link rel="dns-prefetch" href="https://tile.openstreetmap.de"')
   })
+
+  test('prevents mobile sheet scroll jumping on filter changes by guarding scrollTop resets and ranking scroll', () => {
+    expect(html).toContain("if (freshSelection && (wasPeek || wasFull)) setSheetState('half');")
+    expect(html).toContain('if (freshSelection && panelMain) panelMain.scrollTop = 0;')
+    expect(html).toContain('if (opts && opts.scrollIntoView) {')
+    expect(html).toContain('const prevScrollTop = panelMain ? panelMain.scrollTop : 0;')
+  })
+
+  test('provides scorecard modal dialog with image preview, native share, and download', () => {
+    expect(html).toContain('id="scorecard-dialog"')
+    expect(html).toContain('id="scorecard-img"')
+    expect(html).toContain('id="scorecard-share-btn"')
+    expect(html).toContain('id="scorecard-download-btn"')
+    expect(html).toContain('openScorecardModal(feature)')
+    expect(html).toContain('dataUrlToFile')
+  })
+
+  test('shares view natively via navigator.share on mobile and falls back to clipboard copy', () => {
+    expect(html).toContain("typeof navigator.share === 'function'")
+    expect(html).toContain('Ansicht teilen')
+    expect(html).toContain('✓ Geteilt!')
+    expect(html).toContain('✓ Link kopiert!')
+  })
 })
