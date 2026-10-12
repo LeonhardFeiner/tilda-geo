@@ -209,4 +209,31 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('aria-labelledby="methodology-title"')
     expect(html).not.toContain('<h3')
   })
+
+  test('respects prefers-reduced-motion in CSS transitions and disables camera animations in JS', () => {
+    expect(html).toContain('@media (prefers-reduced-motion: reduce)')
+    expect(html).toContain('animation-duration: 0.01ms !important;')
+    expect(html).toContain('transition-duration: 0.01ms !important;')
+    expect(html).toContain('function prefersReducedMotion()')
+    expect(html).toContain("window.matchMedia('(prefers-reduced-motion: reduce)')")
+    expect(html).toContain('const shouldAnimate = Boolean(animate) && !prefersReducedMotion();')
+    expect(html).toContain('duration: prefersReducedMotion() ? 0 : 350')
+  })
+
+  test('provides accessible 44px minimum touch targets and high-contrast text', () => {
+    expect(html).toContain('min-height: 44px; height: 44px;')
+    expect(html).toContain('.region-detail-close::after')
+    expect(html).toContain('.methodology-close::after')
+    expect(html).toContain('#share-fab::after')
+    expect(html).toContain('color: #475569;')
+  })
+
+  test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
+    expect(html).toContain(
+      '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',
+    )
+    expect(html).toContain('<link rel="preconnect" href="https://api.maptiler.com"')
+    expect(html).toContain('<link rel="preconnect" href="https://tiles.tilda-geo.de"')
+    expect(html).toContain('<link rel="dns-prefetch" href="https://tile.openstreetmap.de"')
+  })
 })
