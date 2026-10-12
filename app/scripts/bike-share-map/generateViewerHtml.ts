@@ -1026,130 +1026,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         padding: 16px;
       }
     }
-    dialog.scorecard-dialog {
-      border: none;
-      border-radius: 16px;
-      padding: 0;
-      width: min(720px, calc(100vw - 24px));
-      max-height: calc(100vh - 40px);
-      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.45);
-      background: #0f172a;
-      color: #f8fafc;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-    }
-    dialog.scorecard-dialog:not([open]) {
-      display: none;
-    }
-    dialog.scorecard-dialog::backdrop {
-      background: rgba(0, 0, 0, 0.65);
-      backdrop-filter: blur(4px);
-    }
-    .scorecard-dialog-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 12px 18px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      background: #0b1120;
-    }
-    .scorecard-dialog-header h2 {
-      margin: 0;
-      font-size: 16px;
-      font-weight: 700;
-      color: #f8fafc;
-    }
-    .scorecard-close {
-      position: relative;
-      border: none;
-      background: none;
-      font-size: 24px;
-      line-height: 1;
-      color: #94a3b8;
-      cursor: pointer;
-      padding: 4px 8px;
-      min-width: 36px;
-      min-height: 36px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: 6px;
-    }
-    .scorecard-close:hover {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-    }
-    .scorecard-dialog-body {
-      padding: 16px;
-      overflow-y: auto;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 14px;
-    }
-    .scorecard-img {
-      width: 100%;
-      height: auto;
-      max-width: 660px;
-      border-radius: 12px;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-      display: block;
-    }
-    .scorecard-dialog-actions {
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 10px;
-      width: 100%;
-    }
-    .scorecard-action-btn {
-      font: inherit;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: 8px;
-      cursor: pointer;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      background: rgba(255, 255, 255, 0.08);
-      color: #f8fafc;
-      transition: background 0.15s;
-    }
-    .scorecard-action-btn:hover {
-      background: rgba(255, 255, 255, 0.16);
-    }
-    .scorecard-action-btn--primary {
-      background: #0284c7;
-      border-color: #38bdf8;
-      color: #fff;
-    }
-    .scorecard-action-btn--primary:hover {
-      background: #0369a1;
-    }
-    .scorecard-tip {
-      margin: 0;
-      font-size: 12px;
-      color: #94a3b8;
-      text-align: center;
-      line-height: 1.4;
-    }
-    @media (max-width: 768px) {
-      dialog.scorecard-dialog {
-        width: 100vw;
-        max-height: 92vh;
-        border-radius: 16px 16px 0 0;
-        margin-top: auto;
-        margin-bottom: 0;
-      }
-      .scorecard-dialog-body {
-        padding: 12px;
-      }
-      .scorecard-action-btn {
-        flex: 1;
-        min-height: 44px;
-        text-align: center;
-      }
-    }
     .print-sheet { display: none; }
     @media print {
       @page { size: A4; margin: 15mm; }
@@ -1438,9 +1314,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <button type="button" id="copy-view-link" class="share-btn" disabled title="Link kopieren" aria-label="Link kopieren">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>Link
         </button>
-        <button type="button" id="share-scorecard-image" class="share-btn" disabled title="Scorecard als Bild speichern" aria-label="Scorecard als Bild speichern">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>Scorecard
-        </button>
         <button type="button" id="share-map-image" class="share-btn" disabled title="Karte als Bild speichern" aria-label="Karte als Bild speichern">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Karte
         </button>
@@ -1491,20 +1364,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     </div>
     <div class="methodology-dialog-body" id="methodology-dialog-body">
       <p>Lade Methodik …</p>
-    </div>
-  </dialog>
-  <dialog id="scorecard-dialog" class="scorecard-dialog" aria-labelledby="scorecard-dialog-title">
-    <div class="scorecard-dialog-header">
-      <h2 id="scorecard-dialog-title">Scorecard</h2>
-      <button type="button" class="scorecard-close" id="scorecard-close" aria-label="Schließen">×</button>
-    </div>
-    <div class="scorecard-dialog-body" id="scorecard-dialog-body">
-      <img id="scorecard-img" alt="Scorecard" class="scorecard-img" />
-      <div class="scorecard-dialog-actions">
-        <button type="button" id="scorecard-share-btn" class="scorecard-action-btn scorecard-action-btn--primary">Teilen</button>
-        <button type="button" id="scorecard-download-btn" class="scorecard-action-btn">Herunterladen</button>
-      </div>
-      <p class="scorecard-tip" id="scorecard-tip">Tipp: Bild lange gedrückt halten, um es direkt in Fotos zu speichern.</p>
     </div>
   </dialog>
   <script src="./statsClassSums.js"></script>
@@ -1695,7 +1554,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
     const copyViewLinkBtn = document.getElementById('copy-view-link');
-    const shareScorecardImageBtn = document.getElementById('share-scorecard-image');
     const shareMapImageBtn = document.getElementById('share-map-image');
     const shareRankingImageBtn = document.getElementById('share-ranking-image');
     const shareNativeBtn = document.getElementById('share-native');
@@ -3309,41 +3167,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return mainRoadBreakdownCache.get(p.id);
     }
 
-    /** Median main-road share of the regions in the current view (same pool as the ranking). */
-    function viewMainRoadMedianPct() {
-      const pcts = lastRankingSorted
-        .map((f) => mainRoadBreakdownFor(f.properties)?.pct)
-        .filter((v) => typeof v === 'number' && Number.isFinite(v))
-        .sort((a, b) => a - b);
-      if (pcts.length < MIN_BENCHMARK_REGIONS) return null;
-      const mid = Math.floor(pcts.length / 2);
-      return pcts.length % 2 ? pcts[mid] : (pcts[mid - 1] + pcts[mid]) / 2;
-    }
-
     /**
-     * "Who has to build it": the main-road gap split by road authority. Turns one percentage
+     * "Who has to build it": road length and bike share split by road authority. Turns one percentage
      * into an address — Kreistag, Landesbauamt or Gemeinderat.
      */
     function renderRegionAuthority(p, mainRoads) {
       regionDetailAuthority.replaceChildren();
-      const medianPct = viewMainRoadMedianPct();
       if (!mainRoads || !mainRoads.byAuthority.length) {
         regionDetailAuthority.hidden = true;
         return;
       }
       const km = (v, d) => TildaStats.formatStatKm(v, d);
-      const gap =
-        medianPct != null && mainRoads.pct < medianPct
-          ? TildaStats.mainRoadGapByAuthority(mainRoads, medianPct)
-          : null;
-      const gapById = new Map((gap?.byAuthority || []).map((r) => [r.authority, r.gapKm]));
       const title = document.createElement('p');
       title.className = 'ra-title';
       title.textContent = 'Hauptverkehrsstraßen – wer ist zuständig?';
       const table = document.createElement('table');
       table.className = 'ra-table';
       const head = table.insertRow();
-      for (const text of ['Baulastträger', 'Straße', 'mit Radinfra', gap ? 'fehlt' : '']) {
+      for (const text of ['Baulastträger', 'Straße', 'mit Radinfra']) {
         const th = document.createElement('th');
         th.textContent = text;
         head.appendChild(th);
@@ -3355,27 +3196,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         tr.insertCell().textContent = TildaStats.ROAD_AUTHORITY_LABELS[row.authority];
         tr.insertCell().textContent = km(row.roadKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) + ' km';
         tr.insertCell().textContent = formatUiPct(row.pct) + ' %';
-        const gapCell = tr.insertCell();
-        const g = gapById.get(row.authority) || 0;
-        if (gap && g >= 0.05) {
-          gapCell.className = 'ra-gap';
-          gapCell.textContent = km(g, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
-        }
       }
       const note = document.createElement('p');
       note.className = 'ra-note';
       const notes = [];
-      if (gap) {
-        notes.push(
-          '„fehlt“: Anteil an den rund ' +
-            km(gap.totalGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-            ' km bis zum Median der Hauptverkehrsstraßen ' +
-            viewComparisonLabel() +
-            ' (' +
-            formatUiPct(medianPct) +
-            ' %).',
-        );
-      }
       notes.push(
         'Zuständigkeit aus der Straßennummer abgeleitet; Ortsdurchfahrten größerer Städte ' +
           'liegen oft bei der Stadt.',
@@ -4278,15 +4102,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }, 2200);
       });
       links.appendChild(shareButton);
-      const scorecardButton = document.createElement('button');
-      scorecardButton.type = 'button';
-      scorecardButton.className = 'region-detail-drill';
-      scorecardButton.textContent = 'Scorecard (Bild)';
-      scorecardButton.title = 'Scorecard als Infografik (PNG) ansehen, speichern oder teilen';
-      scorecardButton.addEventListener('click', () => {
-        openScorecardModal(feature);
-      });
-      links.appendChild(scorecardButton);
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
         if (edit) links.appendChild(edit);
@@ -5200,408 +5015,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
 
-    function drawRoundRect(ctx, x, y, w, h, r) {
-      if (typeof ctx.roundRect === 'function') {
-        ctx.roundRect(x, y, w, h, r);
-      } else {
-        ctx.beginPath();
-        ctx.moveTo(x + r, y);
-        ctx.arcTo(x + w, y, x + w, y + h, r);
-        ctx.arcTo(x + w, y + h, x, y + h, r);
-        ctx.arcTo(x, y + h, x, y, r);
-        ctx.arcTo(x, y, x + w, y, r);
-        ctx.closePath();
-      }
-    }
-
-    function hexToRgba(hex, alpha) {
-      const h = String(hex || '').replace('#', '');
-      if (h.length === 6) {
-        const r = parseInt(h.slice(0, 2), 16);
-        const g = parseInt(h.slice(2, 4), 16);
-        const b = parseInt(h.slice(4, 6), 16);
-        return 'rgba(' + r + ', ' + g + ', ' + b + ', ' + alpha + ')';
-      }
-      return hex;
-    }
-
-    function scorecardFilename(feature) {
-      const p = feature?.properties || {};
-      const name = String(p.name || p.id || 'gebiet')
-        .toLowerCase()
-        .replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' }[c] || c))
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '');
-      return (name || 'gebiet') + '-scorecard.png';
-    }
-
-    function drawRegionScorecardCanvas(feature) {
-      const p = feature?.properties || {};
-      const id = String(p.id ?? '');
-      const name = String(p.name || p.id || 'Gebiet');
-      const level = String(p.level ?? '');
-      const width = 1200;
-      const height = 630;
-      const canvas = document.createElement('canvas');
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext('2d');
-
-      // 1. Background gradient
-      const bg = ctx.createLinearGradient(0, 0, width, height);
-      bg.addColorStop(0, '#090d16');
-      bg.addColorStop(1, '#1e293b');
-      ctx.fillStyle = bg;
-      ctx.fillRect(0, 0, width, height);
-
-      // Metric calculations
-      const minPct = lastRankingMinPct;
-      const maxPct = lastRankingMaxPct;
-      const pct = typeof p.bikeSharePct === 'number' && p.roadSumKm > 0 ? p.bikeSharePct : null;
-      const accent = pct !== null ? colorForPct(pct, minPct, maxPct) : '#38bdf8';
-
-      // Ambient radial glow behind the score
-      const glow = ctx.createRadialGradient(240, 290, 10, 240, 290, 340);
-      glow.addColorStop(0, hexToRgba(accent, 0.22));
-      glow.addColorStop(1, 'transparent');
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, 0, width, height);
-
-      // Card border
-      drawRoundRect(ctx, 16, 16, width - 32, height - 32, 22);
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.12)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // 2. Header
-      // Category pill
-      drawRoundRect(ctx, 48, 42, 246, 28, 14);
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.16)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.4)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '700 12px system-ui, sans-serif';
-      ctx.fillText('RADINFRA-VERGLEICH 2026', 62, 61);
-
-      // Top right branding
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 14px system-ui, sans-serif';
-      ctx.fillText('tilda-geo.de / radinfra · OpenStreetMap', width - 48, 61);
-      ctx.textAlign = 'left';
-
-      // Region Title
-      ctx.fillStyle = '#ffffff';
-      let titleSize = 44;
-      ctx.font = '800 ' + titleSize + 'px system-ui, sans-serif';
-      if (ctx.measureText(name).width > 700) {
-        titleSize = 36;
-        ctx.font = '800 ' + titleSize + 'px system-ui, sans-serif';
-      }
-      if (ctx.measureText(name).width > 700) {
-        titleSize = 28;
-        ctx.font = '800 ' + titleSize + 'px system-ui, sans-serif';
-      }
-      ctx.fillText(truncateCanvasText(ctx, name, 760), 48, 116);
-
-      // Subtitle (hierarchy / type)
-      let subtitle = level === '4' ? 'Bundesland in Deutschland' : level === '6' ? 'Landkreis / Kreisfreie Stadt' : 'Gemeinde in Deutschland';
-      const parentName = p.landkreis_id ? regionIndex?.byId.get(p.landkreis_id)?.properties?.name : (p.bundesland_id ? regionIndex?.byId.get(p.bundesland_id)?.properties?.name : null);
-      if (parentName) {
-        subtitle += ' · ' + parentName;
-      }
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 17px system-ui, sans-serif';
-      ctx.fillText(subtitle, 48, 144);
-
-      // 3. Hero Score Card (Left, X: 48, Y: 170, W: 350, H: 285)
-      drawRoundRect(ctx, 48, 170, 350, 285, 18);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '700 13px system-ui, sans-serif';
-      ctx.fillText('RADWEGE-ANTEIL', 72, 204);
-
-      ctx.fillStyle = accent;
-      ctx.font = '900 74px system-ui, sans-serif';
-      const pctStr = pct !== null ? formatUiPct(pct) + ' %' : '– %';
-      ctx.fillText(pctStr, 70, 280);
-
-      ctx.fillStyle = '#f1f5f9';
-      ctx.font = '500 15px system-ui, sans-serif';
-      wrapCanvasText(ctx, 'der Straßen verfügen über Radinfrastruktur', 72, 314, 300, 20);
-
-      // Rank Pill inside hero card
-      const rankInfo = rankByFeatureId.get(id);
-      if (rankInfo) {
-        drawRoundRect(ctx, 72, 382, 302, 48, 10);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.fillStyle = '#f8fafc';
-        ctx.font = '600 15px system-ui, sans-serif';
-        const rankLabel = '🏆 Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
-        ctx.fillText(truncateCanvasText(ctx, rankLabel, 284), 86, 412);
-      }
-
-      // 4. Stats Grid (Right side, 4 glass tiles)
-      const tiles = [
-        {
-          label: 'Radinfrastruktur (gesamt)',
-          value: TildaStats.formatStatKm(p.bikelaneSumKm, 1) + ' km',
-          detail: 'baulich getrennt oder markiert',
-          valColor: '#38bdf8',
-        },
-        {
-          label: 'Befahrbares Straßennetz',
-          value: TildaStats.formatStatKm(p.roadSumKm, 1) + ' km',
-          detail: 'ohne Autobahnen & Kraftfahrstraßen',
-          valColor: '#f8fafc',
-        },
-      ];
-
-      const mainRoads = mainRoadBreakdownFor(p);
-      tiles.push({
-        label: 'Hauptverkehrsstraßen',
-        value: mainRoads ? formatUiPct(mainRoads.pct) + ' %' : '–',
-        detail: 'Bundes-, Landes- & Kreisstraßen mit Radweg',
-        valColor: '#a7f3d0',
-      });
-
-      // Context metric (density or transit or slope)
-      const density = densityIndex?.byId[id];
-      const stationDist = transitIndex?.byId[id]?.avgDistanceToStationM;
-      if (typeof density === 'number') {
-        tiles.push({
-          label: 'Bevölkerungsdichte',
-          value: Math.round(density).toLocaleString('de-DE') + ' Einw./km²',
-          detail: 'demografischer Kontext',
-          valColor: '#fbbf24',
-        });
-      } else if (typeof stationDist === 'number') {
-        tiles.push({
-          label: 'Ø Weg zur Haltestelle',
-          value: (stationDist / 1000).toFixed(1).replace('.', ',') + ' km',
-          detail: 'Luftlinie einwohnergewichtet',
-          valColor: '#fbbf24',
-        });
-      } else {
-        tiles.push({
-          label: 'Vergleichsgruppe',
-          value: viewLabelForCurrentMode(),
-          detail: 'aktuelle Betrachtungsebene',
-          valColor: '#fbbf24',
-        });
-      }
-
-      const gridStartX = 422;
-      const tileW = 350;
-      const tileH = 132;
-      const positions = [
-        { x: gridStartX, y: 170 },
-        { x: gridStartX + tileW + 18, y: 170 },
-        { x: gridStartX, y: 170 + tileH + 20 },
-        { x: gridStartX + tileW + 18, y: 170 + tileH + 20 },
-      ];
-
-      for (let i = 0; i < 4; i++) {
-        const t = tiles[i];
-        const pos = positions[i];
-        drawRoundRect(ctx, pos.x, pos.y, tileW, tileH, 14);
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
-        ctx.fill();
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.08)';
-        ctx.lineWidth = 1;
-        ctx.stroke();
-
-        ctx.fillStyle = '#94a3b8';
-        ctx.font = '600 12px system-ui, sans-serif';
-        ctx.fillText(t.label.toUpperCase(), pos.x + 18, pos.y + 28);
-
-        ctx.fillStyle = t.valColor;
-        ctx.font = '800 28px system-ui, sans-serif';
-        ctx.fillText(t.value, pos.x + 18, pos.y + 68);
-
-        ctx.fillStyle = '#64748b';
-        ctx.font = '400 12px system-ui, sans-serif';
-        ctx.fillText(t.detail, pos.x + 18, pos.y + 96);
-      }
-
-      // 5. Benchmark Visualizer Bar (Y: 486 to 526)
-      const barX = 48;
-      const barY = 486;
-      const barW = width - 96;
-      const barH = 12;
-
-      drawRoundRect(ctx, barX, barY, barW, barH, 6);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
-      ctx.fill();
-
-      const span = Math.max(maxPct - minPct, 0.01);
-      const ratio = pct !== null ? Math.max(0.02, Math.min(0.98, (pct - minPct) / span)) : 0.5;
-      const fillW = Math.max(12, barW * ratio);
-
-      drawRoundRect(ctx, barX, barY, fillW, barH, 6);
-      const barGrad = ctx.createLinearGradient(barX, 0, barX + fillW, 0);
-      barGrad.addColorStop(0, '#38bdf8');
-      barGrad.addColorStop(1, accent);
-      ctx.fillStyle = barGrad;
-      ctx.fill();
-
-      // Labels below track
-      ctx.fillStyle = '#64748b';
-      ctx.font = '500 13px system-ui, sans-serif';
-      ctx.fillText('Min: ' + formatUiPct(minPct) + ' %', barX, barY + 28);
-
-      const median = (minPct + maxPct) / 2;
-      ctx.textAlign = 'center';
-      ctx.fillText('Median: ~' + formatUiPct(median) + ' %', barX + barW / 2, barY + 28);
-
-      ctx.textAlign = 'right';
-      ctx.fillText('Max: ' + formatUiPct(maxPct) + ' %', barX + barW, barY + 28);
-      ctx.textAlign = 'left';
-
-      // Pin marker above the bar
-      const needleX = Math.max(barX + 20, Math.min(barX + barW - 20, barX + fillW));
-      ctx.fillStyle = accent;
-      ctx.font = '700 13px system-ui, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('▲ ' + formatUiPct(pct ?? 0) + ' %', needleX, barY - 6);
-      ctx.textAlign = 'left';
-
-      // 6. Footer bar
-      ctx.fillStyle = '#475569';
-      ctx.font = '500 13px system-ui, sans-serif';
-      ctx.fillText('radinfra.de · Offener Radinfrastruktur-Atlas Deutschland', 48, height - 38);
-
-      ctx.textAlign = 'right';
-      ctx.fillStyle = '#64748b';
-      ctx.fillText('#Radinfrastruktur #Verkehrswende #WieVielRadweg', width - 48, height - 38);
-      ctx.textAlign = 'left';
-
-      return canvas;
-    }
-
-    function dataUrlToFile(dataUrl, filename) {
-      const parts = dataUrl.split(',');
-      const mime = parts[0].match(/:(.*?);/)?.[1] || 'image/png';
-      const bstr = atob(parts[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
-      }
-      try {
-        return new File([u8arr], filename, { type: mime });
-      } catch {
-        return new Blob([u8arr], { type: mime });
-      }
-    }
-
-    const scorecardDialog = document.getElementById('scorecard-dialog');
-    const scorecardImg = document.getElementById('scorecard-img');
-    const scorecardClose = document.getElementById('scorecard-close');
-    const scorecardShareBtn = document.getElementById('scorecard-share-btn');
-    const scorecardDownloadBtn = document.getElementById('scorecard-download-btn');
-    const scorecardDialogTitle = document.getElementById('scorecard-dialog-title');
-    let currentScorecardData = null;
-
-    function openScorecardModal(feature) {
-      const feat = feature || selectedFeatureOverride || currentSelectedFeature() || lastRankingFeatures[0];
-      if (!feat) {
-        showCopyViewLinkFeedback('Bitte zuerst ein Gebiet auswählen.', true);
-        return;
-      }
-      try {
-        const canvas = drawRegionScorecardCanvas(feat);
-        const dataUrl = canvas.toDataURL('image/png');
-        const filename = scorecardFilename(feat);
-        const p = feat.properties || {};
-        const name = p.name || p.id || 'Gebiet';
-        currentScorecardData = { dataUrl, filename, feat, name, p };
-
-        if (scorecardImg) scorecardImg.src = dataUrl;
-        if (scorecardDialogTitle) scorecardDialogTitle.textContent = 'Scorecard: ' + name;
-        if (scorecardShareBtn) {
-          scorecardShareBtn.hidden = typeof navigator.share !== 'function';
-        }
-
-        if (scorecardDialog) {
-          if (typeof scorecardDialog.showModal === 'function') {
-            scorecardDialog.showModal();
-          } else {
-            scorecardDialog.hidden = false;
-          }
-        }
-      } catch (err) {
-        console.error('Scorecard error:', err);
-        showCopyViewLinkFeedback('Scorecard konnte nicht erstellt werden.', true);
-      }
-    }
-
-    function closeScorecardModal() {
-      if (!scorecardDialog) return;
-      if (typeof scorecardDialog.close === 'function') {
-        scorecardDialog.close();
-      } else {
-        scorecardDialog.hidden = true;
-      }
-    }
-
-    scorecardClose?.addEventListener('click', closeScorecardModal);
-    scorecardDialog?.addEventListener('click', (e) => {
-      if (e.target === scorecardDialog) closeScorecardModal();
-    });
-
-    scorecardShareBtn?.addEventListener('click', async () => {
-      if (!currentScorecardData) return;
-      const { dataUrl, filename, name, p } = currentScorecardData;
-      const file = dataUrlToFile(dataUrl, filename);
-      const text =
-        name +
-        ': ' +
-        (p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '') +
-        ' der Straßen mit Radinfrastruktur. ' +
-        buildShareUrl();
-
-      if (typeof navigator.share === 'function') {
-        const attempts = [
-          { files: [file], title: name + ' – Radinfra-Scorecard', text },
-          { files: [file], text },
-          { files: [file] },
-        ];
-        for (const data of attempts) {
-          if (navigator.canShare && !navigator.canShare(data)) continue;
-          try {
-            await navigator.share(data);
-            showCopyViewLinkFeedback('Scorecard geteilt.');
-            return;
-          } catch (err) {
-            if (err?.name === 'AbortError') return;
-          }
-        }
-      }
-      triggerImageDownload(dataUrl, filename);
-      showCopyViewLinkFeedback('Scorecard als Bild gespeichert.');
-    });
-
-    scorecardDownloadBtn?.addEventListener('click', () => {
-      if (!currentScorecardData) return;
-      triggerImageDownload(currentScorecardData.dataUrl, currentScorecardData.filename);
-      showCopyViewLinkFeedback('Scorecard als Bild gespeichert.');
-    });
-
-    function shareRegionScorecard(feature) {
-      openScorecardModal(feature);
-    }
 
     function notifyMapResize() {
       requestAnimationFrame(() => map.resize());
@@ -7281,7 +6694,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       shareNativeBtn.hidden = false;
     }
     copyViewLinkBtn?.addEventListener('click', copyShareLink);
-    shareScorecardImageBtn?.addEventListener('click', () => void shareRegionScorecard());
     shareMapImageBtn?.addEventListener('click', downloadMapImage);
     shareRankingImageBtn?.addEventListener('click', downloadRankingImage);
     shareNativeBtn?.addEventListener('click', nativeShareLink);

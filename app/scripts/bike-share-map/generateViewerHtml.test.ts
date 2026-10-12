@@ -94,6 +94,12 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(gapPos).toBeGreaterThan(actionsPos)
   })
 
+  test('authority table renders Baulastträger columns without fehlt column', () => {
+    expect(html).toContain("for (const text of ['Baulastträger', 'Straße', 'mit Radinfra'])")
+    expect(html).not.toContain("gap ? 'fehlt' : ''")
+    expect(html).not.toContain('id="scorecard-dialog"')
+  })
+
   test('neighbor view renders a floating exit chip to restore standard view', () => {
     expect(html).toContain('id="exit-neighbor-view"')
     expect(html).toContain('‹ Ansicht wiederherstellen')
@@ -164,28 +170,6 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('map.jumpTo({ center, zoom, bearing, pitch });')
   })
 
-  test('renders 1200x630 social share scorecard canvas with key metrics and benchmark bar', () => {
-    expect(html).toContain('function drawRegionScorecardCanvas(')
-    expect(html).toContain('const width = 1200;')
-    expect(html).toContain('const height = 630;')
-    expect(html).toContain('RADINFRA-VERGLEICH 2026')
-    expect(html).toContain('RADWEGE-ANTEIL')
-    expect(html).toContain('Hauptverkehrsstraßen')
-    expect(html).toContain('barGrad.addColorStop(0,')
-  })
-
-  test('normalizes scorecard PNG filename from region name', () => {
-    expect(html).toContain('function scorecardFilename(')
-    expect(html).toContain("'-scorecard.png'")
-  })
-
-  test('provides Scorecard export in toolbar and region detail actions with native share support', () => {
-    expect(html).toContain('id="share-scorecard-image"')
-    expect(html).toContain("scorecardButton.textContent = 'Scorecard (Bild)'")
-    expect(html).toContain('function shareRegionScorecard(')
-    expect(html).toContain('shareScorecardImageBtn?.addEventListener')
-  })
-
   test('includes social sharing cards, favicon, theme-color, and canonical URL in head', () => {
     expect(html).toContain('<meta name="theme-color" content="#1e293b" />')
     expect(html).toContain('<link rel="icon"')
@@ -243,15 +227,6 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('if (freshSelection && panelMain) panelMain.scrollTop = 0;')
     expect(html).toContain('if (opts && opts.scrollIntoView) {')
     expect(html).toContain('const prevScrollTop = panelMain ? panelMain.scrollTop : 0;')
-  })
-
-  test('provides scorecard modal dialog with image preview, native share, and download', () => {
-    expect(html).toContain('id="scorecard-dialog"')
-    expect(html).toContain('id="scorecard-img"')
-    expect(html).toContain('id="scorecard-share-btn"')
-    expect(html).toContain('id="scorecard-download-btn"')
-    expect(html).toContain('openScorecardModal(feature)')
-    expect(html).toContain('dataUrlToFile')
   })
 
   test('shares view natively via navigator.share on mobile and falls back to clipboard copy', () => {

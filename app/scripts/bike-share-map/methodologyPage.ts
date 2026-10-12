@@ -169,9 +169,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
   <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
   L/S/St → Land, K oder Kreiskürzel (z.&nbsp;B. „RO&nbsp;35“) → Landkreis, ohne Nummer → Gemeinde.
   Das ist eine Näherung: Ortsdurchfahrten von Bundes- und Landesstraßen liegen in größeren Städten
-  meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.
-  Die Spalte „fehlt“ verteilt die Kilometer bis zum Median der aktuellen Ansicht anteilig nach dem
-  Rückstand jedes Baulastträgers.</p>
+  meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.</p>
 
   ${peerSection}
 
