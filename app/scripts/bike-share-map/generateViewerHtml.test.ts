@@ -159,9 +159,10 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('map.easeTo({')
   })
 
-  test('region detail actions provide an in-place Ansicht teilen button with instant feedback', () => {
-    expect(html).toContain("shareButton.textContent = 'Ansicht teilen'")
-    expect(html).toContain("shareButton.textContent = '✓ Link kopiert!'")
+  test('region detail actions and unified export dialog provide sharing and export with instant feedback', () => {
+    expect(html).toContain("exportButton.textContent = 'Teilen & Exportieren'")
+    expect(html).toContain('id="export-dialog"')
+    expect(html).toContain('✓ Link kopiert!')
   })
 
   test('basemap switching preserves user camera bearing and pitch', () => {
@@ -227,13 +228,22 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('body.printing #print-sheet {')
     expect(html).toContain('print-color-adjust: exact;')
     expect(html).toContain('html, body.printing {')
-    expect(html).toContain("printButton.textContent = 'Drucken / PDF'")
+    expect(html).toContain('Drucken / PDF')
     expect(html).toContain('async function printRegionSheet(feature)')
     expect(html).toContain("section('Rangliste', buildPrintRanking(feature))")
     expect(html).toContain('function buildPrintRanking(feature)')
     expect(html).toContain('.print-sheet .ps-ranking-list')
     expect(html).toContain('.print-sheet .ps-ranking-row--current')
     expect(html).toContain("document.body.classList.add('printing')")
+  })
+
+  test('unifies map image, ranking image, and pdf export into a single dialog across desktop and mobile', () => {
+    expect(html).toContain('id="export-item-map"')
+    expect(html).toContain('id="export-item-ranking"')
+    expect(html).toContain('id="export-item-pdf"')
+    expect(html).toContain('id="share-fab"')
+    expect(html).toContain('id="panel-export-btn"')
+    expect(html).not.toContain('.panel-actions .share-toolbar { display: none; }')
   })
 
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {

@@ -167,8 +167,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .panel-body { margin: 0; }
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
-    /* Floating share button: phone only (see media query); desktop shares via the panel toolbar. */
-    .share-fab, .search-fab { display: none; }
+    .search-fab { display: none; }
+    @media (min-width: 769px) {
+      #share-fab {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        position: fixed; z-index: 5;
+        top: 10px; right: 50px;
+        height: 30px; padding: 0 10px;
+        border: none; border-radius: 4px;
+        background: #fff; color: #333; cursor: pointer;
+        font: inherit; font-size: 12px; font-weight: 600;
+        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+      }
+      #share-fab svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
+      #share-fab:hover { background: #f8fafc; }
+      #share-fab:active { background: #f1f5f9; }
+      #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
+    }
     @media (max-width: 768px) {
       body { --sheet-peek: 4.9rem; }
 
@@ -266,6 +281,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
       }
       #share-fab svg { width: 18px; height: 18px; fill: currentColor; }
+      #share-fab .share-fab-label { display: none; }
       #share-fab:active { background: #f2f2f2; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
       body[data-sheet="full"] #share-fab { display: none; }
@@ -303,8 +319,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-in,
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-out { display: none; }
-      .panel-actions .share-toolbar { display: none; }
-      .panel-actions { margin-top: 0; }
+      .panel-actions { margin-top: 10px; }
       #copy-view-link-feedback {
         position: fixed; z-index: 6;
         top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
@@ -371,6 +386,21 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       font-size: 12px; font-weight: normal; margin: 3px 0; cursor: pointer;
     }
     .panel-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+    .panel-export-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      width: 100%; height: 2.35rem; padding: 0 12px;
+      font: inherit; font-size: 12px; font-weight: 600;
+      color: #1565c0; background: #f0f6ff;
+      border: 1px solid #c8ddf6; border-radius: 6px;
+      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    }
+    .panel-export-btn:hover:not(:disabled) {
+      background: #e1efff; border-color: #9ec5f3;
+    }
+    .panel-export-btn:disabled { opacity: 0.55; cursor: not-allowed; }
+    .panel-export-btn svg {
+      width: 1rem; height: 1rem; fill: currentColor; flex: none;
+    }
     .share-toolbar {
       display: flex; flex-wrap: nowrap; gap: clamp(3px, 1.2vw, 6px);
       align-items: center; width: 100%; min-width: 0;
@@ -1026,6 +1056,163 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         padding: 16px;
       }
     }
+    dialog.export-dialog {
+      border: none;
+      border-radius: 12px;
+      padding: 0;
+      width: min(420px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+      background: #fff;
+      color: #1f2421;
+      overflow: hidden;
+    }
+    dialog.export-dialog:not([open]) {
+      display: none;
+    }
+    dialog.export-dialog::backdrop {
+      background: rgba(15, 23, 42, 0.45);
+      backdrop-filter: blur(2px);
+      -webkit-backdrop-filter: blur(2px);
+    }
+    .export-dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 18px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #f8fafc;
+    }
+    .export-dialog-header h2 {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      color: #1e293b;
+    }
+    .export-dialog-close {
+      position: relative;
+      background: none;
+      border: none;
+      font-size: 24px;
+      line-height: 1;
+      color: #64748b;
+      cursor: pointer;
+      padding: 0;
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      min-height: 36px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+    }
+    .export-dialog-close::after {
+      content: '';
+      position: absolute;
+      inset: -4px;
+    }
+    .export-dialog-close:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .export-dialog-body {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 14px 18px;
+    }
+    .export-dialog-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      background: #f8fafc;
+      color: #1e293b;
+      cursor: pointer;
+      text-align: left;
+      font: inherit;
+      transition: background 0.15s, border-color 0.15s;
+    }
+    .export-dialog-item:hover:not(:disabled) {
+      background: #eff6ff;
+      border-color: #93c5fd;
+    }
+    .export-dialog-item:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+    }
+    .export-dialog-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      color: #1565c0;
+      flex: none;
+    }
+    .export-dialog-item:hover:not(:disabled) .export-dialog-icon {
+      background: #1565c0;
+      color: #fff;
+      border-color: #1565c0;
+    }
+    .export-dialog-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+    .export-dialog-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .export-dialog-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .export-dialog-desc {
+      font-size: 11px;
+      color: #64748b;
+    }
+    .export-dialog-footer {
+      padding: 0 18px 12px;
+    }
+    .export-dialog-feedback {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #166534;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      text-align: center;
+    }
+    .export-dialog-feedback.is-error {
+      color: #991b1b;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    @media (max-width: 768px) {
+      dialog.export-dialog {
+        width: 100vw;
+        max-height: 85vh;
+        border-radius: 16px 16px 0 0;
+        margin-top: auto;
+        margin-bottom: 0;
+        padding-bottom: env(safe-area-inset-bottom, 12px);
+      }
+    }
     .print-sheet { display: none; }
     @media print {
       @page { size: A4; margin: 15mm; }
@@ -1163,8 +1350,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <main id="app-root">
     <div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur"></div>
     <div id="sheet-scrim" aria-hidden="true"></div>
-  <button type="button" id="share-fab" class="share-fab" title="Teilen" aria-label="Ansicht teilen">
+  <button type="button" id="share-fab" class="share-fab" title="Teilen &amp; Exportieren" aria-label="Ansicht teilen und exportieren" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
+    <span class="share-fab-label">Exportieren / Teilen</span>
   </button>
   <button type="button" id="search-fab" class="search-fab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
@@ -1387,20 +1575,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         </div>
     </details>
     <div class="panel-actions">
-      <div class="share-toolbar" role="group" aria-label="Ansicht teilen und exportieren">
-        <button type="button" id="share-native" class="share-btn share-btn--primary" hidden title="Teilen" aria-label="Teilen">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>Teilen
-        </button>
-        <button type="button" id="copy-view-link" class="share-btn" disabled title="Link kopieren" aria-label="Link kopieren">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 0 0-2 2v14h2V3h12V1zm3 4H8a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2zm0 16H8V7h11v14z"/></svg>Link
-        </button>
-        <button type="button" id="share-map-image" class="share-btn" disabled title="Karte als Bild speichern" aria-label="Karte als Bild speichern">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>Karte
-        </button>
-        <button type="button" id="share-ranking-image" class="share-btn" disabled title="Rangliste als Bild speichern" aria-label="Rangliste als Bild speichern">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 4h7v3h-7v-3z"/></svg>Rangliste
-        </button>
-      </div>
+      <button type="button" id="panel-export-btn" class="panel-export-btn" title="Ansicht teilen, Karte oder Rangliste als Bild speichern, oder PDF drucken" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
+        <span>Teilen &amp; Exportieren</span>
+      </button>
       <span id="copy-view-link-feedback" hidden></span>
     </div>
     </div>
@@ -1444,6 +1622,53 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     </div>
     <div class="methodology-dialog-body" id="methodology-dialog-body">
       <p>Lade Methodik …</p>
+    </div>
+  </dialog>
+  <dialog id="export-dialog" class="export-dialog" aria-labelledby="export-dialog-title">
+    <div class="export-dialog-header">
+      <h2 id="export-dialog-title">Teilen &amp; Exportieren</h2>
+      <button type="button" class="export-dialog-close" id="export-dialog-close" aria-label="Schließen">×</button>
+    </div>
+    <div class="export-dialog-body">
+      <button type="button" class="export-dialog-item" id="export-item-share">
+        <span class="export-dialog-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7a3.27 3.27 0 0 0 0-1.39l7.05-4.11A2.99 2.99 0 1 0 14.5 5.5l-7.05 4.11a3 3 0 1 0 0 4.78l7.05 4.11a3 3 0 1 0 .45 1.55 2.99 2.99 0 0 0-.45-.05z"/></svg>
+        </span>
+        <span class="export-dialog-info">
+          <span class="export-dialog-name" id="export-item-share-label">Ansicht teilen</span>
+          <span class="export-dialog-desc" id="export-item-share-desc">Link zur aktuellen Kartenansicht kopieren</span>
+        </span>
+      </button>
+      <button type="button" class="export-dialog-item" id="export-item-map">
+        <span class="export-dialog-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M21 19V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+        </span>
+        <span class="export-dialog-info">
+          <span class="export-dialog-name">Karte als Bild</span>
+          <span class="export-dialog-desc">Aktuelle Karte als PNG speichern</span>
+        </span>
+      </button>
+      <button type="button" class="export-dialog-item" id="export-item-ranking">
+        <span class="export-dialog-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M4 4h7v7H4V4zm9 0h7v7h-7V4zM4 13h7v7H4v-7zm9 4h7v3h-7v-3z"/></svg>
+        </span>
+        <span class="export-dialog-info">
+          <span class="export-dialog-name">Rangliste als Bild</span>
+          <span class="export-dialog-desc">Ranglisten-Grafik als PNG speichern</span>
+        </span>
+      </button>
+      <button type="button" class="export-dialog-item" id="export-item-pdf">
+        <span class="export-dialog-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24"><path d="M19 8H5c-1.66 0-3 1.34-3 3v6h4v4h12v-4h4v-6c0-1.66-1.34-3-3-3zm-3 11H8v-5h8v5zm3-7c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm-1-9H6v4h12V3z"/></svg>
+        </span>
+        <span class="export-dialog-info">
+          <span class="export-dialog-name" id="export-item-pdf-label">Drucken / PDF</span>
+          <span class="export-dialog-desc" id="export-item-pdf-desc">A4-Datenblatt zum ausgewählten Gebiet</span>
+        </span>
+      </button>
+    </div>
+    <div class="export-dialog-footer">
+      <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
   <script src="./statsClassSums.js"></script>
@@ -1633,11 +1858,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const scaleRobustEnabledCb = document.getElementById('scale-robust-enabled');
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
-    const copyViewLinkBtn = document.getElementById('copy-view-link');
-    const shareMapImageBtn = document.getElementById('share-map-image');
-    const shareRankingImageBtn = document.getElementById('share-ranking-image');
-    const shareNativeBtn = document.getElementById('share-native');
-    const shareToolbar = document.querySelector('.share-toolbar');
+    const shareFab = document.getElementById('share-fab');
+    const panelExportBtn = document.getElementById('panel-export-btn');
+    const exportDialog = document.getElementById('export-dialog');
+    const exportDialogClose = document.getElementById('export-dialog-close');
+    const exportDialogFeedback = document.getElementById('export-dialog-feedback');
+    const exportItemShare = document.getElementById('export-item-share');
+    const exportItemShareLabel = document.getElementById('export-item-share-label');
+    const exportItemShareDesc = document.getElementById('export-item-share-desc');
+    const exportItemMap = document.getElementById('export-item-map');
+    const exportItemRanking = document.getElementById('export-item-ranking');
+    const exportItemPdf = document.getElementById('export-item-pdf');
+    const exportItemPdfLabel = document.getElementById('export-item-pdf-label');
+    const exportItemPdfDesc = document.getElementById('export-item-pdf-desc');
+    const copyViewLinkBtn = exportItemShare;
+    const shareMapImageBtn = exportItemMap;
+    const shareRankingImageBtn = exportItemRanking;
+    const shareNativeBtn = null;
+    const shareToolbar = null;
     const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
@@ -2143,13 +2381,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function setPanelActionsEnabled(enabled) {
       setCsvExportEnabled(enabled);
-      const shareFab = document.getElementById('share-fab');
       if (shareFab) shareFab.disabled = !enabled;
-      if (!shareToolbar) return;
-      for (const btn of shareToolbar.querySelectorAll('.share-btn')) {
-        if (btn.id === 'share-native' && btn.hidden) continue;
-        btn.disabled = !enabled;
-      }
+      if (panelExportBtn) panelExportBtn.disabled = !enabled;
+      if (exportItemShare) exportItemShare.disabled = !enabled;
+      if (exportItemMap) exportItemMap.disabled = !enabled;
+      if (exportItemRanking) exportItemRanking.disabled = !enabled;
     }
 
     const LEGEND_TICK_COUNT = 5;
@@ -3343,6 +3579,55 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
 
+    function syncExportDialogState() {
+      const feature =
+        selectedFeatureOverride || (selectedFeatureId ? regionIndex?.byId.get(selectedFeatureId) : null);
+      if (feature && feature.properties) {
+        const name = feature.properties.name || feature.properties.id || 'Gebiet';
+        if (exportItemPdf) {
+          exportItemPdf.disabled = false;
+          exportItemPdf.title = 'A4-Datenblatt für ' + name + ' drucken oder als PDF speichern';
+        }
+        if (exportItemPdfDesc) {
+          exportItemPdfDesc.textContent = 'A4-Datenblatt für „' + name + '“';
+        }
+        if (exportItemShareDesc) {
+          exportItemShareDesc.textContent = 'Link mit „' + name + '“ teilen';
+        }
+      } else {
+        if (exportItemPdf) {
+          exportItemPdf.disabled = true;
+          exportItemPdf.title = 'Bitte zuerst ein Gebiet auswählen';
+        }
+        if (exportItemPdfDesc) {
+          exportItemPdfDesc.textContent = 'Bitte zuerst ein Gebiet auswählen';
+        }
+        if (exportItemShareDesc) {
+          exportItemShareDesc.textContent = 'Link zur aktuellen Kartenansicht kopieren';
+        }
+      }
+    }
+
+    function openExportDialog() {
+      if (!exportDialog) return;
+      syncExportDialogState();
+      if (typeof exportDialog.showModal === 'function') {
+        exportDialog.showModal();
+      } else {
+        exportDialog.hidden = false;
+      }
+    }
+
+    function closeExportDialog() {
+      if (!exportDialog) return;
+      if (typeof exportDialog.close === 'function') {
+        exportDialog.close();
+      } else {
+        exportDialog.hidden = true;
+      }
+      if (exportDialogFeedback) exportDialogFeedback.hidden = true;
+    }
+
     const mainRoadBreakdownCache = new Map();
     /** Per-region main-road figures (fixed by the data, so cached by id). */
     function mainRoadBreakdownFor(p) {
@@ -4244,53 +4529,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         });
         links.appendChild(neighborButton);
       }
-      const printButton = document.createElement('button');
-      printButton.type = 'button';
-      printButton.className = 'region-detail-drill';
-      printButton.textContent = 'Drucken / PDF';
-      printButton.title = 'Eine A4-Seite zu diesem Gebiet, z. B. für die Gemeinderatssitzung';
-      printButton.addEventListener('click', () => void printRegionSheet(feature));
-      links.appendChild(printButton);
-      const shareButton = document.createElement('button');
-      shareButton.type = 'button';
-      shareButton.className = 'region-detail-drill';
-      shareButton.textContent = 'Ansicht teilen';
-      shareButton.title = 'Link zu diesem Gebiet und der aktuellen Kartenausrichtung teilen oder kopieren';
-      shareButton.addEventListener('click', async () => {
-        const url = buildShareUrl();
-        const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
-        const shareText =
-          (p.name || 'Gebiet') +
-          (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
-          '\\n' +
-          url;
-
-        if (typeof navigator.share === 'function') {
-          try {
-            await navigator.share({
-              title: (p.name || 'Gebiet') + ' – Radinfra-Vergleich',
-              text: shareText,
-              url: url,
-            });
-            const prev = shareButton.textContent;
-            shareButton.textContent = '✓ Geteilt!';
-            setTimeout(() => {
-              shareButton.textContent = prev;
-            }, 2200);
-            showCopyViewLinkFeedback('Ansicht geteilt.');
-            return;
-          } catch (err) {
-            if (err?.name === 'AbortError') return;
-          }
-        }
-        await copyShareLink();
-        const prev = shareButton.textContent;
-        shareButton.textContent = '✓ Link kopiert!';
-        setTimeout(() => {
-          shareButton.textContent = prev;
-        }, 2200);
-      });
-      links.appendChild(shareButton);
+      const exportButton = document.createElement('button');
+      exportButton.type = 'button';
+      exportButton.className = 'region-detail-drill';
+      exportButton.textContent = 'Teilen & Exportieren';
+      exportButton.title = 'Datenblatt (PDF), Karte (Bild), Rangliste (Bild) oder Link teilen';
+      exportButton.addEventListener('click', () => openExportDialog());
+      links.appendChild(exportButton);
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
         if (edit) links.appendChild(edit);
@@ -4322,6 +4567,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       updateMapHighlights();
       syncRankingRowHighlights();
       updatePanelSummaryPreview();
+      syncExportDialogState();
       // A selection is a step the Back button should be able to undo.
       scheduleUrlSync(implicitSelectionClear ? undefined : 'push');
     }
@@ -5839,13 +6085,26 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let copyViewLinkFeedbackTimer = null;
 
     function showCopyViewLinkFeedback(message, isError) {
-      copyViewLinkFeedback.textContent = message;
-      copyViewLinkFeedback.hidden = false;
-      copyViewLinkFeedback.classList.toggle('is-error', !!isError);
+      if (copyViewLinkFeedback) {
+        copyViewLinkFeedback.textContent = message;
+        copyViewLinkFeedback.hidden = false;
+        copyViewLinkFeedback.classList.toggle('is-error', !!isError);
+      }
+      if (exportDialogFeedback) {
+        exportDialogFeedback.textContent = message;
+        exportDialogFeedback.hidden = false;
+        exportDialogFeedback.classList.toggle('is-error', !!isError);
+      }
       if (copyViewLinkFeedbackTimer) clearTimeout(copyViewLinkFeedbackTimer);
       copyViewLinkFeedbackTimer = setTimeout(() => {
-        copyViewLinkFeedback.hidden = true;
-        copyViewLinkFeedback.classList.remove('is-error');
+        if (copyViewLinkFeedback) {
+          copyViewLinkFeedback.hidden = true;
+          copyViewLinkFeedback.classList.remove('is-error');
+        }
+        if (exportDialogFeedback) {
+          exportDialogFeedback.hidden = true;
+          exportDialogFeedback.classList.remove('is-error');
+        }
       }, 2500);
     }
 
@@ -6879,14 +7138,73 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     syncRankingModeButtons();
     syncRankingScrollLayout();
-    if (typeof navigator.share === 'function' && shareNativeBtn) {
-      shareNativeBtn.hidden = false;
-    }
-    copyViewLinkBtn?.addEventListener('click', copyShareLink);
-    shareMapImageBtn?.addEventListener('click', downloadMapImage);
-    shareRankingImageBtn?.addEventListener('click', downloadRankingImage);
-    shareNativeBtn?.addEventListener('click', nativeShareLink);
-    document.getElementById('share-fab')?.addEventListener('click', nativeShareLink);
+    shareFab?.addEventListener('click', openExportDialog);
+    panelExportBtn?.addEventListener('click', openExportDialog);
+    exportDialogClose?.addEventListener('click', closeExportDialog);
+    exportDialog?.addEventListener('click', (e) => {
+      if (e.target === exportDialog) closeExportDialog();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && exportDialog?.open) {
+        closeExportDialog();
+      }
+    });
+
+    exportItemShare?.addEventListener('click', async () => {
+      const feature =
+        selectedFeatureOverride || (selectedFeatureId ? regionIndex?.byId.get(selectedFeatureId) : null);
+      if (feature && feature.properties) {
+        const p = feature.properties;
+        const url = buildShareUrl();
+        const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
+        const shareText =
+          (p.name || 'Gebiet') +
+          (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
+          '\\n' +
+          url;
+        if (typeof navigator.share === 'function') {
+          try {
+            await navigator.share({
+              title: (p.name || 'Gebiet') + ' – Radinfra-Vergleich',
+              text: shareText,
+              url: url,
+            });
+            showCopyViewLinkFeedback('✓ Geteilt!');
+            return;
+          } catch (err) {
+            if (err?.name === 'AbortError') return;
+          }
+        }
+      } else if (typeof navigator.share === 'function') {
+        try {
+          const { url, title, text } = sharePayload();
+          await navigator.share({ title, text, url });
+          showCopyViewLinkFeedback('✓ Geteilt!');
+          return;
+        } catch (err) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+      await copyShareLink();
+      showCopyViewLinkFeedback('✓ Link kopiert!');
+    });
+
+    exportItemMap?.addEventListener('click', async () => {
+      await downloadMapImage();
+    });
+
+    exportItemRanking?.addEventListener('click', async () => {
+      await downloadRankingImage();
+    });
+
+    exportItemPdf?.addEventListener('click', () => {
+      const feature =
+        selectedFeatureOverride || (selectedFeatureId ? regionIndex?.byId.get(selectedFeatureId) : null);
+      if (feature) {
+        closeExportDialog();
+        void printRegionSheet(feature);
+      }
+    });
     function updateBasemapHint() {
       if (!basemapHint) return;
       const basemapId = basemapSelect?.value || CONFIG.basemap;
