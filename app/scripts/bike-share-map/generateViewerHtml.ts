@@ -1059,6 +1059,77 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet .ps-plot-page { break-before: page; }
     .print-sheet .ps-plots { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt 14pt; }
     .print-sheet .ps-plots .ctx-plot { margin: 0; padding-top: 0; border-top: 0; break-inside: avoid; }
+    .print-sheet .ps-section.ps-ranking-section { break-inside: auto; }
+    .print-sheet .ps-ranking-wrap { margin-top: 4pt; }
+    .print-sheet .ps-ranking-summary { font-size: 8.5pt; color: #555; margin: 0 0 5pt; }
+    .print-sheet .ps-ranking-list {
+      columns: 2;
+      column-gap: 16pt;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .print-sheet .ps-ranking-row {
+      display: grid;
+      grid-template-columns: 2em minmax(0, 1fr) 52pt 3.5em;
+      gap: 0 4pt;
+      align-items: center;
+      font-size: 8.5pt;
+      line-height: 1.35;
+      margin-bottom: 2pt;
+      padding: 1pt 2pt;
+      break-inside: avoid;
+    }
+    .print-sheet .ps-ranking-row--current {
+      background: #eef6ff;
+      font-weight: 700;
+      border-radius: 2pt;
+    }
+    .print-sheet .ps-ranking-rank {
+      color: #64748b;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+    .print-sheet .ps-ranking-name {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #1e293b;
+    }
+    .print-sheet .ps-ranking-row--current .ps-ranking-name {
+      color: #0369a1;
+    }
+    .print-sheet .ps-ranking-bar-track {
+      height: 6.5pt;
+      background: #f1f5f9;
+      border-radius: 2pt;
+      overflow: hidden;
+    }
+    .print-sheet .ps-ranking-bar-fill {
+      height: 100%;
+      border-radius: 2pt;
+      min-width: 2pt;
+    }
+    .print-sheet .ps-ranking-pct {
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+      color: #334155;
+      white-space: nowrap;
+    }
+    .print-sheet .ps-ranking-divider {
+      text-align: center;
+      color: #94a3b8;
+      font-size: 8.5pt;
+      padding: 2pt 0;
+      break-inside: avoid;
+      list-style: none;
+    }
+    .print-sheet .ps-ranking-note {
+      font-size: 8pt;
+      font-style: italic;
+      color: #64748b;
+      margin: 4pt 0 0;
+    }
     .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
     .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
@@ -3049,6 +3120,103 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     /** Short enough for all eight plots (4 rows) to share one page. */
     const PRINT_PLOT_HEIGHT_PX = 180;
 
+    function buildPrintRanking(feature) {
+      if (!lastRankingFeatures.length) return null;
+      const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
+      const withPct = sorted.filter(isRanked);
+      if (withPct.length <= 1) return null;
+
+      const p = feature?.properties || {};
+      const minPct = lastRankingMinPct;
+      const maxPct = lastRankingMaxPct;
+      const span = Math.max(maxPct - minPct, 0.001);
+
+      const items = withPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      const topN = currentRankingTopN();
+      const built = RankingDisplay.buildRankingExportRows(items, {
+        mode: rankingMode,
+        topN,
+        focusChainIds: rankingFocusChainIds(),
+        maxAlleRows: 40,
+      });
+
+      const wrap = document.createElement('div');
+      wrap.className = 'ps-ranking-wrap';
+
+      const summary = document.createElement('p');
+      summary.className = 'ps-ranking-summary';
+      const rankInfo = rankByFeatureId.get(p.id);
+      const rankText = rankInfo
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
+        : withPct.length + ' Gebiete ' + viewComparisonLabel();
+      const modeHint =
+        rankingMode === 'topflop' && withPct.length > (topN ?? DEFAULT_RANKING_TOP_N) * 2
+          ? ' (Top & Flop je ' + (topN ?? DEFAULT_RANKING_TOP_N) + ')'
+          : '';
+
+      summary.textContent = rankText + modeHint + ' · Balken = Anteil in dieser Ansicht';
+      wrap.appendChild(summary);
+
+      const list = document.createElement('ul');
+      list.className = 'ps-ranking-list';
+
+      for (const row of built) {
+        if (row.type === 'divider') {
+          const div = document.createElement('li');
+          div.className = 'ps-ranking-divider';
+          div.textContent = '…';
+          list.appendChild(div);
+          continue;
+        }
+        const f = withPct[row.index];
+        if (!f) continue;
+        const fProps = f.properties || {};
+        const fId = String(fProps.id ?? '');
+        const pct = fProps.bikeSharePct;
+        const name = String(fProps.name || fId || '–');
+        const isCurrent = Boolean(fId && fId === p.id);
+
+        const li = document.createElement('li');
+        li.className = 'ps-ranking-row' + (isCurrent ? ' ps-ranking-row--current' : '');
+
+        const rankEl = document.createElement('span');
+        rankEl.className = 'ps-ranking-rank';
+        rankEl.textContent = row.rank + '.';
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'ps-ranking-name';
+        nameEl.textContent = name;
+
+        const track = document.createElement('div');
+        track.className = 'ps-ranking-bar-track';
+        const fill = document.createElement('div');
+        fill.className = 'ps-ranking-bar-fill';
+        const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
+        fill.style.width = widthPct + '%';
+        fill.style.background = colorForPct(pct, minPct, maxPct);
+        track.appendChild(fill);
+
+        const pctEl = document.createElement('span');
+        pctEl.className = 'ps-ranking-pct';
+        pctEl.textContent = formatUiPct(pct) + ' %';
+
+        li.append(rankEl, nameEl, track, pctEl);
+        list.appendChild(li);
+      }
+
+      wrap.appendChild(list);
+
+      const withoutPct = sorted.length - withPct.length;
+      if (withoutPct > 0) {
+        const note = document.createElement('p');
+        note.className = 'ps-ranking-note';
+        note.textContent = withoutPct + ' weitere Gebiete ohne Rang (< 5 km erfasste Straße)';
+        wrap.appendChild(note);
+      }
+
+      return wrap;
+    }
+
     async function printRegionSheet(feature) {
       if (document.body.classList.contains('printing')) return;
       const p = feature.properties || {};
@@ -3079,7 +3247,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           const parts = nodes.filter(Boolean);
           if (!parts.length) return;
           const wrap = el('section', 'ps-section');
-          if (title) wrap.appendChild(el('h2', null, title));
+          if (title) {
+            wrap.appendChild(el('h2', null, title));
+            if (title === 'Rangliste') wrap.classList.add('ps-ranking-section');
+          }
           wrap.append(...parts);
           sheet.appendChild(wrap);
         };
@@ -3116,6 +3287,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         } catch (e) {
           console.error('[radinfra-viewer] print map', e);
         }
+        section('Rangliste', buildPrintRanking(feature));
         // The context rows render with the card even while "Mehr Zahlen" is folded.
         section('Umfeld', printable(regionDetailExtra));
 

@@ -229,6 +229,10 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('html, body.printing {')
     expect(html).toContain("printButton.textContent = 'Drucken / PDF'")
     expect(html).toContain('async function printRegionSheet(feature)')
+    expect(html).toContain("section('Rangliste', buildPrintRanking(feature))")
+    expect(html).toContain('function buildPrintRanking(feature)')
+    expect(html).toContain('.print-sheet .ps-ranking-list')
+    expect(html).toContain('.print-sheet .ps-ranking-row--current')
     expect(html).toContain("document.body.classList.add('printing')")
   })
 
