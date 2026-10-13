@@ -319,7 +319,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-in,
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-out { display: none; }
-      .panel-actions { margin-top: 10px; }
       #copy-view-link-feedback {
         position: fixed; z-index: 6;
         top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
@@ -385,43 +384,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: flex; align-items: flex-start; gap: 6px;
       font-size: 12px; font-weight: normal; margin: 3px 0; cursor: pointer;
     }
-    .panel-actions { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-    .panel-export-btn {
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      width: 100%; height: 2.35rem; padding: 0 12px;
-      font: inherit; font-size: 12px; font-weight: 600;
-      color: #1565c0; background: #f0f6ff;
-      border: 1px solid #c8ddf6; border-radius: 6px;
-      cursor: pointer; transition: background 0.15s, border-color 0.15s;
+    #copy-view-link-feedback {
+      position: fixed; z-index: 6;
+      top: 50px; right: 50px;
+      padding: 6px 12px; font-size: 12px; font-weight: 500;
+      color: #2e7d32; background: #fff;
+      border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
-    .panel-export-btn:hover:not(:disabled) {
-      background: #e1efff; border-color: #9ec5f3;
-    }
-    .panel-export-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .panel-export-btn svg {
-      width: 1rem; height: 1rem; fill: currentColor; flex: none;
-    }
-    .share-toolbar {
-      display: flex; flex-wrap: nowrap; gap: clamp(3px, 1.2vw, 6px);
-      align-items: center; width: 100%; min-width: 0;
-    }
-    .share-btn {
-      display: inline-flex; align-items: center; justify-content: center;
-      flex: 1 1 auto; min-width: 0; width: auto; height: 2.25rem; gap: 5px;
-      padding: 0 8px; font: inherit; font-size: 11px; font-weight: 600; white-space: nowrap;
-      border: 1px solid #ccc; border-radius: 6px; background: #fafafa;
-      cursor: pointer; color: #444;
-    }
-    .share-btn:hover:not(:disabled) { background: #f0f0f0; }
-    .share-btn:disabled { opacity: 0.55; cursor: not-allowed; }
-    .share-btn svg {
-      width: 1rem; height: 1rem; flex: none;
-      fill: currentColor;
-    }
-    .share-btn--primary { border-color: #1565c0; color: #1565c0; }
-    .share-btn--primary:hover:not(:disabled) { background: #e8f0fb; }
-    #share-native[hidden] { display: none !important; }
-    #copy-view-link-feedback { display: block; margin-top: 4px; color: #2e7d32; font-size: 11px; }
     #copy-view-link-feedback[hidden] { display: none !important; }
     #copy-view-link-feedback.is-error { color: #b71c1c; }
     .scale-cap-controls {
@@ -1352,8 +1321,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <div id="sheet-scrim" aria-hidden="true"></div>
   <button type="button" id="share-fab" class="share-fab" title="Teilen &amp; Exportieren" aria-label="Ansicht teilen und exportieren" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
-    <span class="share-fab-label">Exportieren / Teilen</span>
+    <span class="share-fab-label">Teilen &amp; Exportieren</span>
   </button>
+  <span id="copy-view-link-feedback" hidden></span>
   <button type="button" id="search-fab" class="search-fab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
     <span>Wie steht deine Gemeinde da?</span>
@@ -1574,13 +1544,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           <ol class="ranking-list" id="ranking-list" aria-label="Rangliste der Gebiete"></ol>
         </div>
     </details>
-    <div class="panel-actions">
-      <button type="button" id="panel-export-btn" class="panel-export-btn" title="Ansicht teilen, Karte oder Rangliste als Bild speichern, oder PDF drucken" aria-haspopup="dialog">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
-        <span>Teilen &amp; Exportieren</span>
-      </button>
-      <span id="copy-view-link-feedback" hidden></span>
-    </div>
     </div>
     <p class="footer">
       ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
@@ -1859,7 +1822,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const scaleCapEnabledCb = document.getElementById('scale-cap-enabled');
     const scaleCapPctInput = document.getElementById('scale-cap-pct');
     const shareFab = document.getElementById('share-fab');
-    const panelExportBtn = document.getElementById('panel-export-btn');
     const exportDialog = document.getElementById('export-dialog');
     const exportDialogClose = document.getElementById('export-dialog-close');
     const exportDialogFeedback = document.getElementById('export-dialog-feedback');
@@ -2382,7 +2344,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function setPanelActionsEnabled(enabled) {
       setCsvExportEnabled(enabled);
       if (shareFab) shareFab.disabled = !enabled;
-      if (panelExportBtn) panelExportBtn.disabled = !enabled;
       if (exportItemShare) exportItemShare.disabled = !enabled;
       if (exportItemMap) exportItemMap.disabled = !enabled;
       if (exportItemRanking) exportItemRanking.disabled = !enabled;
@@ -4529,13 +4490,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         });
         links.appendChild(neighborButton);
       }
-      const exportButton = document.createElement('button');
-      exportButton.type = 'button';
-      exportButton.className = 'region-detail-drill';
-      exportButton.textContent = 'Teilen & Exportieren';
-      exportButton.title = 'Datenblatt (PDF), Karte (Bild), Rangliste (Bild) oder Link teilen';
-      exportButton.addEventListener('click', () => openExportDialog());
-      links.appendChild(exportButton);
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');
         if (edit) links.appendChild(edit);
@@ -7139,7 +7093,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     syncRankingModeButtons();
     syncRankingScrollLayout();
     shareFab?.addEventListener('click', openExportDialog);
-    panelExportBtn?.addEventListener('click', openExportDialog);
     exportDialogClose?.addEventListener('click', closeExportDialog);
     exportDialog?.addEventListener('click', (e) => {
       if (e.target === exportDialog) closeExportDialog();

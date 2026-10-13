@@ -159,10 +159,11 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('map.easeTo({')
   })
 
-  test('region detail actions and unified export dialog provide sharing and export with instant feedback', () => {
-    expect(html).toContain("exportButton.textContent = 'Teilen & Exportieren'")
+  test('unified export dialog provides sharing and export with instant feedback', () => {
+    expect(html).toContain('id="share-fab"')
     expect(html).toContain('id="export-dialog"')
     expect(html).toContain('✓ Link kopiert!')
+    expect(html).not.toContain("exportButton.textContent = 'Teilen & Exportieren'")
   })
 
   test('basemap switching preserves user camera bearing and pitch', () => {
@@ -237,13 +238,12 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("document.body.classList.add('printing')")
   })
 
-  test('unifies map image, ranking image, and pdf export into a single dialog across desktop and mobile', () => {
+  test('unifies map image, ranking image, and pdf export into a single dialog triggered from map corner', () => {
     expect(html).toContain('id="export-item-map"')
     expect(html).toContain('id="export-item-ranking"')
     expect(html).toContain('id="export-item-pdf"')
     expect(html).toContain('id="share-fab"')
-    expect(html).toContain('id="panel-export-btn"')
-    expect(html).not.toContain('.panel-actions .share-toolbar { display: none; }')
+    expect(html).not.toContain('id="panel-export-btn"')
   })
 
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
