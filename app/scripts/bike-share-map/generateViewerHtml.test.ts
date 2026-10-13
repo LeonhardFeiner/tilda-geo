@@ -246,6 +246,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).not.toContain('id="panel-export-btn"')
   })
 
+  test('includes population-weighted bike time to next station in context metrics', () => {
+    expect(html).toContain("key: 'stationBike'")
+    expect(html).toContain("label: 'Ø mit dem Rad zur nächsten Haltestelle'")
+    expect(html).toContain("note: 'entlang der Wege, einwohnergewichtet'")
+    expect(html).toContain('transitIndex?.byId[id]?.access?.bike?.[0]')
+  })
+
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
       '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',

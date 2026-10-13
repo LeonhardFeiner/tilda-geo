@@ -181,15 +181,16 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
     // transit-stop-counts.json hasn't been fetched (the publicTransport topic isn't part of the
     // default local processing run).
     const transitCountsPath = join(outputRoot, 'transit-stop-counts.json')
-    if (existsSync(transitCountsPath)) {
+    const accessPath = join(outputRoot, 'station-access.json')
+    if (existsSync(transitCountsPath) || existsSync(accessPath)) {
       const areaByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.areaKm2]))
-      const counts = JSON.parse(await Bun.file(transitCountsPath).text()) as {
-        byId?: Record<string, { stopCount?: number; avgDistanceToStationM?: number }>
-      }
+      const counts = existsSync(transitCountsPath)
+        ? (JSON.parse(await Bun.file(transitCountsPath).text()) as {
+            byId?: Record<string, { stopCount?: number; avgDistanceToStationM?: number }>
+          })
+        : {}
       // Time/distance to the nearest station on foot, by bike and by car along the network
-      // (fetchStationAccess.ts): {mode: [minutes, km, % within 10 min]}. Optional: absent until
-      // routing/station_access.py has been run.
-      const accessPath = join(outputRoot, 'station-access.json')
+      // (fetchStationAccess.ts): {mode: [minutes, km, % within 10 min]}.
       const accessById = existsSync(accessPath)
         ? ((
             JSON.parse(await Bun.file(accessPath).text()) as {
@@ -203,21 +204,23 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         access?: Record<string, [number, number, number]>
       }
       const transitById: Record<string, TransitEntry> = {}
-      for (const [id, entry] of Object.entries(counts.byId ?? {})) {
+      const allIds = new Set([...Object.keys(counts.byId ?? {}), ...Object.keys(accessById)])
+      for (const id of allIds) {
+        const entry = counts.byId?.[id]
         const rs = rsById.get(id)
         const areaKm2 = rs ? areaByRs.get(rs) : undefined
         const out: TransitEntry = accessById[id] ? { access: accessById[id] } : {}
-        if (typeof entry.stopCount === 'number' && typeof areaKm2 === 'number' && areaKm2 > 0) {
+        if (entry && typeof entry.stopCount === 'number' && typeof areaKm2 === 'number' && areaKm2 > 0) {
           out.density = entry.stopCount / areaKm2
         }
-        if (typeof entry.avgDistanceToStationM === 'number') {
+        if (entry && typeof entry.avgDistanceToStationM === 'number') {
           out.avgDistanceToStationM = entry.avgDistanceToStationM
         }
         if (Object.keys(out).length) transitById[id] = out
       }
       writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
       process.stdout.write(
-        `Transit stops: ${Object.keys(transitById).length} Gemeinden → ${viewerDir}/gemeinde-transit.json\n`,
+        `Transit stops & access: ${Object.keys(transitById).length} regions → ${viewerDir}/gemeinde-transit.json\n`,
       )
     }
   } catch (err) {

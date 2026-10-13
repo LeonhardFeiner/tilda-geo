@@ -73,7 +73,7 @@ async function aggregateMode(client: Client, cells: ReturnType<typeof readCells>
            SUM(CASE WHEN c.seconds <= $1 THEN c.einwohner ELSE 0 END)::float8 / SUM(c.einwohner) AS within_share
     FROM public.aggregated_lengths al
     JOIN _access_cells c ON c.geom && al.geom AND ST_Contains(al.geom, c.geom)
-    WHERE al.level = '8'
+    WHERE al.level IN ('2', '4', '6', '7', '8', '9')
     GROUP BY al.id
     HAVING SUM(c.einwohner) > 0
     `,
@@ -91,7 +91,12 @@ if (import.meta.main) {
     process.exit(1)
   }
   const byId: Record<string, Partial<Record<Mode, [number, number, number]>>> = {}
-  const client = new Client({ connectionString: getBaseDatabaseUrl() })
+  const connectionString =
+    process.env.DATABASE_URL ||
+    (process.env.DATABASE_HOST
+      ? getBaseDatabaseUrl()
+      : 'postgresql://postgres:mysecretpassword@localhost:5432/postgres')
+  const client = new Client({ connectionString })
   await client.connect()
   try {
     await client.query('SET statement_timeout = 0')
@@ -105,7 +110,7 @@ if (import.meta.main) {
           Math.round(row.within_share * 1000) / 10,
         ]
       }
-      process.stdout.write(`${mode}: ${rows.length} Gemeinden\n`)
+      process.stdout.write(`${mode}: ${rows.length} regions\n`)
     }
   } finally {
     await client.end()
@@ -121,5 +126,5 @@ if (import.meta.main) {
       byId,
     }),
   )
-  process.stdout.write(`${outPath} (${Object.keys(byId).length} Gemeinden)\n`)
+  process.stdout.write(`${outPath} (${Object.keys(byId).length} regions)\n`)
 }

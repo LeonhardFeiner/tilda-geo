@@ -3928,10 +3928,28 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
         },
         {
+          key: 'stationBike',
+          label: 'Ø mit dem Rad zur nächsten Haltestelle',
+          note: 'entlang der Wege, einwohnergewichtet',
+          source: transitIndex,
+          get: (id) => {
+            const v = transitIndex?.byId[id]?.access?.bike?.[0];
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const access = id ? transitIndex?.byId[id]?.access : null;
+            const km = access?.bike?.[1];
+            return (
+              formatMinutes(v) +
+              (typeof km === 'number' ? ' (' + deNumber(km, km < 10 ? 1 : 0) + ' km)' : '')
+            );
+          },
+        },
+        {
           // One line for all three modes, so no single position bar: the bar would have to
           // pick one mode. Present whenever any mode has a figure.
           key: 'stationAccess',
-          label: 'Ø zur nächsten Haltestelle',
+          label: 'Ø zu Fuß / Rad / Auto',
           note: 'entlang der Wege, einwohnergewichtet',
           source: transitIndex,
           noBar: true,
