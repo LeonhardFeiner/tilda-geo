@@ -1029,9 +1029,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet { display: none; }
     @media print {
       @page { size: A4; margin: 15mm; }
+      html, body.printing {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        background: #fff;
+      }
       body.printing > :not(#print-sheet) { display: none !important; }
-      body.printing { overflow: visible !important; background: #fff; }
-      body.printing #print-sheet { display: block; }
+      body.printing #print-sheet {
+        display: block !important;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
     }
     .print-sheet { font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; color: #111; font-size: 10pt; line-height: 1.35; }
     .print-sheet .ps-kicker { font-size: 9pt; letter-spacing: 0.08em; text-transform: uppercase; color: #555; margin: 0; }
@@ -1335,7 +1344,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     </div>
   </details>
   <div id="tooltip"></div>
-  <div id="print-sheet" class="print-sheet"></div>
   <div id="region-detail" class="region-detail" hidden>
     <button type="button" class="region-detail-close" id="region-detail-close" aria-label="Schließen">×</button>
     <div class="region-detail-header">
@@ -1354,6 +1362,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     </details>
   </div>
   </main>
+  <div id="print-sheet" class="print-sheet"></div>
   <dialog id="methodology-dialog" class="methodology-dialog" aria-labelledby="methodology-title">
     <div class="methodology-dialog-header">
       <h2 id="methodology-title">Methodik &amp; Datenquellen</h2>
@@ -3041,117 +3050,125 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const PRINT_PLOT_HEIGHT_PX = 180;
 
     async function printRegionSheet(feature) {
+      if (document.body.classList.contains('printing')) return;
       const p = feature.properties || {};
       const sheet = document.getElementById('print-sheet');
       if (!sheet) return;
-      const el = (tag, className, text) => {
-        const node = document.createElement(tag);
-        if (className) node.className = className;
-        if (text != null) node.textContent = text;
-        return node;
-      };
-      /** Static copy of a card part: no ids, no buttons/links/selects, folded parts left out. */
-      const printable = (node) => {
-        if (!node || node.hidden) return null;
-        const copy = node.cloneNode(true);
-        copy.removeAttribute('id');
-        for (const n of copy.querySelectorAll('[id]')) n.removeAttribute('id');
-        for (const sel of copy.querySelectorAll('select')) {
-          sel.replaceWith(el('span', null, sel.selectedOptions[0]?.textContent || ''));
-        }
-        for (const n of copy.querySelectorAll('.ctx-plot, [hidden]')) n.remove();
-        // Inline buttons (e.g. the nearby example's name) carry text the sentence needs.
-        for (const btn of copy.querySelectorAll('button')) btn.replaceWith(el('strong', null, btn.textContent));
-        return copy;
-      };
-      const section = (title, ...nodes) => {
-        const parts = nodes.filter(Boolean);
-        if (!parts.length) return;
-        const wrap = el('section', 'ps-section');
-        if (title) wrap.appendChild(el('h2', null, title));
-        wrap.append(...parts);
-        sheet.appendChild(wrap);
-      };
-
-      sheet.replaceChildren();
-      const parentNames = [p.landkreis_id, p.bundesland_id]
-        .map((id) => (id && id !== p.id ? regionIndex?.byId.get(id)?.properties?.name : null))
-        .filter(Boolean);
-      sheet.append(
-        el('p', 'ps-kicker', 'Radinfrastruktur – Datenblatt'),
-        el('h1', null, p.name || p.id),
-        el(
-          'p',
-          'ps-sub',
-          [RegionSearch.regionSearchLevelLabel(String(p.level ?? ''), p.id, regionIndex), ...parentNames].join(
-            ' · ',
-          ),
-        ),
-      );
-      section(null, printable(regionDetailMeta));
-      section(
-        'Vergleich',
-        printable(regionDetailGap),
-        printable(regionDetailPeerGap),
-        printable(regionDetailQuality),
-      );
-      section(null, printable(regionDetailAuthority));
       try {
-        const img = el('img');
-        img.alt = 'Karte: ' + (p.name || '');
-        img.src = (await captureLiveMapCanvas()).toDataURL('image/png');
-        await raceTimeout(img.decode(), 1500);
-        section('Karte', img);
-      } catch (e) {
-        console.error('[radinfra-viewer] print map', e);
+        const el = (tag, className, text) => {
+          const node = document.createElement(tag);
+          if (className) node.className = className;
+          if (text != null) node.textContent = text;
+          return node;
+        };
+        /** Static copy of a card part: no ids, no buttons/links/selects, folded parts left out. */
+        const printable = (node) => {
+          if (!node || node.hidden) return null;
+          const copy = node.cloneNode(true);
+          copy.removeAttribute('id');
+          for (const n of copy.querySelectorAll('[id]')) n.removeAttribute('id');
+          for (const sel of copy.querySelectorAll('select')) {
+            sel.replaceWith(el('span', null, sel.selectedOptions[0]?.textContent || ''));
+          }
+          for (const n of copy.querySelectorAll('.ctx-plot, [hidden]')) n.remove();
+          // Inline buttons (e.g. the nearby example's name) carry text the sentence needs.
+          for (const btn of copy.querySelectorAll('button')) btn.replaceWith(el('strong', null, btn.textContent));
+          return copy;
+        };
+        const section = (title, ...nodes) => {
+          const parts = nodes.filter(Boolean);
+          if (!parts.length) return;
+          const wrap = el('section', 'ps-section');
+          if (title) wrap.appendChild(el('h2', null, title));
+          wrap.append(...parts);
+          sheet.appendChild(wrap);
+        };
+
+        sheet.replaceChildren();
+        const parentNames = [p.landkreis_id, p.bundesland_id]
+          .map((id) => (id && id !== p.id ? regionIndex?.byId.get(id)?.properties?.name : null))
+          .filter(Boolean);
+        sheet.append(
+          el('p', 'ps-kicker', 'Radinfrastruktur – Datenblatt'),
+          el('h1', null, p.name || p.id),
+          el(
+            'p',
+            'ps-sub',
+            [RegionSearch.regionSearchLevelLabel(String(p.level ?? ''), p.id, regionIndex), ...parentNames].join(
+              ' · ',
+            ),
+          ),
+        );
+        section(null, printable(regionDetailMeta));
+        section(
+          'Vergleich',
+          printable(regionDetailGap),
+          printable(regionDetailPeerGap),
+          printable(regionDetailQuality),
+        );
+        section(null, printable(regionDetailAuthority));
+        try {
+          const img = el('img');
+          img.alt = 'Karte: ' + (p.name || '');
+          img.src = (await captureLiveMapCanvas()).toDataURL('image/png');
+          await raceTimeout(img.decode(), 1500);
+          section('Karte', img);
+        } catch (e) {
+          console.error('[radinfra-viewer] print map', e);
+        }
+        // The context rows render with the card even while "Mehr Zahlen" is folded.
+        section('Umfeld', printable(regionDetailExtra));
+
+        const filter = readLengthClassFilterFromUi();
+        const byClass = el('div', 'ps-columns');
+        appendLengthRows(byClass, 'Straßen nach Klasse', TildaStats.listFilteredRoadClassLengths(p.road_length, filter), null, overlayRoadColorInput.value);
+        appendLengthRows(byClass, 'Radinfrastruktur nach Klasse', TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+        const byType = el('div', 'ps-columns');
+        appendLengthRows(byType, 'Straßen nach Typ', TildaStats.listFilteredHighwayTagLengths(p.road_length, filter), null, overlayRoadColorInput.value);
+        appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+        section('Längen', byClass, byType);
+
+        // One small scatter per context metric, same comparison group as the card.
+        const level = String(p.level ?? '');
+        const scopes = contextScopesFor(p, CONTEXT_REFERENCE_NOUN[level] || 'Gebieten');
+        const plotScope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
+        const plots = el('div', 'ps-plots');
+        for (const metric of contextMetrics()) {
+          const value = metric.get(p.id);
+          if (value == null || !Number.isFinite(value) || !plotScope) continue;
+          const plot = buildMetricPlot(metric, level, plotScope);
+          if (!plot) continue;
+          renderMetricPlot(plot.chart, metric, plot.entries, p.id, PRINT_PLOT_WIDTH_PX, PRINT_PLOT_HEIGHT_PX);
+          plots.appendChild(plot.plotDiv);
+        }
+        if (plots.childElementCount) {
+          const heading = el('h2', null, 'Zusammenhänge – Vergleich: ' + plotScope.label);
+          const wrap = el('section', 'ps-section ps-plot-page');
+          wrap.append(heading, plots);
+          sheet.appendChild(wrap);
+        }
+
+        const foot = el(
+          'p',
+          'ps-foot',
+          'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
+            (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
+            '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${dataDateLabel || generatedDateLabel}. ' +
+            'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
+        );
+        foot.appendChild(el('span', 'ps-url', buildShareUrl()));
+        sheet.appendChild(foot);
+
+        const done = () => document.body.classList.remove('printing');
+        window.addEventListener('afterprint', done, { once: true });
+        document.body.classList.add('printing');
+        requestAnimationFrame(() => {
+          window.print();
+        });
+      } catch (err) {
+        console.error('[radinfra-viewer] printRegionSheet failed', err);
+        document.body.classList.remove('printing');
       }
-      // The context rows render with the card even while "Mehr Zahlen" is folded.
-      section('Umfeld', printable(regionDetailExtra));
-
-      const filter = readLengthClassFilterFromUi();
-      const byClass = el('div', 'ps-columns');
-      appendLengthRows(byClass, 'Straßen nach Klasse', TildaStats.listFilteredRoadClassLengths(p.road_length, filter), null, overlayRoadColorInput.value);
-      appendLengthRows(byClass, 'Radinfrastruktur nach Klasse', TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
-      const byType = el('div', 'ps-columns');
-      appendLengthRows(byType, 'Straßen nach Typ', TildaStats.listFilteredHighwayTagLengths(p.road_length, filter), null, overlayRoadColorInput.value);
-      appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
-      section('Längen', byClass, byType);
-
-      // One small scatter per context metric, same comparison group as the card.
-      const level = String(p.level ?? '');
-      const scopes = contextScopesFor(p, CONTEXT_REFERENCE_NOUN[level] || 'Gebieten');
-      const plotScope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
-      const plots = el('div', 'ps-plots');
-      for (const metric of contextMetrics()) {
-        const value = metric.get(p.id);
-        if (value == null || !Number.isFinite(value) || !plotScope) continue;
-        const plot = buildMetricPlot(metric, level, plotScope);
-        if (!plot) continue;
-        renderMetricPlot(plot.chart, metric, plot.entries, p.id, PRINT_PLOT_WIDTH_PX, PRINT_PLOT_HEIGHT_PX);
-        plots.appendChild(plot.plotDiv);
-      }
-      if (plots.childElementCount) {
-        const heading = el('h2', null, 'Zusammenhänge – Vergleich: ' + plotScope.label);
-        const wrap = el('section', 'ps-section ps-plot-page');
-        wrap.append(heading, plots);
-        sheet.appendChild(wrap);
-      }
-
-      const foot = el(
-        'p',
-        'ps-foot',
-        'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
-          (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
-          '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${dataDateLabel || generatedDateLabel}. ' +
-          'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
-      );
-      foot.appendChild(el('span', 'ps-url', buildShareUrl()));
-      sheet.appendChild(foot);
-
-      const done = () => document.body.classList.remove('printing');
-      window.addEventListener('afterprint', done, { once: true });
-      document.body.classList.add('printing');
-      window.print();
     }
 
     const mainRoadBreakdownCache = new Map();

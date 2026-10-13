@@ -213,6 +213,25 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('color: #475569;')
   })
 
+  test('places printable fact sheet outside app-root main and configures media print styles', () => {
+    const appRootPos = html.indexOf('<main id="app-root">')
+    const appRootClosePos = html.indexOf('</main>')
+    const printSheetPos = html.indexOf('<div id="print-sheet" class="print-sheet"></div>')
+
+    expect(appRootPos).toBeGreaterThan(-1)
+    expect(appRootClosePos).toBeGreaterThan(appRootPos)
+    expect(printSheetPos).toBeGreaterThan(appRootClosePos)
+
+    expect(html).toContain('@media print')
+    expect(html).toContain('body.printing > :not(#print-sheet) { display: none !important; }')
+    expect(html).toContain('body.printing #print-sheet {')
+    expect(html).toContain('print-color-adjust: exact;')
+    expect(html).toContain('html, body.printing {')
+    expect(html).toContain("printButton.textContent = 'Drucken / PDF'")
+    expect(html).toContain('async function printRegionSheet(feature)')
+    expect(html).toContain("document.body.classList.add('printing')")
+  })
+
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
       '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',
