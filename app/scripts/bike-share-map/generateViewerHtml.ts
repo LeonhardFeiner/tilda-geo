@@ -3908,6 +3908,27 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       { key: 'car', label: 'Auto', csv: 'mit dem Auto' },
     ];
 
+    /** Travel time along the paths to the nearest station for one mode, with its distance. */
+    function stationAccessMetric(mode, label) {
+      return {
+        key: 'station' + mode[0].toUpperCase() + mode.slice(1),
+        label,
+        note: 'entlang der Wege, einwohnergewichtet',
+        source: transitIndex,
+        get: (id) => {
+          const v = transitIndex?.byId[id]?.access?.[mode]?.[0];
+          return typeof v === 'number' ? v : null;
+        },
+        format: (v, id) => {
+          const km = id ? transitIndex?.byId[id]?.access?.[mode]?.[1] : null;
+          return (
+            formatMinutes(v) +
+            (typeof km === 'number' ? ' (' + deNumber(km, km < 10 ? 1 : 0) + ' km)' : '')
+          );
+        },
+      };
+    }
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -3942,45 +3963,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           },
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
         },
-        {
-          key: 'stationBike',
-          label: 'Ø mit dem Rad zur nächsten Haltestelle',
-          note: 'entlang der Wege, einwohnergewichtet',
-          source: transitIndex,
-          get: (id) => {
-            const v = transitIndex?.byId[id]?.access?.bike?.[0];
-            return typeof v === 'number' ? v : null;
-          },
-          format: (v, id) => {
-            const access = id ? transitIndex?.byId[id]?.access : null;
-            const km = access?.bike?.[1];
-            return (
-              formatMinutes(v) +
-              (typeof km === 'number' ? ' (' + deNumber(km, km < 10 ? 1 : 0) + ' km)' : '')
-            );
-          },
-        },
-        {
-          // One line for all three modes, so no single position bar: the bar would have to
-          // pick one mode. Present whenever any mode has a figure.
-          key: 'stationAccess',
-          label: 'Ø zu Fuß / Rad / Auto',
-          note: 'entlang der Wege, einwohnergewichtet',
-          source: transitIndex,
-          noBar: true,
-          get: (id) => {
-            const access = transitIndex?.byId[id]?.access;
-            const v = access?.bike?.[0] ?? access?.foot?.[0] ?? access?.car?.[0];
-            return typeof v === 'number' ? v : null;
-          },
-          format: (v, id) => {
-            const access = id ? transitIndex?.byId[id]?.access : null;
-            if (!access) return deNumber(v, 0) + ' min';
-            return STATION_ACCESS_MODES.filter((m) => access[m.key])
-              .map((m) => m.label + ' ' + formatMinutes(access[m.key][0]))
-              .join(' · ');
-          },
-        },
+        stationAccessMetric('foot', 'Ø zu Fuß zur nächsten Haltestelle'),
+        stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
         {
           key: 'elevation',
           label: 'Höhenlage (Ø)',
