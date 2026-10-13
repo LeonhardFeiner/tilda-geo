@@ -262,3 +262,23 @@ export function medianOfSorted(sortedAsc: number[]) {
   const mid = Math.floor(n / 2)
   return n % 2 ? sortedAsc[mid]! : (sortedAsc[mid - 1]! + sortedAsc[mid]!) / 2
 }
+
+/**
+ * "in <place>" with the article German needs for admin-area names as OSM spells them:
+ * "im Landkreis Konstanz", "im Rhein-Sieg-Kreis", "im Altenburger Land", "im Saarland",
+ * "im Märkischen Kreis", "in der Region Hannover", but "in Bayern".
+ */
+export function inPlacePhrase(name: string) {
+  const n = name.trim()
+  if (/^(Region|Städteregion)\s/.test(n)) return `in der ${n}`
+  if (
+    /kreis(\s|$)/i.test(n) ||
+    /^(Regierungsbezirk|Regionalverband|Stadtverband)\s/.test(n) ||
+    /\sLand$/.test(n) ||
+    n === 'Saarland'
+  ) {
+    // Adjective names take the dative ending: "Märkischer Kreis" → "im Märkischen Kreis".
+    return `im ${n.replace(/ischer Kreis$/, 'ischen Kreis')}`
+  }
+  return `in ${n}`
+}

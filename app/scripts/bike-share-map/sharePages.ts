@@ -1,5 +1,10 @@
 import type { DemographicPeerSummary } from './demographicPeers'
-import { bikelaneGapKm, computeViewBenchmark, type ViewBenchmarkStat } from './rankingDisplay'
+import {
+  bikelaneGapKm,
+  computeViewBenchmark,
+  inPlacePhrase,
+  type ViewBenchmarkStat,
+} from './rankingDisplay'
 import { formatStatKm, formatStatPctUi, STAT_KM_BIKE_UI_DECIMALS } from './statsClassSums'
 
 /**
@@ -147,12 +152,12 @@ export function shareRankPhrase(s: Pick<ShareRegionSummary, 'rank' | 'total'>) {
 
 export function groupLocationPhrase(s: Pick<ShareRegionSummary, 'groupKind' | 'groupName'>) {
   if (s.groupKind === 'gemeinden_in_landkreis') {
-    // The OSM relation name is usually already "Landkreis X" — don't say it twice.
-    return s.groupName.startsWith('Landkreis ')
-      ? `im ${s.groupName}`
-      : `im Landkreis ${s.groupName}`
+    // The OSM relation name usually already says what it is ("Landkreis X", "Rhein-Sieg-Kreis",
+    // "Region Hannover") — don't say it twice. A bare name ("Bautzen") gets "Landkreis".
+    const phrase = inPlacePhrase(s.groupName)
+    return phrase === `in ${s.groupName.trim()}` ? `im Landkreis ${s.groupName}` : phrase
   }
-  if (s.groupKind === 'landkreise_in_bundesland') return `in ${s.groupName}`
+  if (s.groupKind === 'landkreise_in_bundesland') return inPlacePhrase(s.groupName)
   return 'in Deutschland'
 }
 

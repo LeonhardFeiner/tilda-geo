@@ -126,6 +126,15 @@ describe('shareRankPhrase / groupLocationPhrase', () => {
         groupName: 'Landkreis Pfaffenhofen an der Ilm',
       }),
     ).toBe('im Landkreis Pfaffenhofen an der Ilm')
+    expect(
+      groupLocationPhrase({ groupKind: 'gemeinden_in_landkreis', groupName: 'Region Hannover' }),
+    ).toBe('in der Region Hannover')
+    expect(
+      groupLocationPhrase({ groupKind: 'gemeinden_in_landkreis', groupName: 'Rhein-Sieg-Kreis' }),
+    ).toBe('im Rhein-Sieg-Kreis')
+    expect(
+      groupLocationPhrase({ groupKind: 'landkreise_in_bundesland', groupName: 'Saarland' }),
+    ).toBe('im Saarland')
   })
 })
 

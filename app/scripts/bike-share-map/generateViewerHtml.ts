@@ -24,6 +24,11 @@ import {
 } from './statsClassSums'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
 
+// Bottom-sheet ("phone") layout: narrow screens, and short ones too — a phone held sideways is
+// wide but too low for the side panel. DESKTOP_MEDIA is the exact complement.
+const PHONE_MEDIA = '(max-width: 768px), (max-height: 500px)'
+const DESKTOP_MEDIA = '(min-width: 769px) and (min-height: 501px)'
+
 export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
@@ -168,7 +173,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     /* Desktop scrim is inert; the mobile bottom-sheet block below activates it. */
     #sheet-scrim { display: none; }
     .search-fab { display: none; }
-    @media (min-width: 769px) {
+    @media ${DESKTOP_MEDIA} {
       #share-fab {
         display: inline-flex; align-items: center; justify-content: center; gap: 6px;
         position: fixed; z-index: 5;
@@ -183,8 +188,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       #share-fab:hover { background: #f8fafc; }
       #share-fab:active { background: #f1f5f9; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
+      /* While the panel is open the breadcrumb (or the region card) already says this; the
+         preview only earns its place on the collapsed panel. */
+      .panel[open] > summary .panel-summary-preview { visibility: hidden; }
     }
-    @media (max-width: 768px) {
+    @media ${PHONE_MEDIA} {
       body { --sheet-peek: 4.9rem; }
 
       #sheet-scrim {
@@ -231,6 +239,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       .panel > summary::after { display: none; }
       .panel-summary-preview { font-size: 12px; }
       .panel-body { padding-bottom: 8px; }
+      /* Peek shows the title row only — the body would otherwise be sliced mid-line. */
+      body[data-sheet="peek"] .panel-body { visibility: hidden; }
+      /* The region card below already leads with the name and percentage. */
+      body[data-region-detail] .panel-summary-preview { visibility: hidden; }
 
       /* Primary sections are permanently open on the phone (see lockOpenSectionsForViewport). */
       .panel-section[data-lock-open] > summary {
@@ -269,18 +281,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       #region-detail-mount .region-detail-header { padding-right: 0; }
 
-      /* Share button, top-left over the map. Styled to match the MapLibre zoom
-         control (top-right) so it reads as a map control, not a floating chip. */
+      /* Share button, top-left over the map: a round twin of the search pill beside it. */
       #share-fab {
         display: flex; align-items: center; justify-content: center;
         position: fixed; z-index: 5;
         top: calc(10px + env(safe-area-inset-top, 0px)); left: 10px;
-        width: 30px; height: 30px; padding: 0;
-        border: none; border-radius: 4px;
+        width: 44px; height: 44px; padding: 0;
+        border: none; border-radius: 999px;
         background: #fff; color: #333; cursor: pointer;
-        box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
       }
-      #share-fab svg { width: 18px; height: 18px; fill: currentColor; }
+      #share-fab svg { width: 20px; height: 20px; fill: currentColor; }
       #share-fab .share-fab-label { display: none; }
       #share-fab:active { background: #f2f2f2; }
       #share-fab:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -290,7 +301,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       #search-fab {
         display: flex; align-items: center; gap: 8px;
         position: fixed; z-index: 5;
-        top: calc(10px + env(safe-area-inset-top, 0px)); left: 50px; right: 50px;
+        top: calc(10px + env(safe-area-inset-top, 0px)); left: 62px; right: 50px;
         min-height: 44px; height: 44px; padding: 0 14px;
         border: none; border-radius: 999px;
         background: #fff; color: #444; cursor: pointer;
@@ -300,19 +311,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       #search-fab svg { flex: none; width: 20px; height: 20px; fill: #1565c0; }
       #search-fab span { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
       body[data-sheet="full"] #search-fab { display: none; }
+      /* With nothing selected the half sheet shows the real search field — one is enough. */
+      body[data-sheet="half"]:not([data-region-detail]) #search-fab { display: none; }
       .exit-neighbor-view {
-        top: 56px; font-size: 12px; padding: 6px 14px;
+        top: calc(62px + env(safe-area-inset-top, 0px)); font-size: 12px; padding: 6px 14px;
       }
       body[data-sheet="full"] .exit-neighbor-view {
         display: none !important;
-      }
-      .canvas-mini-legend {
-        left: 10px;
-        bottom: calc(var(--sheet-peek) + 12px);
-      }
-      body[data-sheet="half"] .canvas-mini-legend,
-      body[data-sheet="full"] .canvas-mini-legend {
-        opacity: 0;
       }
       .region-search-results {
         max-height: min(220px, calc(100dvh - 320px));
@@ -321,7 +326,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-out { display: none; }
       #copy-view-link-feedback {
         position: fixed; z-index: 6;
-        top: calc(60px + env(safe-area-inset-top, 0px)); left: 10px;
+        top: calc(62px + env(safe-area-inset-top, 0px)); left: 10px;
         max-width: 74vw; padding: 6px 10px;
         background: #fff; border-radius: 8px;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
@@ -466,7 +471,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ranking-hint { font-weight: normal; font-size: 11px; color: #475569; }
     .ranking-list {
       margin: 0; padding: 0;
-      font-size: 11px; line-height: 1.45; color: #444;
+      font-size: 12px; line-height: 1.45; color: #444;
       list-style: none;
     }
     .ranking-list li {
@@ -502,23 +507,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ranking-list li.ranking-row-focus {
       background: #ececec;
     }
-    .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 10px; }
+    .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 11px; }
     .ranking-name {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-size: 10px;
+      font-size: 13px;
     }
     .ranking-bar-track {
-      height: 9px; background: #eceff1; border-radius: 2px; overflow: hidden;
+      height: 10px; background: #eceff1; border-radius: 2px; overflow: hidden;
     }
     .ranking-bar-fill { height: 100%; border-radius: 2px; min-width: 2px; }
     .ranking-pct {
-      text-align: right; font-variant-numeric: tabular-nums; font-size: 10px; color: #444;
+      text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: #444;
       white-space: nowrap;
     }
     .ranking-list .ranking-more,
     .ranking-list .ranking-divider {
       display: block; grid-column: 1 / -1;
-      color: #475569; font-style: italic; font-size: 10px; padding: 2px 0;
+      color: #475569; font-style: italic; font-size: 11px; padding: 2px 0;
     }
     .ranking-divider { text-align: center; font-style: normal; color: #aaa; }
     .ranking-toolbar {
@@ -530,7 +535,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .ranking-mode[hidden] { display: none; }
     .ranking-mode-btn {
-      font-size: 11px; padding: 3px 8px; border: none; background: #f5f5f5;
+      font-size: 12px; padding: 5px 10px; border: none; background: #f5f5f5;
       color: #444; cursor: pointer;
     }
     .ranking-mode-btn:hover { background: #ebebeb; }
@@ -539,7 +544,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .view-csv-row { margin-top: 6px; }
     .view-csv-btn {
-      font-size: 11px; padding: 3px 8px;
+      font-size: 12px; padding: 5px 10px;
     }
     .ranking-csv-actions {
       display: flex;
@@ -570,6 +575,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .view-meta {
       font-size: 11px; color: #475569; margin: 0; line-height: 1.45;
     }
+    .view-meta-more > summary {
+      cursor: pointer; font-size: 11px; color: #1565c0; margin-top: 2px;
+    }
+    .view-meta-more[hidden] { display: none !important; }
     .national-context {
       font-size: 12px; font-weight: 600; color: #333;
       margin: 6px 0 0; line-height: 1.4;
@@ -603,7 +612,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-detail[hidden] { display: none !important; }
     /* On a computer there is room: a wider card that runs most of the way up the screen
        (below the zoom buttons, beside the panel) so it rarely needs scrolling. */
-    @media (min-width: 769px) {
+    @media ${DESKTOP_MEDIA} {
       .region-detail {
         width: min(460px, calc(100vw - 460px));
         min-width: 340px;
@@ -788,7 +797,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-nav[hidden] { display: none !important; }
     .region-search-block { position: relative; margin-bottom: 10px; }
     .region-search-block[hidden] { display: none !important; }
-    @media (min-width: 769px) {
+    @media ${DESKTOP_MEDIA} {
       .region-search-block {
         position: sticky; top: -12px; z-index: 5;
         background: rgba(255, 255, 255, 0.98);
@@ -806,13 +815,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       font-weight: 600;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
     }
-    @media (min-width: 769px) {
+    @media ${DESKTOP_MEDIA} {
       body[data-region-detail] .maplibregl-ctrl-bottom-right {
         margin-right: min(480px, calc(100vw - 440px));
         transition: margin-right 0.28s cubic-bezier(0.32, 0.72, 0, 1);
       }
     }
-    @media (max-width: 768px) {
+    @media ${PHONE_MEDIA} {
       .maplibregl-ctrl-bottom-right {
         margin-bottom: calc(var(--sheet-peek) + 8px);
       }
@@ -916,8 +925,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       pointer-events: none;
       transition: opacity 0.2s ease, left 0.2s ease, bottom 0.2s ease;
     }
-    .panel:not([open]) ~ .canvas-mini-legend {
+    /* The legend precedes the panel in the DOM, so a sibling selector can't see the panel. */
+    body:has(#panel-main:not([open])) .canvas-mini-legend {
       left: 16px;
+    }
+    /* After the base rule above: same specificity, so source order decides. */
+    @media ${PHONE_MEDIA} {
+      .canvas-mini-legend {
+        left: 10px;
+        bottom: calc(var(--sheet-peek) + 12px);
+      }
+      body[data-sheet="half"] .canvas-mini-legend,
+      body[data-sheet="full"] .canvas-mini-legend {
+        opacity: 0;
+      }
     }
     .cml-title {
       font-size: 10px; font-weight: 600; color: #555;
@@ -1026,7 +1047,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       font-size: 14px;
       line-height: 1.6;
     }
-    @media (max-width: 768px) {
+    @media ${PHONE_MEDIA} {
       dialog.methodology-dialog {
         width: 100vw;
         max-height: 85vh;
@@ -1185,7 +1206,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background: #fef2f2;
       border-color: #fecaca;
     }
-    @media (max-width: 768px) {
+    @media ${PHONE_MEDIA} {
       dialog.export-dialog {
         width: 100vw;
         max-height: 85vh;
@@ -1339,11 +1360,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <span id="copy-view-link-feedback" hidden></span>
   <button type="button" id="search-fab" class="search-fab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
-    <span>Wie steht deine Gemeinde da?</span>
+    <span>Deine Gemeinde suchen</span>
   </button>
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
-    <div class="cml-title">Radinfrastruktur-Anteil</div>
+    <div class="cml-title">Radinfra-Anteil</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
       <span id="cml-min">0 %</span>
@@ -1371,7 +1392,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         id="region-search-input"
         autocomplete="off"
         enterkeyhint="search"
-        placeholder="Gemeinde, Stadt oder Landkreis – z. B. Erding"
+        placeholder="Gemeinde oder Landkreis, z. B. Erding"
       />
       <ul id="region-search-results" class="region-search-results" hidden></ul>
       <button type="button" id="region-locate" class="region-locate" hidden>
@@ -1494,7 +1515,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         </div>
       </div>
     </details>
-    <details class="panel-section map-legend-section" id="map-legend-section" open>
+    <!-- Closed on a computer: the small legend on the map carries the scale. The phone keeps it
+         open (PHONE_OPEN_SECTIONS), where that legend hides as soon as the sheet rises. -->
+    <details class="panel-section map-legend-section" id="map-legend-section">
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
@@ -1509,6 +1532,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           <div class="legend-labels" id="legend-labels"></div>
         </div>
         <p class="view-meta" id="view-meta"></p>
+        <details class="view-meta-more" id="view-meta-more" hidden>
+          <summary>Mehr zur Farbskala</summary>
+          <p class="view-meta" id="view-meta-more-text"></p>
+        </details>
         <p class="national-context" id="national-context" hidden></p>
         <div class="map-legend-toggles">
           <label>
@@ -1854,7 +1881,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const copyViewLinkFeedback = document.getElementById('copy-view-link-feedback');
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
-    const panelMobileMq = window.matchMedia('(max-width: 768px)');
+    const panelMobileMq = window.matchMedia('${PHONE_MEDIA}');
     if (scaleCapPctInput) scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
     if (scaleCapEnabledCb) scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
     if (scaleRobustEnabledCb) scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
@@ -2408,36 +2435,34 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return n + (n === 1 ? ' Gebiet' : ' Gebiete');
     }
 
+    /** One short line under the legend; the scale's fine print folds away below it. */
     function updateViewMetaText(filtered, range) {
-      let metaText = viewLabelForCurrentMode() + ' · ' + gebiete(filtered.length);
+      let metaText = gebiete(filtered.length);
+      const details = [];
       if (range.scaleCapped) {
-        if (range.robustApplied && !getScaleCapSettings().enabled) {
-          const parts = [
-            'Farbskala endet bei ' + formatUiPct(range.max) + ' % (höhere Werte sind gleich gefärbt)',
-          ];
-          if (range.dataMax > range.max) {
-            parts.push('Maximum ' + formatUiPct(range.dataMax) + ' %');
-          }
-          if (range.outlierCount > 0) {
-            parts.push(
-              range.outlierCount + ' Ausreißer' +
-                ' außerhalb der Skala',
-            );
-          }
-          if (range.excludedLowRoadCount > 0) {
-            parts.push(gebiete(range.excludedLowRoadCount) + ' mit sehr wenig Straßen (ohne Rang)');
-          }
-          metaText += ' · ' + parts.join(' · ');
-        } else {
-          metaText +=
-            ' · Farbskala endet bei ' +
-            range.capPct +
-            ' % (höhere Werte sind gleich gefärbt) · Maximum ' +
-            formatUiPct(range.dataMax) +
-            ' %';
+        const robust = range.robustApplied && !getScaleCapSettings().enabled;
+        const endPct = robust ? formatUiPct(range.max) : String(range.capPct);
+        metaText += ' · höhere Werte als ' + endPct + ' % gleich gefärbt';
+        if (range.dataMax > range.max || !robust) {
+          details.push('Höchster Wert: ' + formatUiPct(range.dataMax) + ' %');
+        }
+        if (robust && range.outlierCount > 0) {
+          details.push(
+            range.outlierCount +
+              (range.outlierCount === 1 ? ' Gebiet liegt' : ' Gebiete liegen') +
+              ' darüber und würden die Farben sonst zusammendrücken',
+          );
+        }
+        if (robust && range.excludedLowRoadCount > 0) {
+          details.push(gebiete(range.excludedLowRoadCount) + ' mit sehr wenig Straßen (ohne Rang)');
         }
       }
       document.getElementById('view-meta').textContent = metaText;
+      const more = document.getElementById('view-meta-more');
+      if (more) {
+        document.getElementById('view-meta-more-text').textContent = details.join(' · ') + '.';
+        more.hidden = details.length === 0;
+      }
       updateScaleCapHint();
       updateNationalContext();
     }
@@ -3252,7 +3277,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function viewComparisonLabel() {
       const name = currentViewScopeName();
-      return name ? 'in ' + name : 'in dieser Ansicht';
+      return name ? RankingDisplay.inPlacePhrase(name) : 'in dieser Ansicht';
     }
 
     function viewBenchmark() {
@@ -4070,7 +4095,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function contextScopesFor(p, noun) {
       const nameOf = (id) => String(regionIndex?.byId.get(id)?.properties?.name ?? id);
-      const inPlace = (place) => ({ label: 'Alle ' + noun + ' in ' + place, group: noun + ' in ' + place });
+      const inPlace = (place) => {
+        const where = RankingDisplay.inPlacePhrase(place);
+        return { label: 'Alle ' + noun + ' ' + where, group: noun + ' ' + where };
+      };
       const scopes = [{ type: 'country', ...inPlace('Deutschland') }];
       const level = String(p.level ?? '');
       if (level !== '4' && p.bundesland_id) {

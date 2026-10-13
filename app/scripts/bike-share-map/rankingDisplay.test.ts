@@ -9,6 +9,7 @@ import {
   computeViewBenchmark,
   effectiveRankingTopN,
   focusChainFromParentMap,
+  inPlacePhrase,
   isFocusChainInTopOrFlopWindow,
   mergeFocusChains,
   rankingShowsAsAlle,
@@ -201,5 +202,28 @@ describe('percentileOf / contextBand', () => {
     expect(medianOfSorted([1, 3, 9])).toBe(3)
     expect(medianOfSorted([1, 3, 5, 9])).toBe(4)
     expect(medianOfSorted([])).toBeNull()
+  })
+})
+
+describe('inPlacePhrase', () => {
+  test.each([
+    ['Bayern', 'in Bayern'],
+    ['Deutschland', 'in Deutschland'],
+    ['Saarland', 'im Saarland'],
+    ['Landkreis Konstanz', 'im Landkreis Konstanz'],
+    ['Kreis Bergstraße', 'im Kreis Bergstraße'],
+    ['Alb-Donau-Kreis', 'im Alb-Donau-Kreis'],
+    ['Rhein-Kreis Neuss', 'im Rhein-Kreis Neuss'],
+    ['Altmarkkreis Salzwedel', 'im Altmarkkreis Salzwedel'],
+    ['Märkischer Kreis', 'im Märkischen Kreis'],
+    ['Rheinisch-Bergischer Kreis', 'im Rheinisch-Bergischen Kreis'],
+    ['Altenburger Land', 'im Altenburger Land'],
+    ['Regierungsbezirk Arnsberg', 'im Regierungsbezirk Arnsberg'],
+    ['Regionalverband Saarbrücken', 'im Regionalverband Saarbrücken'],
+    ['Region Hannover', 'in der Region Hannover'],
+    ['Städteregion Aachen', 'in der Städteregion Aachen'],
+    ['Frankfurt am Main', 'in Frankfurt am Main'],
+  ])('%s → %s', (name, expected) => {
+    expect(inPlacePhrase(name)).toBe(expected)
   })
 })
