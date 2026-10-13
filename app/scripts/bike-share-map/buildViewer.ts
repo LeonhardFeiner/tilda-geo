@@ -210,7 +210,12 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         const rs = rsById.get(id)
         const areaKm2 = rs ? areaByRs.get(rs) : undefined
         const out: TransitEntry = accessById[id] ? { access: accessById[id] } : {}
-        if (entry && typeof entry.stopCount === 'number' && typeof areaKm2 === 'number' && areaKm2 > 0) {
+        if (
+          entry &&
+          typeof entry.stopCount === 'number' &&
+          typeof areaKm2 === 'number' &&
+          areaKm2 > 0
+        ) {
           out.density = entry.stopCount / areaKm2
         }
         if (entry && typeof entry.avgDistanceToStationM === 'number') {
