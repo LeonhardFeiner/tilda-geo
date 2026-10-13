@@ -699,6 +699,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       border: 1px solid #c8d3e0; border-radius: 4px; background: #fff; width: 100%;
     }
     .ctx-row { padding: 2px 0; cursor: help; }
+    .ctx-hint { margin: 0 0 4px; font-size: 11px; color: #475569; }
+    /* Rows that unfold a scatter: a disclosure arrow and a hover state say they open something. */
+    .ctx-row--plot { cursor: pointer; margin: 0 -4px; padding: 3px 4px; border-radius: 4px; }
+    .ctx-row--plot:hover { background: #eef3fa; }
+    .ctx-row--plot:focus-visible { outline: 2px solid #1565c0; outline-offset: 1px; }
+    .ctx-row--plot .ctx-label::before {
+      content: '▸'; display: inline-block; width: 1em; color: #1565c0;
+      transition: transform 0.15s ease;
+    }
+    .ctx-row--plot[aria-expanded="true"] .ctx-label::before { transform: rotate(90deg); }
+    .ctx-row--plot[aria-expanded="true"] { background: #f5f8fc; }
+    .print-sheet .ctx-row--plot { margin: 0; padding: 2px 0; background: none; }
+    .print-sheet .ctx-row--plot .ctx-label::before { content: none; }
     .ctx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .ctx-label { color: #444; }
     .ctx-label small { color: #475569; font-size: 10px; }
@@ -1568,7 +1581,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <div class="region-detail-authority" id="region-detail-authority" hidden></div>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <details class="region-detail-more" id="region-detail-more">
-      <summary>Mehr Zahlen: Umfeld und Aufschlüsselung</summary>
+      <summary>Mehr Zahlen: Umfeld mit Diagrammen, Aufschlüsselung</summary>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
       <div id="region-detail-body"></div>
     </details>
@@ -1864,6 +1877,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
+    const regionDetailMore = document.getElementById('region-detail-more');
+    regionDetailMore?.addEventListener('toggle', () => reopenContextPlot());
     const regionDetailQuality = document.getElementById('region-detail-quality');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
@@ -3435,7 +3450,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           for (const sel of copy.querySelectorAll('select')) {
             sel.replaceWith(el('span', null, sel.selectedOptions[0]?.textContent || ''));
           }
-          for (const n of copy.querySelectorAll('.ctx-plot, [hidden]')) n.remove();
+          for (const n of copy.querySelectorAll('.ctx-plot, .ctx-hint, [hidden]')) n.remove();
           // Inline buttons (e.g. the nearby example's name) carry text the sentence needs.
           for (const btn of copy.querySelectorAll('button')) btn.replaceWith(el('strong', null, btn.textContent));
           return copy;
@@ -4010,6 +4025,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     // Which yardstick the card compares against; kept across regions so clicking through
     // Gemeinden of one Landkreis keeps comparing within it.
     let contextScopeChoice = 'country';
+    // The context metric whose scatter is unfolded. Kept across re-renders (counting filter,
+    // scope pick, other region) so the card doesn't fold the plot away and jump under the cursor.
+    let openContextPlotKey = null;
 
     /** Every value of one figure with where it belongs — built once per figure. */
     function contextEntries(metric) {
@@ -4138,6 +4156,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             caption.append(scope.label);
           }
           regionDetailExtra.appendChild(caption);
+          const hint = document.createElement('p');
+          hint.className = 'ctx-hint';
+          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra-Anteil aller Vergleichsgebiete';
+          regionDetailExtra.appendChild(hint);
         }
         const row = document.createElement('div');
         row.className = 'ctx-row';
@@ -4193,32 +4215,52 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           row.appendChild(track);
         }
         if (!metric.noBar) {
-          row.style.cursor = 'pointer';
-          row.addEventListener('click', () => {
-            toggleMetricPlot(row, metric, level, scope, p);
+          row.classList.add('ctx-row--plot');
+          row.dataset.metric = metric.key;
+          row.tabIndex = 0;
+          row.setAttribute('role', 'button');
+          row.setAttribute('aria-expanded', 'false');
+          row.openPlot = () => openMetricPlot(row, metric, level, scope, p);
+          const toggle = () => {
+            const wasOpen = !!row.querySelector('.ctx-plot');
+            closeMetricPlots();
+            openContextPlotKey = wasOpen ? null : metric.key;
+            if (!wasOpen) row.openPlot();
+          };
+          row.addEventListener('click', toggle);
+          row.addEventListener('keydown', (ev) => {
+            if (ev.target !== row || (ev.key !== 'Enter' && ev.key !== ' ')) return;
+            ev.preventDefault();
+            toggle();
           });
         }
         regionDetailExtra.appendChild(row);
       }
       regionDetailExtra.hidden = !regionDetailExtra.firstChild;
+      // Hidden card = first selection: showRegionDetail reopens the plot once the card has a width.
+      if (!regionDetailEl.hidden) reopenContextPlot();
     }
 
-    function toggleMetricPlot(row, metric, level, scope, selectedRegion) {
-      const open = row.querySelector('.ctx-plot');
-      if (open) {
-        open.remove();
-        return;
+    function closeMetricPlots() {
+      for (const openPlot of regionDetailExtra.querySelectorAll('.ctx-plot')) openPlot.remove();
+      for (const row of regionDetailExtra.querySelectorAll('.ctx-row--plot')) {
+        row.setAttribute('aria-expanded', 'false');
       }
+    }
 
-      // Close other open plots
-      for (const openPlot of row.parentElement.querySelectorAll('.ctx-plot')) {
-        openPlot.remove();
-      }
+    function reopenContextPlot() {
+      // Folded away, the row has no width yet; the toggle listener below reopens it on unfold.
+      if (!openContextPlotKey || !regionDetailMore?.open) return;
+      const row = regionDetailExtra.querySelector('.ctx-row[data-metric="' + openContextPlotKey + '"]');
+      if (row && !row.querySelector('.ctx-plot')) row.openPlot?.();
+    }
 
+    function openMetricPlot(row, metric, level, scope, selectedRegion) {
       const plot = buildMetricPlot(metric, level, scope);
       if (!plot) return;
       plot.plotDiv.addEventListener('click', (ev) => ev.stopPropagation());
       row.appendChild(plot.plotDiv);
+      row.setAttribute('aria-expanded', 'true');
       // Drawn after insertion so it can take the card's real pixel width.
       renderMetricPlot(plot.chart, metric, plot.entries, selectedRegion.id);
     }
@@ -4402,6 +4444,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function showRegionDetail(feature, opts) {
       const freshSelection = !!(opts && opts.freshSelection);
+      // A refresh (counting filter, breakdown toggle) empties and refills the card. On a
+      // computer the card is its own scroll box, so without this it snaps back to the top.
+      const prevCardScrollTop = !freshSelection && !regionDetailEl.hidden ? regionDetailEl.scrollTop : null;
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
       if (detailId) setSelectedFeatureId(detailId, feature);
@@ -4516,6 +4561,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionDetailEl.hidden = false;
       document.body.dataset.regionDetail = '1';
       placeRegionDetail();
+      reopenContextPlot();
+      if (prevCardScrollTop != null) {
+        regionDetailEl.scrollTop = prevCardScrollTop;
+        requestAnimationFrame(() => {
+          if (regionDetailEl.scrollTop !== prevCardScrollTop) regionDetailEl.scrollTop = prevCardScrollTop;
+        });
+      }
       updatePanelSummaryPreview();
       if (typeof sheetEnabled === 'function' && sheetEnabled()) {
         const wasPeek = sheetState() === 'peek';
