@@ -1245,13 +1245,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet .ps-section .region-detail-gap,
     .print-sheet .ps-section .region-detail-quality { margin: 4pt 0; }
     .print-sheet img { display: block; width: 100%; max-height: 85mm; object-fit: contain; border: 1pt solid #ddd; }
+    .print-sheet img.ps-map-img { width: auto; max-width: 100%; max-height: 100mm; margin: 0 auto; }
     .print-sheet .ps-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 0 14pt; margin-bottom: 6pt; }
     .print-sheet .region-detail-section { break-inside: avoid; }
     .print-sheet .region-detail-section h4 { margin: 4pt 0 2pt; font-size: 10pt; }
     .print-sheet .region-detail-rows { margin: 0; padding: 0; list-style: none; }
     .print-sheet .region-detail-rows li { margin: 0 0 3pt; }
     .print-sheet .ps-plot-page { break-before: page; }
-    .print-sheet .ps-plots { display: grid; grid-template-columns: 1fr 1fr; gap: 6pt 14pt; }
+    .print-sheet .ps-plots { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6pt 14pt; }
+    /* The plots are drawn at a fixed pixel size; scale them to their column so a narrower
+       print layout (a phone's) shrinks them instead of cutting them off. */
+    .print-sheet .ps-plots .ctx-plot-chart svg { width: 100%; height: auto; max-width: 100%; }
+    .print-sheet .ps-plots img.ps-plot-img { width: 100%; max-height: none; height: auto; border: 0; object-fit: fill; }
     .print-sheet .ps-plots .ctx-plot { margin: 0; padding-top: 0; border-top: 0; break-inside: avoid; }
     .print-sheet .ps-section.ps-ranking-section { break-inside: auto; }
     .print-sheet .ps-ranking-wrap { margin-top: 4pt; }
@@ -3384,6 +3389,57 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * by class and by type; the map is the live canvas.
      */
     /** Two plots side by side across the A4 content width (~180 mm at 96 dpi). */
+    // The scatter plots hold ~10,000 dots each; as vector art nine of them make a PDF of tens of
+    // megabytes, which phones struggle to build, share or open. A picture of each is a few
+    // hundred KB in all. The page's plot CSS does not reach into an SVG that is drawn as an
+    // image, so the rules it needs travel inside the SVG.
+    const PRINT_PLOT_SVG_STYLE =
+      'text{fill:#475569;font:10px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}' +
+      '.grid{stroke:#e6e6e6}.axis-title{fill:#333;font-weight:600}' +
+      '.dots circle{fill:#1565c0;fill-opacity:.25}' +
+      '.selected{fill:#e20613;stroke:#fff;stroke-width:2}' +
+      '.selected-label{fill:#e20613;font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3}';
+    async function rasterizePlotForPrint(chart) {
+      const svg = chart.querySelector('svg');
+      if (!svg) return;
+      const width = Number(svg.getAttribute('width'));
+      const height = Number(svg.getAttribute('height'));
+      if (!(width > 0 && height > 0)) return;
+      const clone = svg.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      const style = document.createElementNS('http://www.w3.org/2000/svg', 'style');
+      style.textContent = PRINT_PLOT_SVG_STYLE;
+      clone.insertBefore(style, clone.firstChild);
+      const url = URL.createObjectURL(
+        new Blob([new XMLSerializer().serializeToString(clone)], {
+          type: 'image/svg+xml;charset=utf-8',
+        }),
+      );
+      try {
+        const source = new Image();
+        source.src = url;
+        await source.decode();
+        const scale = 2;
+        const canvas = document.createElement('canvas');
+        canvas.width = width * scale;
+        canvas.height = height * scale;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(source, 0, 0, canvas.width, canvas.height);
+        const img = document.createElement('img');
+        img.className = 'ps-plot-img';
+        img.alt = '';
+        img.src = canvas.toDataURL('image/png');
+        await raceTimeout(img.decode(), 1500);
+        chart.replaceChildren(img);
+      } catch (err) {
+        // Keep the vector plot: a heavy PDF beats a missing plot.
+        console.error('[radinfra-viewer] print plot raster', err);
+      } finally {
+        URL.revokeObjectURL(url);
+      }
+    }
     const PRINT_PLOT_WIDTH_PX = 330;
     /** Short enough for all eight plots (4 rows) to share one page. */
     const PRINT_PLOT_HEIGHT_PX = 180;
@@ -3491,6 +3547,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const sheet = document.getElementById('print-sheet');
       if (!sheet) return;
       try {
+        // The context rows and scatter plots need the density/transit/terrain files, which are
+        // fetched on the first selection. On a slow connection they may still be on their way —
+        // without them the sheet silently comes out without "Umfeld" and without any plot.
+        ensureRegionExtraIndexes();
+        if (regionExtraIndexesPromise) {
+          setLoadStatus('Daten für das Datenblatt werden geladen …');
+          try {
+            await raceTimeout(regionExtraIndexesPromise, 20000);
+          } finally {
+            setLoadStatus('');
+          }
+        }
         const el = (tag, className, text) => {
           const node = document.createElement(tag);
           if (className) node.className = className;
@@ -3547,9 +3615,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         );
         section(null, printable(regionDetailAuthority));
         try {
-          const img = el('img');
+          const img = el('img', 'ps-map-img');
           img.alt = 'Karte: ' + (p.name || '');
-          img.src = (await captureLiveMapCanvas()).toDataURL('image/png');
+          img.src = (await capturePrintMapCanvas(feature)).toDataURL('image/jpeg', 0.88);
           await raceTimeout(img.decode(), 1500);
           section('Karte', img);
         } catch (e) {
@@ -3579,6 +3647,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           const plot = buildMetricPlot(metric, level, plotScope);
           if (!plot) continue;
           renderMetricPlot(plot.chart, metric, plot.entries, p.id, PRINT_PLOT_WIDTH_PX, PRINT_PLOT_HEIGHT_PX);
+          await rasterizePlotForPrint(plot.chart);
           plots.appendChild(plot.plotDiv);
         }
         if (plots.childElementCount) {
@@ -5133,9 +5202,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       await raceTimeout(new Promise((resolve) => map.once('idle', resolve)), 4000);
     }
 
-    async function captureLiveMapCanvas() {
+    async function captureLiveMapCanvas(idleTimeoutMs) {
       map.triggerRepaint();
-      await raceTimeout(new Promise((resolve) => map.once('idle', resolve)), 1500);
+      await raceTimeout(new Promise((resolve) => map.once('idle', resolve)), idleTimeoutMs || 1500);
       const source = map.getCanvas();
       if (!source?.width) throw new Error('empty canvas');
       const copy = document.createElement('canvas');
@@ -5143,6 +5212,80 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       copy.height = source.height;
       copy.getContext('2d').drawImage(source, 0, 0);
       return copy;
+    }
+
+    /**
+     * Map picture for the printed sheet: the region itself, framed, in a shape that suits A4.
+     * The live canvas is whatever the visitor is looking at — on a phone a tall strip with the
+     * sheet over its lower half, on a computer partly under the card — so frame the region
+     * explicitly, crop, and put the camera back afterwards.
+     */
+    async function capturePrintMapCanvas(feature) {
+      const bbox = feature?.geometry ? turf.bbox(feature) : null;
+      if (!bbox || !bbox.every(Number.isFinite)) return captureLiveMapCanvas();
+      const saved = {
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+        padding: { ...map.getPadding() },
+      };
+      try {
+        map.setPadding({ top: 0, right: 0, bottom: 0, left: 0 });
+        map.fitBounds(
+          [
+            [bbox[0], bbox[1]],
+            [bbox[2], bbox[3]],
+          ],
+          { padding: 24, duration: 0, maxZoom: 13, bearing: 0, pitch: 0 },
+        );
+        const canvas = await captureLiveMapCanvas(5000);
+        return cropCanvasAroundBbox(canvas, bbox);
+      } finally {
+        map.setPadding(saved.padding);
+        map.jumpTo({
+          center: saved.center,
+          zoom: saved.zoom,
+          bearing: saved.bearing,
+          pitch: saved.pitch,
+        });
+      }
+    }
+
+    /**
+     * Crop to the region plus a margin, landscape-leaning (1:1 to 2:1), and cap the width so
+     * the PDF stays small. A tall region gets a square with map on both sides, not a sliver.
+     */
+    function cropCanvasAroundBbox(canvas, bbox) {
+      const scale = canvas.width / (map.getContainer().clientWidth || canvas.width);
+      const nw = map.project([bbox[0], bbox[3]]);
+      const se = map.project([bbox[2], bbox[1]]);
+      const cx = ((nw.x + se.x) / 2) * scale;
+      const cy = ((nw.y + se.y) / 2) * scale;
+      const w0 = Math.max(Math.abs(se.x - nw.x) * scale * 1.3, 120);
+      const h0 = Math.max(Math.abs(se.y - nw.y) * scale * 1.3, 120);
+      const aspect = Math.min(2, Math.max(1, w0 / h0));
+      let w = Math.max(w0, h0 * aspect);
+      let h = w / aspect;
+      if (w > canvas.width) {
+        w = canvas.width;
+        h = w / aspect;
+      }
+      if (h > canvas.height) {
+        h = canvas.height;
+        w = h * aspect;
+      }
+      const x = Math.min(Math.max(cx - w / 2, 0), canvas.width - w);
+      const y = Math.min(Math.max(cy - h / 2, 0), canvas.height - h);
+      const outW = Math.min(1400, Math.round(w));
+      const out = document.createElement('canvas');
+      out.width = outW;
+      out.height = Math.round((outW * h) / w);
+      const ctx = out.getContext('2d');
+      ctx.fillStyle = '#fff';
+      ctx.fillRect(0, 0, out.width, out.height);
+      ctx.drawImage(canvas, x, y, w, h, 0, 0, out.width, out.height);
+      return out;
     }
 
     function bboxForCurrentView() {

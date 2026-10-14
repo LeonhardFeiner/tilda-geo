@@ -60,6 +60,20 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).not.toContain('function fitMapToFeature')
   })
 
+  test('printed sheet waits for context data, frames the region and rasterizes the plots', () => {
+    const start = html.indexOf('async function printRegionSheet')
+    const end = html.indexOf('function syncExportDialogState')
+    const body = html.slice(start, end)
+    // Plots/Umfeld need the lazily fetched density/transit/terrain files.
+    expect(body).toContain('await raceTimeout(regionExtraIndexesPromise')
+    // A framed, cropped picture of the region, not the raw (phone-shaped) live canvas.
+    expect(body).toContain('capturePrintMapCanvas(feature)')
+    expect(body).not.toContain('captureLiveMapCanvas()).toDataURL')
+    // Nine ~10,000-dot SVGs make a PDF of tens of MB.
+    expect(body).toContain('rasterizePlotForPrint(plot.chart)')
+    expect(html).toContain('function cropCanvasAroundBbox')
+  })
+
   test('desktop scale bar is added and offset when region detail is open', () => {
     expect(html).toContain('new maplibregl.ScaleControl')
     expect(html).toContain('body[data-region-detail] .maplibregl-ctrl-bottom-right')
