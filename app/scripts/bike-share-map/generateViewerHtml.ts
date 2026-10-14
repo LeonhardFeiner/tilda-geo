@@ -507,6 +507,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ranking-list li.ranking-row-focus {
       background: #ececec;
     }
+    .ranking-list li.ranking-row-container .ranking-name { font-weight: 600; color: #1565c0; }
+    .ranking-focus-note {
+      grid-column: 2 / -1; font-size: 11px; color: #1565c0; line-height: 1.3;
+    }
     .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 11px; }
     .ranking-name {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -2710,6 +2714,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return finestVisibleIdsRelatingToUnit(selectedFeatureId, lastRankingFeatures);
     }
 
+    /** Name of the visible area carrying the selection, or '' when the selection is a row itself. */
+    function focusContainerName() {
+      if (!selectedFeatureId || !regionIndex) return '';
+      if (lastRankingFeatures.some((f) => f.properties?.id === selectedFeatureId)) return '';
+      const [containerId] = selectionHighlightIds();
+      return containerId ? String(regionIndex.byId.get(containerId)?.properties?.name ?? '') : '';
+    }
+
     function syncRankingRowHighlights(opts) {
       const list = document.getElementById('ranking-list');
       if (!list) return;
@@ -2717,14 +2729,27 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         isNeighborView()
           ? new Set(simpleFocusHighlightIds(lastRankingFeatures, neighborFocus.focusId))
           : new Set();
+      // The selection itself, or — when it is not a row of this view — the visible area
+      // that contains it. Both read as "the focus"; the latter says what it contains.
+      const focusRowIds = new Set(selectionHighlightIds());
+      const selectedName = selectedFeatureId
+        ? String(regionIndex?.byId.get(selectedFeatureId)?.properties?.name ?? '')
+        : '';
       for (const li of list.querySelectorAll('li[data-ranking-id]')) {
         const id = li.dataset.rankingId;
-        li.classList.toggle('ranking-row-selected', id === selectedFeatureId);
-        li.setAttribute('aria-pressed', String(id === selectedFeatureId));
-        li.classList.toggle(
-          'ranking-row-focus',
-          focusIds.has(id) && id !== selectedFeatureId,
-        );
+        const isSelected = id === selectedFeatureId;
+        const isContainer = !isSelected && focusRowIds.has(id);
+        li.classList.toggle('ranking-row-selected', isSelected || isContainer);
+        li.classList.toggle('ranking-row-container', isContainer);
+        li.setAttribute('aria-pressed', String(isSelected || isContainer));
+        li.classList.toggle('ranking-row-focus', focusIds.has(id) && !isSelected && !isContainer);
+        li.querySelector('.ranking-focus-note')?.remove();
+        if (isContainer && selectedName) {
+          const note = document.createElement('span');
+          note.className = 'ranking-focus-note';
+          note.textContent = 'enthält ' + selectedName;
+          li.appendChild(note);
+        }
       }
       if (opts && opts.scrollIntoView) {
         const selectedLi = selectedFeatureId
@@ -3292,6 +3317,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function regionGapSummary(p) {
       if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
+      // Median and leader belong to the regions shown; a focus carried by an ancestor isn't one.
+      if (!lastRankingFeatures.some((f) => f.properties?.id === p.id)) return null;
       const bench = viewBenchmark();
       if (!bench || bench.count < MIN_BENCHMARK_REGIONS) return null;
       const leaderName =
@@ -4464,9 +4491,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (detailId) setSelectedFeatureId(detailId, feature);
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
+      const containerName = focusContainerName();
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
-        : 'Kein Rang (ohne Straßendaten in der Zählung)';
+        : containerName
+          ? 'In dieser Ansicht Teil von ' + containerName
+          : 'Kein Rang (ohne Straßendaten in der Zählung)';
       const rankLine = p.lowRoad && p.roadSumKm > 0
         ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
         : rankText;
@@ -4596,11 +4626,25 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
 
+    /**
+     * The Top & Flop window is built around the focus region (the selection, or the visible
+     * area that contains it), so it has to follow every change of that focus — not just the
+     * highlight classes on rows that happen to be drawn already.
+     */
+    function rebuildRankingForFocus() {
+      if (rankingMode !== 'topflop' || !lastRankingSorted.length) return;
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
+      updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct);
+      if (panelMain) panelMain.scrollTop = prevScrollTop;
+    }
+
     function setSelectedFeatureId(id, feature) {
+      const previousId = selectedFeatureId;
       selectedFeatureId = id;
       selectedFeatureOverride =
         id && feature?.properties?.id === id ? feature : null;
       updateMapHighlights();
+      if (previousId !== id) rebuildRankingForFocus();
       syncRankingRowHighlights();
       updatePanelSummaryPreview();
       syncExportDialogState();
@@ -4773,8 +4817,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function refreshSelectedRegionIfNeeded() {
       if (!selectedFeatureId) return;
       const feature = lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId);
+      const rawFeature = feature ? null : regionIndex?.byId.get(selectedFeatureId);
       if (feature) {
         showRegionDetail(feature);
+      } else if (rawFeature && selectionHighlightIds().length) {
+        // The view moved up (breadcrumb, coarser "Zeige"): the region is no longer a polygon of
+        // its own, but it stays the focus — carried by the visible area that contains it, which
+        // the map outlines and the ranking marks. Dropping it here would leave that area in the
+        // ranking window with nothing saying why.
+        showRegionDetail(enrichFeature(rawFeature));
       } else {
         // The new view is already a history step of its own; the selection it drops is not a
         // second one — otherwise Back needs two presses to undo a single view change.

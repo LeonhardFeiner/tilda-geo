@@ -412,6 +412,10 @@
     .ranking-list li.ranking-row-focus {
       background: #ececec;
     }
+    .ranking-list li.ranking-row-container .ranking-name { font-weight: 600; color: #1565c0; }
+    .ranking-focus-note {
+      grid-column: 2 / -1; font-size: 11px; color: #1565c0; line-height: 1.3;
+    }
     .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 11px; }
     .ranking-name {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -1588,7 +1592,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-13T22:31:41.238Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-14T05:36:39.997Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -3274,6 +3278,14 @@
       return finestVisibleIdsRelatingToUnit(selectedFeatureId, lastRankingFeatures);
     }
 
+    /** Name of the visible area carrying the selection, or '' when the selection is a row itself. */
+    function focusContainerName() {
+      if (!selectedFeatureId || !regionIndex) return '';
+      if (lastRankingFeatures.some((f) => f.properties?.id === selectedFeatureId)) return '';
+      const [containerId] = selectionHighlightIds();
+      return containerId ? String(regionIndex.byId.get(containerId)?.properties?.name ?? '') : '';
+    }
+
     function syncRankingRowHighlights(opts) {
       const list = document.getElementById('ranking-list');
       if (!list) return;
@@ -3281,14 +3293,27 @@
         isNeighborView()
           ? new Set(simpleFocusHighlightIds(lastRankingFeatures, neighborFocus.focusId))
           : new Set();
+      // The selection itself, or — when it is not a row of this view — the visible area
+      // that contains it. Both read as "the focus"; the latter says what it contains.
+      const focusRowIds = new Set(selectionHighlightIds());
+      const selectedName = selectedFeatureId
+        ? String(regionIndex?.byId.get(selectedFeatureId)?.properties?.name ?? '')
+        : '';
       for (const li of list.querySelectorAll('li[data-ranking-id]')) {
         const id = li.dataset.rankingId;
-        li.classList.toggle('ranking-row-selected', id === selectedFeatureId);
-        li.setAttribute('aria-pressed', String(id === selectedFeatureId));
-        li.classList.toggle(
-          'ranking-row-focus',
-          focusIds.has(id) && id !== selectedFeatureId,
-        );
+        const isSelected = id === selectedFeatureId;
+        const isContainer = !isSelected && focusRowIds.has(id);
+        li.classList.toggle('ranking-row-selected', isSelected || isContainer);
+        li.classList.toggle('ranking-row-container', isContainer);
+        li.setAttribute('aria-pressed', String(isSelected || isContainer));
+        li.classList.toggle('ranking-row-focus', focusIds.has(id) && !isSelected && !isContainer);
+        li.querySelector('.ranking-focus-note')?.remove();
+        if (isContainer && selectedName) {
+          const note = document.createElement('span');
+          note.className = 'ranking-focus-note';
+          note.textContent = 'enthält ' + selectedName;
+          li.appendChild(note);
+        }
       }
       if (opts && opts.scrollIntoView) {
         const selectedLi = selectedFeatureId
@@ -3856,6 +3881,8 @@
      */
     function regionGapSummary(p) {
       if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
+      // Median and leader belong to the regions shown; a focus carried by an ancestor isn't one.
+      if (!lastRankingFeatures.some((f) => f.properties?.id === p.id)) return null;
       const bench = viewBenchmark();
       if (!bench || bench.count < MIN_BENCHMARK_REGIONS) return null;
       const leaderName =
@@ -5028,9 +5055,12 @@
       if (detailId) setSelectedFeatureId(detailId, feature);
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
+      const containerName = focusContainerName();
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
-        : 'Kein Rang (ohne Straßendaten in der Zählung)';
+        : containerName
+          ? 'In dieser Ansicht Teil von ' + containerName
+          : 'Kein Rang (ohne Straßendaten in der Zählung)';
       const rankLine = p.lowRoad && p.roadSumKm > 0
         ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
         : rankText;
@@ -5160,11 +5190,25 @@
       }
     }
 
+    /**
+     * The Top & Flop window is built around the focus region (the selection, or the visible
+     * area that contains it), so it has to follow every change of that focus — not just the
+     * highlight classes on rows that happen to be drawn already.
+     */
+    function rebuildRankingForFocus() {
+      if (rankingMode !== 'topflop' || !lastRankingSorted.length) return;
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
+      updateRanking(lastRankingSorted, lastRankingMinPct, lastRankingMaxPct);
+      if (panelMain) panelMain.scrollTop = prevScrollTop;
+    }
+
     function setSelectedFeatureId(id, feature) {
+      const previousId = selectedFeatureId;
       selectedFeatureId = id;
       selectedFeatureOverride =
         id && feature?.properties?.id === id ? feature : null;
       updateMapHighlights();
+      if (previousId !== id) rebuildRankingForFocus();
       syncRankingRowHighlights();
       updatePanelSummaryPreview();
       syncExportDialogState();
@@ -5337,8 +5381,15 @@
     function refreshSelectedRegionIfNeeded() {
       if (!selectedFeatureId) return;
       const feature = lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId);
+      const rawFeature = feature ? null : regionIndex?.byId.get(selectedFeatureId);
       if (feature) {
         showRegionDetail(feature);
+      } else if (rawFeature && selectionHighlightIds().length) {
+        // The view moved up (breadcrumb, coarser "Zeige"): the region is no longer a polygon of
+        // its own, but it stays the focus — carried by the visible area that contains it, which
+        // the map outlines and the ranking marks. Dropping it here would leave that area in the
+        // ranking window with nothing saying why.
+        showRegionDetail(enrichFeature(rawFeature));
       } else {
         // The new view is already a history step of its own; the selection it drops is not a
         // second one — otherwise Back needs two presses to undo a single view change.
