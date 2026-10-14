@@ -46,11 +46,18 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('enterkeyhint="search"')
   })
 
-  test('sheet drag includes velocity tracking and smooth glide camera framing', () => {
+  test('sheet drag includes velocity tracking', () => {
     expect(html).toContain('velocityY')
     expect(html).toContain('isSheetDragTarget')
-    expect(html).toContain('turf.center(selected).geometry.coordinates')
+  })
+
+  test('selecting a region only reveals it: shift, or zoom out to fit — never zoom in', () => {
+    expect(html).toContain('function revealSelectedRegion(feature, allowZoomOut)')
     expect(html).toContain('map.easeTo({ center')
+    // The one fitBounds in the reveal is capped at the zoom the visitor already has.
+    expect(html).toContain('maxZoom: map.getZoom()')
+    // The old "always zoom into the selection" helper is gone.
+    expect(html).not.toContain('function fitMapToFeature')
   })
 
   test('desktop scale bar is added and offset when region detail is open', () => {

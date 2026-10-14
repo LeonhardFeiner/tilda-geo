@@ -1902,6 +1902,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let selectedFeatureId = null;
     let selectedFeatureOverride = null;
     let refitScopeOnNextApply = false;
+    // While a selection is being made the card and sheet re-pad the map along the way; the
+    // camera must be decided once, after all of that (see selectRegionById).
+    let deferMapReveal = false;
     let regionClickBound = false;
     const regionDetailEl = document.getElementById('region-detail');
     const regionDetailTitle = document.getElementById('region-detail-title');
@@ -4624,6 +4627,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (freshSelection && panelMain) panelMain.scrollTop = 0;
       } else if (freshSelection) {
         regionDetailEl.scrollIntoView?.({ block: 'nearest' });
+        // The card now covers the right of the map: pad for it and keep the region visible.
+        syncMapViewport(true);
       }
     }
 
@@ -4653,17 +4658,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       scheduleUrlSync(implicitSelectionClear ? undefined : 'push');
     }
 
-    function featureBboxInMapView(bbox) {
-      if (!bbox.every(Number.isFinite)) return true;
-      const bounds = map.getBounds();
-      return (
-        bounds.getWest() <= bbox[0] &&
-        bounds.getSouth() <= bbox[1] &&
-        bounds.getEast() >= bbox[2] &&
-        bounds.getNorth() >= bbox[3]
-      );
-    }
-
     /** Pixels of the map hidden by the bottom sheet at its target state (0 on desktop / full). */
     function mapBottomInset() {
       if (typeof sheetEnabled !== 'function' || !sheetEnabled()) return 0;
@@ -4684,31 +4678,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return Boolean(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
     }
 
-    function fitMapToFeature(feature, opts) {
-      if (!feature?.geometry) return;
-      const bbox = turf.bbox(feature);
-      if (!bbox.every(Number.isFinite)) return;
-      if (!(opts && opts.force) && featureBboxInMapView(bbox)) return;
-      // map.setPadding({ bottom: mapBottomInset() }) already reserves space for the bottom sheet
-      // on mobile. fitBounds padding only adds margin around the visible canvas.
-      const maxZoom = opts && opts.maxZoom != null ? opts.maxZoom : 12;
-      const defaultDuration = prefersReducedMotion() ? 0 : 400;
-      const duration = opts && typeof opts.duration === 'number'
-        ? (prefersReducedMotion() ? 0 : opts.duration)
-        : defaultDuration;
-      map.fitBounds(
-        [
-          [bbox[0], bbox[1]],
-          [bbox[2], bbox[3]],
-        ],
-        {
-          padding: { top: 56, right: 36, bottom: 36, left: 36 },
-          duration,
-          maxZoom,
-        },
-      );
-    }
-
     /** Desktop padding reserving room for left panel (400px) and right card (460px). */
     function desktopMapPadding() {
       if (typeof sheetEnabled === 'function' && sheetEnabled()) return null;
@@ -4721,12 +4690,69 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     /**
+     * Bring a selected region into the free part of the map — the part not covered by the left
+     * panel, the open card or the phone sheet — with the least camera movement. Selecting never
+     * zooms in; only a deliberate scope change re-frames the map.
+     *   - fits and is fully inside the free part: stay put
+     *   - fits but sticks out or is hidden: shift so it is centred (zoom unchanged)
+     *   - does not fit: with allowZoomOut (a ranking click) zoom out just far enough to show
+     *     all of it; without (a map click on a polygon bigger than the screen) leave it, unless
+     *     none of it is visible, then shift.
+     */
+    function revealSelectedRegion(feature, allowZoomOut) {
+      if (!feature?.geometry || typeof map.project !== 'function') return;
+      const bbox = turf.bbox(feature);
+      if (!bbox.every(Number.isFinite)) return;
+      const pad = (typeof map.getPadding === 'function' && map.getPadding()) || {};
+      const box = map.getContainer();
+      const free = {
+        left: pad.left || 0,
+        top: pad.top || 0,
+        right: box.clientWidth - (pad.right || 0),
+        bottom: box.clientHeight - (pad.bottom || 0),
+      };
+      const nw = map.project([bbox[0], bbox[3]]);
+      const se = map.project([bbox[2], bbox[1]]);
+      const x0 = Math.min(nw.x, se.x);
+      const x1 = Math.max(nw.x, se.x);
+      const y0 = Math.min(nw.y, se.y);
+      const y1 = Math.max(nw.y, se.y);
+      const margin = 24;
+      const fits =
+        x1 - x0 <= free.right - free.left - 2 * margin &&
+        y1 - y0 <= free.bottom - free.top - 2 * margin;
+      const inside =
+        x0 >= free.left + margin &&
+        x1 <= free.right - margin &&
+        y0 >= free.top + margin &&
+        y1 <= free.bottom - margin;
+      const overlaps = x1 > free.left && x0 < free.right && y1 > free.top && y0 < free.bottom;
+      const duration = prefersReducedMotion() ? 0 : 400;
+      if (!fits && allowZoomOut) {
+        map.fitBounds(
+          [
+            [bbox[0], bbox[1]],
+            [bbox[2], bbox[3]],
+          ],
+          {
+            padding: { top: 56, right: 36, bottom: 36, left: 36 },
+            duration,
+            maxZoom: map.getZoom(),
+          },
+        );
+        return;
+      }
+      if (fits ? inside : overlaps) return;
+      map.easeTo({ center: [(bbox[0] + bbox[2]) / 2, (bbox[1] + bbox[3]) / 2], duration });
+    }
+
+    /**
      * While a region is selected on the phone the sheet covers the lower part of the map:
      * pad the map's bottom by the sheet height and re-frame the selected region into the
      * strip that is still visible. Resets to 0 when nothing is selected.
      * On desktop: offsets the visible map center between the left panel and right card.
      */
-    function syncMapViewport(animate, forceFit) {
+    function syncMapViewport(animate, allowZoomOut) {
       if (!map || typeof map.setPadding !== 'function') return;
       const isMobile = typeof sheetEnabled === 'function' && sheetEnabled();
       const selected = document.body.dataset.regionDetail
@@ -4753,18 +4779,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const shouldAnimate = Boolean(animate) && !prefersReducedMotion();
 
       if (selected) {
-        if (forceFit) {
-          fitMapToFeature(selected, { force: true, duration: shouldAnimate ? 420 : 0 });
-        } else {
-          // Smooth glide: center the selected region within the visible upper viewport without
-          // violent zoom changes.
-          try {
-            const center = turf.center(selected).geometry.coordinates;
-            map.easeTo({ center, duration: shouldAnimate ? 360 : 0 });
-          } catch {
-            fitMapToFeature(selected, { force: true, duration: shouldAnimate ? 420 : 0 });
-          }
-        }
+        // The padding above may just have moved the free part of the map (card or sheet opened).
+        if (!deferMapReveal) revealSelectedRegion(selected, allowZoomOut);
       } else if (paddingChanged && shouldAnimate && typeof map.easeTo === 'function') {
         map.easeTo({ padding: targetPadding, duration: 260 });
       }
@@ -4789,10 +4805,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           : null);
       if (!feature) return;
       clearOverlayLineHighlight();
-      showRegionDetail(feature, { freshSelection: true });
-      if (panToMap) {
-        syncMapViewport(true, true);
+      deferMapReveal = true;
+      try {
+        showRegionDetail(feature, { freshSelection: true });
+      } finally {
+        deferMapReveal = false;
       }
+      // One camera decision, with the card/sheet padding already in place. panToMap = a ranking
+      // click: show all of the region even if that means zooming out; a map click only shifts.
+      syncMapViewport(true, !!panToMap);
     }
 
     let implicitSelectionClear = false;
@@ -4848,7 +4869,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const regionId = urlParams().get('region');
       if (!regionId) return;
       const feature = lastRankingFeatures.find((f) => f.properties?.id === regionId);
-      if (feature) selectRegionById(regionId, null, !explicitMapPositionPending);
+      if (feature) {
+        // A link lands on the area it was made in, region highlighted — not zoomed into it.
+        selectRegionById(regionId, null, false);
+        if (!explicitMapPositionPending) fitMapToCurrentView(true);
+      }
     }
 
     function bindRegionMapInteraction() {
@@ -6147,7 +6172,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (wantedRegion !== (selectedFeatureId || null)) {
           if (selectedFeatureId) clearRegionSelection();
           if (wantedRegion && lastRankingFeatures.some((f) => f.properties?.id === wantedRegion)) {
-            selectRegionById(wantedRegion, null, !mapPos);
+            selectRegionById(wantedRegion, null, false);
           }
         }
         if (mapPos && !isMapAtPosition(mapPos)) {
@@ -7037,12 +7062,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       applyExpertScopeToUi(scope);
       updateScaleCapDefaultForView();
       void applyScopeChange().then(() => {
-        // The sibling scope always contains the searched region, so this always opens its card
-        // and recentres on it — no level-dependent "sometimes a card, sometimes a refit".
+        // The sibling scope always contains the searched region, so this always opens its card —
+        // and keeps showing the whole area it sits in: the card and sheet now cover part of the
+        // map, so re-fit the scope into what is left instead of zooming into the region.
         // Clear first: selectRegionById treats a re-select of the current region as a toggle,
         // which would leave a search for the already-selected region with no card at all.
         if (selectedFeatureId) clearRegionSelection();
-        selectRegionById(id, null, true);
+        selectRegionById(id, null, false);
+        fitMapToCurrentView(true);
       });
     }
     function renderRegionSearchResults(query) {
