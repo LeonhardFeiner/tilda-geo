@@ -294,7 +294,7 @@ export function viewerRegionNavScript() {
         ),
       });
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
     }
 
     function populateGebietSelect() {
@@ -459,7 +459,7 @@ export function viewerRegionNavScript() {
       syncViewScopeFromUi();
       currentViewScope.darstellung = darstellungSelect.value;
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
     }
 
     function onUntergebietChange() {
@@ -470,7 +470,7 @@ export function viewerRegionNavScript() {
       syncViewScopeFromUi();
       currentViewScope.darstellung = darstellungSelect.value;
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
     }
 
     function onDarstellungChange() {
@@ -485,7 +485,7 @@ export function viewerRegionNavScript() {
         syncViewScopeFromUi();
       }
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
     }
 
     /** From a region card: show that Landkreis/Gemeinde together with the ones around it. */
@@ -505,7 +505,7 @@ export function viewerRegionNavScript() {
       scheduleUrlSync('push');
       if (!enterNeighborView(focusId, preset)) return false;
       updateScaleCapDefaultForView();
-      await applyCurrentView();
+      await applyScopeChange();
       return true;
     }
 

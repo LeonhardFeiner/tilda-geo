@@ -1901,6 +1901,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const rankByFeatureId = new Map();
     let selectedFeatureId = null;
     let selectedFeatureOverride = null;
+    let refitScopeOnNextApply = false;
     let regionClickBound = false;
     const regionDetailEl = document.getElementById('region-detail');
     const regionDetailTitle = document.getElementById('region-detail-title');
@@ -4477,7 +4478,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       exitNeighborView();
       applyExpertScopeToUi(scope);
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
       return true;
     }
 
@@ -5127,15 +5128,27 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return turf.bbox(boundsFeatures);
     }
 
-    function fitMapToCurrentView() {
+    /**
+     * @param {boolean} [respectMapPadding] The map's own persistent padding (panel, card, sheet)
+     *   is added to the padding passed here, so with a card or the half-open sheet showing it
+     *   would count twice. Pass true to only top up what that padding does not already cover.
+     */
+    function fitMapToCurrentView(respectMapPadding) {
       const bbox = bboxForCurrentView();
       if (bbox.every(Number.isFinite)) {
         // Reserve space for the bottom sheet even with nothing selected — on mobile it's
         // always on screen (at least at peek height), so without this the view's southern
         // edge can render behind it and become untappable.
         const inset = mapBottomInset();
+        const have = respectMapPadding && map.getPadding ? map.getPadding() : null;
+        const top = (n) => Math.max(0, n - ((have && have.top) || 0));
         map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], {
-          padding: { top: 48, right: 48, bottom: 48 + inset, left: 48 },
+          padding: {
+            top: top(48),
+            right: Math.max(0, 48 - ((have && have.right) || 0)),
+            bottom: Math.max(0, 48 + inset - ((have && have.bottom) || 0)),
+            left: Math.max(0, 48 - ((have && have.left) || 0)),
+          },
           duration: 0,
         });
       }
@@ -6853,7 +6866,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       updateOverlayVisibility();
     }
 
+    /**
+     * Re-render after the visitor chose a different area or level (breadcrumb, Zeige, Gebiet,
+     * search, drill-down, neighbour view). Unlike a passive re-render (neighbour index arrived,
+     * basemap swap), this re-frames the map on everything now shown — a selection that survives
+     * the change must not keep the camera parked on the old, finer region.
+     */
+    function applyScopeChange() {
+      refitScopeOnNextApply = true;
+      return applyCurrentView();
+    }
+
     async function applyCurrentView() {
+      const refitScope = refitScopeOnNextApply;
+      refitScopeOnNextApply = false;
       syncViewScopeFromUi();
       // The neighbour index (~1.3 MB) is only fetched once a view could use it: a neighbour
       // view, or a single Landkreis in the scope, whose Zeige select can then offer "Nachbarn".
@@ -6907,6 +6933,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           // Explicit map coordinates were supplied via URL hash/params on initial load; do not override
         } else if (applyingUrlState && getMapPositionFromUrl()) {
           // Handled by applyStateFromUrl easing to explicit camera coordinates
+        } else if (refitScope) {
+          fitMapToCurrentView(true);
         } else if (document.body.dataset.regionDetail) {
           syncMapViewport(false);
         } else {
@@ -7008,7 +7036,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       exitNeighborView();
       applyExpertScopeToUi(scope);
       updateScaleCapDefaultForView();
-      void applyCurrentView().then(() => {
+      void applyScopeChange().then(() => {
         // The sibling scope always contains the searched region, so this always opens its card
         // and recentres on it — no level-dependent "sometimes a card, sometimes a refit".
         // Clear first: selectRegionById treats a re-select of the current region as a toggle,
@@ -7134,7 +7162,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       exitNeighborView();
       scheduleUrlSync('push');
       updateScaleCapDefaultForView();
-      void applyCurrentView();
+      void applyScopeChange();
     });
 
     const methodologyDialog = document.getElementById('methodology-dialog');
