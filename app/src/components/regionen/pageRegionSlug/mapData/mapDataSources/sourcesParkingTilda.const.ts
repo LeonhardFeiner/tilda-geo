@@ -4,16 +4,20 @@ import type { MapDataSource } from '../types'
 export type SourcesParkingTildaId =
   | 'tilda_parkings'
   | 'tilda_parkings_cutouts'
-  | 'tilda_parkings_quantized'
   | 'tilda_parkings_no'
   | 'tilda_parkings_off_street'
-  | 'tilda_parkings_off_street_quantized'
 
 export const sourcesParkingTilda: MapDataSource<SourcesParkingTildaId>[] = [
   {
     id: 'tilda_parkings',
     // NOTE: We have the lines, the labels and the areas (as "shadow" data) in one response
-    tileTables: ['parkings', 'parkings_edges', 'parkings_labels', 'parkings_separate'],
+    tileTables: [
+      'parkings',
+      'parkings_edges',
+      'parkings_edges_labels',
+      'parkings_labels',
+      'parkings_separate',
+    ],
     minzoom: SIMPLIFY_MIN_ZOOM,
     // We need to apply a higher maxzoom here so the data from parkings_separate gets loaded that is only visible starting at 17
     // We could add the "separate" from 14 (our default) and only hide it visually.
@@ -55,7 +59,6 @@ export const sourcesParkingTilda: MapDataSource<SourcesParkingTildaId>[] = [
         'composit_mapillary',
       ],
     },
-    calculator: { enabled: false },
   },
   {
     id: 'tilda_parkings_cutouts',
@@ -75,57 +78,6 @@ export const sourcesParkingTilda: MapDataSource<SourcesParkingTildaId>[] = [
         'category',
         'buffer_radius__if_present',
       ],
-    },
-    calculator: { enabled: false },
-  },
-  {
-    id: 'tilda_parkings_quantized',
-    tileTables: ['parkings_quantized'],
-    minzoom: SIMPLIFY_MIN_ZOOM,
-    maxzoom: SIMPLIFY_MAX_ZOOM,
-    attributionHtml:
-      '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a>; <a href="https://tilda-geo.de">tilda-geo.de</a>',
-    licence: 'ODbL',
-    promoteId: 'id',
-    osmIdConfig: { osmTypeId: 'id' },
-    inspector: {
-      enabled: true,
-      highlightingKey: 'id',
-      documentedKeys: ['capacity', 'operator_type', 'composit_condition_category'],
-    },
-    calculator: {
-      enabled: true,
-      sumKeys: { capacity: 'Stellplätze', area: 'Fläche m²' },
-      groupByKeys: [
-        'parking',
-        'operator_type',
-        'orientation',
-        'surface',
-        'condition_category_primary',
-      ],
-      highlightingKey: 'id',
-    },
-  },
-  {
-    id: 'tilda_parkings_off_street_quantized',
-    tileTables: ['off_street_parking_quantized'],
-    minzoom: SIMPLIFY_MIN_ZOOM,
-    maxzoom: SIMPLIFY_MAX_ZOOM,
-    attributionHtml:
-      '<a href="https://www.openstreetmap.org/copyright">© OpenStreetMap</a>; <a href="https://tilda-geo.de">tilda-geo.de</a>',
-    licence: 'ODbL',
-    promoteId: 'id',
-    osmIdConfig: { osmTypeId: 'id' },
-    inspector: {
-      enabled: true,
-      highlightingKey: 'id',
-      documentedKeys: ['capacity', 'operator_type', 'composit_condition_category'],
-    },
-    calculator: {
-      enabled: true,
-      sumKeys: { capacity: 'Stellplätze', area: 'Fläche m²' },
-      groupByKeys: ['parking', 'operator_type', 'access', 'condition_category_primary'],
-      highlightingKey: 'id',
     },
   },
   {
@@ -148,7 +100,6 @@ export const sourcesParkingTilda: MapDataSource<SourcesParkingTildaId>[] = [
         'composit_mapillary',
       ],
     },
-    calculator: { enabled: false },
   },
   {
     id: 'tilda_parkings_off_street',
@@ -186,6 +137,5 @@ export const sourcesParkingTilda: MapDataSource<SourcesParkingTildaId>[] = [
         'composit_mapillary',
       ],
     },
-    calculator: { enabled: false },
   },
 ]

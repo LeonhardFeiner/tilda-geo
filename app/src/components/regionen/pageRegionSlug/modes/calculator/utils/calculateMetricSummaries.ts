@@ -1,12 +1,15 @@
-import type { MapGeoJSONFeature } from 'react-map-gl/maplibre'
-import { z } from 'zod'
-import type { MapDataSourceCalculator } from '@/components/regionen/pageRegionSlug/mapData/types'
+import type { CalculatorMetric } from '../calculatorDatasets.const'
+import { type CalculatorFilter, calculatorCombinedAreaId } from '../calculatorModeParam'
 
-type CalculatorMetricKey = keyof Extract<MapDataSourceCalculator, { enabled: true }>['sumKeys']
-
-type CalculatorAreaWithFeatures = {
-  key: string
-  features: MapGeoJSONFeature[]
+/**
+ * The sums of the features of one area that share these tag values, as the server returns them
+ * (`sumMeasureFeatures`). `properties` holds the group-by keys of the dataset (`''` for a missing
+ * tag) and the part under `calculatorPartKey`.
+ */
+export type CalculatorRow = {
+  area: string
+  properties: Record<string, string>
+  sums: Partial<Record<CalculatorMetric, number>>
 }
 
 type CalculatorGroupValueSummary = {
@@ -30,74 +33,59 @@ type CalculatorMetricSummary = {
   groups: CalculatorGroupSummary[]
 }
 
-export const calculatorMetricOrder = [
-  'capacity',
-  'area',
-  'length',
-] as const satisfies CalculatorMetricKey[]
-
 export const calculatorMissingGroupValueLabel = '(Ohne Angabe)'
-
-const toNumber = (value: unknown) => {
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string') {
-    const parsedValue = Number(value)
-    if (Number.isFinite(parsedValue)) return parsedValue
-  }
-  return null
-}
 
 const toRatio = (value: number, total: number) => {
   if (total <= 0) return 0
   return value / total
 }
 
-/** A tag value as filters compare it: missing and blank values are `''`. */
-const toFilterValue = (value: unknown) => {
-  if (value === null || value === undefined) return ''
-  return String(value).trim()
-}
+/** A tag value as filters compare it: a missing value is `''`. */
+const toFilterValue = (value: string | undefined) => value ?? ''
 
 const matchesFilter = (
-  properties: Record<string, unknown>,
-  filter: Record<string, string>,
+  properties: Record<string, string>,
+  filter: CalculatorFilter,
   exceptKey?: string,
 ) =>
   Object.entries(filter).every(
-    ([key, value]) => key === exceptKey || toFilterValue(properties[key]) === value,
+    ([key, values]) => key === exceptKey || values.includes(toFilterValue(properties[key])),
   )
 
-const sortBySumDesc = <T extends { sum: number }>(items: T[]) =>
-  [...items].sort((a, b) => b.sum - a.sum)
+/** Sum per value of each group-by key, without any filter. */
+type CalculatorValueRanks = Map<string, Map<string, number>>
 
-const dedupeFeaturesById = (features: MapGeoJSONFeature[]) => {
-  const uniqueFeatures = new Map<string | number, MapGeoJSONFeature>()
-
-  for (const feature of features) {
-    if (feature.id === undefined) continue
-    uniqueFeatures.set(feature.id, feature)
+/**
+ * The order of the values of a group: the largest first, measured without the filter over all
+ * areas. So a filter never reorders the rows, and every area lists them the same way.
+ */
+const rankValues = (rows: CalculatorRow[], metric: CalculatorMetric, keys: string[]) => {
+  const ranks: CalculatorValueRanks = new Map(keys.map((key) => [key, new Map()]))
+  for (const { properties, sums } of rows) {
+    const metricValue = sums[metric]
+    if (metricValue === undefined) continue
+    for (const [key, byValue] of ranks) {
+      const filterValue = toFilterValue(properties[key])
+      byValue.set(filterValue, (byValue.get(filterValue) ?? 0) + metricValue)
+    }
   }
-
-  return [...uniqueFeatures.values()]
+  return ranks
 }
 
-const flattenFeatures = (areas: CalculatorAreaWithFeatures[]) =>
-  dedupeFeaturesById(areas.flatMap((area) => area.features))
-
 const calculateMetricSummary = (
-  features: MapGeoJSONFeature[],
-  metric: CalculatorMetricKey,
+  rows: CalculatorRow[],
+  metric: CalculatorMetric,
   groupByKeys: string[],
-  filter: Record<string, string>,
+  filter: CalculatorFilter,
+  ranks: CalculatorValueRanks,
 ) => {
   const sumByGroupByKey = new Map<string, number>()
   const sumByGroupByValue = new Map<string, Map<string, number>>()
   let total = 0
 
-  for (const feature of features) {
-    const properties = feature.properties ?? {}
-    const metricValue = toNumber(properties[metric])
-    if (metricValue === null) continue
+  for (const { properties, sums } of rows) {
+    const metricValue = sums[metric]
+    if (metricValue === undefined) continue
     if (matchesFilter(properties, filter)) total += metricValue
 
     for (const groupByKey of groupByKeys) {
@@ -115,62 +103,60 @@ const calculateMetricSummary = (
     }
   }
 
-  const groups = sortBySumDesc(
-    [...sumByGroupByKey.entries()].map(([key, sum]) => {
-      const values = sortBySumDesc(
-        [...(sumByGroupByValue.get(key)?.entries() ?? [])].map(([filterValue, valueSum]) => ({
-          value: filterValue || calculatorMissingGroupValueLabel,
-          filterValue,
-          sum: valueSum,
-          // Share of the group, which is the total unless the group's own key is filtered.
-          ratio: toRatio(valueSum, sum),
-        })),
+  // Groups in the order of `groupByKeys`, values in the order of `ranks`: neither follows the
+  // filtered sums, so the rows stay where they are when a filter changes.
+  const groups = groupByKeys.flatMap((key) => {
+    const sum = sumByGroupByKey.get(key)
+    if (sum === undefined) return []
+
+    const rank = (filterValue: string) => ranks.get(key)?.get(filterValue) ?? 0
+    const values = [...(sumByGroupByValue.get(key)?.entries() ?? [])]
+      .map(([filterValue, valueSum]) => ({
+        value: filterValue || calculatorMissingGroupValueLabel,
+        filterValue,
+        sum: valueSum,
+        // Share of the group, which is the total unless the group's own key is filtered.
+        ratio: toRatio(valueSum, sum),
+      }))
+      .sort(
+        (a, b) =>
+          rank(b.filterValue) - rank(a.filterValue) || a.filterValue.localeCompare(b.filterValue),
       )
 
-      return {
-        key,
-        sum,
-        ratio: toRatio(sum, total),
-        values,
-      }
-    }),
-  )
+    return [{ key, sum, ratio: toRatio(sum, total), values }]
+  })
 
   return { total, groups } satisfies CalculatorMetricSummary
 }
 
-export const getAvailableMetricsForAreas = (
-  areas: CalculatorAreaWithFeatures[],
-  configuredMetrics: CalculatorMetricKey[],
-) => {
-  const numericMetricValueSchema = z.coerce.number().finite()
-  const hasNumericMetricValue = (feature: MapGeoJSONFeature, metric: CalculatorMetricKey) =>
-    numericMetricValueSchema.safeParse(feature.properties?.[metric]).success
-
-  const features = flattenFeatures(areas)
-  return configuredMetrics.filter((metric) =>
-    features.some((feature) => hasNumericMetricValue(feature, metric)),
-  )
-}
-
+/**
+ * The summary of every drawn area (`areaIds`, also those without a row) and of all areas together.
+ * The latter are the rows of the union of the areas, so an overlap is not counted twice.
+ */
 export const calculateMetricSummaryForAreas = ({
-  areas,
+  rows,
+  areaIds,
   metric,
   groupByKeys,
   filter = {},
 }: {
-  areas: CalculatorAreaWithFeatures[]
-  metric: CalculatorMetricKey
+  rows: CalculatorRow[]
+  areaIds: string[]
+  metric: CalculatorMetric
   groupByKeys: string[]
-  /** Tag values the summed points must have (`sum.filter`). */
-  filter?: Record<string, string>
+  /** Tag values the summed features must have (`sum.filter`). */
+  filter?: CalculatorFilter
 }) => {
-  const byArea = areas.map((area) => ({
-    key: area.key,
-    summary: calculateMetricSummary(dedupeFeaturesById(area.features), metric, groupByKeys, filter),
+  const rowsOfArea = (area: string) => rows.filter((row) => row.area === area)
+  const combinedRows = rowsOfArea(calculatorCombinedAreaId)
+  const ranks = rankValues(combinedRows, metric, groupByKeys)
+
+  const byArea = areaIds.map((key) => ({
+    key,
+    summary: calculateMetricSummary(rowsOfArea(key), metric, groupByKeys, filter, ranks),
   }))
 
-  const combined = calculateMetricSummary(flattenFeatures(areas), metric, groupByKeys, filter)
+  const combined = calculateMetricSummary(combinedRows, metric, groupByKeys, filter, ranks)
 
   return { byArea, combined }
 }

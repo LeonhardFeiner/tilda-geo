@@ -1,6 +1,6 @@
 import type { FileMapDataSubcategory } from '../types'
-import { litAbsentDataLegend, litLineLayers, litLineLegends } from './manualStyles/lit'
-import { mapboxStyleLayers } from './mapboxStyles/mapboxStyleLayers'
+import { litAbsentDataLegend, litLineLayers, litLineLegends } from './layers/lit'
+import { wrapSourceLayers } from './layers/utils/wrapSourceLayers'
 
 const subcatId = 'lit_bikelanes'
 const source = 'atlas_bikelanes'
@@ -13,11 +13,12 @@ export const subcat_lit_bikelanes: FileMapDataSubcategory = {
   name: 'Radverkehrsanlagen',
   ui: 'checkbox',
   sourceId: source,
+  beforeId: 'atlas-app-beforeid-top',
   styles: [
     {
       id: 'default',
       name: 'Beleuchtung',
-      layers: mapboxStyleLayers({
+      layers: wrapSourceLayers({
         layers: litLineLayers(),
         source,
         sourceLayer,

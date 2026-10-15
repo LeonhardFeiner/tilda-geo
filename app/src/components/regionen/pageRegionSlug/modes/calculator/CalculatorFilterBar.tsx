@@ -6,14 +6,16 @@ import { translations } from '@/components/regionen/pageRegionSlug/SidebarInspec
 import { MotionAutoHeight } from '@/components/shared/motion/MotionAutoHeight'
 import { ModeFilterSelect } from '../ModeFilterSelect'
 import { modePanelFilterControlClassName } from '../modePanel.const'
+import { type CalculatorDataset, calculatorTranslationSourceId } from './calculatorDatasets.const'
 import type { CalculatorFilter } from './calculatorModeParam'
 import { calculatorMissingGroupValueLabel } from './utils/calculateMetricSummaries'
 
 const defaultStyleValue = 'default'
 
 type Props = {
-  sourceId: string
-  /** The tags of the dataset: what the points can be colored by. */
+  /** The sources of the dataset; their translations name the tags and values. */
+  parts: CalculatorDataset['parts']
+  /** The tags of the dataset: what the features can be colored by. */
   groupByKeys: string[]
   style: string | undefined
   onStyleChange: (key: string | undefined) => void
@@ -23,12 +25,12 @@ type Props = {
 }
 
 /**
- * Filter line of the Summieren panel: how the points are colored (`sum.style`) and the active
+ * Filter line of the Summieren panel: how the features are colored (`sum.style`) and the active
  * filters (`sum.filter`). A filter is set by clicking a value in the breakdown; a chip removes
  * it again.
  */
 export const CalculatorFilterBar = ({
-  sourceId,
+  parts,
   groupByKeys,
   style,
   onStyleChange,
@@ -36,12 +38,14 @@ export const CalculatorFilterBar = ({
   onToggleFilter,
   onClearFilter,
 }: Props) => {
-  const entries = Object.entries(filter)
+  const entries = Object.entries(filter).flatMap(([key, values]) =>
+    values.map((value) => [key, value] as const),
+  )
   const styleOptions = [
     { value: defaultStyleValue, label: 'Einfarbig' },
     ...groupByKeys.map((key) => ({
       value: key,
-      label: `Nach ${translations[`${sourceId}--${key}--key`] ?? key}`,
+      label: `Nach ${translations[`${calculatorTranslationSourceId(parts, key)}--${key}--key`] ?? key}`,
     })),
   ]
 
@@ -51,7 +55,7 @@ export const CalculatorFilterBar = ({
       <MotionAutoHeight>
         <div className="flex flex-wrap items-center gap-1.5">
           <ModeFilterSelect
-            label="Punkte einfärben"
+            label="Karte einfärben"
             triggerPrefix="Farbe"
             icon={SwatchIcon}
             value={style ?? defaultStyleValue}
@@ -60,17 +64,21 @@ export const CalculatorFilterBar = ({
           />
           {entries.map(([key, value]) => (
             <button
-              key={key}
+              key={`${key}::${value}`}
               type="button"
               onClick={() => onToggleFilter(key, value)}
               title="Filter entfernen"
               className={`${modePanelFilterControlClassName} max-w-full gap-1 px-1.5`}
             >
               <span className="min-w-0 truncate [&_span]:truncate">
-                <ConditionalFormattedKey sourceId={sourceId} tagKey={key} />:{' '}
+                <ConditionalFormattedKey
+                  sourceId={calculatorTranslationSourceId(parts, key)}
+                  tagKey={key}
+                />
+                :{' '}
                 <span className="font-semibold">
                   <ConditionalFormattedValue
-                    sourceId={sourceId}
+                    sourceId={calculatorTranslationSourceId(parts, key, value)}
                     tagKey={key}
                     tagValue={value || calculatorMissingGroupValueLabel}
                   />

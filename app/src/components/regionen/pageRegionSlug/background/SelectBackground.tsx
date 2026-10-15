@@ -1,5 +1,5 @@
 import { Listbox, ListboxButton, ListboxOptions } from '@headlessui/react'
-import { CheckIcon } from '@heroicons/react/20/solid'
+import { CheckIcon, LockClosedIcon } from '@heroicons/react/20/solid'
 import { GlobeAltIcon } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useMap } from 'react-map-gl/maplibre'
@@ -11,9 +11,8 @@ import {
 import { useBackgroundParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useBackgroundParam'
 import { useBg3dParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useBg3dParam'
 import { useMapParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useMapParam'
-import { useRegionLoaderData } from '@/components/regionen/pageRegionSlug/hooks/useRegionLoaderData'
-import { sourcesBackgroundsRaster } from '@/components/regionen/pageRegionSlug/mapData/mapDataSources/sourcesBackgroundsRaster.const'
 import { useBreakpoint } from '@/components/shared/hooks/viewport/useBreakpoint'
+import { isPrivateBackgroundParam } from '@/server/private-backgrounds/privateBackgroundParam'
 import {
   mapOverlayAnchoredMenuMaxHeightClassName,
   mapOverlayMenuClassName,
@@ -26,21 +25,16 @@ import {
 } from '../mobile/mobileControlButton.const'
 import { Background3dToggleRow } from './Background3dToggleRow'
 import { ListOption } from './ListOption'
+import { useRegionBackgrounds } from './useRegionBackgrounds'
 
 export const SelectBackground = () => {
   const { mainMap } = useMap()
   const { backgroundParam, setBackgroundParam } = useBackgroundParam()
   const { mapParam, setMapParam } = useMapParam()
   const { is3dActive, toggle3d } = useBg3dParam()
-  const { region } = useRegionLoaderData()
+  const backgrounds = useRegionBackgrounds()
   const isSmBreakpointOrAbove = useBreakpoint('sm')
   const [sheetOpen, setSheetOpen] = useState(false)
-
-  if (!region?.backgroundSources) return null
-
-  const backgrounds = sourcesBackgroundsRaster.filter((s) =>
-    region?.backgroundSources?.includes(s.id),
-  )
 
   const onChange = (value: BackgroundParam) => {
     void setBackgroundParam(value)
@@ -126,6 +120,15 @@ export const SelectBackground = () => {
                     <span className="line-clamp-2 leading-tight hyphens-auto" lang="de">
                       {name}
                     </span>
+                    {isPrivateBackgroundParam(value) && (
+                      <>
+                        <LockClosedIcon
+                          className="ml-auto size-4 shrink-0 text-gray-500"
+                          aria-hidden="true"
+                        />
+                        <span className="sr-only">Nur für Mitglieder dieser Region</span>
+                      </>
+                    )}
                   </button>
                 )
               })}

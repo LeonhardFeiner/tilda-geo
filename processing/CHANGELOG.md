@@ -2,6 +2,45 @@
 
 Manual and incomplete list of changes to processing output. Attribute documentation for all datasets lives in `topic-docs/` YAML (built into in-app docs via `topic-docs-build`); this file tracks schema and value-contract changes over time.
 
+## 2026-10
+
+### `roads`, `roadsPathClasses`, `bikelanes`: `route_relations`
+
+- New key `route_relations`: the OSM route relations a way belongs to, grouped by `route=*`, e.g. `bicycle:2788485,12138805;bus:1234567`. Route types: `bicycle`, `mtb`, `bus`, `foot`, `hiking`. Also the Berlin cycling network from infraVelo as pseudo relation per line, e.g. `radnetz_berlin:Vorrangnetz`, from the infravelo-radnetz repo. Why and how: [topics/roads_bikelanes/route_relations/README.md](topics/roads_bikelanes/route_relations/README.md).
+
+### Topic `bikeroutes` renamed to `routes`; new tables `mtbroutes`, `busroutes`, `footroutes`, `hikingroutes`
+
+- The topic now writes one table per route type. `bikeroutes` keeps its name and content. The error table is now `routes_errors` (was `bikeroutes_errors`). Use `PROCESS_ONLY_TOPICS=routes` instead of `bikeroutes`.
+
+### `roads`, `routing`, `bikelanes`
+
+- Fix: `maxspeed` is now read from `zone:maxspeed` (e.g. `DE:30`, `30`) and from `source:maxspeed=DE:zone:30` (colon form) when the way has no `maxspeed` tag. Before, these values gave no `maxspeed`.
+
+### Summieren: `bicycle_parking`
+
+- Fix: a bicycle parking mapped as an area was summed twice, as the area and as the point at its centroid. `tilda_measure_bicycle_parking` now reads `bicycleParking_points` only.
+
+### `parkings_edges_labels` (new), `parkings_labels`
+
+- New point table `parkings_edges_labels`: one point at the middle of each `parkings_edges` line with capacity, minzoom 14. Keys: `capacity_*`, `capacity_private_*`, `operator_type_*`, `angle` (upright text angle along the edge, degrees for MapLibre `text-rotate`) and `flipped` (true when the text was turned by 180°, so the edge's left side is below the text). The map shows the capacity per edge once instead of repeating it along the line.
+- `parkings_labels`: new key `angle`, the upright text angle along the parking line.
+
+### `parkings`
+
+- Tagged `capacity` of a parking line that is cut into several segments: the rounding remainder goes to the longest segment. When two segments have exactly the same length, the one with the lower segment id now gets it. Before, the choice was random, so `capacity` could move between the two segments from one run to the next. The sum per parking line is unchanged.
+
+### `parkings_quantized`, `off_street_parking_quantized`
+
+- Removed (tables, exports, tiles). QA, Statistik and Summieren measure the features in their own geometry instead of generated points: a parking line or lot that crosses the border of an area counts with the share of its `capacity` that lies inside (`processing/measure/measure_functions.sql`, [docs/Measure.md](../docs/Measure.md)).
+
+### `aggregated_lengths`
+
+- Kilometers per Bundesland and Kreis are measured on the lines instead of on a point every 100 m, so a line that crosses a boundary counts on each side with the exact share of its length. Values move by about 1 km in single classes. Still kilometers per direction (a line that is not oneway counts twice).
+
+### QA tables (`qa_*_indicators`)
+
+- Amounts per cell are measured on the lines and areas instead of on generated points (bikelanes: a point every 5 m; parking: a point per space), so they can be fractional. A reference table has to be written with the same code as the nightly run reads it; references written from points must be rebuilt.
+
 ## 2026-09
 
 ### `roads`, `roadsPathClasses`, `bikelanes`, `bikelanesPresence`, `bikeSuitability`, `routing`

@@ -30,6 +30,7 @@ const data = {
         'Mapillary-Bild-IDs in Gegenrichtung (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
       mapillary_traffic_sign:
         'Mapillary-Bild-IDs für Verkehrszeichen (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
+      route_relations: 'Routen und Netze, zu denen der Weg gehört.',
       offset:
         'Reiner Darstellungswert für den Kartenstil – empfohlener seitlicher Versatz in Metern. Die Geometrie bleibt auf der Straßen-Mittellinie; der Versatz wird ausschließlich visuell als `line-offset` angewendet und verändert die Daten nicht. Vorzeichen: positiv = links, negativ = rechts der Mittellinie. Der Betrag wird im Processing aus der halben Straßenbreite berechnet.',
     },
@@ -127,6 +128,7 @@ const data = {
         'Mapillary-Bild-IDs in Gegenrichtung (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
       mapillary_traffic_sign:
         'Mapillary-Bild-IDs für Verkehrszeichen (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
+      route_relations: 'Routen und Netze, zu denen der Weg gehört.',
     },
     values: {
       tunnel: {
@@ -152,6 +154,7 @@ const data = {
         'Mapillary-Bild-IDs in Gegenrichtung (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
       mapillary_traffic_sign:
         'Mapillary-Bild-IDs für Verkehrszeichen (technisch bereinigt). Mehrere IDs sind als semikolongetrennte Liste möglich. Im Inspector wird pro ID ein Link erzeugt, z. B. `https://www.mapillary.com/app/?pKey=<ID>&focus=photo&z=15`.',
+      route_relations: 'Routen und Netze, zu denen der Weg gehört.',
       adjoining_road:
         'Ein Indikator für die Gefährdung durch nahen Kfz-Verkehr: TILDA-Straßenklasse der relevanten Kfz-Straße (keine Aussage, ob der Weg zu dieser Straße gehört). Bei begleitenden Wegen die parallele Straße; bei Querungen die gequerte Straße. Primär, außer bei Querungen: OSM `is_sidepath:of`, über die TILDA-Straßenklassifikation gemappt (nur die `highway`-Klasse, ohne Untertags). Damit kann eine Kartierung die Schätzung überschreiben. `residential_priority_road` entsteht so nicht; der gröbere `:of`-Wert bleibt. Unbrauchbare `:of`-Werte (Tippfehler, Straßenname, `trunk`) fallen auf die Schätzung zurück. Bei Querungen immer nur die Schätzung (gequerte Straße), nie `:of`. Auch gesetzt, wenn der Weg selbstständig geführt ist.',
       adjoining_maxspeed:
@@ -199,8 +202,11 @@ const data = {
   },
   tilda_parkings: {
     keys: {
-      parking: 'Lage oder Art des Parkraums im Straßenland.',
       capacity: 'Geschätzte oder explizit erfasste Anzahl von Stellplätzen.',
+      area: 'Fläche des durch parkende Fahrzeuge auf diesem Parkraumabschnitt belegten Raumes in Quadratmetern.',
+      angle:
+        'Drehung der Beschriftung in Grad (im Uhrzeigersinn, 0 = Osten), entlang der Linie (Parklinie bzw. Kante) und so gewendet, dass der Text nie auf dem Kopf steht (−90 bis 90). Nur zur Darstellung.',
+      parking: 'Lage oder Art des Parkraums im Straßenland.',
       capacity_source: 'Herkunft der Stellplatzanzahl inklusive Schätz- oder Umverteilungslogik.',
       orientation: 'Ausrichtung der Fahrzeuge im Straßenland zur Verkehrsrichtung.',
       condition_category_primary:
@@ -219,7 +225,6 @@ const data = {
       road_oneway: 'Verkehrsrichtung der Straße, an dem der Parkraum liegt.',
       road_width: 'Breite der Fahrbahn, an dem der Parkraum liegt.',
       side: 'Seite des Parkraums relativ zur Linienrichtung der OSM-Geometrie.',
-      area: 'Fläche des durch parkende Fahrzeuge auf diesem Parkraumabschnitt belegten Raumes in Quadratmetern.',
       surface: 'Oberflächenbelag des Parkraumabschnitts.',
       direction: 'Vorgesehene oder ausgeschilderte Fahrzeugrichtung beim Einparken.',
       location: 'Besondere Lagemerkmale des Parkraums im Straßenland.',
@@ -369,80 +374,6 @@ const data = {
       condition_category_primary: {
         invalid:
           'Mindestens ein `*:conditional`-Tag ist syntaktisch fehlerhaft (z. B. unvollständige Klammern). Die tatsächliche Beschränkung ist daher unbekannt; der Tag ist in `parking_errors` gelistet und sollte in OSM korrigiert werden.',
-      },
-    },
-  },
-  tilda_parkings_off_street_quantized: {
-    keys: {
-      category: 'Kategorie der Parkmöglichkeit.',
-      parking: 'Typ der Parkmöglichkeit.',
-      capacity: 'Geschätzte oder explizit erfasste Anzahl von Stellplätzen.',
-      condition_category_primary:
-        'Der für die Darstellung wichtigste Wert aus `condition_category`. Reihenfolge: Sonderparkplätze (Behinderte, Taxi, Ladezone, E-Laden, Carsharing) vor Park- und Haltverboten, dann private/eingeschränkte Flächen, dann Höchstparkdauer vor Bewirtschaftung. Nur zur Darstellung; fachlich gilt `condition_category`.',
-      area: 'Fläche in Quadratmetern.',
-      surface: 'Oberflächenbelag des Parkraumabschnitts.',
-      orientation: 'Ausrichtung der Fahrzeuge im Straßenland zur Verkehrsrichtung.',
-      location: 'Besondere Lagemerkmale des Parkraums im Straßenland.',
-      zone: 'Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.',
-      mapillary: 'Mapillary-Foto-ID für dieses Feature.',
-      traffic_sign: 'Verkehrszeichennummer, mit der dieses Feature ausgeschildert ist.',
-    },
-    values: {
-      condition_category: {
-        invalid:
-          'Mindestens ein `*:conditional`-Tag ist syntaktisch fehlerhaft (z. B. unvollständige Klammern). Die tatsächliche Beschränkung ist daher unbekannt; der Tag ist in `parking_errors` gelistet und sollte in OSM korrigiert werden.',
-      },
-      condition_category_primary: {
-        invalid:
-          'Mindestens ein `*:conditional`-Tag ist syntaktisch fehlerhaft (z. B. unvollständige Klammern). Die tatsächliche Beschränkung ist daher unbekannt; der Tag ist in `parking_errors` gelistet und sollte in OSM korrigiert werden.',
-      },
-    },
-  },
-  tilda_parkings_quantized: {
-    keys: {
-      parking: 'Lage oder Art des Parkraums im Straßenland.',
-      capacity: 'Geschätzte oder explizit erfasste Anzahl von Stellplätzen.',
-      orientation: 'Ausrichtung der Fahrzeuge im Straßenland zur Verkehrsrichtung.',
-      condition_category_primary:
-        'Der für die Darstellung wichtigste Wert aus `condition_category`. Reihenfolge: Sonderparkplätze (Behinderte, Taxi, Ladezone, E-Laden, Carsharing) vor Park- und Haltverboten, dann private/eingeschränkte Flächen, dann Höchstparkdauer vor Bewirtschaftung. Nur zur Darstellung; fachlich gilt `condition_category`.',
-      staggered:
-        'Besondere Merkmale zur Parkweise, insbesondere bei alternierendem/versetztem Parken auf Fahrbahnen, die zu schmal sind um auf beiden Seiten gleichzeitig zu parken, keine Markierungen und Beschilderungen aufweisen, die das Parken regeln und auf denen gewöhnlich wechselseitig abschnittsweise auf der einen oder anderen Straßenseite geparkt wird oder geparkt werden kann.',
-      length:
-        'Ein berechneter Wert für das OpenStreetMap-Straßensegment. Die Berechnung nutzt die Projektion EPSG:5243 und hat somit eine gute Genauigkeit für Deutschland.',
-      source: 'Datenquelle der Parkraumgeometrie aus OpenStreetMap.',
-      geom_sources:
-        'Interne Hilfswerte. Semikolonseparierte Liste der OSM-IDs die für eine Geometrie verwendet wurden.',
-      tag_sources:
-        'Interne Hilfswerte. Semikolonseparierte Liste der OSM-IDs aus denen die OSM-Tags abgeleitet wurden.',
-      road: 'Art der Straße, an dem der Parkraum liegt.',
-      road_name: 'Name der Straße, an dem der Parkraum liegt.',
-      road_oneway: 'Verkehrsrichtung der Straße, an dem der Parkraum liegt.',
-      road_width: 'Breite der Fahrbahn, an dem der Parkraum liegt.',
-      side: 'Seite des Parkraums relativ zur Linienrichtung der OSM-Geometrie.',
-      area: 'Fläche des durch parkende Fahrzeuge auf diesem Parkraumabschnitt belegten Raumes in Quadratmetern.',
-      surface: 'Oberflächenbelag des Parkraumabschnitts.',
-      direction: 'Vorgesehene oder ausgeschilderte Fahrzeugrichtung beim Einparken.',
-      location: 'Besondere Lagemerkmale des Parkraums im Straßenland.',
-      zone: 'Parkzonennummer oder -bezeichnung entsprechend der lokalen Parkraumbewirtschaftung bei Stellplätzen, die nur mit einem entsprechenden Parkrausweis genutzt werden dürfen. Sind (insbesondere an Zonengrenzen) mehrere Parkzonen berechtigt, sind diese üblicherweise als semikolongetrennte Liste aufgeführt.',
-      reason: 'Angabe eines Grundes bei Nicht-Parken.',
-      mapillary: 'Mapillary-Foto-ID für dieses Feature.',
-      traffic_sign: 'Verkehrszeichennummer, mit der dieses Feature ausgeschildert ist.',
-      _staggered_maneuvering_loss:
-        'Interner Wert aus der Kapazitätsberechnung bei alternierendem Parken',
-      _staggered_original_capacity:
-        'Interner Zwischenwert vor Anwendung der alternierenden-Parken-Logik',
-    },
-    values: {
-      condition_category: {
-        invalid:
-          'Mindestens ein `*:conditional`-Tag ist syntaktisch fehlerhaft (z. B. unvollständige Klammern). Die tatsächliche Beschränkung ist daher unbekannt; der Tag ist in `parking_errors` gelistet und sollte in OSM korrigiert werden.',
-      },
-      condition_category_primary: {
-        invalid:
-          'Mindestens ein `*:conditional`-Tag ist syntaktisch fehlerhaft (z. B. unvollständige Klammern). Die tatsächliche Beschränkung ist daher unbekannt; der Tag ist in `parking_errors` gelistet und sollte in OSM korrigiert werden.',
-      },
-      staggered: {
-        yes: 'Auf diesem Abschnitt ist die Fahrbahn zu schmal, um auf beiden Seiten gleichzeitig zu parken. Es gibt keine Markierungen oder Schilder, die das Parken regeln. Häufig entwickeln sich örtliche Konventionen, in welchen Bereichen auf welcher Seite geparkt wird. In die Kapazitätsberechnung fließt das ein: Die Kapazität wird um 50% reduziert (da nur eine Seite genutzt werden kann) und zusätzlich wird für jeden 60m-Abschnitt ein Manövrierraumverlust von 10m (≈1,9 Fahrzeugplätze) abgezogen, da beim Seitenwechsel Manövrierraum benötigt wird. Diese Angaben basieren auf Erfahrungswerten und können lediglich eine Schätzung des tatsächlichen Parkgeschehens abbilden.',
       },
     },
   },

@@ -87,6 +87,11 @@ export const adminNavigation: AdminNavItem[] = [
         description: 'Aufträge und die zugehörigen Regionen.',
       },
       {
+        name: 'Private Hintergrundkarten',
+        to: '/admin/private-backgrounds',
+        description: 'Hintergrundkarten mit geheimem Token, nur für Mitglieder der Regionen.',
+      },
+      {
         name: 'Prüflisten',
         to: '/admin/review-lists',
         countKey: 'reviewLists',
@@ -155,6 +160,11 @@ export const adminNavigation: AdminNavItem[] = [
     name: 'System',
     icon: Cog6ToothIcon,
     children: [
+      {
+        name: 'Karten-Layer-Reihenfolge',
+        to: '/admin/layer-order',
+        description: 'Reihenfolge der Layer auf der Karte, global für alle Regionen.',
+      },
       {
         name: 'Änderungsverlauf',
         to: '/admin/audit-log',

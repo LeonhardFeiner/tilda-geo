@@ -1,32 +1,18 @@
-import { Fragment } from 'react'
 import { Layer, Source } from 'react-map-gl/maplibre'
+import { useRegionBackgrounds } from '@/components/regionen/pageRegionSlug/background/useRegionBackgrounds'
 import { useBackgroundParam } from '@/components/regionen/pageRegionSlug/hooks/useQueryState/useBackgroundParam'
-import { useRegionLoaderData } from '@/components/regionen/pageRegionSlug/hooks/useRegionLoaderData'
-import { sourcesBackgroundsRaster } from '@/components/regionen/pageRegionSlug/mapData/mapDataSources/sourcesBackgroundsRaster.const'
 import { layerVisibility } from '../utils/layerVisibility'
+import { RASTER_BACKGROUND_POSITION } from './utils/beforeId'
 
-export const SourcesLayerRasterBackgrounds: React.FC = () => {
-  const { backgroundParam } = useBackgroundParam()
-  const { region } = useRegionLoaderData()
+// Source and Layers are two components, see <AllSources> and <AllLayers>.
 
-  if (!region?.backgroundSources) return null
-
-  const backgrounds = sourcesBackgroundsRaster.filter((s) =>
-    region.backgroundSources.includes(s.id),
-  )
-
-  // Last layer in Array `allLayer.filter((l) => l.source === 'openmaptiles')`
-  // Picking a different layer would who maptiler Vector data on top of the background
-  // Check the list via <Map> => `handleLoad` => `console.log`
-  // See also <SourceAndLayers> => `layerOrder`
-  const beforeId = 'atlas-app-beforeid-below-roadname'
+export const SourcesRasterBackgrounds = () => {
+  const backgrounds = useRegionBackgrounds()
 
   return (
     <>
-      {backgrounds.map(({ id, tilesUrl, minzoom, maxzoom, tileSize, attributionHtml }) => {
+      {backgrounds.map(({ id, tilesUrl, minzoom, maxzoom, tileSize, scheme, attributionHtml }) => {
         const backgroundId = `${id}_tiles`
-
-        const visible = backgroundParam === id
 
         // TODO A: The idea was to be able to use {x}… params in the attribution string
         //    however, that causes React devtool warnings `Unable to update <Source> prop: attribution`.
@@ -40,26 +26,45 @@ export const SourcesLayerRasterBackgrounds: React.FC = () => {
         // })
 
         return (
-          <Fragment key={backgroundId}>
-            <Source
-              id={backgroundId}
-              key={backgroundId}
-              type="raster"
-              tiles={[tilesUrl]}
-              attribution={enhancedAttributionHtml}
-              {...(maxzoom ? { maxzoom } : {})}
-              {...(minzoom ? { minzoom } : {})}
-              {...(tileSize ? { tileSize } : {})}
-            />
-            <Layer
-              id={id}
-              key={id}
-              type="raster"
-              source={backgroundId}
-              layout={layerVisibility(visible)}
-              beforeId={beforeId}
-            />
-          </Fragment>
+          <Source
+            id={backgroundId}
+            key={backgroundId}
+            type="raster"
+            tiles={[tilesUrl]}
+            attribution={enhancedAttributionHtml}
+            {...(maxzoom ? { maxzoom } : {})}
+            {...(minzoom ? { minzoom } : {})}
+            {...(tileSize ? { tileSize } : {})}
+            {...(scheme ? { scheme } : {})}
+          />
+        )
+      })}
+    </>
+  )
+}
+
+export const LayersRasterBackgrounds = () => {
+  const { backgroundParam } = useBackgroundParam()
+  const backgrounds = useRegionBackgrounds()
+
+  // The background covers the basemap layers below it; the Atlas-Geo layers of positions below it
+  // move right above it (`beforeIdOnBackground`). Check the list via <Map> => `handleLoad` => `console.log`.
+
+  return (
+    <>
+      {backgrounds.map(({ id }) => {
+        const backgroundId = `${id}_tiles`
+        const visible = backgroundParam === id
+
+        return (
+          <Layer
+            id={id}
+            key={id}
+            type="raster"
+            source={backgroundId}
+            layout={layerVisibility(visible)}
+            beforeId={RASTER_BACKGROUND_POSITION}
+          />
         )
       })}
     </>

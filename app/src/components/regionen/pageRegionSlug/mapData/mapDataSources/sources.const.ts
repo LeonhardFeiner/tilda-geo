@@ -43,8 +43,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['name', 'admin_level'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_bikelanes',
@@ -82,12 +80,11 @@ export const sources: MapDataSource<SourcesId>[] = [
         'surface_color__if_present',
         'description__if_present',
         'length',
+        'composit_route_relations',
         // Last: links to photos, not a property of the object.
         'composit_mapillary',
       ],
     },
-    // presence: { enabled: true },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_bikeroutes',
@@ -120,8 +117,6 @@ export const sources: MapDataSource<SourcesId>[] = [
         'route_description__if_present',
       ],
     },
-    // presence: { enabled: false }, // this is false until we are able to merge the `bikelanesPresence` with `bikelanes`
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_roads',
@@ -150,12 +145,11 @@ export const sources: MapDataSource<SourcesId>[] = [
         'width',
         'length',
         'description__if_present',
+        'composit_route_relations',
         // Last: links to photos, not a property of the object.
         'composit_mapillary',
       ],
     },
-    // presence: { enabled: false }, // this is false until we are able to merge the `bikelanesPresence` with `bikelanes`
-    calculator: { enabled: false },
   },
   {
     id: 'tilda_highwayAreas',
@@ -185,7 +179,6 @@ export const sources: MapDataSource<SourcesId>[] = [
         'description__if_present',
       ],
     },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_roadsPathClasses',
@@ -214,12 +207,11 @@ export const sources: MapDataSource<SourcesId>[] = [
         'width',
         'length',
         'description__if_present',
+        'composit_route_relations',
         // Last: links to photos, not a property of the object.
         'composit_mapillary',
       ],
     },
-    // presence: { enabled: false }, // this is false until we are able to merge the `bikelanesPresence` with `bikelanes`
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_bikelanesPresence',
@@ -236,8 +228,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['composit_road_bikelanes'],
     },
-    // presence: { enabled: false }, // this is false until we are able to merge the `bikelanesPresence` with `bikelanes`
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_bikeSuitability',
@@ -260,8 +250,6 @@ export const sources: MapDataSource<SourcesId>[] = [
         'traffic_sign',
       ],
     },
-    // presence: { enabled: false }, // this is false until we are able to merge the `bikelanesPresence` with `bikelanes`
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_publicTransport',
@@ -278,8 +266,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['name', 'category'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_poiClassification',
@@ -296,8 +282,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['name', 'category', 'type'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_places',
@@ -314,8 +298,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['name', 'place', 'population', 'population_date'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_barriers',
@@ -328,8 +310,6 @@ export const sources: MapDataSource<SourcesId>[] = [
     promoteId: 'id',
     osmIdConfig: { osmTypeId: 'id' },
     inspector: { enabled: false },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_landuse',
@@ -346,8 +326,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['landuse'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false },
   },
   {
     id: 'atlas_bicycleParking',
@@ -374,8 +352,6 @@ export const sources: MapDataSource<SourcesId>[] = [
         'composit_mapillary',
       ],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false }, // TODO
   },
   {
     id: 'atlas_trafficSigns',
@@ -392,8 +368,6 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: ['traffic_sign'],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false }, // TODO
   },
   {
     id: 'atlas_todos_lines',
@@ -410,7 +384,5 @@ export const sources: MapDataSource<SourcesId>[] = [
       highlightingKey: 'id',
       documentedKeys: [],
     },
-    // presence: { enabled: false },
-    calculator: { enabled: false }, // TODO
   },
 ]
