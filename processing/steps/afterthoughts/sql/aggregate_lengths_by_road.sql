@@ -2,7 +2,8 @@
 -- Attributes bike infrastructure to the road it runs along, so the viewer can show
 -- "share of main roads with bike infrastructure" and who is responsible for those roads.
 --
--- aggregated_lengths gains two JSONB columns (km, same oneway factor as aggregate_lengths.sql,
+-- aggregated_lengths gains two JSONB columns (km, measured like aggregate_lengths.sql: oneway rule
+-- from tilda_measure_directions, a line counts in an area by the share of its length inside it;
 -- so road_length_by_authority sums to road_length; bikelane_length_by_road can be lower than
 -- bikelane_length where matched bike km were capped at their road's length). Keys are
 -- '<roads.tags.road key>|<authority>', authority one of autobahn | bund | land | kreis | gemeinde:
@@ -15,6 +16,8 @@
 --     authority from the nearest road within 20 m
 --   * separate ways with _is_sidepath = assumed_no: 'independent' (not along a road)
 --   * other separate ways: nearest road within 30 m, else 'independent'
+-- Bike ways are matched in ~100 m pieces (a long path can run along several roads); each piece
+-- is matched by its midpoint and counts in an area by its share, like any other line.
 -- Authority comes from the road number (roads.tags.name_ref): A → autobahn, B → bund,
 -- L/St/S → land, K or a district code ("RO 35") → kreis, none → gemeinde. An approximation:
 -- e.g. through-roads in larger towns are often the town's responsibility despite a B/L number.
@@ -45,6 +48,19 @@ AS $$
   END;
 $$ LANGUAGE sql;
 
+-- Cuts a line into n ≈ length/res equal pieces, each carrying length/n meters.
+-- (Own name: upstream used to ship atlas_segmentize_linestring and now drops it in parking QA.)
+CREATE OR REPLACE FUNCTION atlas_line_pieces(input_geom geometry, input_length FLOAT, res INT)
+RETURNS TABLE(length FLOAT, geom geometry)
+IMMUTABLE
+AS $$
+  SELECT
+    input_length / n,
+    ST_LineSubstring(input_geom, (i - 1)::FLOAT / n, i::FLOAT / n)
+  FROM (SELECT greatest(round(input_length / res), 1)::INT AS n) c,
+    generate_series(1, n) AS i;
+$$ LANGUAGE sql;
+
 -- Lines only, one row per road, with what the bike matching and the authority sums need.
 DROP TABLE IF EXISTS temp_roads_ref;
 CREATE TABLE temp_roads_ref AS
@@ -52,23 +68,12 @@ CREATE TABLE temp_roads_ref AS
     id,
     tags->>'road' AS road,
     atlas_road_authority(tags->>'name_ref') AS authority,
-    CASE
-      WHEN tags->>'oneway' = 'yes' THEN 1
-      WHEN tags->>'oneway' = 'yes_dual_carriageway' THEN 1
-      ELSE 2
-    END AS factor,
+    tilda_measure_directions(tags) AS factor,
     (tags->>'length')::FLOAT AS length,
     geom
   FROM roads;
 CREATE INDEX temp_roads_ref_geom_idx ON temp_roads_ref USING gist(geom);
 ANALYZE temp_roads_ref;
-
-DROP TABLE IF EXISTS temp_roads_authority_segmentized;
-CREATE TABLE temp_roads_authority_segmentized AS
-  SELECT road || '|' || authority AS road_key, factor, (atlas_segmentize_linestring(geom, length, 100)).*
-  FROM temp_roads_ref;
-CREATE INDEX temp_roads_authority_segmentized_geom_idx
-  ON temp_roads_authority_segmentized USING gist(geom);
 
 DROP TABLE IF EXISTS temp_bikelanes_road_segmentized;
 CREATE TABLE temp_bikelanes_road_segmentized AS
@@ -76,15 +81,11 @@ CREATE TABLE temp_bikelanes_road_segmentized AS
     tags ? '_parent_highway' AS on_road,
     tags->>'road' AS own_road,
     tags->>'_is_sidepath' AS sidepath,
-    CASE
-      WHEN tags->>'oneway' = 'yes' THEN 1
-      WHEN tags->>'oneway' = 'implicit_yes' THEN 1
-      ELSE 2
-    END AS factor,
-    (atlas_segmentize_linestring(geom, (tags->>'length')::FLOAT, 100)).*
+    tilda_measure_directions(tags) AS factor,
+    (atlas_line_pieces(geom, (tags->>'length')::FLOAT, 100)).*
   FROM bikelanes;
 
--- Nearest road per 100 m sample. EPSG:3857 units are metres / cos(lat), so the search
+-- Nearest road per 100 m piece, searched from the piece's midpoint. EPSG:3857 units are metres / cos(lat), so the search
 -- radius is scaled per point to stay ~20 m / ~30 m on the ground.
 DROP TABLE IF EXISTS temp_bikelanes_road_assigned;
 CREATE TABLE temp_bikelanes_road_assigned AS
@@ -97,7 +98,9 @@ CREATE TABLE temp_bikelanes_road_assigned AS
       WHEN n.road IS NOT NULL THEN n.road || '|' || n.authority
       ELSE 'independent'
     END AS road_key
-  FROM temp_bikelanes_road_segmentized s
+  FROM (
+    SELECT *, ST_LineInterpolatePoint(geom, 0.5) AS mid FROM temp_bikelanes_road_segmentized
+  ) s
   LEFT JOIN LATERAL (
     SELECT r.id, r.road, r.authority
     FROM temp_roads_ref r
@@ -107,11 +110,11 @@ CREATE TABLE temp_bikelanes_road_assigned AS
       AND (NOT s.on_road OR r.road = s.own_road)
       AND ST_DWithin(
         r.geom,
-        s.geom,
+        s.mid,
         (CASE WHEN s.on_road THEN 20 ELSE 30 END)
-          / cos(radians(ST_Y(ST_Transform(s.geom, 4326))))
+          / cos(radians(ST_Y(ST_Transform(s.mid, 4326))))
       )
-    ORDER BY r.geom <-> s.geom
+    ORDER BY r.geom <-> s.mid
     LIMIT 1
   ) n ON true;
 -- A road can't be more than fully covered: two-way paths on both sides, or a path mapped twice,
@@ -133,41 +136,30 @@ CREATE INDEX temp_bikelanes_road_assigned_geom_idx
 
 DROP TABLE temp_bikelanes_road_segmentized;
 
-CREATE OR REPLACE FUNCTION atlas_sum_by_key(
-  input_polygon Geometry(MultiPolygon, 3857),
-  source_table REGCLASS,
-  key_column TEXT,
-  length_expr TEXT
+DROP FUNCTION IF EXISTS atlas_sum_by_key(Geometry(MultiPolygon, 3857), REGCLASS, TEXT, TEXT);
+
+WITH
+road_km AS (
+  SELECT a.id, r.road || '|' || r.authority AS road_key,
+    SUM(r.length * r.factor * tilda_measure_share(a.geom, r.geom)) / 1000.0 AS km
+  FROM aggregated_lengths a
+  JOIN temp_roads_ref r ON ST_Intersects(a.geom, r.geom)
+  GROUP BY 1, 2
+),
+bike_km AS (
+  SELECT a.id, b.road_key,
+    SUM(b.length * tilda_measure_share(a.geom, b.geom)) / 1000.0 AS km
+  FROM aggregated_lengths a
+  JOIN temp_bikelanes_road_assigned b ON ST_Intersects(a.geom, b.geom)
+  GROUP BY 1, 2
 )
-RETURNS JSONB AS $$
-DECLARE
-  result JSONB;
-BEGIN
-  EXECUTE format(
-    'SELECT jsonb_object_agg(k, km) FROM (
-       SELECT %1$I AS k, (SUM(%2$s) / 1000.0)::double precision AS km
-       FROM %3$s WHERE ST_Intersects(geom, $1) GROUP BY %1$I
-     ) t',
-    key_column, length_expr, source_table
-  )
-  INTO result
-  USING input_polygon;
-  RETURN result;
-END;
-$$ LANGUAGE plpgsql;
-
-BEGIN;
-
 UPDATE aggregated_lengths a
 SET
-  bikelane_length_by_road = atlas_sum_by_key(a.geom, 'temp_bikelanes_road_assigned', 'road_key', 'length'),
-  road_length_by_authority = atlas_sum_by_key(a.geom, 'temp_roads_authority_segmentized', 'road_key', 'length * factor');
+  bikelane_length_by_road = (SELECT jsonb_object_agg(k.road_key, k.km) FROM bike_km k WHERE k.id = a.id),
+  road_length_by_authority = (SELECT jsonb_object_agg(k.road_key, k.km) FROM road_km k WHERE k.id = a.id);
 
 DROP TABLE temp_bikelanes_road_assigned;
-DROP TABLE temp_roads_authority_segmentized;
 DROP TABLE temp_roads_ref;
-
-COMMIT;
 
 DO $$ BEGIN
   RAISE NOTICE '[Afterthoughts][Statistics by road] Done at %',
