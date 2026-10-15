@@ -74,6 +74,29 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('function cropCanvasAroundBbox')
   })
 
+  test('share options: preview page link, images via the share sheet, tidy dialog', () => {
+    // The region's own preview page (probed ahead of the tap) beats the generic viewer URL.
+    expect(html).toContain('function probeSharePreviewPage(id)')
+    expect(html).toContain('function shareableLink()')
+    expect(html).toContain('const url = shareableLink();')
+    // Phones get pictures through the system share sheet; everything else downloads.
+    expect(html).toContain('async function saveOrShareImage(canvas, filename, savedMessage)')
+    expect(html).toContain('navigator.share({ files: [file]')
+    // The empty feedback bar must stay hidden.
+    expect(html).toContain('.export-dialog-feedback[hidden] { display: none; }')
+    // The map picture neither keeps the sheet's padding nor leaves the camera at the export's.
+    const exportFn = html.slice(
+      html.indexOf('async function captureMapExportCanvas'),
+      html.indexOf('async function downloadMapImage'),
+    )
+    expect(exportFn).toContain('map.setPadding({ top: 0, right: 0, bottom: 0, left: 0 })')
+    expect(exportFn).toContain('map.jumpTo({')
+    expect(exportFn).not.toContain('fitMapToCurrentView')
+    // The share code nobody called any more is gone.
+    expect(html).not.toContain('shareViewWithScreenshots')
+    expect(html).not.toContain('function shareViaApp')
+  })
+
   test('desktop scale bar is added and offset when region detail is open', () => {
     expect(html).toContain('new maplibregl.ScaleControl')
     expect(html).toContain('body[data-region-detail] .maplibregl-ctrl-bottom-right')

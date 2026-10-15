@@ -1110,6 +1110,7 @@
       padding: 6px 10px;
       text-align: center;
     }
+    .export-dialog-feedback[hidden] { display: none; }
     .export-dialog-feedback.is-error {
       color: #991b1b;
       background: #fef2f2;
@@ -1500,7 +1501,7 @@
     </details>
     </div>
     <p class="footer">
-      OSM-Daten vom 30.09.2026 · Erstellt am 14.10.2026 ·
+      OSM-Daten vom 13.10.2026 · Erstellt am 15.10.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -1597,7 +1598,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-14T09:25:46.076Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-15T15:52:23.545Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -4114,15 +4115,15 @@
         // The context rows and scatter plots need the density/transit/terrain files, which are
         // fetched on the first selection. On a slow connection they may still be on their way —
         // without them the sheet silently comes out without "Umfeld" and without any plot.
-        ensureRegionExtraIndexes();
-        if (regionExtraIndexesPromise) {
-          setLoadStatus('Daten für das Datenblatt werden geladen …');
-          try {
-            await raceTimeout(regionExtraIndexesPromise, 20000);
-          } finally {
-            setLoadStatus('');
-          }
+        // Building the sheet takes seconds (data, map picture, nine plots); say so.
+        if (copyViewLinkFeedback) {
+          if (copyViewLinkFeedbackTimer) clearTimeout(copyViewLinkFeedbackTimer);
+          copyViewLinkFeedback.textContent = 'Datenblatt wird erstellt …';
+          copyViewLinkFeedback.classList.remove('is-error');
+          copyViewLinkFeedback.hidden = false;
         }
+        ensureRegionExtraIndexes();
+        if (regionExtraIndexesPromise) await raceTimeout(regionExtraIndexesPromise, 20000);
         const el = (tag, className, text) => {
           const node = document.createElement(tag);
           if (className) node.className = className;
@@ -4226,12 +4227,13 @@
           'ps-foot',
           'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
             (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
-            '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand 30.09.2026. ' +
+            '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand 13.10.2026. ' +
             'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
         );
         foot.appendChild(el('span', 'ps-url', buildShareUrl()));
         sheet.appendChild(foot);
 
+        if (copyViewLinkFeedback) copyViewLinkFeedback.hidden = true;
         const done = () => document.body.classList.remove('printing');
         window.addEventListener('afterprint', done, { once: true });
         document.body.classList.add('printing');
@@ -4240,6 +4242,7 @@
         });
       } catch (err) {
         console.error('[radinfra-viewer] printRegionSheet failed', err);
+        if (copyViewLinkFeedback) copyViewLinkFeedback.hidden = true;
         document.body.classList.remove('printing');
       }
     }
@@ -5284,6 +5287,7 @@
         id && feature?.properties?.id === id ? feature : null;
       updateMapHighlights();
       if (previousId !== id) rebuildRankingForFocus();
+      if (id) probeSharePreviewPage(id);
       syncRankingRowHighlights();
       updatePanelSummaryPreview();
       syncExportDialogState();
@@ -5960,6 +5964,16 @@
         el,
         el.style.visibility,
       ]);
+      // The visitor's camera and the padding for the card/sheet belong to the screen, not to the
+      // picture: without this the picture keeps an empty band where the sheet is, and the map
+      // is left at the export's framing afterwards.
+      const savedCamera = {
+        center: map.getCenter(),
+        zoom: map.getZoom(),
+        bearing: map.getBearing(),
+        pitch: map.getPitch(),
+        padding: { ...map.getPadding() },
+      };
       try {
         for (const [el] of hiddenControls) el.style.visibility = 'hidden';
         mapEl.style.position = 'fixed';
@@ -5971,8 +5985,18 @@
         mapEl.style.width = width + 'px';
         mapEl.style.height = height + 'px';
         mapEl.style.zIndex = '-1';
+        map.setPadding({ top: 0, right: 0, bottom: 0, left: 0 });
         map.resize();
-        fitMapToCurrentView();
+        const exportBbox = bboxForCurrentView();
+        if (exportBbox.every(Number.isFinite)) {
+          map.fitBounds(
+            [
+              [exportBbox[0], exportBbox[1]],
+              [exportBbox[2], exportBbox[3]],
+            ],
+            { padding: 48, duration: 0 },
+          );
+        }
         await waitForMapRender();
         const source = map.getCanvas();
         if (!source?.width) throw new Error('empty canvas');
@@ -5985,16 +6009,44 @@
         for (const [el, visibility] of hiddenControls) el.style.visibility = visibility;
         restoreInlineStyles(mapEl, savedMapStyle, MAP_EXPORT_STYLE_PROPS);
         map.resize();
-        fitMapToCurrentView();
+        map.setPadding(savedCamera.padding);
+        map.jumpTo({
+          center: savedCamera.center,
+          zoom: savedCamera.zoom,
+          bearing: savedCamera.bearing,
+          pitch: savedCamera.pitch,
+        });
         await waitForMapRender();
       }
+    }
+
+    /**
+     * On a phone the system share sheet is how a picture reaches Photos, WhatsApp, Signal …;
+     * a download link often does nothing useful there (iOS Safari). Elsewhere, download.
+     * The share sheet needs a recent tap: if the picture took long to make, sharing is refused
+     * and the download still happens.
+     */
+    async function saveOrShareImage(canvas, filename, savedMessage) {
+      if (isLikelyMobileShareDevice() && typeof navigator.share === 'function') {
+        try {
+          const file = await canvasToPngFile(canvas, filename);
+          if (canShareData({ files: [file] })) {
+            await navigator.share({ files: [file], title: shareTitleText() });
+            showCopyViewLinkFeedback('Geteilt.');
+            return;
+          }
+        } catch (err) {
+          if (err?.name === 'AbortError') return;
+        }
+      }
+      triggerImageDownload(canvas.toDataURL('image/png'), filename);
+      showCopyViewLinkFeedback(savedMessage);
     }
 
     async function downloadMapImage() {
       try {
         const canvas = await captureMapExportCanvas();
-        triggerImageDownload(canvas.toDataURL('image/png'), imageFilename('karte'));
-        showCopyViewLinkFeedback('Kartenbild gespeichert.');
+        await saveOrShareImage(canvas, imageFilename('karte'), 'Kartenbild gespeichert.');
       } catch {
         showCopyViewLinkFeedback('Kartenbild konnte nicht erstellt werden.', true);
       }
@@ -6007,59 +6059,6 @@
       return new File([blob], filename, { type: 'image/png' });
     }
 
-    function combineShareCanvases(canvases) {
-      const list = canvases.filter((c) => c?.width && c?.height);
-      if (!list.length) return null;
-      if (list.length === 1) return list[0];
-      const width = Math.max(...list.map((c) => c.width));
-      const height = list.reduce((sum, c) => sum + c.height, 0);
-      const out = document.createElement('canvas');
-      out.width = width;
-      out.height = height;
-      const ctx = out.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, width, height);
-      let y = 0;
-      for (const canvas of list) {
-        ctx.drawImage(canvas, Math.floor((width - canvas.width) / 2), y);
-        y += canvas.height;
-      }
-      return out;
-    }
-
-    async function buildShareScreenshotAssets() {
-      // Phone: share exactly the map the user is looking at. The off-screen 1080x1920
-      // re-render (captureMapExportCanvas) is heavy and often comes back blank on
-      // mobile; the ranking goes in the link, not the image.
-      const liveMapOnly = isLikelyMobileShareDevice();
-      const canvases = [];
-      try {
-        canvases.push(liveMapOnly ? await captureLiveMapCanvas() : await captureMapExportCanvas());
-      } catch {
-        /* Karte optional */
-      }
-      if (!liveMapOnly) {
-        try {
-          canvases.push(drawRankingExportCanvas());
-        } catch {
-          /* Rangliste optional */
-        }
-      }
-      const files = [];
-      for (const canvas of canvases) {
-        const kind = files.length === 0 ? 'karte' : 'rangliste';
-        files.push(await canvasToPngFile(canvas, imageFilename(kind)));
-      }
-      const combined = combineShareCanvases(canvases);
-      const combinedFile = combined
-        ? await canvasToPngFile(
-            combined,
-            imageFilename('karte').replace(/-karte\.png$/i, '-ansicht.png'),
-          )
-        : null;
-      return { files, combinedFile, canvases };
-    }
-
     function canShareData(data) {
       if (typeof navigator.canShare !== 'function') return false;
       try {
@@ -6069,124 +6068,12 @@
       }
     }
 
-    async function tryNativeShareWithFiles(files, text, url, title) {
-      const attempts = isLikelyMobileShareDevice()
-        ? [
-            { files, title, text },
-            { files, text },
-            { files, title },
-            { files },
-            { files, title, text, url },
-          ]
-        : [
-            { files, title, text, url },
-            { files, title, text },
-            { files, text },
-            { files },
-          ];
-      for (const data of attempts) {
-        if (!canShareData(data)) continue;
-        try {
-          await navigator.share(data);
-          return true;
-        } catch (err) {
-          if (err?.name === 'AbortError') throw err;
-        }
-      }
-      return false;
-    }
-
-    function shareFilesForDevice(files, combinedFile) {
-      if (combinedFile) return [combinedFile];
-      return files.length ? files : [];
-    }
-
     function isLikelyMobileShareDevice() {
       return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
     }
 
     function mapPolygonHoverEnabled() {
       return window.matchMedia('(hover: hover) and (pointer: fine)').matches;
-    }
-
-    async function copyShareMessageToClipboard(text, url) {
-      const line = text + '\n\n' + url;
-      try {
-        if (navigator.clipboard?.writeText) {
-          await navigator.clipboard.writeText(line);
-          return true;
-        }
-      } catch {
-        /* fallback below */
-      }
-      return copyTextFallback(line);
-    }
-
-    async function shareViewWithScreenshots(fallbackApp) {
-      const { url, title, text: baseText } = sharePayload();
-      // Keep the link in the message body itself: many share targets accept files + text
-      // but drop a separate url field, so the link would otherwise be lost.
-      const text = baseText + '\n\n' + url;
-      const mobile = isLikelyMobileShareDevice();
-      showCopyViewLinkFeedback('Screenshots werden vorbereitet …');
-      let files = [];
-      let combinedFile = null;
-      try {
-        const assets = await buildShareScreenshotAssets();
-        files = assets.files;
-        combinedFile = assets.combinedFile;
-      } catch {
-        showCopyViewLinkFeedback('Screenshots konnten nicht erstellt werden.', true);
-        if (fallbackApp && !mobile) shareViaApp(fallbackApp);
-        return;
-      }
-
-      const shareFiles = shareFilesForDevice(files, combinedFile);
-      const hadImages = shareFiles.length > 0;
-
-      try {
-        if (hadImages && (await tryNativeShareWithFiles(shareFiles, text, url, title))) {
-          showCopyViewLinkFeedback('Geteilt.');
-          return;
-        }
-      } catch (err) {
-        if (err?.name === 'AbortError') return;
-      }
-
-      await copyShareMessageToClipboard(baseText, url);
-
-      if (fallbackApp && !mobile) {
-        shareViaApp(fallbackApp);
-        showCopyViewLinkFeedback(
-          hadImages
-            ? 'Text kopiert. Bilder über die Karten-/Ranglisten-Buttons speichern oder erneut „Teilen“ nutzen.'
-            : 'Text kopiert.',
-        );
-        return;
-      }
-
-      if (typeof navigator.share === 'function') {
-        try {
-          await navigator.share({ title, text: baseText, url });
-          showCopyViewLinkFeedback(
-            hadImages
-              ? mobile
-                ? 'Link geteilt. Für Bilder erneut tippen – System-Teilen-Dialog nutzen.'
-                : 'Link geteilt. Bilder über die Speichern-Buttons exportieren.'
-              : 'Geteilt.',
-          );
-          return;
-        } catch (err) {
-          if (err?.name === 'AbortError') return;
-        }
-      }
-
-      showCopyViewLinkFeedback(
-        hadImages
-          ? 'Teilen mit Bildern nicht verfügbar. Text wurde kopiert.'
-          : 'Teilen nicht verfügbar. Text wurde kopiert.',
-        true,
-      );
     }
 
     function drawRankingExportCanvas() {
@@ -6253,7 +6140,14 @@
         ctx.fillText(row.rank + '.', padding + rankColW - 8, y + 34);
         ctx.textAlign = 'left';
         ctx.fillStyle = '#222222';
-        ctx.font = highlighted ? '600 30px system-ui, sans-serif' : '400 30px system-ui, sans-serif';
+        // Shrink a long name before cutting it off — the selected region's own name especially.
+        const nameWeight = highlighted ? '600' : '400';
+        let nameSize = 30;
+        ctx.font = nameWeight + ' ' + nameSize + 'px system-ui, sans-serif';
+        while (nameSize > 22 && ctx.measureText(name).width > 268) {
+          nameSize -= 1;
+          ctx.font = nameWeight + ' ' + nameSize + 'px system-ui, sans-serif';
+        }
         ctx.fillText(truncateCanvasText(ctx, name, 268), padding + rankColW, y + 34);
         ctx.fillStyle = '#eceff1';
         ctx.fillRect(barX, y + 22, barW, 16);
@@ -6275,8 +6169,7 @@
     async function downloadRankingImage() {
       try {
         const canvas = drawRankingExportCanvas();
-        triggerImageDownload(canvas.toDataURL('image/png'), imageFilename('rangliste'));
-        showCopyViewLinkFeedback('Ranglistenbild gespeichert.');
+        await saveOrShareImage(canvas, imageFilename('rangliste'), 'Ranglistenbild gespeichert.');
       } catch {
         showCopyViewLinkFeedback('Ranglistenbild konnte nicht erstellt werden.', true);
       }
@@ -6794,6 +6687,29 @@
       }
     }
 
+    // Region preview pages (r/<slug>.html) carry that region's own link-preview text and image
+    // and redirect into the viewer; the plain viewer URL has the same generic preview for every
+    // region. Whether a page exists is probed once per selected region, ahead of time: the
+    // system share sheet has to be opened inside the tap, so nothing can be awaited then.
+    const sharePreviewPages = new Map(); // region id → preview page URL, or null while unknown/absent
+    function probeSharePreviewPage(id) {
+      if (!id || sharePreviewPages.has(id)) return;
+      sharePreviewPages.set(id, null);
+      const url = new URL('r/' + id.split('/').join('-') + '.html', location.href).href;
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 4000);
+      fetch(url, { method: 'HEAD', signal: controller.signal })
+        .then((res) => {
+          if (res.ok) sharePreviewPages.set(id, url);
+        })
+        .catch(() => {})
+        .finally(() => clearTimeout(timer));
+    }
+    /** What to hand to other people: the region's preview page when it has one, else the view. */
+    function shareableLink() {
+      return (selectedFeatureId && sharePreviewPages.get(selectedFeatureId)) || buildShareUrl();
+    }
+
     function buildShareUrl() {
       const params = new URLSearchParams();
       appendViewScopeToUrl(params);
@@ -7022,59 +6938,8 @@
       return { url, title: shareTitleText(), text: shareMessageText() };
     }
 
-    function openShareWindow(url) {
-      window.open(url, '_blank', 'noopener,noreferrer');
-    }
-
-    function shareViaApp(app) {
-      const { url, title, text } = sharePayload();
-      const line = text + '\n\n' + url;
-      let target = '';
-      switch (app) {
-        case 'email':
-          target =
-            'mailto:?subject=' +
-            encodeURIComponent(title + ' – ' + text) +
-            '&body=' +
-            encodeURIComponent(line);
-          window.location.href = target;
-          return;
-        case 'whatsapp':
-          target = 'https://wa.me/?text=' + encodeURIComponent(text + ' ' + url);
-          break;
-        case 'telegram':
-          target =
-            'https://t.me/share/url?url=' +
-            encodeURIComponent(url) +
-            '&text=' +
-            encodeURIComponent(text);
-          break;
-        case 'linkedin':
-          target =
-            'https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(url);
-          break;
-        case 'bluesky':
-          target = 'https://bsky.app/intent/compose?text=' + encodeURIComponent(text + ' ' + url);
-          break;
-        case 'twitter':
-          target =
-            'https://twitter.com/intent/tweet?url=' +
-            encodeURIComponent(url) +
-            '&text=' +
-            encodeURIComponent(text);
-          break;
-        default:
-          return;
-      }
-      openShareWindow(target);
-    }
-
-    async function nativeShareLink() {
-      await shareViewWithScreenshots(null);
-    }
-
     async function copyShareLink() {
-      const url = buildShareUrl();
+      const url = shareableLink();
       try {
         if (navigator.clipboard?.writeText) {
           await navigator.clipboard.writeText(url);
@@ -8003,7 +7868,7 @@
         selectedFeatureOverride || (selectedFeatureId ? regionIndex?.byId.get(selectedFeatureId) : null);
       if (feature && feature.properties) {
         const p = feature.properties;
-        const url = buildShareUrl();
+        const url = shareableLink();
         const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
         const shareText =
           (p.name || 'Gebiet') +
