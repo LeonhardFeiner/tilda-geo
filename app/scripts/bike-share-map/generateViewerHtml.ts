@@ -7013,7 +7013,31 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       basemapHint.textContent = meta?.description || '';
     }
 
-    basemapSelect?.addEventListener('change', () => setBasemap(basemapSelect.value));
+    // "Hell" and "Gedeckt" come from MapTiler: a key that is locked to this domain and has a
+    // quota. When it stops answering (401/403/429) the tiles fail silently and the map shows
+    // gaps behind the colours. After a few such failures switch to the neutral background and
+    // say so. Only the displayed style changes: the select and the share links keep the
+    // visitor's choice, and picking a basemap again retries.
+    const KEYED_BASEMAPS = ['light', 'muted'];
+    let basemapAuthFailures = 0;
+    let basemapFellBack = false;
+    map.on('error', (event) => {
+      const status = event && event.error && event.error.status;
+      if (!event || event.sourceId !== 'basemap' || ![401, 403, 429].includes(status)) return;
+      if (basemapFellBack || !KEYED_BASEMAPS.includes(basemapSelect?.value)) return;
+      basemapAuthFailures += 1;
+      if (basemapAuthFailures < 3) return;
+      basemapFellBack = true;
+      setBasemap('blank');
+      basemapHint.textContent =
+        'Die Hintergrundkarte ist gerade nicht erreichbar – neutraler Hintergrund.';
+      showCopyViewLinkFeedback('Hintergrundkarte nicht erreichbar – neutraler Hintergrund.', true);
+    });
+    basemapSelect?.addEventListener('change', () => {
+      basemapAuthFailures = 0;
+      basemapFellBack = false;
+      setBasemap(basemapSelect.value);
+    });
     colorScaleSelect?.addEventListener('change', () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       updateLegendBar(colorScaleSelect.value);

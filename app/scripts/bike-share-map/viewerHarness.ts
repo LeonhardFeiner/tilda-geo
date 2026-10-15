@@ -30,7 +30,13 @@ const BUNDLES = [
 
 export type ShareCall = { title?: string; text?: string; url?: string; files?: unknown[] }
 export type ViewerWindow = Window &
-  typeof globalThis & { __calls: string[][]; __shares: ShareCall[]; __clipboard: string[] }
+  typeof globalThis & {
+    __calls: string[][]
+    __shares: ShareCall[]
+    __clipboard: string[]
+    /** The stubbed map instance, to fire map events (e.g. a failing basemap tile) from a test. */
+    __map: { fire: (type: string, event?: object) => void }
+  }
 
 export type ViewerPage = {
   window: ViewerWindow
@@ -146,7 +152,10 @@ const MAPLIBRE_STUB = `
       queryRenderedFeatures() { return []; },
       querySourceFeatures() { return []; },
       cameraForBounds() { return { center: [cam.lng, cam.lat], zoom: cam.z }; },
-      setStyle() { setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('idle'); }, 5); },
+      setStyle(style) {
+        record('setStyle', style && style.layers && style.layers[0] ? style.layers[0].id : '');
+        setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('idle'); }, 5);
+      },
       hasImage() { return false; },
       scrollZoom: handler(), boxZoom: handler(), dragRotate: handler(), dragPan: handler(), keyboard: handler(),
       doubleClickZoom: handler(), touchZoomRotate: handler(), touchPitch: handler(), cooperativeGestures: handler(),
@@ -154,6 +163,7 @@ const MAPLIBRE_STUB = `
     const proxy = new Proxy(base, {
       get(t, k) { if (k in t) return typeof t[k] === 'function' ? t[k].bind(proxy) : t[k]; return () => proxy; },
     });
+    window.__map = proxy;
     setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('load'); base.fire('idle'); }, 5);
     return proxy;
   }

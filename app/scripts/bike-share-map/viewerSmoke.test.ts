@@ -128,6 +128,34 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'falls back to the neutral background when the keyed basemap stops answering',
+    async () => {
+      page = await bootViewer()
+      const { window } = page
+      const basemapStyles = () => window.__calls.filter((c) => c[0] === 'setStyle').map((c) => c[1])
+      const tileError = (status: number, sourceId = 'basemap') =>
+        window.__map.fire('error', { sourceId, error: { status } })
+
+      // Not enough, or not the basemap, or not an auth/quota failure: nothing happens.
+      tileError(403)
+      tileError(403)
+      tileError(404)
+      tileError(403, 'regions')
+      await new Promise((resolve) => setTimeout(resolve, 50))
+      expect(basemapStyles()).toEqual([])
+
+      tileError(429) // the third auth/quota failure
+      await page.waitFor(() => basemapStyles().length === 1, 'the fallback style')
+      expect(basemapStyles()).toEqual(['background']) // the "blank" style
+      expect(page.q('#basemap-hint').textContent).toContain('nicht erreichbar')
+      // The visitor's choice (and so every share link) is left alone.
+      expect(page.q<HTMLSelectElement>('#basemap-select').value).toBe('light')
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'the phone layout boots into a collapsed bottom sheet',
     async () => {
       page = await bootViewer('', { phone: true })
