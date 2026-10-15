@@ -26,23 +26,34 @@ areas AS (
   SELECT id, tags, geom FROM boundaries
   WHERE tags ->> 'admin_level' IN ('2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12')
 ),
+-- The meters inside the area are computed per feature before grouping (OFFSET 0 keeps the planner
+-- from moving the share into the aggregate): otherwise every row carries the area geometry
+-- through the sort, which for the nested levels 2-12 (Germany outline × all lines) fills the disk.
 kilometers AS (
-  SELECT
-    a.id,
-    f.part,
-    COALESCE(f.tags ->> 'category', f.tags ->> 'road') AS class,
-    SUM(
-      (f.tags ->> 'length_directions')::FLOAT
-      * tilda_measure_share(a.geom, f.geom)
-    ) / 1000.0 AS km
+  SELECT a.id, f.part, f.class, SUM(f.meters) / 1000.0 AS km
   FROM areas a
   CROSS JOIN LATERAL (
-    SELECT * FROM tilda_measure_bikelanes(a.geom)
-    UNION ALL
-    SELECT * FROM tilda_measure_roads(a.geom) WHERE part = 'roads'
+    SELECT
+      m.part,
+      COALESCE(m.tags ->> 'category', m.tags ->> 'road') AS class,
+      (m.tags ->> 'length_directions')::FLOAT * tilda_measure_share(a.geom, m.geom) AS meters
+    FROM (
+      SELECT * FROM tilda_measure_bikelanes(a.geom)
+      UNION ALL
+      SELECT * FROM tilda_measure_roads(a.geom) WHERE part = 'roads'
+    ) m
+    WHERE ST_Intersects(a.geom, m.geom)
+    OFFSET 0
   ) f
-  WHERE ST_Intersects(a.geom, f.geom)
   GROUP BY 1, 2, 3
+),
+per_area AS (
+  SELECT
+    id,
+    jsonb_object_agg(class, km) FILTER (WHERE part = 'bikelanes') AS bikelane_length,
+    jsonb_object_agg(class, km) FILTER (WHERE part = 'roads') AS road_length
+  FROM kilometers
+  GROUP BY id
 )
 INSERT INTO aggregated_lengths (id, name, level, geom, regionalschluessel, bikelane_length, road_length)
 SELECT
@@ -51,9 +62,10 @@ SELECT
   a.tags ->> 'admin_level',
   a.geom,
   a.tags ->> 'regionalschluessel',
-  (SELECT jsonb_object_agg(k.class, k.km) FROM kilometers k WHERE k.id = a.id AND k.part = 'bikelanes'),
-  (SELECT jsonb_object_agg(k.class, k.km) FROM kilometers k WHERE k.id = a.id AND k.part = 'roads')
+  p.bikelane_length,
+  p.road_length
 FROM areas a
+LEFT JOIN per_area p ON p.id = a.id
 ON CONFLICT (id)
   DO UPDATE SET
     name = EXCLUDED.name,

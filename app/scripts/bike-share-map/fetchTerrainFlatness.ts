@@ -223,9 +223,8 @@ function areaTerrainStatsForPolygon(
  * Segmentizing directly against `aggregated_lengths` in one query (no intermediate table) was
  * catastrophically slow — Postgres called ST_LineInterpolatePoints per bbox-overlap candidate
  * row with no index to prune the per-point ST_Contains checks. Materializing the segmentized
- * points into an indexed temp table first (mirroring the `temp_roads_segmentized` pattern in
- * processing/steps/afterthoughts/sql/aggregate_lengths.sql) turns it into an index-assisted join
- * and brings the whole-of-Germany run down to well under a minute.
+ * points into an indexed temp table first turns it into an index-assisted join and brings the
+ * whole-of-Germany run down to well under a minute.
  */
 async function fetchRoadSamplePoints() {
   const client = new Client({ connectionString: getBaseDatabaseUrl() })

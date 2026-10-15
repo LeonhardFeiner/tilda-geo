@@ -138,25 +138,45 @@ DROP TABLE temp_bikelanes_road_segmentized;
 
 DROP FUNCTION IF EXISTS atlas_sum_by_key(Geometry(MultiPolygon, 3857), REGCLASS, TEXT, TEXT);
 
+-- Meters per feature are computed before grouping (OFFSET 0), so the sort never carries the
+-- area geometry (see aggregate_lengths.sql).
 WITH
 road_km AS (
-  SELECT a.id, r.road || '|' || r.authority AS road_key,
-    SUM(r.length * r.factor * tilda_measure_share(a.geom, r.geom)) / 1000.0 AS km
+  SELECT f.id, f.road_key, SUM(f.meters) / 1000.0 AS km
   FROM aggregated_lengths a
-  JOIN temp_roads_ref r ON ST_Intersects(a.geom, r.geom)
+  CROSS JOIN LATERAL (
+    SELECT a.id, r.road || '|' || r.authority AS road_key,
+      r.length * r.factor * tilda_measure_share(a.geom, r.geom) AS meters
+    FROM temp_roads_ref r
+    WHERE ST_Intersects(a.geom, r.geom)
+    OFFSET 0
+  ) f
   GROUP BY 1, 2
 ),
 bike_km AS (
-  SELECT a.id, b.road_key,
-    SUM(b.length * tilda_measure_share(a.geom, b.geom)) / 1000.0 AS km
+  SELECT f.id, f.road_key, SUM(f.meters) / 1000.0 AS km
   FROM aggregated_lengths a
-  JOIN temp_bikelanes_road_assigned b ON ST_Intersects(a.geom, b.geom)
+  CROSS JOIN LATERAL (
+    SELECT a.id, b.road_key, b.length * tilda_measure_share(a.geom, b.geom) AS meters
+    FROM temp_bikelanes_road_assigned b
+    WHERE ST_Intersects(a.geom, b.geom)
+    OFFSET 0
+  ) f
   GROUP BY 1, 2
+),
+per_area AS (
+  SELECT id, jsonb_object_agg(road_key, km) AS by_key, 'road' AS kind FROM road_km GROUP BY id
+  UNION ALL
+  SELECT id, jsonb_object_agg(road_key, km), 'bike' FROM bike_km GROUP BY id
 )
 UPDATE aggregated_lengths a
 SET
-  bikelane_length_by_road = (SELECT jsonb_object_agg(k.road_key, k.km) FROM bike_km k WHERE k.id = a.id),
-  road_length_by_authority = (SELECT jsonb_object_agg(k.road_key, k.km) FROM road_km k WHERE k.id = a.id);
+  bikelane_length_by_road = b.by_key,
+  road_length_by_authority = r.by_key
+FROM aggregated_lengths a2
+LEFT JOIN per_area b ON b.id = a2.id AND b.kind = 'bike'
+LEFT JOIN per_area r ON r.id = a2.id AND r.kind = 'road'
+WHERE a2.id = a.id;
 
 DROP TABLE temp_bikelanes_road_assigned;
 DROP TABLE temp_roads_ref;
