@@ -211,7 +211,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       async () => {
         page = await bootViewer(IN_LANDKREIS, { failGemeindeGeometry: true })
         await page.waitFor(
-          () => page!.errors.some((e) => /HTTP 404/.test(e)),
+          () => Boolean(page!.q('#load-error').textContent),
           'the failed polygon request to be reported',
         )
         expect(page.q('#load-error').textContent).toContain(

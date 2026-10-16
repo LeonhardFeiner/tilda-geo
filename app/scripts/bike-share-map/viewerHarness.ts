@@ -296,7 +296,9 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
   const controller = inlineScripts.sort((a, b) => b.length - a.length)[0]
   if (!controller)
     throw new Error('viewer: no inline controller script found in the generated page')
-  window.eval(controller)
+  // Wrapped in a function: under `bun --bun` (the pre-push hook) jsdom's top-level eval loses the
+  // script's function declarations, which a browser — and node — keep.
+  window.eval(`(function () {\n${controller}\n})()`)
 
   const page: ViewerPage = {
     window,
@@ -326,7 +328,10 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
   }
 
   await page.waitFor(
-    () => page.qAll('#ranking-list li').length > 2 || errors.length > 0,
+    () =>
+      page.qAll('#ranking-list li').length > 2 ||
+      errors.length > 0 ||
+      Boolean(page.window.document.getElementById('load-error')?.textContent),
     'the ranking list to fill',
     60_000,
   )
