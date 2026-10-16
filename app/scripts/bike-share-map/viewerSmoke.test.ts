@@ -155,6 +155,73 @@ describe('viewer smoke test (page from source, jsdom)', () => {
     TIMEOUT,
   )
 
+  describe('Gemeinde polygons are fetched per Landkreis, not up front', () => {
+    const polygonFiles = (p: ViewerPage) =>
+      p.window.__fetches.filter((url) => url.startsWith('gemeinde-geometry/'))
+
+    test(
+      'the default view downloads no Gemeinde polygon',
+      async () => {
+        page = await bootViewer()
+        expect(polygonFiles(page)).toEqual([])
+        expect(page.errors).toEqual([])
+      },
+      TIMEOUT,
+    )
+
+    test(
+      'a Gemeinde of one Landkreis fetches only that Landkreis, and its card still works',
+      async () => {
+        page = await bootViewer(IN_LANDKREIS)
+        const { window } = page
+        await page.waitFor(
+          () => window.document.body.dataset.regionDetail === '1',
+          'the region card',
+        )
+        expect(polygonFiles(page)).toEqual(['gemeinde-geometry/relation-62371.msgpack'])
+        // Needs the other Gemeinden's centres, which now travel as properties, not polygons.
+        expect(page.q('#region-detail-peer-gap').textContent).toContain('Vorbild in der Nähe')
+        expect(page.errors).toEqual([])
+      },
+      TIMEOUT,
+    )
+
+    test(
+      '"Mein Standort" finds the Gemeinde from just the nearby Landkreise',
+      async () => {
+        // A point inside Schweitenkirchen (Landkreis Pfaffenhofen an der Ilm).
+        page = await bootViewer('', { geolocation: { lng: 11.6103, lat: 48.5183 } })
+        const { window } = page
+        page.q('#region-locate').click()
+        await page.waitFor(
+          () => window.document.body.dataset.regionDetail === '1',
+          'the located region',
+        )
+        expect(page.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+        const files = polygonFiles(page)
+        expect(files).toContain('gemeinde-geometry/relation-62371.msgpack')
+        expect(files.length).toBeLessThanOrEqual(4) // the Landkreise around the point, not Germany
+        expect(page.errors).toEqual([])
+      },
+      TIMEOUT,
+    )
+
+    test(
+      'a failing polygon file shows an error instead of a broken map',
+      async () => {
+        page = await bootViewer(IN_LANDKREIS, { failGemeindeGeometry: true })
+        await page.waitFor(
+          () => page!.errors.some((e) => /HTTP 404/.test(e)),
+          'the failed polygon request to be reported',
+        )
+        expect(page.q('#load-error').textContent).toContain(
+          'Gemeindegrenzen konnten nicht geladen werden',
+        )
+      },
+      TIMEOUT,
+    )
+  })
+
   test(
     'the phone layout boots into a collapsed bottom sheet',
     async () => {

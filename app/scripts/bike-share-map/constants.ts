@@ -37,6 +37,9 @@ export const SHARE_PAGE_OG_IMAGE_BUNDESLAENDER: readonly string[] =
     .map((s) => s.trim())
     .filter(Boolean) ?? ['all']
 
+/** Folder (inside the viewer output) with the per-Landkreis Gemeinde polygon files. */
+export const GEMEINDE_GEOMETRY_DIR = 'gemeinde-geometry'
+
 /** Values above this % use the max choropleth color; gradient runs 0 → this when data exceeds it. */
 export const BIKE_SHARE_COLOR_CAP_PCT = 50
 

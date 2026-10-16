@@ -1,7 +1,10 @@
-import { decodeStatsRegionPack } from '../stats-export/statsRegionPack'
+import { decodeStatsRegionPack, gemeindeGeometryShardKey } from '../stats-export/statsRegionPack'
 
 ;(
   globalThis as typeof globalThis & {
-    StatsPack: { decodeRegionFeatures: typeof decodeStatsRegionPack }
+    StatsPack: {
+      decodeRegionFeatures: typeof decodeStatsRegionPack
+      gemeindeGeometryShardKey: typeof gemeindeGeometryShardKey
+    }
   }
-).StatsPack = { decodeRegionFeatures: decodeStatsRegionPack }
+).StatsPack = { decodeRegionFeatures: decodeStatsRegionPack, gemeindeGeometryShardKey }

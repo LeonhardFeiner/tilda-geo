@@ -2,6 +2,7 @@ import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basem
 import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
+  GEMEINDE_GEOMETRY_DIR,
   DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM,
   DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL,
   DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR,
@@ -59,6 +60,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     roadsTiles: TILDA_ROADS_TILES,
     statsMsgpackUrl: './stats-core.msgpack',
     statsExtraMsgpackUrl: './stats-extra.msgpack',
+    gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
     lazyDarstellungPresenceUrl: './lazy-darstellung-presence.json',
     statsUrl: './stats.geojson',
     neighborsMsgpackUrl: './neighbors.msgpack',
@@ -1827,6 +1829,49 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           throw err;
         });
       return extraLevelsPromise;
+    }
+
+    // Gemeinde polygons are not in the first download (stats-core carries the statistics and a
+    // centre per Gemeinde); each Landkreis's polygons are a small file, fetched when a view draws
+    // them. A feature whose geometry is still to come has no geometry but a properties.center.
+    const gemeindeGeometryLoads = new Map(); // shard key → Promise, kept so a file is fetched once
+    function loadGemeindeGeometryShard(key) {
+      if (!gemeindeGeometryLoads.has(key)) {
+        const load = fetch(CONFIG.gemeindeGeometryBase + key + '.msgpack')
+          .then(async (res) => {
+            if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + key);
+            const shard = StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
+            for (const g of shard) {
+              const target = regionIndex?.byId.get(g.properties?.id);
+              if (target) target.geometry = g.geometry;
+            }
+          })
+          .catch((err) => {
+            gemeindeGeometryLoads.delete(key); // let the next view retry
+            throw err;
+          });
+        gemeindeGeometryLoads.set(key, load);
+      }
+      return gemeindeGeometryLoads.get(key);
+    }
+    /** Make sure every given feature has its polygon; fetches only the Landkreis files missing. */
+    async function ensureGemeindeGeometry(features) {
+      const keys = new Set();
+      for (const f of features) {
+        if (!f.geometry && f.properties?.center) keys.add(StatsPack.gemeindeGeometryShardKey(f.properties));
+      }
+      if (!keys.size) return;
+      setLoadStatus('Lade Gemeindegrenzen …');
+      try {
+        // A view of all of Germany needs ~400 small files: a few at a time, not all at once.
+        const queue = [...keys];
+        const worker = async () => {
+          while (queue.length) await loadGemeindeGeometryShard(queue.shift());
+        };
+        await Promise.all(Array.from({ length: Math.min(8, queue.length) }, worker));
+      } finally {
+        setLoadStatus('');
+      }
     }
 
     const statsReadyPromise = statsDataPromise
@@ -3916,6 +3961,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     const featureCenterCache = new Map();
     function featureCenter(f) {
+      // Gemeinden carry their centre (their polygons are fetched per Landkreis, not up front).
+      if (f.properties?.center) return f.properties.center;
+      if (!f.geometry) return null;
       const id = f.properties?.id;
       if (featureCenterCache.has(id)) return featureCenterCache.get(id);
       const [w, s, e, n] = turf.bbox(f);
@@ -3936,14 +3984,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function nearestRoleModel(p, peerFeatures, medianPct) {
       const self = allFeatures.find((f) => f.properties?.id === p.id);
-      if (!self?.geometry) return null;
+      const origin = self ? featureCenter(self) : null;
+      if (!origin) return null;
       const minPct = Math.max(medianPct, p.bikeSharePct + ROLE_MODEL_MIN_LEAD_PCT);
-      const origin = featureCenter(self);
       let best = null;
       for (const f of peerFeatures) {
         const q = f.properties;
-        if (q.id === p.id || q.lowRoad || q.bikeSharePct < minPct || !f.geometry) continue;
-        const km = turf.distance(origin, featureCenter(f), { units: 'kilometers' });
+        if (q.id === p.id || q.lowRoad || q.bikeSharePct < minPct) continue;
+        const center = featureCenter(f);
+        if (!center) continue;
+        const km = turf.distance(origin, center, { units: 'kilometers' });
         if (km > ROLE_MODEL_MAX_KM || (best && km >= best.km)) continue;
         // A lead that rests on unclear tagging is exactly what a critic would point at.
         const quality = TildaStats.assessBikeDataQuality(q.road_length, q.bikelane_length);
@@ -6937,7 +6987,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         setLoadStatus('');
       }
-      const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
+      const viewFeatures = filteredFeaturesForCurrentView();
+      try {
+        await ensureGemeindeGeometry(viewFeatures);
+      } catch (err) {
+        showLoadError(err, 'Die Gemeindegrenzen konnten nicht geladen werden.');
+        return;
+      }
+      // Enrich only now: an enriched copy takes the geometry it finds.
+      const filtered = viewFeatures.map(enrichFeature);
       const range = colorScaleRange(filtered);
       const { min, max } = range;
       updateLegendRange(min, max);
@@ -7159,19 +7217,46 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionLocateStatus.textContent = text || '';
       regionLocateStatus.hidden = !text;
     }
+    /**
+     * The smallest region that contains a position. Gemeinde polygons are fetched per Landkreis,
+     * so look into the Landkreise near the point (with a margin: their outlines are simplified)
+     * and fetch only those Gemeinden's polygons.
+     */
+    async function findRegionAtLocation(lng, lat) {
+      const margin = 0.02;
+      const nearbyLandkreise = new Set();
+      for (const f of allFeatures) {
+        if (String(f.properties?.level ?? '') !== '6' || !f.geometry) continue;
+        const [w, s, e, n] = turf.bbox(f);
+        if (lng >= w - margin && lng <= e + margin && lat >= s - margin && lat <= n + margin) {
+          nearbyLandkreise.add(f.properties.id);
+        }
+      }
+      const gemeinden = allFeatures.filter(
+        (f) =>
+          String(f.properties?.level ?? '') === '8' && nearbyLandkreise.has(f.properties?.landkreis_id),
+      );
+      await ensureGemeindeGeometry(gemeinden);
+      const coarser = allFeatures.filter((f) => String(f.properties?.level ?? '') !== '8');
+      return RegionSearch.findRegionAtPoint([...gemeinden, ...coarser], lng, lat);
+    }
     if (regionLocateBtn && navigator.geolocation) {
       regionLocateBtn.hidden = false;
       regionLocateBtn.addEventListener('click', () => {
         showLocateStatus('');
         regionLocateBtn.disabled = true;
         navigator.geolocation.getCurrentPosition(
-          (pos) => {
+          async (pos) => {
+            let f = null;
+            try {
+              f = await findRegionAtLocation(pos.coords.longitude, pos.coords.latitude);
+            } catch (err) {
+              console.error('[radinfra-viewer]', err);
+              regionLocateBtn.disabled = false;
+              showLocateStatus('Gemeindegrenzen konnten nicht geladen werden.');
+              return;
+            }
             regionLocateBtn.disabled = false;
-            const f = RegionSearch.findRegionAtPoint(
-              allFeatures,
-              pos.coords.longitude,
-              pos.coords.latitude,
-            );
             if (f?.properties?.id) jumpToRegionBySearch(f.properties.id);
             else showLocateStatus('Dein Standort liegt außerhalb der Gebiete in dieser Karte.');
           },

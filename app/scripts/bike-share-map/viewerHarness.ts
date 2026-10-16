@@ -32,6 +32,8 @@ export type ShareCall = { title?: string; text?: string; url?: string; files?: u
 export type ViewerWindow = Window &
   typeof globalThis & {
     __calls: string[][]
+    /** Every URL the page fetched, in order (relative to the viewer folder). */
+    __fetches: string[]
     __shares: ShareCall[]
     __clipboard: string[]
     /** The stubbed map instance, to fire map events (e.g. a failing basemap tile) from a test. */
@@ -185,6 +187,10 @@ type BootOptions = {
   phone?: boolean
   /** Whether navigator.share exists (recorded on window.__shares). Default true. */
   nativeShare?: boolean
+  /** The position navigator.geolocation reports; without it the browser has no geolocation. */
+  geolocation?: { lng: number; lat: number }
+  /** Make every Gemeinde polygon file fail with a 404. */
+  failGemeindeGeometry?: boolean
 }
 
 export async function bootViewer(query = '', options: BootOptions = {}): Promise<ViewerPage> {
@@ -209,6 +215,7 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
   })
   const window = dom.window as ViewerWindow
   window.__calls = []
+  window.__fetches = []
   window.__shares = []
   window.__clipboard = []
 
@@ -232,6 +239,8 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
   const fakeFetch = async (input: unknown, init?: { method?: string }) => {
     const url = new URL(String(input), window.location.href)
     const rel = url.pathname.replace(/^\//, '')
+    window.__fetches.push(rel)
+    if (options.failGemeindeGeometry && rel.startsWith('gemeinde-geometry/')) return respond(404)
     // Region preview pages are gitignored build output (CI makes them); pretend they exist.
     if (rel.startsWith('r/') && rel.endsWith('.html'))
       return respond(init?.method === 'HEAD' ? 200 : 404)
@@ -262,6 +271,16 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
     value: { writeText: async (text: string) => void window.__clipboard.push(text) },
     configurable: true,
   })
+  if (options.geolocation) {
+    const { lng, lat } = options.geolocation
+    Object.defineProperty(window.navigator, 'geolocation', {
+      value: {
+        getCurrentPosition: (ok: (position: unknown) => void) =>
+          setTimeout(() => ok({ coords: { longitude: lng, latitude: lat } }), 0),
+      },
+      configurable: true,
+    })
+  }
   if (options.nativeShare !== false) {
     Object.defineProperty(window.navigator, 'share', {
       value: async (data: ShareCall) => void window.__shares.push(data),

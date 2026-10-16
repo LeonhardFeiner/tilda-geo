@@ -237,6 +237,18 @@ describe('findRegionAtPoint', () => {
     expect(findRegionAtPoint(features, 1, 1)?.properties?.id).toBe('lk')
   })
 
+  it('can be limited to some levels, and skips a Gemeinde whose polygon is still to be fetched', () => {
+    const features = [
+      feature('lk', '6', { type: 'Polygon', coordinates: square(0, 0, 10) }),
+      feature('gm', '8', { type: 'Polygon', coordinates: square(4, 4, 2) }),
+      // Polygons are fetched per Landkreis: until then a Gemeinde has no geometry.
+      feature('gm-pending', '8', null),
+    ]
+    expect(findRegionAtPoint(features, 5, 5, ['6', '4'])?.properties?.id).toBe('lk')
+    expect(findRegionAtPoint(features, 5, 5, ['8'])?.properties?.id).toBe('gm')
+    expect(findRegionAtPoint([features[2]!], 5, 5)).toBeNull()
+  })
+
   it('respects holes and multipolygons, and returns null outside everything', () => {
     const withHole = {
       type: 'Polygon',

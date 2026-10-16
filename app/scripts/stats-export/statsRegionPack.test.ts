@@ -3,6 +3,8 @@ import { describe, expect, test } from 'vitest'
 import {
   decodeStatsRegionPack,
   encodeStatsRegionPack,
+  gemeindeGeometryShardKey,
+  splitGemeindeGeometry,
   splitStatsFeaturesByLevel,
 } from './statsRegionPack'
 
@@ -109,5 +111,85 @@ describe('splitStatsFeaturesByLevel', () => {
     ])
     expect(core).toHaveLength(1)
     expect(extra).toHaveLength(0)
+  })
+})
+
+describe('splitGemeindeGeometry', () => {
+  const square = (x: number, y: number) => ({
+    type: 'Polygon',
+    coordinates: [
+      [
+        [x, y],
+        [x + 0.2, y],
+        [x + 0.2, y + 0.4],
+        [x, y + 0.4],
+        [x, y],
+      ],
+    ],
+  })
+  const feature = (id: string, level: string, geometry: unknown, landkreis?: string) => ({
+    type: 'Feature',
+    properties: { id, name: id, level, ...(landkreis && { landkreis_id: landkreis }) },
+    geometry,
+  })
+  const features = [
+    feature('relation/6', '6', square(10, 48)),
+    feature('relation/81', '8', square(11, 48), 'relation/6'),
+    feature('relation/82', '8', square(12, 49), 'relation/6'),
+    feature('relation/83', '8', square(13, 50), 'relation/7'),
+    feature('relation/84', '8', square(14, 51)),
+  ]
+
+  test('only Gemeinde polygons are taken out; everything else is untouched', () => {
+    const { light } = splitGemeindeGeometry(features)
+    expect(light).toHaveLength(5)
+    expect(light[0]).toEqual(features[0]) // the Landkreis keeps its polygon
+    for (const f of light.slice(1)) {
+      expect(f.geometry).toBeNull()
+      expect(f.properties?.name).toBe(f.properties?.id) // statistics stay
+    }
+  })
+
+  test('a Gemeinde keeps its centre, the middle of its bounding box', () => {
+    const { light } = splitGemeindeGeometry(features)
+    expect(light[1]?.properties?.center).toEqual([11.1, 48.2])
+    expect(light[4]?.properties?.center).toEqual([14.1, 51.2])
+  })
+
+  test('polygons go into one shard per Landkreis; strays share "none"', () => {
+    const { shards } = splitGemeindeGeometry(features)
+    expect([...shards.keys()].sort()).toEqual(['none', 'relation-6', 'relation-7'])
+    expect(shards.get('relation-6')?.map((f) => f.properties?.id)).toEqual([
+      'relation/81',
+      'relation/82',
+    ])
+    expect(shards.get('none')?.map((f) => f.properties?.id)).toEqual(['relation/84'])
+  })
+
+  test('shard key is the Landkreis id as a file name, and the same for every caller', () => {
+    expect(gemeindeGeometryShardKey({ landkreis_id: 'relation/62371' })).toBe('relation-62371')
+    expect(gemeindeGeometryShardKey({})).toBe('none')
+    expect(gemeindeGeometryShardKey(null)).toBe('none')
+  })
+
+  test('a shard restores the polygon exactly as the full pack would have had it', () => {
+    const { shards } = splitGemeindeGeometry(features)
+    const restored = decodeStatsRegionPack(encodeStatsRegionPack(shards.get('relation-6') ?? []))
+    const original = decodeStatsRegionPack(encodeStatsRegionPack(features))
+    expect(restored.map((f) => f.geometry)).toEqual([original[1]?.geometry, original[2]?.geometry])
+  })
+
+  test('the light pack is much smaller than the full one', () => {
+    const many = Array.from({ length: 200 }, (_, i) =>
+      feature(
+        `relation/${100 + i}`,
+        '8',
+        square(8 + (i % 20) * 0.01, 47 + Math.floor(i / 20) * 0.01),
+        'relation/6',
+      ),
+    )
+    const full = encodeStatsRegionPack(many).length
+    const light = encodeStatsRegionPack(splitGemeindeGeometry(many).light).length
+    expect(light).toBeLessThan(full)
   })
 })

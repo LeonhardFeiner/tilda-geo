@@ -158,3 +158,64 @@ export function splitStatsFeaturesByLevel(features: StatsFeature[]) {
   }
   return { core, extra }
 }
+
+/** The admin level whose polygons are kept out of the first download: ~10.9k Gemeinden. */
+export const DEFERRED_GEOMETRY_LEVEL = '8'
+
+/**
+ * Which polygon file a Gemeinde's geometry lives in: one per Landkreis (~27 Gemeinden, a few KB),
+ * so a view of one Landkreis fetches one small file instead of every Gemeinde in Germany.
+ * Gemeinden without a Landkreis share `none`.
+ */
+export function gemeindeGeometryShardKey(
+  properties: { landkreis_id?: string | null } | null | undefined,
+) {
+  const landkreis = properties?.landkreis_id
+  return landkreis ? landkreis.split('/').join('-') : 'none'
+}
+
+function bboxCenter(geometry: unknown): [number, number] | null {
+  let minX = Infinity
+  let minY = Infinity
+  let maxX = -Infinity
+  let maxY = -Infinity
+  const visit = (value: unknown) => {
+    if (!Array.isArray(value)) return
+    if (typeof value[0] === 'number' && typeof value[1] === 'number') {
+      minX = Math.min(minX, value[0])
+      maxX = Math.max(maxX, value[0])
+      minY = Math.min(minY, value[1])
+      maxY = Math.max(maxY, value[1])
+      return
+    }
+    for (const inner of value) visit(inner)
+  }
+  visit((geometry as { coordinates?: unknown } | null | undefined)?.coordinates)
+  if (!Number.isFinite(minX)) return null
+  const round = (n: number) => Math.round(n * 1e4) / 1e4
+  return [round((minX + maxX) / 2), round((minY + maxY) / 2)]
+}
+
+/**
+ * Takes the Gemeinde polygons out of a pack. `light` is the same features without geometry but
+ * with their `center`; `shards` maps a shard key to the geometry-only features of that Landkreis.
+ * Polygons are over half of the first download, and the default view (Landkreise) never draws a
+ * Gemeinde; the page fetches a Landkreis's shard when a view needs it.
+ */
+export function splitGemeindeGeometry(features: StatsFeature[]) {
+  const light: StatsFeature[] = []
+  const shards = new Map<string, StatsFeature[]>()
+  for (const f of features) {
+    if (String(f.properties?.level ?? '') !== DEFERRED_GEOMETRY_LEVEL || !f.geometry) {
+      light.push(f)
+      continue
+    }
+    const center = bboxCenter(f.geometry)
+    light.push({ ...f, geometry: null, properties: { ...f.properties, ...(center && { center }) } })
+    const key = gemeindeGeometryShardKey(f.properties)
+    const shard = shards.get(key) ?? []
+    shard.push({ type: f.type, properties: { id: f.properties?.id }, geometry: f.geometry })
+    shards.set(key, shard)
+  }
+  return { light, shards }
+}

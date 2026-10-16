@@ -232,8 +232,13 @@ export function geometryContainsPoint(
  * that contains a coordinate — what "use my location" jumps to. Runs on the geometries the page
  * already holds, so the position never leaves the device.
  */
-export function findRegionAtPoint(features: StatsFeature[], lng: number, lat: number) {
-  for (const level of ['8', '6', '4']) {
+export function findRegionAtPoint(
+  features: StatsFeature[],
+  lng: number,
+  lat: number,
+  levels: readonly string[] = ['8', '6', '4'],
+) {
+  for (const level of levels) {
     for (const f of features) {
       if (String(f.properties?.level ?? '') !== level) continue
       if (geometryContainsPoint(f.geometry as never, lng, lat)) return f

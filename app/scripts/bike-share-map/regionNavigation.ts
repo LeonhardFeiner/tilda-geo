@@ -98,6 +98,12 @@ export type RegionFeatureProps = {
   road_length_by_authority?: unknown
   /** Bike km by the road it runs along, same keys, plus 'independent' (not along a road). */
   bikelane_length_by_road?: unknown
+  /**
+   * `[lng, lat]` centre of the area. Present on features whose geometry is not in the first
+   * download (Gemeinden: see splitGemeindeGeometry); it is also how such a feature is told
+   * apart from one that simply has no geometry.
+   */
+  center?: [number, number]
 }
 
 export type StatsFeature = {
@@ -329,7 +335,8 @@ export function featureWithinScope(
   index: RegionIndex,
 ) {
   const id = regionId(f)
-  if (!id || !f.geometry) return false
+  // A Gemeinde whose polygon is still to be fetched (it carries its centre) is in scope all the same.
+  if (!id || !(f.geometry || f.properties?.center)) return false
 
   const scopeId = scopeIdFor(gebiet, untergebiet)
   if (gebiet === DEUTSCHLAND_GEBIET && !untergebiet) return true

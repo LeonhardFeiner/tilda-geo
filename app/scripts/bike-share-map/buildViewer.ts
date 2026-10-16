@@ -7,6 +7,7 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
+  rmSync,
   symlinkSync,
   unlinkSync,
   writeFileSync,
@@ -16,9 +17,15 @@ import { fileURLToPath } from 'node:url'
 import {
   decodeStatsRegionPack,
   encodeStatsRegionPack,
+  splitGemeindeGeometry,
   splitStatsFeaturesByLevel,
 } from '../stats-export/statsRegionPack'
-import { PROJECT_LEAD, STATION_AREAS_PAGE_STEM, VIEWER_SOURCE_REPO_URL } from './constants'
+import {
+  GEMEINDE_GEOMETRY_DIR,
+  PROJECT_LEAD,
+  STATION_AREAS_PAGE_STEM,
+  VIEWER_SOURCE_REPO_URL,
+} from './constants'
 import { readDataDateLabel } from './dataDate'
 import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
@@ -72,11 +79,22 @@ if (existsSync(msgpackPath)) {
   const packBytes = new Uint8Array(await Bun.file(msgpackPath).arrayBuffer())
   const fullFeatures = decodeStatsRegionPack(packBytes)
   const { core, extra } = splitStatsFeaturesByLevel(fullFeatures)
-  writeFileSync(join(viewerDir, 'stats-core.msgpack'), encodeStatsRegionPack(core))
+  // The Gemeinde polygons are over half of the first download and the default view never draws
+  // one: keep them out of stats-core and write one small file per Landkreis the page fetches
+  // when a view needs them.
+  const { light, shards } = splitGemeindeGeometry(core)
+  writeFileSync(join(viewerDir, 'stats-core.msgpack'), encodeStatsRegionPack(light))
   writeFileSync(join(viewerDir, 'stats-extra.msgpack'), encodeStatsRegionPack(extra))
+  const geometryDir = join(viewerDir, GEMEINDE_GEOMETRY_DIR)
+  rmSync(geometryDir, { recursive: true, force: true })
+  mkdirSync(geometryDir, { recursive: true })
+  for (const [key, shardFeatures] of shards) {
+    writeFileSync(join(geometryDir, `${key}.msgpack`), encodeStatsRegionPack(shardFeatures))
+  }
   process.stdout.write(
     `Stats split: ${core.length} core + ${extra.length} extra (Gemeindeverbände/Stadtbezirke) ` +
-      `→ ${viewerDir}/stats-core.msgpack, stats-extra.msgpack\n`,
+      `→ ${viewerDir}/stats-core.msgpack, stats-extra.msgpack; ` +
+      `Gemeinde polygons in ${shards.size} files → ${geometryDir}/\n`,
   )
 
   // From the FULL (unsplit) feature set, so the Darstellung dropdown can list
