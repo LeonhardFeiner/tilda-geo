@@ -307,6 +307,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     )
   })
 
+  test('scales scatter plot dot opacity with point count for visible density clustering', () => {
+    expect(html).toContain('fill-opacity: var(--dot-opacity, 0.25);')
+    expect(html).toContain('.dots circle{fill:#1565c0;fill-opacity:var(--dot-opacity,.25)}')
+    expect(html).toContain('const dotOpacity = Math.max(')
+    expect(html).toContain("'--dot-opacity: ' + dotOpacity")
+  })
+
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
       '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',

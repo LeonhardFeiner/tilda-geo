@@ -749,7 +749,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ctx-plot-chart text { fill: #475569; }
     .ctx-plot-chart .grid { stroke: #e6e6e6; }
     .ctx-plot-chart .axis-title { fill: #333; font-weight: 600; }
-    .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: 0.25; }
+    .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: var(--dot-opacity, 0.25); }
     .ctx-plot-chart .selected { fill: #e20613; stroke: #fff; stroke-width: 2; }
     .ctx-plot-chart .selected-label { fill: #e20613; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
     .region-detail-section { margin-top: 8px; }
@@ -3464,7 +3464,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const PRINT_PLOT_SVG_STYLE =
       'text{fill:#475569;font:10px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}' +
       '.grid{stroke:#e6e6e6}.axis-title{fill:#333;font-weight:600}' +
-      '.dots circle{fill:#1565c0;fill-opacity:.25}' +
+      '.dots circle{fill:#1565c0;fill-opacity:var(--dot-opacity,.25)}' +
       '.selected{fill:#e20613;stroke:#fff;stroke-width:2}' +
       '.selected-label{fill:#e20613;font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3}';
     async function rasterizePlotForPrint(chart) {
@@ -4584,7 +4584,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra-Anteil'));
 
       let selected = null;
-      const dots = el('g', { class: 'dots' });
+      // Scale dot opacity inversely with point density so dense areas don't collapse into a
+      // flat solid wall, but form a visible density heatmap where the cluster ("dunkelblauer Blob")
+      // stands out clearly.
+      const dotOpacity = Math.max(
+        0.04,
+        Math.min(0.4, Number((1 / (1.5 + Math.sqrt(entries.length) * 0.18)).toFixed(3))),
+      );
+      const dots = el('g', {
+        class: 'dots',
+        style: '--dot-opacity: ' + dotOpacity,
+        'fill-opacity': dotOpacity,
+      });
       for (const e of entries) {
         if (e.id === selectedId) {
           selected = e;
