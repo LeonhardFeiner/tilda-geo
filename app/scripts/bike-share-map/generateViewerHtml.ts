@@ -776,6 +776,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       height: 6px; border-radius: 3px; background: #eee; overflow: hidden;
     }
     .region-detail-bar-fill { height: 100%; border-radius: 3px; }
+    .region-detail-rows li.region-detail-row-excluded { opacity: 0.55; }
+    .region-detail-rows li.region-detail-row-excluded .km { color: #718096; }
+    .region-detail-rows li.region-detail-row-excluded .region-detail-bar-fill {
+      background: #b0bec5 !important; opacity: 0.4;
+    }
+    .region-detail-excluded-badge {
+      display: inline-block; font-size: 10px; font-weight: 500;
+      color: #64748b; background: #f1f5f9; padding: 0 4px;
+      border-radius: 3px; margin-left: 5px; vertical-align: 1px;
+    }
     .detail-mode {
       display: inline-flex; margin: 6px 0 0; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
     }
@@ -3165,6 +3175,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const maxKm = Math.max(...rows.map((row) => row.km || 0), 0.001);
       for (const row of rows) {
         const li = document.createElement('li');
+        const isExcluded = row.enabled === false;
+        if (isExcluded) li.classList.add('region-detail-row-excluded');
         const head = document.createElement('div');
         head.className = 'region-detail-row-head';
         const label = document.createElement('span');
@@ -3173,6 +3185,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         km.className = 'km';
         km.textContent =
           TildaStats.formatStatKm(row.km, TildaStats.STAT_KM_BIKE_UI_DECIMALS) + ' km';
+        if (isExcluded) {
+          const badge = document.createElement('span');
+          badge.className = 'region-detail-excluded-badge';
+          badge.textContent = 'nicht gewertet';
+          km.appendChild(badge);
+        }
         head.append(label, km);
         li.appendChild(head);
         if (barColor) {
@@ -3181,12 +3199,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           const fill = document.createElement('div');
           fill.className = 'region-detail-bar-fill';
           fill.style.width = Math.max(0, (100 * (row.km || 0)) / maxKm) + '%';
-          fill.style.background = barColor;
+          fill.style.background = isExcluded ? '#b0bec5' : barColor;
           track.appendChild(fill);
           li.appendChild(track);
         }
         if (highlightKind && row.id) bindOverlayHighlightRow(li, highlightKind, row.id);
         if (row.key) li.title = (li.title ? li.title + ' · ' : '') + row.key;
+        if (isExcluded) {
+          li.title = (li.title ? li.title + ' · ' : '') + 'In der aktuellen Zählung deaktiviert';
+        }
         ul.appendChild(li);
       }
       section.appendChild(ul);

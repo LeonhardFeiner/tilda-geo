@@ -17,10 +17,11 @@ describe('featureLengthBreakdown', () => {
       road: { ...RADINFRA_DEFAULT_FILTER.road, motorway_like: false },
     }
     const classes = listFilteredRoadClassLengths(road_length, filter)
-    expect(classes.map((r) => r.id)).not.toContain('motorway_like')
-    expect(classes.some((r) => r.id === 'residential_like')).toBe(true)
+    expect(classes.find((r) => r.id === 'motorway_like')?.enabled).toBe(false)
+    expect(classes.find((r) => r.id === 'residential_like')?.enabled).toBe(true)
     const tags = listFilteredHighwayTagLengths(road_length, filter)
-    expect(tags.map((r) => r.id)).toEqual(['residential'])
+    expect(tags.find((r) => r.id === 'motorway')?.enabled).toBe(false)
+    expect(tags.find((r) => r.id === 'residential')?.enabled).toBe(true)
   })
 
   test('builds maplibre overlay filters for road class and highway tag', () => {

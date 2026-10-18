@@ -391,6 +391,8 @@ export type ClassLengthRow = {
   km: number
   /** The raw OSM / TILDA key behind a readable label, for a tooltip. */
   key?: string
+  /** Whether this class or tag is included in the current active calculation filter. */
+  enabled?: boolean
 }
 
 /** German names for the OSM highway values the road lengths are keyed by. */
@@ -453,9 +455,15 @@ export function listFilteredRoadClassLengths(road_length: unknown, filter: Lengt
   const sums = getRoadSums(asLengthRecord(road_length))
   const rows: ClassLengthRow[] = []
   for (const c of ROAD_CLASS_ORDER) {
-    if (!filter.road[c]) continue
     const km = sums[c]
-    if (km > 0) rows.push({ id: c, label: ROAD_CLASS_LABELS[c], km })
+    if (km > 0) {
+      rows.push({
+        id: c,
+        label: ROAD_CLASS_LABELS[c],
+        km,
+        enabled: Boolean(filter.road[c]),
+      })
+    }
   }
   return rows
 }
@@ -467,9 +475,15 @@ export function listFilteredBikelaneClassLengths(
   const sums = getBikelaneSums(asLengthRecord(bikelane_length))
   const rows: ClassLengthRow[] = []
   for (const c of BIKELANE_CLASS_ORDER) {
-    if (!filter.bikelane[c]) continue
     const km = sums[c]
-    if (km > 0) rows.push({ id: c, label: BIKELANE_CLASS_LABELS[c], km })
+    if (km > 0) {
+      rows.push({
+        id: c,
+        label: BIKELANE_CLASS_LABELS[c],
+        km,
+        enabled: Boolean(filter.bikelane[c]),
+      })
+    }
   }
   return rows
 }
@@ -486,8 +500,13 @@ export function listFilteredHighwayTagLengths(road_length: unknown, filter: Leng
   for (const [tag, km] of Object.entries(record)) {
     if (!(km > 0)) continue
     const roadClass = roadClassForKey(tag)
-    if (!filter.road[roadClass]) continue
-    rows.push({ id: tag, label: ROAD_TAG_LABELS[tag] ?? tag, km, key: tag })
+    rows.push({
+      id: tag,
+      label: ROAD_TAG_LABELS[tag] ?? tag,
+      km,
+      key: tag,
+      enabled: Boolean(filter.road[roadClass]),
+    })
   }
   rows.sort((a, b) => b.km - a.km)
   return rows
@@ -502,8 +521,13 @@ export function listFilteredBikelaneTagLengths(
   for (const [tag, km] of Object.entries(record)) {
     if (!(km > 0)) continue
     const cls = bikelaneTagToClass.get(tag)
-    if (!cls || !filter.bikelane[cls]) continue
-    rows.push({ id: tag, label: BIKELANE_TAG_LABELS[tag] ?? tag, km, key: tag })
+    rows.push({
+      id: tag,
+      label: BIKELANE_TAG_LABELS[tag] ?? tag,
+      km,
+      key: tag,
+      enabled: Boolean(cls && filter.bikelane[cls]),
+    })
   }
   rows.sort((a, b) => b.km - a.km)
   return rows
