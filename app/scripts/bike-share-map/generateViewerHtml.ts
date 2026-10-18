@@ -750,6 +750,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .ctx-plot-chart .grid { stroke: #e6e6e6; }
     .ctx-plot-chart .axis-title { fill: #333; font-weight: 600; }
     .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: var(--dot-opacity, 0.25); }
+    .ctx-plot-chart .trend { stroke: #475569; stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: 0.85; }
     .ctx-plot-chart .selected { fill: #e20613; stroke: #fff; stroke-width: 2; }
     .ctx-plot-chart .selected-label { fill: #e20613; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
     .region-detail-section { margin-top: 8px; }
@@ -3465,6 +3466,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       'text{fill:#475569;font:10px system-ui,-apple-system,Segoe UI,Roboto,sans-serif}' +
       '.grid{stroke:#e6e6e6}.axis-title{fill:#333;font-weight:600}' +
       '.dots circle{fill:#1565c0;fill-opacity:var(--dot-opacity,.25)}' +
+      '.trend{stroke:#475569;stroke-width:1.5;stroke-dasharray:4 3;stroke-linecap:round;opacity:.85}' +
       '.selected{fill:#e20613;stroke:#fff;stroke-width:2}' +
       '.selected-label{fill:#e20613;font-size:11px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:3}';
     async function rasterizePlotForPrint(chart) {
@@ -4608,6 +4610,49 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         dots.appendChild(pt);
       }
       svg.appendChild(dots);
+
+      let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+      for (const e of entries) {
+        sumX += e.v;
+        sumY += e.bikeSharePct;
+        sumXY += e.v * e.bikeSharePct;
+        sumX2 += e.v * e.v;
+      }
+      const n = entries.length;
+      const denomX = n * sumX2 - sumX * sumX;
+      if (denomX !== 0) {
+        const slope = (n * sumXY - sumX * sumY) / denomX;
+        const intercept = (sumY - slope * sumX) / n;
+        const pts = [];
+        const addPt = (x, y) => {
+          if (pts.every((p) => Math.hypot(p.x - x, p.y - y) > 1e-4)) {
+            pts.push({ x, y });
+          }
+        };
+        const yAtX0 = slope * x0 + intercept;
+        if (yAtX0 >= 0 && yAtX0 <= y1) addPt(x0, yAtX0);
+        const yAtX1 = slope * x1 + intercept;
+        if (yAtX1 >= 0 && yAtX1 <= y1) addPt(x1, yAtX1);
+        if (slope !== 0) {
+          const xAtY0 = -intercept / slope;
+          if (xAtY0 >= x0 && xAtY0 <= x1) addPt(xAtY0, 0);
+          const xAtY1 = (y1 - intercept) / slope;
+          if (xAtY1 >= x0 && xAtY1 <= x1) addPt(xAtY1, y1);
+        }
+        if (pts.length >= 2) {
+          pts.sort((a, b) => a.x - b.x);
+          const trendLine = el('line', {
+            x1: scaleX(pts[0].x),
+            y1: scaleY(pts[0].y),
+            x2: scaleX(pts[1].x),
+            y2: scaleY(pts[1].y),
+            class: 'trend',
+          });
+          trendLine.appendChild(el('title', {}, 'Trendlinie (lineare Regression)'));
+          svg.appendChild(trendLine);
+        }
+      }
+
       if (selected) {
         const sx = scaleX(selected.v), sy = scaleY(selected.bikeSharePct);
         svg.appendChild(el('circle', { cx: sx, cy: sy, r: 5, class: 'selected' }));

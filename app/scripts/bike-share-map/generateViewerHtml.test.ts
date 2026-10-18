@@ -314,6 +314,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("'--dot-opacity: ' + dotOpacity")
   })
 
+  test('renders linear regression trend line in scatter plots with bounded clipping', () => {
+    expect(html).toContain('.ctx-plot-chart .trend { stroke: #475569;')
+    expect(html).toContain('.trend{stroke:#475569;stroke-width:1.5;')
+    expect(html).toContain("class: 'trend'")
+    expect(html).toContain('Trendlinie (lineare Regression)')
+  })
+
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
       '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',
