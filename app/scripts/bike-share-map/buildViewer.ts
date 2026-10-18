@@ -200,7 +200,8 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
     // default local processing run).
     const transitCountsPath = join(outputRoot, 'transit-stop-counts.json')
     const accessPath = join(outputRoot, 'station-access.json')
-    if (existsSync(transitCountsPath) || existsSync(accessPath)) {
+    const highwayPath = join(outputRoot, 'highway-access.json')
+    if (existsSync(transitCountsPath) || existsSync(accessPath) || existsSync(highwayPath)) {
       const areaByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.areaKm2]))
       const counts = existsSync(transitCountsPath)
         ? (JSON.parse(await Bun.file(transitCountsPath).text()) as {
@@ -216,15 +217,28 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
             }
           ).byId ?? {})
         : {}
+      const highwayById = existsSync(highwayPath)
+        ? ((
+            JSON.parse(await Bun.file(highwayPath).text()) as {
+              byId?: Record<string, { avgDistanceToHighwayM?: number }>
+            }
+          ).byId ?? {})
+        : {}
       type TransitEntry = {
         density?: number
         avgDistanceToStationM?: number
+        avgDistanceToHighwayM?: number
         access?: Record<string, [number, number, number]>
       }
       const transitById: Record<string, TransitEntry> = {}
-      const allIds = new Set([...Object.keys(counts.byId ?? {}), ...Object.keys(accessById)])
+      const allIds = new Set([
+        ...Object.keys(counts.byId ?? {}),
+        ...Object.keys(accessById),
+        ...Object.keys(highwayById),
+      ])
       for (const id of allIds) {
         const entry = counts.byId?.[id]
+        const hwEntry = highwayById[id]
         const rs = rsById.get(id)
         const areaKm2 = rs ? areaByRs.get(rs) : undefined
         const out: TransitEntry = accessById[id] ? { access: accessById[id] } : {}
@@ -239,11 +253,14 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         if (entry && typeof entry.avgDistanceToStationM === 'number') {
           out.avgDistanceToStationM = entry.avgDistanceToStationM
         }
+        if (hwEntry && typeof hwEntry.avgDistanceToHighwayM === 'number') {
+          out.avgDistanceToHighwayM = hwEntry.avgDistanceToHighwayM
+        }
         if (Object.keys(out).length) transitById[id] = out
       }
       writeFileSync(join(viewerDir, 'gemeinde-transit.json'), JSON.stringify({ byId: transitById }))
       process.stdout.write(
-        `Transit stops & access: ${Object.keys(transitById).length} regions → ${viewerDir}/gemeinde-transit.json\n`,
+        `Transit & highway access: ${Object.keys(transitById).length} regions → ${viewerDir}/gemeinde-transit.json\n`,
       )
     }
   } catch (err) {

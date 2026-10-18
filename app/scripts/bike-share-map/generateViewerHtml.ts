@@ -2285,6 +2285,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           { key: 'station_' + m.key + '_km', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
           { key: 'station_' + m.key + '_within_pct', header: 'Einwohner ' + m.csv + ' in 10 min an einer Haltestelle (%)', numeric: 'num1' },
         ]),
+        { key: 'highwayDistance', header: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße (km, einwohnergewichtet)', numeric: 'num1' },
         { key: 'elevation', header: 'Höhenlage Ø (m)', numeric: 'num0' },
         { key: 'elevation_range', header: 'Höhenspanne (m)', numeric: 'num0' },
         { key: 'areaSlope', header: 'Geländesteigung Ø (%)', numeric: 'num1' },
@@ -4164,6 +4165,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         stationAccessMetric('foot', 'Ø zu Fuß zur nächsten Haltestelle'),
         stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
+        {
+          key: 'highwayDistance',
+          label: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße',
+          note: 'einwohnergewichtet',
+          source: transitIndex,
+          get: (id) => {
+            const v = transitIndex?.byId[id]?.avgDistanceToHighwayM;
+            return typeof v === 'number' ? v / 1000 : null;
+          },
+          format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
+        },
         {
           key: 'elevation',
           label: 'Höhenlage (Ø)',

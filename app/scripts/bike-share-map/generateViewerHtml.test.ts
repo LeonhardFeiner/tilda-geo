@@ -298,6 +298,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).not.toContain("key: 'stationAccess'")
   })
 
+  test('includes population-weighted highway distance in context metrics and CSV columns', () => {
+    expect(html).toContain("key: 'highwayDistance'")
+    expect(html).toContain("label: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße'")
+    expect(html).toContain('transitIndex?.byId[id]?.avgDistanceToHighwayM')
+    expect(html).toContain("header: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße (km, einwohnergewichtet)'")
+  })
+
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
       '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',

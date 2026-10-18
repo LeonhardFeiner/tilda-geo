@@ -41,6 +41,7 @@
     "bike-share-map:station-access": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchStationAccess.ts",
     "bike-share-map:stations": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchStations.ts",
     "bike-share-map:terrain-flatness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTerrainFlatness.ts",
+    "bike-share-map:highway-distance": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchHighwayDistance.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",
