@@ -70,6 +70,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     densityUrl: './gemeinde-density.json',
     transitUrl: './gemeinde-transit.json',
     terrainUrl: './gemeinde-terrain.json',
+    zensusUrl: './gemeinde-zensus.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1788,6 +1789,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let densityIndex = null;
     let transitIndex = null;
     let terrainIndex = null;
+    let zensusIndex = null;
     let regionExtraIndexesPromise = null;
     function ensureRegionExtraIndexes() {
       if (regionExtraIndexesPromise) return;
@@ -1802,6 +1804,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.densityUrl, (data) => { densityIndex = data; }),
         load(CONFIG.transitUrl, (data) => { transitIndex = data; }),
         load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
+        load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2339,6 +2342,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'unclear_share_pct', header: 'Davon unklar getaggt (%)', numeric: 'num1' },
         { key: 'share_without_unclear_pct', header: 'Radinfra-Anteil ohne unklare Wege (%)', numeric: 'pct' },
         { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
+        { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
+        { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
+        { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -4402,6 +4408,38 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           source: densityIndex,
           get: (id) => (typeof densityIndex?.byId[id] === 'number' ? densityIndex.byId[id] : null),
           format: (v) => deNumber(Math.round(v), 0) + ' Einw./km²',
+        },
+        {
+          key: 'rent',
+          label: 'Ø Nettokaltmiete (Zensus 2022)',
+          note: 'Wohn- & Bodenwert',
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.rentPerM2;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 2) + ' €/m²',
+        },
+        {
+          key: 'youth',
+          label: 'Kinder & Jugendliche (< 18 Jahre)',
+          note: 'Schulweg-Bedarf',
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.youthSharePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'vacancy',
+          label: 'Wohnungsleerstand',
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.vacancyRatePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 1) + ' %',
         },
         {
           key: 'stops',

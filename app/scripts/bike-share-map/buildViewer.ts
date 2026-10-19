@@ -394,6 +394,25 @@ if (existsSync(terrainPath)) {
   }
 }
 
+// gemeinde-zensus.json: {id → {rentPerM2?, vacancyRatePct?, youthSharePct?, seniorSharePct?}}
+const zensusPath = join(outputRoot, 'zensus-housing-demographics.json')
+if (existsSync(zensusPath)) {
+  try {
+    const zensus = JSON.parse(await Bun.file(zensusPath).text()) as {
+      byId?: Record<string, unknown>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-zensus.json'),
+      JSON.stringify({ byId: zensus.byId ?? {} }),
+    )
+    process.stdout.write(
+      `Zensus housing & demographics: ${Object.keys(zensus.byId ?? {}).length} regions → ${viewerDir}/gemeinde-zensus.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-zensus.json skipped: ${err}\n`)
+  }
+}
+
 const dataDateLabel = readDataDateLabel(outputRoot)
 writeFileSync(
   join(viewerDir, 'methodik.html'),

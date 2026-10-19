@@ -364,6 +364,17 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('Struktureller Erwartungswert')
     expect(html).toContain('~22 % der bundesweiten Unterschiede')
   })
+
+  test('includes Zensus 2022 rent, youth and vacancy metrics in context and CSV columns', () => {
+    expect(html).toContain('"zensusUrl":"./gemeinde-zensus.json"')
+    expect(html).toContain("key: 'rent'")
+    expect(html).toContain("label: 'Ø Nettokaltmiete (Zensus 2022)'")
+    expect(html).toContain("key: 'youth'")
+    expect(html).toContain("label: 'Kinder & Jugendliche (< 18 Jahre)'")
+    expect(html).toContain("key: 'vacancy'")
+    expect(html).toContain("label: 'Wohnungsleerstand'")
+    expect(html).toContain("header: 'Ø Nettokaltmiete (€/m², Zensus 2022)'")
+  })
 })
 
 describe('generateViewerHtml inline script', () => {
