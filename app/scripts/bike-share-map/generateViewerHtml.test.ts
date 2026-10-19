@@ -375,6 +375,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("label: 'Wohnungsleerstand'")
     expect(html).toContain("header: 'Ø Nettokaltmiete (€/m², Zensus 2022)'")
   })
+
+  test('includes KBA car density metric in context and CSV columns', () => {
+    expect(html).toContain('"carsUrl":"./gemeinde-cars.json"')
+    expect(html).toContain("key: 'carDensity'")
+    expect(html).toContain("label: 'PKW-Dichte (KBA)'")
+    expect(html).toContain("header: 'PKW je 1.000 Einwohner (KBA)'")
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

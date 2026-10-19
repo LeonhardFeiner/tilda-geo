@@ -71,6 +71,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     transitUrl: './gemeinde-transit.json',
     terrainUrl: './gemeinde-terrain.json',
     zensusUrl: './gemeinde-zensus.json',
+    carsUrl: './gemeinde-cars.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1790,6 +1791,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let transitIndex = null;
     let terrainIndex = null;
     let zensusIndex = null;
+    let carsIndex = null;
     let regionExtraIndexesPromise = null;
     function ensureRegionExtraIndexes() {
       if (regionExtraIndexesPromise) return;
@@ -1805,6 +1807,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.transitUrl, (data) => { transitIndex = data; }),
         load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
         load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
+        load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2345,6 +2348,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
+        { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -4440,6 +4444,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             return typeof v === 'number' ? v : null;
           },
           format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'carDensity',
+          label: 'PKW-Dichte (KBA)',
+          note: 'Motorisierungsgrad',
+          source: carsIndex,
+          get: (id) => {
+            const v = carsIndex?.byId[id]?.carsPer1000;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const comm = carsIndex?.byId[id]?.commercialSharePct;
+            return (
+              deNumber(Math.round(v), 0) +
+              ' PKW / 1.000 Einw.' +
+              (typeof comm === 'number' ? ' (davon ' + deNumber(comm, 1) + ' % gewerblich)' : '')
+            );
+          },
         },
         {
           key: 'stops',

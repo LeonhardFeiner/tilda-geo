@@ -413,6 +413,25 @@ if (existsSync(zensusPath)) {
   }
 }
 
+// gemeinde-cars.json: {id → {cars, commercialCars?, carsPer1000?, commercialSharePct?}}
+const carsPath = join(outputRoot, 'car-density.json')
+if (existsSync(carsPath)) {
+  try {
+    const carsData = JSON.parse(await Bun.file(carsPath).text()) as {
+      byId?: Record<string, unknown>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-cars.json'),
+      JSON.stringify({ byId: carsData.byId ?? {} }),
+    )
+    process.stdout.write(
+      `KBA car density: ${Object.keys(carsData.byId ?? {}).length} regions → ${viewerDir}/gemeinde-cars.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-cars.json skipped: ${err}\n`)
+  }
+}
+
 const dataDateLabel = readDataDateLabel(outputRoot)
 writeFileSync(
   join(viewerDir, 'methodik.html'),

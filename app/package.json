@@ -43,6 +43,7 @@
     "bike-share-map:terrain-flatness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTerrainFlatness.ts",
     "bike-share-map:highway-distance": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchHighwayDistance.ts",
     "bike-share-map:zensus-housing": "bun ./scripts/bike-share-map/fetchZensusHousingAndDemographics.ts",
+    "bike-share-map:car-density": "bun ./scripts/bike-share-map/fetchCarDensity.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",
