@@ -1395,6 +1395,7 @@
           <option value="modelGap">Modell-Abweichung (Über- &amp; Nachzügler)</option>
           <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
+          <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
         </select>
         <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
@@ -1670,7 +1671,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-19T21:15:47.797Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","zensusUrl":"./gemeinde-zensus.json","carsUrl":"./gemeinde-cars.json","calmedUrl":"./gemeinde-calmed.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-19T21:38:40.431Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","zensusUrl":"./gemeinde-zensus.json","carsUrl":"./gemeinde-cars.json","calmedUrl":"./gemeinde-calmed.json","accidentsUrl":"./gemeinde-accidents.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1701,6 +1702,7 @@
     let zensusIndex = null;
     let carsIndex = null;
     let calmedIndex = null;
+    let accidentsIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1720,6 +1722,7 @@
         load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
         load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
+        load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2812,6 +2815,10 @@
 
       const cars = carsIndex?.byId[p.id]?.carsPer1000 ?? null;
       const rent = zensusIndex?.byId[p.id]?.rentPerM2 ?? null;
+      const accidents = accidentsIndex?.byId[p.id];
+      const bikeAccidentsPer10k = accidents?.bikeAccidentsPer10k ?? null;
+      const bikeAccidents = accidents?.bikeAccidents ?? null;
+      const bikeFatalOrSevere = accidents?.bikeFatalOrSevere ?? null;
 
       let modelPrediction = null;
       let modelGapPct = null;
@@ -2876,6 +2883,20 @@
         } else {
           label = name + ': Keine Mietdaten verfügbar';
         }
+      } else if (currentMapMetric === 'accidents') {
+        if (typeof bikeAccidentsPer10k === 'number') {
+          label =
+            name +
+            ': ' +
+            deNumber(bikeAccidentsPer10k, 1) +
+            ' Fahrradunfälle / 10.000 Einw.\n(' +
+            deNumber(bikeAccidents, 0) +
+            ' Unfälle mit Personenschaden, davon ' +
+            (bikeFatalOrSevere ?? 0) +
+            ' schwer/tödlich)';
+        } else {
+          label = name + ': Keine Unfalldaten verfügbar';
+        }
       } else {
         label =
           name +
@@ -2903,6 +2924,9 @@
           expectedPct,
           carsPer1000: cars,
           rentColdM2: rent,
+          bikeAccidentsPer10k,
+          bikeAccidents,
+          bikeFatalOrSevere,
           lowRoad,
           label,
         },
@@ -2997,6 +3021,9 @@
         { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
+        { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
+        { key: 'bikeAccidentsPer10k', header: 'Fahrradunfälle je 10.000 Einwohner', numeric: 'num1' },
+        { key: 'bikeFatalOrSevere', header: 'Fahrradunfälle mit Getöteten/Schwerverletzten', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -3201,6 +3228,7 @@
         if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
         else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
+        else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else cmlTitle.textContent = 'Radinfra-Anteil';
       }
 
@@ -3208,6 +3236,7 @@
         if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
         else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
+        else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
       }
 
@@ -3223,6 +3252,9 @@
         } else if (metric === 'rent') {
           metricDef.textContent =
             'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
+        } else if (metric === 'accidents') {
+          metricDef.textContent =
+            'Fahrradunfälle mit Personenschaden je 10.000 Einwohner (Quelle: Destatis Unfallatlas 2023).';
         } else {
           metricDef.innerHTML =
             'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
@@ -3235,12 +3267,14 @@
         if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
         else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
         else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
+        else if (metric === 'accidents') cmlMin.textContent = deNumber(min, 1);
         else cmlMin.textContent = formatUiPct(min) + ' %';
       }
       if (cmlMax) {
         if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
+        else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
         else cmlMax.textContent = formatUiPct(max) + ' %';
       }
 
@@ -3260,6 +3294,8 @@
           text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' PKW' : '');
         } else if (metric === 'rent') {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
+        } else if (metric === 'accidents') {
+          text = deNumber(val, 1) + (i === count - 1 ? ' / 10k' : '');
         } else {
           text = formatUiPct(val) + (i === count - 1 ? ' %' : '');
         }
@@ -3485,6 +3521,28 @@
         return {
           min,
           max: Math.max(max, min + 2),
+          dataMin,
+          dataMax,
+          scaleCapped: min > dataMin || max < dataMax,
+        };
+      }
+      if (metric === 'accidents') {
+        const vals = features
+          .map((f) => f.properties?.bikeAccidentsPer10k)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: 2, max: 20, dataMin: 2, dataMax: 20, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const q02 = sorted[Math.min(sorted.length - 1, Math.floor(0.02 * sorted.length))];
+        const q98 = sorted[Math.min(sorted.length - 1, Math.floor(0.98 * sorted.length))];
+        const min = Math.floor(q02);
+        const max = Math.ceil(q98);
+        return {
+          min,
+          max: Math.max(max, min + 5),
           dataMin,
           dataMax,
           scaleCapped: min > dataMin || max < dataMax,
@@ -5309,6 +5367,63 @@
               deNumber(v, 1) +
               ' %' +
               (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '')
+            );
+          },
+        },
+        {
+          key: 'bikeAccidents',
+          label: 'Fahrradunfälle mit Personenschaden',
+          note: 'Unfallatlas 2023',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeAccidents;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const per10k = accidentsIndex?.byId[id]?.bikeAccidentsPer10k;
+            const severe = accidentsIndex?.byId[id]?.bikeFatalOrSevere;
+            let text = deNumber(v, 0);
+            if (typeof per10k === 'number') {
+              text += ' (' + deNumber(per10k, 1) + ' / 10.000 Einw.)';
+            }
+            if (typeof severe === 'number' && severe > 0) {
+              text += ', davon ' + severe + ' schwer/tödlich';
+            }
+            return text;
+          },
+        },
+        {
+          key: 'bikeAccidentsPer10k',
+          label: 'Fahrradunfälle je 10.000 Einw.',
+          note: 'Verunglückte relativ zur Bevölkerung',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeAccidentsPer10k;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const count = accidentsIndex?.byId[id]?.bikeAccidents;
+            return (
+              deNumber(v, 1) +
+              ' / 10.000 Einw.' +
+              (typeof count === 'number' ? ' (' + deNumber(count, 0) + ' Unfälle)' : '')
+            );
+          },
+        },
+        {
+          key: 'bikeFatalOrSevere',
+          label: 'Schwere Fahrradunfälle (Getötete & Schwerverletzte)',
+          note: 'Unfallschwere (Kategorie 1 & 2)',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeFatalOrSevere;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const fatal = accidentsIndex?.byId[id]?.bikeFatal;
+            return (
+              deNumber(v, 0) +
+              (typeof fatal === 'number' && fatal > 0 ? ' (davon ' + fatal + ' tödlich)' : '')
             );
           },
         },
@@ -7862,7 +7977,7 @@
         syncRankingModeButtons();
       }
       const metrik = params.get('metrik');
-      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent'].includes(metrik)) {
+      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents'].includes(metrik)) {
         currentMapMetric = metrik;
         if (mapMetricSelect) mapMetricSelect.value = metrik;
       } else if (live && currentMapMetric !== 'bikeShare') {
@@ -8167,6 +8282,30 @@
         ];
       }
 
+      if (metric === 'accidents') {
+        const lowColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const midColor = isColorblind ? '#f0e442' : '#fff59d';
+        const highColor = isColorblind ? '#e69f00' : '#c62828';
+        const midVal = (minVal + maxVal) / 2;
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'bikeAccidentsPer10k'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'bikeAccidentsPer10k'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            midVal,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
       if (maxVal <= minVal) return scale.mid;
       const mid = (minVal + maxVal) / 2;
       const pct = ['coalesce', ['get', 'bikeSharePct'], 0];
@@ -8201,6 +8340,10 @@
         gradient = isColorblind
           ? 'linear-gradient(to right, #e69f00, #f0e442, #3274a1)'
           : 'linear-gradient(to right, #e8f5e9, #ffb74d, #c62828)';
+      } else if (metric === 'accidents') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'
+          : 'linear-gradient(to right, #2e7d32, #fff59d, #c62828)';
       }
       legendBar.style.background = gradient;
       const cmlBar = document.getElementById('cml-bar');

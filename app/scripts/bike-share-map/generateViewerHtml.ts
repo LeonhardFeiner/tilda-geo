@@ -1,5 +1,5 @@
-import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basemaps'
-import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from "./basemaps";
+import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from "./colorScales";
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
   GEMEINDE_GEOMETRY_DIR,
@@ -15,37 +15,37 @@ import {
   SHARE_PAGE_BASE_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
-} from './constants'
+} from "./constants";
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
   RADINFRA_DEFAULT_FILTER,
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
-} from './statsClassSums'
-import { viewerRegionNavScript } from './viewerRegionNavScript'
+} from "./statsClassSums";
+import { viewerRegionNavScript } from "./viewerRegionNavScript";
 
 // Bottom-sheet ("phone") layout: narrow screens, and short ones too — a phone held sideways is
 // wide but too low for the side panel. DESKTOP_MEDIA is the exact complement.
-const PHONE_MEDIA = '(max-width: 768px), (max-height: 500px)'
-const DESKTOP_MEDIA = '(min-width: 769px) and (min-height: 501px)'
+const PHONE_MEDIA = "(max-width: 768px), (max-height: 500px)";
+const DESKTOP_MEDIA = "(min-width: 769px) and (min-height: 501px)";
 
-export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
+export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
-  )
+  );
 
   const defaultColorScale =
-    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
+    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0];
   if (!defaultColorScale) {
-    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`)
+    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`);
   }
 
-  const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-  })
+  const generatedDateLabel = new Date(generatedAt).toLocaleDateString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
 
   const config = {
     generatedAt,
@@ -58,21 +58,22 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: './stats-core.msgpack',
-    statsExtraMsgpackUrl: './stats-extra.msgpack',
+    statsMsgpackUrl: "./stats-core.msgpack",
+    statsExtraMsgpackUrl: "./stats-extra.msgpack",
     gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
-    lazyDarstellungPresenceUrl: './lazy-darstellung-presence.json',
-    statsUrl: './stats.geojson',
-    neighborsMsgpackUrl: './neighbors.msgpack',
-    neighborsUrl: './neighbors.json',
-    manifestUrl: './manifest.json',
-    peersUrl: './gemeinde-peers.json',
-    densityUrl: './gemeinde-density.json',
-    transitUrl: './gemeinde-transit.json',
-    terrainUrl: './gemeinde-terrain.json',
-    zensusUrl: './gemeinde-zensus.json',
-    carsUrl: './gemeinde-cars.json',
-    calmedUrl: './gemeinde-calmed.json',
+    lazyDarstellungPresenceUrl: "./lazy-darstellung-presence.json",
+    statsUrl: "./stats.geojson",
+    neighborsMsgpackUrl: "./neighbors.msgpack",
+    neighborsUrl: "./neighbors.json",
+    manifestUrl: "./manifest.json",
+    peersUrl: "./gemeinde-peers.json",
+    densityUrl: "./gemeinde-density.json",
+    transitUrl: "./gemeinde-transit.json",
+    terrainUrl: "./gemeinde-terrain.json",
+    zensusUrl: "./gemeinde-zensus.json",
+    carsUrl: "./gemeinde-cars.json",
+    calmedUrl: "./gemeinde-calmed.json",
+    accidentsUrl: "./gemeinde-accidents.json",
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -96,7 +97,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       label: BIKELANE_CLASS_LABELS[id],
     })),
     radinfraDefaultFilter: RADINFRA_DEFAULT_FILTER,
-  }
+  };
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -131,7 +132,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     property="og:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
-  <meta property="og:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
+  <meta property="og:image" content="${new URL("r/og-default.png", SHARE_PAGE_BASE_URL).href}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -140,7 +141,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     name="twitter:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
-  <meta name="twitter:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
+  <meta name="twitter:image" content="${new URL("r/og-default.png", SHARE_PAGE_BASE_URL).href}" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -1495,6 +1496,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           <option value="modelGap">Modell-Abweichung (Über- &amp; Nachzügler)</option>
           <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
+          <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
         </select>
         <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
@@ -1672,7 +1674,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     </details>
     </div>
     <p class="footer">
-      ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
+      ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ""}Erstellt am ${generatedDateLabel} ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -1801,6 +1803,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let zensusIndex = null;
     let carsIndex = null;
     let calmedIndex = null;
+    let accidentsIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1820,6 +1823,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
         load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
+        load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2253,6 +2257,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       const cars = carsIndex?.byId[p.id]?.carsPer1000 ?? null;
       const rent = zensusIndex?.byId[p.id]?.rentPerM2 ?? null;
+      const accidents = accidentsIndex?.byId[p.id];
+      const bikeAccidentsPer10k = accidents?.bikeAccidentsPer10k ?? null;
+      const bikeAccidents = accidents?.bikeAccidents ?? null;
+      const bikeFatalOrSevere = accidents?.bikeFatalOrSevere ?? null;
 
       let modelPrediction = null;
       let modelGapPct = null;
@@ -2317,6 +2325,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         } else {
           label = name + ': Keine Mietdaten verfügbar';
         }
+      } else if (currentMapMetric === 'accidents') {
+        if (typeof bikeAccidentsPer10k === 'number') {
+          label =
+            name +
+            ': ' +
+            deNumber(bikeAccidentsPer10k, 1) +
+            ' Fahrradunfälle / 10.000 Einw.\\n(' +
+            deNumber(bikeAccidents, 0) +
+            ' Unfälle mit Personenschaden, davon ' +
+            (bikeFatalOrSevere ?? 0) +
+            ' schwer/tödlich)';
+        } else {
+          label = name + ': Keine Unfalldaten verfügbar';
+        }
       } else {
         label =
           name +
@@ -2344,6 +2366,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           expectedPct,
           carsPer1000: cars,
           rentColdM2: rent,
+          bikeAccidentsPer10k,
+          bikeAccidents,
+          bikeFatalOrSevere,
           lowRoad,
           label,
         },
@@ -2438,6 +2463,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
+        { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
+        { key: 'bikeAccidentsPer10k', header: 'Fahrradunfälle je 10.000 Einwohner', numeric: 'num1' },
+        { key: 'bikeFatalOrSevere', header: 'Fahrradunfälle mit Getöteten/Schwerverletzten', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -2642,6 +2670,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
         else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
+        else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else cmlTitle.textContent = 'Radinfra-Anteil';
       }
 
@@ -2649,6 +2678,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
         else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
+        else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
       }
 
@@ -2664,6 +2694,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         } else if (metric === 'rent') {
           metricDef.textContent =
             'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
+        } else if (metric === 'accidents') {
+          metricDef.textContent =
+            'Fahrradunfälle mit Personenschaden je 10.000 Einwohner (Quelle: Destatis Unfallatlas 2023).';
         } else {
           metricDef.innerHTML =
             'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
@@ -2676,12 +2709,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
         else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
         else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
+        else if (metric === 'accidents') cmlMin.textContent = deNumber(min, 1);
         else cmlMin.textContent = formatUiPct(min) + ' %';
       }
       if (cmlMax) {
         if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
+        else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
         else cmlMax.textContent = formatUiPct(max) + ' %';
       }
 
@@ -2701,6 +2736,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' PKW' : '');
         } else if (metric === 'rent') {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
+        } else if (metric === 'accidents') {
+          text = deNumber(val, 1) + (i === count - 1 ? ' / 10k' : '');
         } else {
           text = formatUiPct(val) + (i === count - 1 ? ' %' : '');
         }
@@ -2926,6 +2963,28 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return {
           min,
           max: Math.max(max, min + 2),
+          dataMin,
+          dataMax,
+          scaleCapped: min > dataMin || max < dataMax,
+        };
+      }
+      if (metric === 'accidents') {
+        const vals = features
+          .map((f) => f.properties?.bikeAccidentsPer10k)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: 2, max: 20, dataMin: 2, dataMax: 20, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const q02 = sorted[Math.min(sorted.length - 1, Math.floor(0.02 * sorted.length))];
+        const q98 = sorted[Math.min(sorted.length - 1, Math.floor(0.98 * sorted.length))];
+        const min = Math.floor(q02);
+        const max = Math.ceil(q98);
+        return {
+          min,
+          max: Math.max(max, min + 5),
           dataMin,
           dataMax,
           scaleCapped: min > dataMin || max < dataMax,
@@ -4750,6 +4809,63 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
               deNumber(v, 1) +
               ' %' +
               (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '')
+            );
+          },
+        },
+        {
+          key: 'bikeAccidents',
+          label: 'Fahrradunfälle mit Personenschaden',
+          note: 'Unfallatlas 2023',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeAccidents;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const per10k = accidentsIndex?.byId[id]?.bikeAccidentsPer10k;
+            const severe = accidentsIndex?.byId[id]?.bikeFatalOrSevere;
+            let text = deNumber(v, 0);
+            if (typeof per10k === 'number') {
+              text += ' (' + deNumber(per10k, 1) + ' / 10.000 Einw.)';
+            }
+            if (typeof severe === 'number' && severe > 0) {
+              text += ', davon ' + severe + ' schwer/tödlich';
+            }
+            return text;
+          },
+        },
+        {
+          key: 'bikeAccidentsPer10k',
+          label: 'Fahrradunfälle je 10.000 Einw.',
+          note: 'Verunglückte relativ zur Bevölkerung',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeAccidentsPer10k;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const count = accidentsIndex?.byId[id]?.bikeAccidents;
+            return (
+              deNumber(v, 1) +
+              ' / 10.000 Einw.' +
+              (typeof count === 'number' ? ' (' + deNumber(count, 0) + ' Unfälle)' : '')
+            );
+          },
+        },
+        {
+          key: 'bikeFatalOrSevere',
+          label: 'Schwere Fahrradunfälle (Getötete & Schwerverletzte)',
+          note: 'Unfallschwere (Kategorie 1 & 2)',
+          source: accidentsIndex,
+          get: (id) => {
+            const v = accidentsIndex?.byId[id]?.bikeFatalOrSevere;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const fatal = accidentsIndex?.byId[id]?.bikeFatal;
+            return (
+              deNumber(v, 0) +
+              (typeof fatal === 'number' && fatal > 0 ? ' (davon ' + fatal + ' tödlich)' : '')
             );
           },
         },
@@ -7303,7 +7419,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         syncRankingModeButtons();
       }
       const metrik = params.get('metrik');
-      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent'].includes(metrik)) {
+      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents'].includes(metrik)) {
         currentMapMetric = metrik;
         if (mapMetricSelect) mapMetricSelect.value = metrik;
       } else if (live && currentMapMetric !== 'bikeShare') {
@@ -7608,6 +7724,30 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ];
       }
 
+      if (metric === 'accidents') {
+        const lowColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const midColor = isColorblind ? '#f0e442' : '#fff59d';
+        const highColor = isColorblind ? '#e69f00' : '#c62828';
+        const midVal = (minVal + maxVal) / 2;
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'bikeAccidentsPer10k'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'bikeAccidentsPer10k'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            midVal,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
       if (maxVal <= minVal) return scale.mid;
       const mid = (minVal + maxVal) / 2;
       const pct = ['coalesce', ['get', 'bikeSharePct'], 0];
@@ -7642,6 +7782,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         gradient = isColorblind
           ? 'linear-gradient(to right, #e69f00, #f0e442, #3274a1)'
           : 'linear-gradient(to right, #e8f5e9, #ffb74d, #c62828)';
+      } else if (metric === 'accidents') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'
+          : 'linear-gradient(to right, #2e7d32, #fff59d, #c62828)';
       }
       legendBar.style.background = gradient;
       const cmlBar = document.getElementById('cml-bar');
@@ -8544,5 +8688,5 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   </script>
 </body>
 </html>
-`
+`;
 }
