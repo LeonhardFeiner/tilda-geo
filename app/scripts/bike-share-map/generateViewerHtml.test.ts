@@ -353,6 +353,17 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
       "'6': { nom: 'Landkreise und kreisfreie Städte', gen: 'Landkreise und kreisfreien Städte' }",
     )
   })
+
+  test('renders structural model expected value and factor breakdown waterfall', () => {
+    expect(html).toContain('id="region-detail-model-gap"')
+    expect(html).toContain('region-detail-gap--model')
+    expect(html).toContain('function renderRegionModelGap')
+    expect(html).toContain('RankingDisplay.computeStructuralModelPrediction')
+    expect(html).toContain('model-breakdown-details')
+    expect(html).toContain('Faktoren-Zerlegung (Topografie, Dichte, ÖPNV)')
+    expect(html).toContain('Struktureller Erwartungswert')
+    expect(html).toContain('~22 % der bundesweiten Unterschiede')
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

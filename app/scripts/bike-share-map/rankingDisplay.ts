@@ -282,3 +282,84 @@ export function inPlacePhrase(name: string) {
   }
   return `in ${n}`
 }
+
+export type StructuralModelParams = {
+  roadKm: number
+  bikeKm: number
+  roadSlope: number | null
+  elevMean: number | null
+  density: number | null
+  stDistKm: number | null
+}
+
+export const STRUCTURAL_MODEL_CONFIG = {
+  baselinePct: 8.91,
+  means: {
+    roadSlope: 4.14,
+    elevMean: 277.3,
+    logDens: 2.02,
+    stDist: 4.79,
+  },
+  betas: {
+    roadSlope: -0.61,
+    elevMean: -0.0111,
+    logDens: 4.118,
+    stDist: -0.127,
+  },
+  r2: {
+    totalPct: 22.3,
+    topographyPct: 17.6,
+    densityPct: 4.5,
+    transitPct: 0.2,
+    unexplainedPct: 77.7,
+  },
+} as const
+
+export function computeStructuralModelPrediction(params: StructuralModelParams) {
+  const { roadKm, bikeKm, roadSlope, elevMean, density, stDistKm } = params
+  if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
+  if (roadSlope == null && elevMean == null && density == null && stDistKm == null) return null
+
+  const c = STRUCTURAL_MODEL_CONFIG
+  const deltaSlope = roadSlope != null ? c.betas.roadSlope * (roadSlope - c.means.roadSlope) : 0
+  const deltaElev = elevMean != null ? c.betas.elevMean * (elevMean - c.means.elevMean) : 0
+  const deltaTopo = deltaSlope + deltaElev
+
+  const deltaDens =
+    density != null
+      ? c.betas.logDens * (Math.log10(Math.max(1, density)) - c.means.logDens)
+      : 0
+
+  const deltaTransit =
+    stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
+
+  const expectedPct = Math.max(0, Math.min(100, c.baselinePct + deltaTopo + deltaDens + deltaTransit))
+  const expectedKm = (expectedPct / 100) * roadKm
+  const actualPct = (bikeKm / roadKm) * 100
+  const diffPct = actualPct - expectedPct
+  const diffKm = bikeKm - expectedKm
+
+  return {
+    baselinePct: c.baselinePct,
+    deltaSlope: roadSlope != null ? deltaSlope : null,
+    deltaElev: elevMean != null ? deltaElev : null,
+    deltaTopo,
+    deltaDens,
+    deltaTransit,
+    expectedPct,
+    expectedKm,
+    actualPct,
+    actualKm: bikeKm,
+    roadKm,
+    diffPct,
+    diffKm,
+    behind: diffPct < -0.05,
+    inputs: {
+      roadSlope,
+      elevMean,
+      density,
+      stDistKm,
+    },
+    r2: c.r2,
+  }
+}

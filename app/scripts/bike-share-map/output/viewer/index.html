@@ -581,7 +581,60 @@
     .region-detail-gap--ahead {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
-    #region-detail-gap + #region-detail-peer-gap { margin-top: -4px; }
+    #region-detail-gap + #region-detail-peer-gap,
+    .region-detail-gap + .region-detail-gap { margin-top: -4px; }
+    .region-detail-gap--model {
+      background: #f8fafc; border: 1px solid #cbd5e1; color: #1e293b;
+    }
+    .region-detail-gap--model.region-detail-gap--behind {
+      background: #fdecea; border: 1px solid #f5c6c0; color: #8a1c11;
+    }
+    .region-detail-gap--model.region-detail-gap--ahead {
+      background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
+    }
+    .region-detail-gap--model .region-detail-gap-headline {
+      display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
+    }
+    .region-detail-gap--model::before {
+      content: 'Struktureller Erwartungswert (Faktoren-Modell)'; display: block;
+      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
+    }
+    .model-breakdown-details {
+      margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.1);
+      font-size: 11.5px;
+    }
+    .model-breakdown-summary {
+      cursor: pointer; font-weight: 600; color: #1565c0; padding: 2px 0; user-select: none;
+    }
+    .region-detail-gap--behind .model-breakdown-summary { color: #8a1c11; }
+    .region-detail-gap--ahead .model-breakdown-summary { color: #1b5e20; }
+    .model-breakdown-table {
+      width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px;
+      font-variant-numeric: tabular-nums;
+    }
+    .model-breakdown-table th {
+      font-size: 10px; font-weight: 600; color: #475569; text-align: right;
+      padding: 2px 4px; border-bottom: 1px solid #cbd5e1;
+    }
+    .model-breakdown-table th:first-child { text-align: left; padding-left: 0; }
+    .model-breakdown-table td {
+      padding: 3px 4px; text-align: right; border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    .model-breakdown-table td:first-child { text-align: left; padding-left: 0; }
+    .model-breakdown-table td small { display: block; font-size: 9.5px; color: #64748b; font-weight: normal; }
+    .model-breakdown-table tr.model-row-total td {
+      border-top: 1.5px solid #94a3b8; font-weight: 700;
+    }
+    .model-breakdown-table tr.model-row-actual td {
+      border-top: 1px solid #cbd5e1; font-weight: 700;
+    }
+    .model-breakdown-table tr.model-row-diff td {
+      border-top: 1.5px solid #94a3b8; font-weight: 700;
+    }
+    .model-breakdown-note {
+      margin: 6px 0 0; font-size: 10px; line-height: 1.35; color: #64748b;
+    }
     .region-detail-quality {
       margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
       font-size: 11px; line-height: 1.45; color: #555;
@@ -598,7 +651,7 @@
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--peer::before {
-      content: 'Ähnlich große Gemeinden bundesweit'; display: block;
+      content: var(--peer-gap-label, 'Ähnlich große Gemeinden bundesweit'); display: block;
       font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -1531,6 +1584,7 @@
     <div id="region-detail-actions"></div>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
+    <div class="region-detail-gap region-detail-gap--model" id="region-detail-model-gap" hidden></div>
     <div class="region-detail-authority" id="region-detail-authority" hidden></div>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <details class="region-detail-more" id="region-detail-more">
@@ -1609,7 +1663,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-19T08:17:54.604Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-19T09:09:21.887Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -1653,9 +1707,14 @@
         load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
-          ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId)
+          ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
+            regionIndex?.byId.get(selectedFeatureId)
           : null;
-        if (selected) renderRegionExtra(selected.properties || {});
+        if (selected) {
+          const props = selected.properties || {};
+          renderRegionExtra(props);
+          renderRegionModelGap(props);
+        }
       });
     }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
@@ -2535,6 +2594,7 @@
     const regionDetailMeta = document.getElementById('region-detail-meta');
     const regionDetailGap = document.getElementById('region-detail-gap');
     const regionDetailPeerGap = document.getElementById('region-detail-peer-gap');
+    const regionDetailModelGap = document.getElementById('region-detail-model-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
     const regionDetailMore = document.getElementById('region-detail-more');
     regionDetailMore?.addEventListener('toggle', () => reopenContextPlot());
@@ -4243,6 +4303,7 @@
           'Vergleich',
           printable(regionDetailGap),
           printable(regionDetailPeerGap),
+          printable(regionDetailModelGap),
           printable(regionDetailQuality),
         );
         section(null, printable(regionDetailAuthority));
@@ -4615,6 +4676,10 @@
       headline.textContent = 'Platz ' + s.rank + ' von ' + s.total;
       regionDetailPeerGap.appendChild(headline);
       const isCounty = String(p.level) === '6';
+      regionDetailPeerGap.style.setProperty(
+        '--peer-gap-label',
+        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Ähnlich große Gemeinden bundesweit'",
+      );
       regionDetailPeerGap.appendChild(
         document.createTextNode(
           (isCounty
@@ -4652,6 +4717,190 @@
         regionDetailPeerGap.appendChild(line);
       }
       regionDetailPeerGap.hidden = false;
+    }
+
+    /**
+     * Expected bike infrastructure share (%) and kilometres based on the multivariate structural
+     * model (topography/slope, elevation, density, transit access). Shows the net expected value,
+     * the actual comparison, and an expandable waterfall decomposition of the contributing factors.
+     */
+    function renderRegionModelGap(p) {
+      if (!regionDetailModelGap) return;
+      regionDetailModelGap.replaceChildren();
+      const level = String(p.level ?? '');
+      if (level !== '8' && level !== '6') {
+        regionDetailModelGap.hidden = true;
+        return;
+      }
+      ensureRegionExtraIndexes();
+      const filter = readLengthClassFilterFromUi();
+      const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
+        p.road_length,
+        p.bikelane_length,
+        filter,
+      );
+      const dens = densityIndex?.byId[p.id];
+      const slope = terrainIndex?.byId[p.id]?.road;
+      const elev = terrainIndex?.byId[p.id]?.elevationMean;
+      const stDist =
+        transitIndex?.byId[p.id]?.avgDistanceToStationM != null
+          ? transitIndex.byId[p.id].avgDistanceToStationM / 1000
+          : null;
+
+      const m = RankingDisplay.computeStructuralModelPrediction({
+        roadKm,
+        bikeKm,
+        roadSlope: typeof slope === 'number' ? slope : null,
+        elevMean: typeof elev === 'number' ? elev : null,
+        density: typeof dens === 'number' ? dens : null,
+        stDistKm: typeof stDist === 'number' ? stDist : null,
+      });
+
+      if (!m) {
+        regionDetailModelGap.hidden = true;
+        return;
+      }
+
+      regionDetailModelGap.className =
+        'region-detail-gap region-detail-gap--model ' +
+        (m.behind ? 'region-detail-gap--behind' : 'region-detail-gap--ahead');
+
+      const headline = document.createElement('span');
+      headline.className = 'region-detail-gap-headline';
+      headline.textContent =
+        'Erwartet: ' +
+        formatUiPct(m.expectedPct) +
+        ' % (ca. ' +
+        deNumber(Math.round(m.expectedKm), 0) +
+        ' km)';
+      regionDetailModelGap.appendChild(headline);
+
+      const statusText = document.createElement('span');
+      const diffKmRounded = Math.abs(Math.round(m.diffKm));
+      const diffKmStr = deNumber(diffKmRounded, 0) + ' km';
+      const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %';
+
+      if (m.behind) {
+        statusText.textContent =
+          'Tatsächlich ' +
+          formatUiPct(m.actualPct) +
+          ' % (' +
+          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
+          ' km) · ' +
+          diffKmStr +
+          ' unter Erwartung (−' +
+          diffPctStr +
+          ' Lücke trotz Geografie und Dichte).';
+      } else {
+        statusText.textContent =
+          'Tatsächlich ' +
+          formatUiPct(m.actualPct) +
+          ' % (' +
+          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
+          ' km) · ' +
+          diffKmStr +
+          ' über Erwartung (+' +
+          diffPctStr +
+          ' Vorsprung gegenüber geografischem Profil).';
+      }
+      regionDetailModelGap.appendChild(statusText);
+
+      // Expandable waterfall table (Variant B)
+      const details = document.createElement('details');
+      details.className = 'model-breakdown-details';
+      const summary = document.createElement('summary');
+      summary.className = 'model-breakdown-summary';
+      summary.textContent = 'Faktoren-Zerlegung (Topografie, Dichte, ÖPNV)';
+      details.appendChild(summary);
+
+      const table = document.createElement('table');
+      table.className = 'model-breakdown-table';
+      table.innerHTML =
+        '<thead><tr><th>Faktor</th><th>Einfluss</th><th>Messwert</th></tr></thead>';
+      const tbody = document.createElement('tbody');
+
+      const formatDelta = (d) => (d > 0 ? '+' : '') + formatUiPct(d) + ' %';
+
+      const addRow = (label, note, delta, measVal, rowClass) => {
+        const tr = document.createElement('tr');
+        if (rowClass) tr.className = rowClass;
+        const tdLabel = document.createElement('td');
+        tdLabel.append(label);
+        if (note) {
+          const small = document.createElement('small');
+          small.textContent = note;
+          tdLabel.appendChild(small);
+        }
+        const tdDelta = document.createElement('td');
+        tdDelta.textContent = typeof delta === 'number' ? formatDelta(delta) : (delta || '');
+        const tdMeas = document.createElement('td');
+        tdMeas.textContent = measVal;
+        tr.append(tdLabel, tdDelta, tdMeas);
+        tbody.appendChild(tr);
+      };
+
+      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete', m.baselinePct, '8,9 %');
+
+      const topoNotes = [];
+      if (m.inputs.roadSlope != null) topoNotes.push('Ø ' + deNumber(m.inputs.roadSlope, 1) + ' % Steigung');
+      if (m.inputs.elevMean != null) topoNotes.push(deNumber(Math.round(m.inputs.elevMean), 0) + ' m Höhe');
+      addRow(
+        'Topografie & Hanglage',
+        topoNotes.join(', ') || null,
+        m.deltaTopo,
+        m.deltaTopo <= -0.05 ? 'bremsend' : m.deltaTopo >= 0.05 ? 'begünstigend' : 'neutral',
+      );
+
+      addRow(
+        'Siedlungsdichte',
+        m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null,
+        m.deltaDens,
+        m.deltaDens >= 0.05 ? 'überdurchschn.' : m.deltaDens <= -0.05 ? 'unterdurchschn.' : 'neutral',
+      );
+
+      addRow(
+        'ÖPNV-Haltestellennähe',
+        m.inputs.stDistKm != null ? 'Ø ' + deNumber(m.inputs.stDistKm, 1) + ' km Distanz' : null,
+        m.deltaTransit,
+        m.deltaTransit >= 0.05 ? 'gute Anbindung' : m.deltaTransit <= -0.05 ? 'weite Wege' : 'neutral',
+      );
+
+      addRow(
+        'Struktureller Erwartungswert',
+        'Aus Topografie, Dichte & ÖPNV errechnet',
+        formatUiPct(m.expectedPct) + ' %',
+        'ca. ' + deNumber(Math.round(m.expectedKm), 0) + ' km',
+        'model-row-total',
+      );
+
+      addRow(
+        'Tatsächlicher Radinfra-Ausbau',
+        'Laut OpenStreetMap-Erfassung',
+        formatUiPct(m.actualPct) + ' %',
+        deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) + ' km',
+        'model-row-actual',
+      );
+
+      addRow(
+        m.behind ? 'Aufholbedarf (Lücke)' : 'Gestaltungsspielraum (Vorsprung)',
+        'Politische Priorität & Investitionen',
+        (m.diffPct > 0 ? '+' : '') + formatUiPct(m.diffPct) + ' %',
+        (m.diffKm > 0 ? '+' : '') + deNumber(m.diffKm, 1) + ' km',
+        'model-row-diff',
+      );
+
+      table.appendChild(tbody);
+      details.appendChild(table);
+
+      const note = document.createElement('p');
+      note.className = 'model-breakdown-note';
+      note.textContent =
+        'Geografie und Dichte erklären ~22 % der bundesweiten Unterschiede (Topografie 18 %, Dichte 4 %). ' +
+        'Über 77 % beruhen auf kommunaler Schwerpunktsetzung.';
+      details.appendChild(note);
+
+      regionDetailModelGap.appendChild(details);
+      regionDetailModelGap.hidden = false;
     }
 
     /** Fewer than this and a fifth of the distribution is a single region: no bar. */
@@ -5322,6 +5571,7 @@
       }
       renderRegionAuthority(p, mainRoads);
       renderRegionPeerGap(p);
+      renderRegionModelGap(p);
       renderRegionGap(p);
       renderRegionQuality(p);
       renderRegionExtra(p);

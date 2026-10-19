@@ -13,6 +13,7 @@ import {
   isFocusChainInTopOrFlopWindow,
   mergeFocusChains,
   rankingShowsAsAlle,
+  computeStructuralModelPrediction,
 } from './rankingDisplay'
 
 const items = () => [...Array(30).keys()].map((i) => ({ id: `r${i + 1}` }))
@@ -225,5 +226,81 @@ describe('inPlacePhrase', () => {
     ['Frankfurt am Main', 'in Frankfurt am Main'],
   ])('%s → %s', (name, expected) => {
     expect(inPlacePhrase(name)).toBe(expected)
+  })
+})
+
+describe('computeStructuralModelPrediction', () => {
+  test('returns baseline expectation when predictors are at national means', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 8.91,
+      roadSlope: 4.14,
+      elevMean: 277.3,
+      density: 104.7, // 10^2.02 ≈ 104.7
+      stDistKm: 4.79,
+    })
+    expect(res).not.toBeNull()
+    expect(res!.expectedPct).toBeCloseTo(8.91, 1)
+    expect(res!.expectedKm).toBeCloseTo(8.91, 1)
+    expect(res!.diffPct).toBeCloseTo(0, 1)
+    expect(res!.diffKm).toBeCloseTo(0, 1)
+    expect(res!.behind).toBe(false)
+  })
+
+  test('steep mountain terrain reduces expected bike share', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 3.0,
+      roadSlope: 8.0, // steeper than 4.14%
+      elevMean: 700,  // higher than 277.3m
+      density: 100,
+      stDistKm: 5.0,
+    })
+    expect(res).not.toBeNull()
+    expect(res!.deltaTopo).toBeLessThan(0)
+    expect(res!.expectedPct).toBeLessThan(8.91)
+    expect(res!.actualPct).toBe(3.0)
+  })
+
+  test('flat high-density town increases expected bike share', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 500,
+      bikeKm: 120,
+      roadSlope: 1.5, // much flatter than 4.14%
+      elevMean: 40,   // lower than 277.3m
+      density: 3000,  // much denser than 104
+      stDistKm: 1.0,  // very close to station
+    })
+    expect(res).not.toBeNull()
+    expect(res!.deltaTopo).toBeGreaterThan(0)
+    expect(res!.deltaDens).toBeGreaterThan(0)
+    expect(res!.deltaTransit).toBeGreaterThan(0)
+    expect(res!.expectedPct).toBeGreaterThan(15.0)
+    expect(res!.expectedKm).toBe((res!.expectedPct / 100) * 500)
+    expect(res!.diffKm).toBe(120 - res!.expectedKm)
+  })
+
+  test('returns null when roadKm <= 0 or all predictors are missing', () => {
+    expect(
+      computeStructuralModelPrediction({
+        roadKm: 0,
+        bikeKm: 0,
+        roadSlope: 4.0,
+        elevMean: 200,
+        density: 100,
+        stDistKm: 5.0,
+      }),
+    ).toBeNull()
+
+    expect(
+      computeStructuralModelPrediction({
+        roadKm: 100,
+        bikeKm: 5,
+        roadSlope: null,
+        elevMean: null,
+        density: null,
+        stDistKm: null,
+      }),
+    ).toBeNull()
   })
 })
