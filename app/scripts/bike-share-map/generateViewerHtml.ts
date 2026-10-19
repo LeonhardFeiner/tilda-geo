@@ -72,6 +72,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     terrainUrl: './gemeinde-terrain.json',
     zensusUrl: './gemeinde-zensus.json',
     carsUrl: './gemeinde-cars.json',
+    calmedUrl: './gemeinde-calmed.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1792,6 +1793,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let terrainIndex = null;
     let zensusIndex = null;
     let carsIndex = null;
+    let calmedIndex = null;
     let regionExtraIndexesPromise = null;
     function ensureRegionExtraIndexes() {
       if (regionExtraIndexesPromise) return;
@@ -1808,6 +1810,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
         load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
         load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
+        load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2349,6 +2352,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
+        { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
+        { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -4460,6 +4465,42 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
               deNumber(Math.round(v), 0) +
               ' PKW / 1.000 Einw.' +
               (typeof comm === 'number' ? ' (davon ' + deNumber(comm, 1) + ' % gewerblich)' : '')
+            );
+          },
+        },
+        {
+          key: 'calmedShare',
+          label: 'Wohn- & Tempo-30-Netz',
+          note: 'Erschließungsstraßen',
+          source: calmedIndex,
+          get: (id) => {
+            const v = calmedIndex?.byId[id]?.calmedSharePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const km = calmedIndex?.byId[id]?.calmedKm;
+            return (
+              deNumber(v, 1) +
+              ' %' +
+              (typeof km === 'number' ? ' (' + deNumber(Math.round(km), 0) + ' km)' : '')
+            );
+          },
+        },
+        {
+          key: 'livingShare',
+          label: 'Verkehrsberuhigt & Fahrradstraßen',
+          note: 'Spielstraßen & Vorrang Rad',
+          source: calmedIndex,
+          get: (id) => {
+            const v = calmedIndex?.byId[id]?.livingSharePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const km = calmedIndex?.byId[id]?.livingKm;
+            return (
+              deNumber(v, 1) +
+              ' %' +
+              (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '')
             );
           },
         },

@@ -13,9 +13,25 @@ describe('parseKbaFz3Rows', () => {
       [],
       [],
       // Row 8: headers
-      ['', 'Land', 'Zulassungsbezirk', 'Gemeinde', 'Krafträder', 'Personenkraftwagen', 'darunter gewerblich'],
+      [
+        '',
+        'Land',
+        'Zulassungsbezirk',
+        'Gemeinde',
+        'Krafträder',
+        'Personenkraftwagen',
+        'darunter gewerblich',
+      ],
       // Row 9: Stuttgart Stadt
-      ['', 'BADEN-WÜRTTEMBERG', '08111 STUTTGART,STADT', '08111000 STUTTGART,LANDESHAUPTSTADT', 28000, 300000, 75000],
+      [
+        '',
+        'BADEN-WÜRTTEMBERG',
+        '08111 STUTTGART,STADT',
+        '08111000 STUTTGART,LANDESHAUPTSTADT',
+        28000,
+        300000,
+        75000,
+      ],
       // Row 10: Stuttgart Zusammen
       ['', '', '', 'ZUSAMMEN', 28000, 300000, 75000],
       // Row 11: Boeblingen Kreis & Aidlingen Gemeinde
@@ -61,4 +77,3 @@ describe('parseKbaFz3Rows', () => {
     })
   })
 })
-

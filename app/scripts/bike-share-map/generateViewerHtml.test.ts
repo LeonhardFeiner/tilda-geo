@@ -382,6 +382,16 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("label: 'PKW-Dichte (KBA)'")
     expect(html).toContain("header: 'PKW je 1.000 Einwohner (KBA)'")
   })
+
+  test('includes traffic calmed and Tempo-30 road metrics in context and CSV columns', () => {
+    expect(html).toContain('"calmedUrl":"./gemeinde-calmed.json"')
+    expect(html).toContain("key: 'calmedShare'")
+    expect(html).toContain("label: 'Wohn- & Tempo-30-Netz'")
+    expect(html).toContain("key: 'livingShare'")
+    expect(html).toContain("label: 'Verkehrsberuhigt & Fahrradstraßen'")
+    expect(html).toContain("header: 'Wohn- & Tempo-30-Netz Anteil (%)'")
+    expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

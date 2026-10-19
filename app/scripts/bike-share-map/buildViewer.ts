@@ -432,6 +432,25 @@ if (existsSync(carsPath)) {
   }
 }
 
+// gemeinde-calmed.json: {id → {totalRoadKm, calmedKm, calmedSharePct, livingKm, livingSharePct}}
+const calmedPath = join(outputRoot, 'calmed-roads.json')
+if (existsSync(calmedPath)) {
+  try {
+    const calmedData = JSON.parse(await Bun.file(calmedPath).text()) as {
+      byId?: Record<string, unknown>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-calmed.json'),
+      JSON.stringify({ byId: calmedData.byId ?? {} }),
+    )
+    process.stdout.write(
+      `Traffic calmed road share: ${Object.keys(calmedData.byId ?? {}).length} regions → ${viewerDir}/gemeinde-calmed.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-calmed.json skipped: ${err}\n`)
+  }
+}
+
 const dataDateLabel = readDataDateLabel(outputRoot)
 writeFileSync(
   join(viewerDir, 'methodik.html'),
