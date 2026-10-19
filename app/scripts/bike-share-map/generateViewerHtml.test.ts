@@ -393,6 +393,18 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Wohn- & Tempo-30-Netz Anteil (%)'")
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
   })
+
+  test('includes thematic map metric selector with model gap, cars, and rent', () => {
+    expect(html).toContain('id="map-metric-select"')
+    expect(html).toContain('value="bikeShare"')
+    expect(html).toContain('value="modelGap"')
+    expect(html).toContain('value="cars"')
+    expect(html).toContain('value="rent"')
+    expect(html).toContain("params.set('metrik', currentMapMetric)")
+    expect(html).toContain("params.get('metrik')")
+    expect(html).toContain('colorScaleRangeForMetric(metric, features)')
+    expect(html).toContain("id=\"choropleth-legend-title\"")
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

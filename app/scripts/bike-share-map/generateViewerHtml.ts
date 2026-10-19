@@ -1489,6 +1489,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
         <label for="darstellung-select">Zeige</label>
         <select id="darstellung-select"></select>
+        <label for="map-metric-select">Kartenansicht</label>
+        <select id="map-metric-select">
+          <option value="bikeShare">Radinfrastruktur-Anteil</option>
+          <option value="modelGap">Modell-Abweichung (Über- &amp; Nachzügler)</option>
+          <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
+          <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
+        </select>
         <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
         <!-- Not user-facing: the area state the breadcrumb and the picker above read and write
@@ -1600,7 +1607,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
-          <span class="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
+          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
           <p class="metric-definition" id="metric-definition">
             Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
             <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
@@ -1795,8 +1802,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let carsIndex = null;
     let calmedIndex = null;
     let regionExtraIndexesPromise = null;
+    let currentMapMetric = 'bikeShare';
+    let lastBikeShareRange = { min: 0, max: 20 };
     function ensureRegionExtraIndexes() {
-      if (regionExtraIndexesPromise) return;
+      if (regionExtraIndexesPromise) return regionExtraIndexesPromise;
       const load = (url, assign) =>
         fetch(url)
           .then((res) => (res.ok ? res.json() : null))
@@ -1822,6 +1831,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           renderRegionModelGap(props);
         }
       });
+      return regionExtraIndexesPromise;
     }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
     // Stadtbezirke per scope — lets the Darstellung dropdown list those options correctly
@@ -1983,6 +1993,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const rankingModeButtons = [...document.querySelectorAll('.ranking-mode-btn')];
     const colorScaleSelect = document.getElementById('color-scale-select');
     const colorScaleHint = document.getElementById('color-scale-hint');
+    const mapMetricSelect = document.getElementById('map-metric-select');
     const legendBar = document.getElementById('legend-bar');
     const bikelaneSwatch = document.getElementById('bikelane-swatch');
     const roadSwatch = document.getElementById('road-swatch');
@@ -2239,17 +2250,86 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       );
       const pct = road > 0 ? (bike / road) * 100 : null;
       const lowRoad = TildaStats.isLowRoadNetworkForScale(road);
-      let label =
-        (p.name || p.id) +
-        ': ' +
-        (pct != null ? formatUiPct(pct) : '–') +
-        ' %\\n' +
-        TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-        ' km / ' +
-        TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
-        ' km';
-      if (lowRoad && pct != null) {
-        label += '\\n(wenig Straßennetz – Anteil kann unrepräsentativ sein)';
+
+      const cars = carsIndex?.byId[p.id]?.carsPer1000 ?? null;
+      const rent = zensusIndex?.byId[p.id]?.rentPerM2 ?? null;
+
+      let modelPrediction = null;
+      let modelGapPct = null;
+      let expectedPct = null;
+
+      if (densityIndex && terrainIndex && !lowRoad && road > 0) {
+        const dens = densityIndex?.byId[p.id];
+        const slope = terrainIndex?.byId[p.id]?.road;
+        const elev = terrainIndex?.byId[p.id]?.elevationMean;
+        const stDist =
+          transitIndex?.byId[p.id]?.avgDistanceToStationM != null
+            ? transitIndex.byId[p.id].avgDistanceToStationM / 1000
+            : null;
+        const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
+
+        modelPrediction = RankingDisplay.computeStructuralModelPrediction({
+          roadKm: road,
+          bikeKm: bike,
+          roadSlope: typeof slope === 'number' ? slope : null,
+          elevMean: typeof elev === 'number' ? elev : null,
+          density: typeof dens === 'number' ? dens : null,
+          stDistKm: typeof stDist === 'number' ? stDist : null,
+          rent: typeof rent === 'number' ? rent : null,
+          carsPer1000: typeof cars === 'number' ? cars : null,
+          livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
+        });
+        if (modelPrediction) {
+          modelGapPct = modelPrediction.diffPct;
+          expectedPct = modelPrediction.expectedPct;
+        }
+      }
+
+      const name = p.name || p.id;
+      let label = '';
+      if (currentMapMetric === 'modelGap') {
+        if (modelGapPct != null && pct != null && expectedPct != null) {
+          const sign = modelGapPct > 0 ? '+' : '';
+          label =
+            name +
+            ': ' +
+            sign +
+            formatUiPct(modelGapPct) +
+            ' %-Punkte ggü. Erwartung\\n(Tatsächlich: ' +
+            formatUiPct(pct) +
+            ' %, Erwartet: ' +
+            formatUiPct(expectedPct) +
+            ' %)';
+        } else if (lowRoad) {
+          label = name + ': Keine Modellprognose (wenig Straßennetz)';
+        } else {
+          label = name + ': Keine Modellprognose verfügbar';
+        }
+      } else if (currentMapMetric === 'cars') {
+        if (typeof cars === 'number') {
+          label = name + ': ' + deNumber(Math.round(cars), 0) + ' PKW je 1.000 Einw.';
+        } else {
+          label = name + ': Keine PKW-Daten verfügbar';
+        }
+      } else if (currentMapMetric === 'rent') {
+        if (typeof rent === 'number') {
+          label = name + ': ' + deNumber(rent, 2) + ' €/m² Ø Nettokaltmiete';
+        } else {
+          label = name + ': Keine Mietdaten verfügbar';
+        }
+      } else {
+        label =
+          name +
+          ': ' +
+          (pct != null ? formatUiPct(pct) : '–') +
+          ' %\\n' +
+          TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
+          ' km / ' +
+          TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
+          ' km';
+        if (lowRoad && pct != null) {
+          label += '\\n(wenig Straßennetz – Anteil kann unrepräsentativ sein)';
+        }
       }
       return {
         type: 'Feature',
@@ -2260,6 +2340,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           roadSumKm: road,
           bikelaneSumKm: bike,
           bikeSharePct: pct != null ? pct : 0,
+          modelGapPct,
+          expectedPct,
+          carsPer1000: cars,
+          rentColdM2: rent,
           lowRoad,
           label,
         },
@@ -2544,13 +2628,63 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * the same relative position on the bar. Labelling only the two ends left every mid-tone
      * unreadable, which is most of the map.
      */
-    function updateLegendRange(min, max) {
+    function updateLegendRange(min, max, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
       const labels = document.getElementById('legend-labels');
       const ticks = document.getElementById('legend-ticks');
       const cmlMin = document.getElementById('cml-min');
       const cmlMax = document.getElementById('cml-max');
-      if (cmlMin) cmlMin.textContent = formatUiPct(min) + ' %';
-      if (cmlMax) cmlMax.textContent = formatUiPct(max) + ' %';
+      const cmlTitle = document.querySelector('.cml-title');
+      const choroplethTitle = document.getElementById('choropleth-legend-title');
+      const metricDef = document.getElementById('metric-definition');
+
+      if (cmlTitle) {
+        if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
+        else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
+        else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
+        else cmlTitle.textContent = 'Radinfra-Anteil';
+      }
+
+      if (choroplethTitle) {
+        if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
+        else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
+        else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
+        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
+      }
+
+      if (metricDef) {
+        if (metric === 'modelGap') {
+          metricDef.innerHTML =
+            'Differenz tatsächlicher Ausbau minus Erwartungswert. ' +
+            '<strong>Grün</strong> = mehr Radinfrastruktur als erwartet (Vorreiter), ' +
+            '<strong>Rot</strong> = weniger als erwartet (Nachzügler).';
+        } else if (metric === 'cars') {
+          metricDef.textContent =
+            'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
+        } else if (metric === 'rent') {
+          metricDef.textContent =
+            'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
+        } else {
+          metricDef.innerHTML =
+            'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
+            '<span id="metric-definition-counting">nach Radinfra.de-Standard</span>. ' +
+            '<a href="./methodik.html">So wird gezählt</a>';
+        }
+      }
+
+      if (cmlMin) {
+        if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
+        else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
+        else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
+        else cmlMin.textContent = formatUiPct(min) + ' %';
+      }
+      if (cmlMax) {
+        if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
+        else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
+        else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
+        else cmlMax.textContent = formatUiPct(max) + ' %';
+      }
+
       if (!labels) return;
       const span = max - min;
       const count = span > 0 ? LEGEND_TICK_COUNT : 2;
@@ -2558,9 +2692,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (ticks) ticks.replaceChildren();
       for (let i = 0; i < count; i++) {
         const t = i / (count - 1);
+        const val = min + span * t;
         const el = document.createElement('span');
-        // Only the last label carries the unit — repeating it on every tick is noise.
-        el.textContent = formatUiPct(min + span * t) + (i === count - 1 ? ' %' : '');
+        let text = '';
+        if (metric === 'modelGap') {
+          text = (val > 0 ? '+' : '') + formatUiPct(val) + (i === count - 1 ? ' %' : '');
+        } else if (metric === 'cars') {
+          text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' PKW' : '');
+        } else if (metric === 'rent') {
+          text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
+        } else {
+          text = formatUiPct(val) + (i === count - 1 ? ' %' : '');
+        }
+        el.textContent = text;
         if (i === 0) {
           el.className = 'legend-label--start';
         } else if (i === count - 1) {
@@ -2630,13 +2774,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function repaintRegionsFromCounting() {
       const filtered = filteredFeaturesForCurrentView().map(enrichFeature);
-      const range = colorScaleRange(filtered);
-      const { min, max } = range;
-      lastPctRange = { min, max, scaleCapped: range.scaleCapped, dataMax: range.dataMax };
-      updateLegendRange(min, max);
+      const bikeRange = colorScaleRange(filtered);
+      lastBikeShareRange = bikeRange;
+      const activeRange = colorScaleRangeForMetric(currentMapMetric, filtered);
+      const { min, max } = activeRange;
+      lastPctRange = { min, max, scaleCapped: activeRange.scaleCapped, dataMax: activeRange.dataMax };
+      updateLegendRange(min, max, currentMapMetric);
       lastRankingFeatures = filtered;
-      updateRanking(filtered, min, max);
-      updateViewMetaText(filtered, range);
+      updateRanking(filtered, bikeRange.min, bikeRange.max);
+      updateViewMetaText(filtered, activeRange);
       refreshSelectedRegionIfNeeded();
       const geojson = buildRegionGeojson(filtered);
       const src = map.getSource('regions');
@@ -2717,6 +2863,75 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         manualCapEnabled: enabled,
         manualCapPct: capPct,
       });
+    }
+
+    function colorScaleRangeForMetric(metric, features) {
+      if (metric === 'modelGap') {
+        const vals = features
+          .map((f) => f.properties?.modelGapPct)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: -10, max: 10, dataMin: -10, dataMax: 10, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const absSorted = sorted.map((v) => Math.abs(v)).sort((a, b) => a - b);
+        const p95 = absSorted[Math.min(absSorted.length - 1, Math.floor(0.95 * absSorted.length))];
+        const bound = Math.max(5, Math.ceil(p95));
+        return {
+          min: -bound,
+          max: bound,
+          dataMin,
+          dataMax,
+          scaleCapped: bound < Math.max(Math.abs(dataMin), Math.abs(dataMax)),
+        };
+      }
+      if (metric === 'cars') {
+        const vals = features
+          .map((f) => f.properties?.carsPer1000)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: 350, max: 700, dataMin: 350, dataMax: 700, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const q02 = sorted[Math.min(sorted.length - 1, Math.floor(0.02 * sorted.length))];
+        const q98 = sorted[Math.min(sorted.length - 1, Math.floor(0.98 * sorted.length))];
+        const min = Math.floor(q02 / 10) * 10;
+        const max = Math.ceil(q98 / 10) * 10;
+        return {
+          min,
+          max: Math.max(max, min + 50),
+          dataMin,
+          dataMax,
+          scaleCapped: min > dataMin || max < dataMax,
+        };
+      }
+      if (metric === 'rent') {
+        const vals = features
+          .map((f) => f.properties?.rentColdM2)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: 6.0, max: 14.0, dataMin: 6.0, dataMax: 14.0, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const q02 = sorted[Math.min(sorted.length - 1, Math.floor(0.02 * sorted.length))];
+        const q98 = sorted[Math.min(sorted.length - 1, Math.floor(0.98 * sorted.length))];
+        const min = Math.floor(q02 * 2) / 2;
+        const max = Math.ceil(q98 * 2) / 2;
+        return {
+          min,
+          max: Math.max(max, min + 2),
+          dataMin,
+          dataMax,
+          scaleCapped: min > dataMin || max < dataMax,
+        };
+      }
+      return colorScaleRange(features);
     }
 
     updateScaleCapDefaultForView();
@@ -6601,6 +6816,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       else params.delete('ranking');
       if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
       else params.delete('rankingMode');
+      if (currentMapMetric !== 'bikeShare') {
+        params.set('metrik', currentMapMetric);
+      } else {
+        params.delete('metrik');
+      }
       if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
         params.set('colors', colorScaleSelect.value);
       } else {
@@ -7082,7 +7302,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         rankingMode = 'topflop';
         syncRankingModeButtons();
       }
-      lastRankingViewAvailable = true;
+      const metrik = params.get('metrik');
+      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent'].includes(metrik)) {
+        currentMapMetric = metrik;
+        if (mapMetricSelect) mapMetricSelect.value = metrik;
+      } else if (live && currentMapMetric !== 'bikeShare') {
+        currentMapMetric = 'bikeShare';
+        if (mapMetricSelect) mapMetricSelect.value = 'bikeShare';
+      }
 
       const colors = params.get('colors');
       let scaleFromUrl = null;
@@ -7305,30 +7532,121 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return CONFIG.colorScales.find((s) => s.id === id) || CONFIG.colorScales[0];
     }
 
-    function fillColorExpression(minPct, maxPct, scaleId) {
+    function fillColorExpression(minVal, maxVal, scaleId, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
       const scale = colorScaleById(scaleId);
-      if (maxPct <= minPct) return scale.mid;
-      const mid = (minPct + maxPct) / 2;
+      const isColorblind = scaleId === 'colorblind';
+
+      if (metric === 'modelGap') {
+        const lowColor = isColorblind ? '#e69f00' : '#c62828';
+        const midColor = '#f5f5f5';
+        const highColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'modelGapPct'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'modelGapPct'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            0,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
+      if (metric === 'cars') {
+        const lowColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const midColor = isColorblind ? '#f0e442' : '#fff59d';
+        const highColor = isColorblind ? '#e69f00' : '#c62828';
+        const midVal = (minVal + maxVal) / 2;
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'carsPer1000'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'carsPer1000'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            midVal,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
+      if (metric === 'rent') {
+        const lowColor = isColorblind ? '#e69f00' : '#e8f5e9';
+        const midColor = isColorblind ? '#f0e442' : '#ffb74d';
+        const highColor = isColorblind ? '#3274a1' : '#c62828';
+        const midVal = (minVal + maxVal) / 2;
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'rentColdM2'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'rentColdM2'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            midVal,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
+      if (maxVal <= minVal) return scale.mid;
+      const mid = (minVal + maxVal) / 2;
       const pct = ['coalesce', ['get', 'bikeSharePct'], 0];
-      const clamped = ['max', minPct, ['min', maxPct, pct]];
+      const clamped = ['max', minVal, ['min', maxVal, pct]];
       return [
         'interpolate',
         ['linear'],
         clamped,
-        minPct,
+        minVal,
         scale.low,
         mid,
         scale.mid,
-        maxPct,
+        maxVal,
         scale.high,
       ];
     }
 
-    function updateLegendBar(scaleId) {
+    function updateLegendBar(scaleId, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
       const scale = colorScaleById(scaleId);
-      legendBar.style.background = scale.legendGradient;
+      const isColorblind = scaleId === 'colorblind';
+      let gradient = scale.legendGradient;
+      if (metric === 'modelGap') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #e69f00, #f5f5f5, #3274a1)'
+          : 'linear-gradient(to right, #c62828, #f5f5f5, #2e7d32)';
+      } else if (metric === 'cars') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'
+          : 'linear-gradient(to right, #2e7d32, #fff59d, #c62828)';
+      } else if (metric === 'rent') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #e69f00, #f0e442, #3274a1)'
+          : 'linear-gradient(to right, #e8f5e9, #ffb74d, #c62828)';
+      }
+      legendBar.style.background = gradient;
       const cmlBar = document.getElementById('cml-bar');
       if (cmlBar) cmlBar.style.background = scale.legendGradient;
+      if (cmlBar && gradient !== scale.legendGradient) cmlBar.style.background = gradient;
     }
 
     function updateColorScaleHint() {
@@ -7341,12 +7659,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
 
-    function updateRegionColors(minPct, maxPct) {
+    function updateRegionColors(minVal, maxVal) {
       if (!map.getLayer('regions-fill')) return;
       map.setPaintProperty(
         'regions-fill',
         'fill-color',
-        fillColorExpression(minPct, maxPct, colorScaleSelect.value),
+        fillColorExpression(minVal, maxVal, colorScaleSelect.value, currentMapMetric),
       );
     }
 
@@ -7474,6 +7792,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         setLoadStatus('');
       }
+      if (currentMapMetric !== 'bikeShare') {
+        if (!regionExtraIndexesPromise) {
+          await ensureRegionExtraIndexes();
+        } else {
+          await regionExtraIndexesPromise;
+        }
+      }
       const viewFeatures = filteredFeaturesForCurrentView();
       try {
         await ensureGemeindeGeometry(viewFeatures);
@@ -7483,14 +7808,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       // Enrich only now: an enriched copy takes the geometry it finds.
       const filtered = viewFeatures.map(enrichFeature);
-      const range = colorScaleRange(filtered);
-      const { min, max } = range;
-      updateLegendRange(min, max);
+      const bikeRange = colorScaleRange(filtered);
+      lastBikeShareRange = bikeRange;
+      const activeRange = colorScaleRangeForMetric(currentMapMetric, filtered);
+      const { min, max } = activeRange;
+      updateLegendRange(min, max, currentMapMetric);
       lastRankingFeatures = filtered;
       updateRankingVisibility();
       updateScaleCapHint();
-      updateRanking(filtered, min, max);
-      updateViewMetaText(filtered, range);
+      updateRanking(filtered, bikeRange.min, bikeRange.max);
+      updateViewMetaText(filtered, activeRange);
       updatePanelSummaryPreview();
       const exitNeighborBtn = document.getElementById('exit-neighbor-view');
       if (exitNeighborBtn) {
@@ -7583,15 +7910,28 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       basemapFellBack = false;
       setBasemap(basemapSelect.value);
     });
+    mapMetricSelect?.addEventListener('change', async () => {
+      const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
+      currentMapMetric = mapMetricSelect.value;
+      if (currentMapMetric !== 'bikeShare') {
+        setLoadStatus('Lade Modelldaten …');
+        await ensureRegionExtraIndexes();
+        setLoadStatus('');
+      }
+      await applyCurrentView();
+      if (panelMain) {
+        panelMain.scrollTop = prevScrollTop;
+      }
+    });
     colorScaleSelect?.addEventListener('change', () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
-      updateLegendBar(colorScaleSelect.value);
+      updateLegendBar(colorScaleSelect.value, currentMapMetric);
       updateColorScaleHint();
       syncOverlayColorInputsFromScale(colorScaleSelect.value);
       applyOverlayLineColors();
       updateRegionColors(lastPctRange.min, lastPctRange.max);
       if (lastRankingFeatures.length) {
-        updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
+        updateRanking(lastRankingFeatures, lastBikeShareRange.min, lastBikeShareRange.max);
       }
       if (panelMain) {
         panelMain.scrollTop = prevScrollTop;

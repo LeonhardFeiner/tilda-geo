@@ -362,7 +362,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
   const deltaTransit = stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
 
   const deltaRent = rent != null ? c.betas.rent * (rent - c.means.rent) : 0
-  const deltaCars = carsPer1000 != null ? c.betas.carsPer1000 * (carsPer1000 - c.means.carsPer1000) : 0
+  const deltaCars =
+    carsPer1000 != null ? c.betas.carsPer1000 * (carsPer1000 - c.means.carsPer1000) : 0
   const deltaLiving =
     livingSharePct != null ? c.betas.livingSharePct * (livingSharePct - c.means.livingSharePct) : 0
 

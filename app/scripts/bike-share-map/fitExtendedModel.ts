@@ -220,7 +220,6 @@ console.log(`\nModel R^2: ${(r2 * 100).toFixed(2)} %`)
 
 // Partial R^2 decomposition (variance explained by groups)
 
-
 console.log('\nConfig output for rankingDisplay.ts:')
 console.log(
   JSON.stringify(
