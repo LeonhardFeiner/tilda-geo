@@ -233,32 +233,54 @@ describe('computeStructuralModelPrediction', () => {
   test('returns baseline expectation when predictors are at national means', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 8.91,
-      roadSlope: 4.14,
-      elevMean: 277.3,
-      density: 104.7, // 10^2.02 ≈ 104.7
-      stDistKm: 4.79,
+      bikeKm: 8.67,
+      roadSlope: 4.15,
+      elevMean: 276.74,
+      density: 102.3, // 10^2.01 ≈ 102.3
+      stDistKm: 4.92,
+      rent: 5.77,
+      carsPer1000: 687.49,
+      livingSharePct: 1.48,
     })
     expect(res).not.toBeNull()
-    expect(res!.expectedPct).toBeCloseTo(8.91, 1)
-    expect(res!.expectedKm).toBeCloseTo(8.91, 1)
+    expect(res!.expectedPct).toBeCloseTo(8.67, 1)
+    expect(res!.expectedKm).toBeCloseTo(8.67, 1)
     expect(res!.diffPct).toBeCloseTo(0, 1)
     expect(res!.diffKm).toBeCloseTo(0, 1)
     expect(res!.behind).toBe(false)
+  })
+
+  test('high rent and living streets increase expected bike share', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 15.0,
+      roadSlope: 4.15,
+      elevMean: 276.74,
+      density: 102.3,
+      stDistKm: 4.92,
+      rent: 9.77, // +4 €/m² over mean
+      carsPer1000: 500, // lower motorization
+      livingSharePct: 5.0, // higher traffic calming
+    })
+    expect(res).not.toBeNull()
+    expect(res!.deltaRent).toBeGreaterThan(5.0)
+    expect(res!.deltaCars).toBeGreaterThan(0)
+    expect(res!.deltaLiving).toBeGreaterThan(1.0)
+    expect(res!.expectedPct).toBeGreaterThan(15.0)
   })
 
   test('steep mountain terrain reduces expected bike share', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 3.0,
-      roadSlope: 8.0, // steeper than 4.14%
-      elevMean: 700, // higher than 277.3m
+      roadSlope: 8.0, // steeper than 4.15%
+      elevMean: 700, // higher than 276.7m
       density: 100,
       stDistKm: 5.0,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
-    expect(res!.expectedPct).toBeLessThan(8.91)
+    expect(res!.expectedPct).toBeLessThan(8.67)
     expect(res!.actualPct).toBe(3.0)
   })
 
@@ -266,15 +288,17 @@ describe('computeStructuralModelPrediction', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 500,
       bikeKm: 120,
-      roadSlope: 1.5, // much flatter than 4.14%
-      elevMean: 40, // lower than 277.3m
-      density: 3000, // much denser than 104
+      roadSlope: 1.5, // much flatter than 4.15%
+      elevMean: 40, // lower than 276.7m
+      density: 3000, // much denser than 102
       stDistKm: 1.0, // very close to station
+      rent: 9.0, // higher rent typical for dense city
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
     expect(res!.deltaDens).toBeGreaterThan(0)
     expect(res!.deltaTransit).toBeGreaterThan(0)
+    expect(res!.deltaRent).toBeGreaterThan(0)
     expect(res!.expectedPct).toBeGreaterThan(15.0)
     expect(res!.expectedKm).toBe((res!.expectedPct / 100) * 500)
     expect(res!.diffKm).toBe(120 - res!.expectedKm)

@@ -360,9 +360,10 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('function renderRegionModelGap')
     expect(html).toContain('RankingDisplay.computeStructuralModelPrediction')
     expect(html).toContain('model-breakdown-details')
-    expect(html).toContain('Faktoren-Zerlegung (Topografie, Dichte, ÖPNV)')
+    expect(html).toContain('Faktoren-Zerlegung (Topografie, Wohlstand, Beruhigung, Dichte)')
+    expect(html).toContain('Mietniveau & Wohlstand')
     expect(html).toContain('Struktureller Erwartungswert')
-    expect(html).toContain('~22 % der bundesweiten Unterschiede')
+    expect(html).toContain('~28 % der bundesweiten Unterschiede')
   })
 
   test('includes Zensus 2022 rent, youth and vacancy metrics in context and CSV columns', () => {

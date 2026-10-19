@@ -290,35 +290,66 @@ export type StructuralModelParams = {
   elevMean: number | null
   density: number | null
   stDistKm: number | null
+  rent?: number | null
+  carsPer1000?: number | null
+  livingSharePct?: number | null
 }
 
 export const STRUCTURAL_MODEL_CONFIG = {
-  baselinePct: 8.91,
+  baselinePct: 8.67,
   means: {
-    roadSlope: 4.14,
-    elevMean: 277.3,
-    logDens: 2.02,
-    stDist: 4.79,
+    roadSlope: 4.15,
+    elevMean: 276.74,
+    logDens: 2.01,
+    stDist: 4.92,
+    rent: 5.77,
+    carsPer1000: 687.49,
+    livingSharePct: 1.48,
   },
   betas: {
-    roadSlope: -0.61,
-    elevMean: -0.0111,
-    logDens: 4.118,
-    stDist: -0.127,
+    roadSlope: -0.4058,
+    elevMean: -0.0126,
+    logDens: 0.7883,
+    stDist: -0.0443,
+    rent: 1.6068,
+    carsPer1000: -0.0014,
+    livingSharePct: 0.3589,
   },
   r2: {
-    totalPct: 22.3,
-    topographyPct: 17.6,
-    densityPct: 4.5,
-    transitPct: 0.2,
-    unexplainedPct: 77.7,
+    totalPct: 27.5,
+    topographyPct: 17.0,
+    rentPct: 8.2,
+    trafficCalmingPct: 2.0,
+    densityPct: 0.2,
+    transitPct: 0.1,
+    unexplainedPct: 72.5,
   },
 } as const
 
 export function computeStructuralModelPrediction(params: StructuralModelParams) {
-  const { roadKm, bikeKm, roadSlope, elevMean, density, stDistKm } = params
+  const {
+    roadKm,
+    bikeKm,
+    roadSlope,
+    elevMean,
+    density,
+    stDistKm,
+    rent = null,
+    carsPer1000 = null,
+    livingSharePct = null,
+  } = params
   if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
-  if (roadSlope == null && elevMean == null && density == null && stDistKm == null) return null
+  if (
+    roadSlope == null &&
+    elevMean == null &&
+    density == null &&
+    stDistKm == null &&
+    rent == null &&
+    carsPer1000 == null &&
+    livingSharePct == null
+  ) {
+    return null
+  }
 
   const c = STRUCTURAL_MODEL_CONFIG
   const deltaSlope = roadSlope != null ? c.betas.roadSlope * (roadSlope - c.means.roadSlope) : 0
@@ -330,9 +361,17 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
 
   const deltaTransit = stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
 
+  const deltaRent = rent != null ? c.betas.rent * (rent - c.means.rent) : 0
+  const deltaCars = carsPer1000 != null ? c.betas.carsPer1000 * (carsPer1000 - c.means.carsPer1000) : 0
+  const deltaLiving =
+    livingSharePct != null ? c.betas.livingSharePct * (livingSharePct - c.means.livingSharePct) : 0
+
   const expectedPct = Math.max(
     0,
-    Math.min(100, c.baselinePct + deltaTopo + deltaDens + deltaTransit),
+    Math.min(
+      100,
+      c.baselinePct + deltaTopo + deltaDens + deltaTransit + deltaRent + deltaCars + deltaLiving,
+    ),
   )
   const expectedKm = (expectedPct / 100) * roadKm
   const actualPct = (bikeKm / roadKm) * 100
@@ -346,6 +385,9 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     deltaTopo,
     deltaDens,
     deltaTransit,
+    deltaRent: rent != null ? deltaRent : null,
+    deltaCars: carsPer1000 != null ? deltaCars : null,
+    deltaLiving: livingSharePct != null ? deltaLiving : null,
     expectedPct,
     expectedKm,
     actualPct,
@@ -359,6 +401,9 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
       elevMean,
       density,
       stDistKm,
+      rent,
+      carsPer1000,
+      livingSharePct,
     },
     r2: c.r2,
   }

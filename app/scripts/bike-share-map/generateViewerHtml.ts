@@ -4200,6 +4200,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           ? transitIndex.byId[p.id].avgDistanceToStationM / 1000
           : null;
 
+      const rent = zensusIndex?.byId[p.id]?.rentPerM2;
+      const carsPer1000 = carsIndex?.byId[p.id]?.carsPer1000;
+      const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
+
       const m = RankingDisplay.computeStructuralModelPrediction({
         roadKm,
         bikeKm,
@@ -4207,6 +4211,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         elevMean: typeof elev === 'number' ? elev : null,
         density: typeof dens === 'number' ? dens : null,
         stDistKm: typeof stDist === 'number' ? stDist : null,
+        rent: typeof rent === 'number' ? rent : null,
+        carsPer1000: typeof carsPer1000 === 'number' ? carsPer1000 : null,
+        livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
       });
 
       if (!m) {
@@ -4263,7 +4270,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       details.className = 'model-breakdown-details';
       const summary = document.createElement('summary');
       summary.className = 'model-breakdown-summary';
-      summary.textContent = 'Faktoren-Zerlegung (Topografie, Dichte, ÖPNV)';
+      summary.textContent = 'Faktoren-Zerlegung (Topografie, Wohlstand, Beruhigung, Dichte)';
       details.appendChild(summary);
 
       const table = document.createElement('table');
@@ -4292,7 +4299,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         tbody.appendChild(tr);
       };
 
-      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete', m.baselinePct, '8,9 %');
+      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete', m.baselinePct, formatUiPct(m.baselinePct) + ' %');
 
       const topoNotes = [];
       if (m.inputs.roadSlope != null) topoNotes.push('Ø ' + deNumber(m.inputs.roadSlope, 1) + ' % Steigung');
@@ -4303,6 +4310,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         m.deltaTopo,
         m.deltaTopo <= -0.05 ? 'bremsend' : m.deltaTopo >= 0.05 ? 'begünstigend' : 'neutral',
       );
+
+      if (m.deltaRent != null) {
+        addRow(
+          'Mietniveau & Wohlstand',
+          m.inputs.rent != null ? deNumber(m.inputs.rent, 2) + ' €/m² Kaltmiete' : null,
+          m.deltaRent,
+          m.deltaRent >= 0.05 ? 'gehobenes Niveau' : m.deltaRent <= -0.05 ? 'niedrigeres Niveau' : 'neutral',
+        );
+      }
+
+      if (m.deltaLiving != null) {
+        addRow(
+          'Verkehrsberuhigung & Spielstraßen',
+          m.inputs.livingSharePct != null ? deNumber(m.inputs.livingSharePct, 1) + ' % des Netzes' : null,
+          m.deltaLiving,
+          m.deltaLiving >= 0.05 ? 'hohe Beruhigung' : m.deltaLiving <= -0.05 ? 'wenig Beruhigung' : 'neutral',
+        );
+      }
 
       addRow(
         'Siedlungsdichte',
@@ -4318,9 +4343,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         m.deltaTransit >= 0.05 ? 'gute Anbindung' : m.deltaTransit <= -0.05 ? 'weite Wege' : 'neutral',
       );
 
+      if (m.deltaCars != null) {
+        addRow(
+          'Motorisierungsgrad',
+          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' PKW / 1k Einw.' : null,
+          m.deltaCars,
+          m.deltaCars >= 0.05 ? 'wenig PKW' : m.deltaCars <= -0.05 ? 'viele PKW' : 'neutral',
+        );
+      }
+
       addRow(
         'Struktureller Erwartungswert',
-        'Aus Topografie, Dichte & ÖPNV errechnet',
+        'Aus Topografie, Wohlstand, Beruhigung & Dichte',
         formatUiPct(m.expectedPct) + ' %',
         'ca. ' + deNumber(Math.round(m.expectedKm), 0) + ' km',
         'model-row-total',
@@ -4348,8 +4382,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const note = document.createElement('p');
       note.className = 'model-breakdown-note';
       note.textContent =
-        'Geografie und Dichte erklären ~22 % der bundesweiten Unterschiede (Topografie 18 %, Dichte 4 %). ' +
-        'Über 77 % beruhen auf kommunaler Schwerpunktsetzung.';
+        'Strukturmerkmale (Topografie, Miete/Wohlstand, Verkehrsberuhigung, Dichte) erklären ~28 % der bundesweiten Unterschiede (Topografie 17 %, Miete 8 %, Beruhigung 2 %). ' +
+        'Über 72 % beruhen auf kommunaler Schwerpunktsetzung.';
       details.appendChild(note);
 
       regionDetailModelGap.appendChild(details);
