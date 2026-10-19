@@ -326,14 +326,14 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
   const deltaTopo = deltaSlope + deltaElev
 
   const deltaDens =
-    density != null
-      ? c.betas.logDens * (Math.log10(Math.max(1, density)) - c.means.logDens)
-      : 0
+    density != null ? c.betas.logDens * (Math.log10(Math.max(1, density)) - c.means.logDens) : 0
 
-  const deltaTransit =
-    stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
+  const deltaTransit = stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
 
-  const expectedPct = Math.max(0, Math.min(100, c.baselinePct + deltaTopo + deltaDens + deltaTransit))
+  const expectedPct = Math.max(
+    0,
+    Math.min(100, c.baselinePct + deltaTopo + deltaDens + deltaTransit),
+  )
   const expectedKm = (expectedPct / 100) * roadKm
   const actualPct = (bikeKm / roadKm) * 100
   const diffPct = actualPct - expectedPct

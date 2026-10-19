@@ -252,7 +252,7 @@ describe('computeStructuralModelPrediction', () => {
       roadKm: 100,
       bikeKm: 3.0,
       roadSlope: 8.0, // steeper than 4.14%
-      elevMean: 700,  // higher than 277.3m
+      elevMean: 700, // higher than 277.3m
       density: 100,
       stDistKm: 5.0,
     })
@@ -267,9 +267,9 @@ describe('computeStructuralModelPrediction', () => {
       roadKm: 500,
       bikeKm: 120,
       roadSlope: 1.5, // much flatter than 4.14%
-      elevMean: 40,   // lower than 277.3m
-      density: 3000,  // much denser than 104
-      stDistKm: 1.0,  // very close to station
+      elevMean: 40, // lower than 277.3m
+      density: 3000, // much denser than 104
+      stDistKm: 1.0, // very close to station
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
