@@ -343,6 +343,16 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('✓ Geteilt!')
     expect(html).toContain('✓ Link kopiert!')
   })
+
+  test('supports demographic peer comparison, role models and context scopes for Landkreise', () => {
+    expect(html).toContain("(level !== '8' && level !== '6')")
+    expect(html).toContain('ROLE_MODEL_MAX_KM_LANDKREIS = 180')
+    expect(html).toContain('unter Landkreisen und kreisfreien Städten mit ähnlichem Profil')
+    expect(html).toContain("label: (isCounty ? 'Ähnliche Kreise (' : 'Ähnliche Gemeinden (')")
+    expect(html).toContain(
+      "'6': { nom: 'Landkreise und kreisfreie Städte', gen: 'Landkreise und kreisfreien Städte' }",
+    )
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

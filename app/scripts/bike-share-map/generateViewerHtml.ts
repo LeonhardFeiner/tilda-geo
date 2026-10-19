@@ -3708,7 +3708,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
         // One small scatter per context metric, same comparison group as the card.
         const level = String(p.level ?? '');
-        const scopes = contextScopesFor(p, CONTEXT_REFERENCE_NOUN[level] || 'Gebieten');
+        const scopes = contextScopesFor(p, CONTEXT_REFERENCE_NOUN[level] || { nom: 'Gebiete', gen: 'Gebiete' });
         const plotScope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
         const plots = el('div', 'ps-plots');
         for (const metric of contextMetrics()) {
@@ -3957,7 +3957,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * MIN_BENCHMARK_REGIONS members.
      */
     function demographicPeerSummary(p) {
-      if (!peerGroupIndex || String(p.level) !== '8') return null;
+      const level = String(p.level ?? '');
+      if (!peerGroupIndex || (level !== '8' && level !== '6')) return null;
       if (!(p.roadSumKm > 0) || typeof p.bikeSharePct !== 'number') return null;
       const key = peerGroupIndex.byId[p.id];
       if (!key) return null;
@@ -3973,7 +3974,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const rank = ranked.findIndex((q) => q.id === p.id) + 1;
       if (!rank) return null;
       return {
-        groupLabel: peerGroupIndex.groups[key] || 'vergleichbare Gemeinden',
+        groupLabel:
+          peerGroupIndex.groups[key] ||
+          (level === '6' ? 'vergleichbare Kreise' : 'vergleichbare Gemeinden'),
         rank,
         total: ranked.length,
         medianPct: bench.medianPct,
@@ -4000,6 +4003,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const ROLE_MODEL_MIN_LEAD_PCT = 2;
     /** Beyond this, "in der Nähe" stops being true and the comparison loses its pull. */
     const ROLE_MODEL_MAX_KM = 60;
+    const ROLE_MODEL_MAX_KM_LANDKREIS = 180;
 
     /**
      * The closest Gemeinde of the same profile that does clearly better (at least the group
@@ -4007,6 +4011,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * harder to wave away than a rank among 800 places nobody knows.
      */
     function nearestRoleModel(p, peerFeatures, medianPct) {
+      const maxKm = String(p.level) === '6' ? ROLE_MODEL_MAX_KM_LANDKREIS : ROLE_MODEL_MAX_KM;
       const self = allFeatures.find((f) => f.properties?.id === p.id);
       const origin = self ? featureCenter(self) : null;
       if (!origin) return null;
@@ -4018,7 +4023,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const center = featureCenter(f);
         if (!center) continue;
         const km = turf.distance(origin, center, { units: 'kilometers' });
-        if (km > ROLE_MODEL_MAX_KM || (best && km >= best.km)) continue;
+        if (km > maxKm || (best && km >= best.km)) continue;
         // A lead that rests on unclear tagging is exactly what a critic would point at.
         const quality = TildaStats.assessBikeDataQuality(q.road_length, q.bikelane_length);
         if (quality && quality.level !== 'good') continue;
@@ -4047,9 +4052,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       headline.className = 'region-detail-gap-headline';
       headline.textContent = 'Platz ' + s.rank + ' von ' + s.total;
       regionDetailPeerGap.appendChild(headline);
+      const isCounty = String(p.level) === '6';
       regionDetailPeerGap.appendChild(
         document.createTextNode(
-          'unter Gemeinden mit ähnlichem Profil (' + s.groupLabel + ').',
+          (isCounty
+            ? 'unter Landkreisen und kreisfreien Städten mit ähnlichem Profil ('
+            : 'unter Gemeinden mit ähnlichem Profil (') +
+            s.groupLabel +
+            ').',
         ),
       );
       regionDetailPeerGap.appendChild(
@@ -4086,9 +4096,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const CONTEXT_MIN_REFERENCE = 8;
 
     const CONTEXT_REFERENCE_NOUN = {
-      '8': 'Gemeinden',
-      '6': 'Landkreisen und kreisfreien Städten',
-      '4': 'Bundesländern',
+      '8': { nom: 'Gemeinden', gen: 'Gemeinden' },
+      '6': { nom: 'Landkreise und kreisfreie Städte', gen: 'Landkreise und kreisfreien Städte' },
+      '4': { nom: 'Bundesländer', gen: 'Bundesländer' },
     };
 
     function deNumber(value, digits) {
@@ -4283,9 +4293,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function contextScopesFor(p, noun) {
       const nameOf = (id) => String(regionIndex?.byId.get(id)?.properties?.name ?? id);
+      const nomNoun = typeof noun === 'string' ? noun : noun.nom;
+      const genNoun = typeof noun === 'string' ? noun : (noun.gen || noun.dat || noun.nom);
       const inPlace = (place) => {
         const where = RankingDisplay.inPlacePhrase(place);
-        return { label: 'Alle ' + noun + ' ' + where, group: noun + ' ' + where };
+        return { label: 'Alle ' + nomNoun + ' ' + where, group: genNoun + ' ' + where };
       };
       const scopes = [{ type: 'country', ...inPlace('Deutschland') }];
       const level = String(p.level ?? '');
@@ -4295,14 +4307,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (level === '8' && p.landkreis_id) {
         scopes.push({ type: 'landkreis', id: String(p.landkreis_id), ...inPlace(nameOf(p.landkreis_id)) });
       }
-      const peerKey = level === '8' ? peerGroupIndex?.byId[p.id] : null;
+      const peerKey = (level === '8' || level === '6') ? peerGroupIndex?.byId[p.id] : null;
       if (peerKey) {
         const peerLabel = peerGroupIndex.groups[peerKey] || '';
+        const isCounty = level === '6';
         scopes.push({
           type: 'peers',
           id: peerKey,
-          label: 'Ähnliche Gemeinden (' + peerLabel + ')',
-          group: 'ähnlichen Gemeinden (' + peerLabel + ')',
+          label: (isCounty ? 'Ähnliche Kreise (' : 'Ähnliche Gemeinden (') + peerLabel + ')',
+          group: (isCounty ? 'ähnlichen Kreise (' : 'ähnlichen Gemeinden (') + peerLabel + ')',
         });
       }
       return scopes;
@@ -4325,7 +4338,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function renderRegionExtra(p) {
       ensureRegionExtraIndexes();
       const level = String(p.level ?? '');
-      const noun = CONTEXT_REFERENCE_NOUN[level] || 'Gebieten';
+      const noun = CONTEXT_REFERENCE_NOUN[level] || { nom: 'Gebiete', gen: 'Gebiete' };
       const scopes = contextScopesFor(p, noun);
       const scope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
       regionDetailExtra.replaceChildren();

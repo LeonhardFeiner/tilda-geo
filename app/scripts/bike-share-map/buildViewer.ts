@@ -27,7 +27,12 @@ import {
   VIEWER_SOURCE_REPO_URL,
 } from './constants'
 import { readDataDateLabel } from './dataDate'
-import { buildPeerGroupIndex, type PeerDemographics } from './demographicPeers'
+import {
+  buildPeerGroupIndex,
+  classifyLandkreisPeer,
+  LANDKREIS_PEER_LABELS,
+  type PeerDemographics,
+} from './demographicPeers'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { methodologyPageHtml } from './methodologyPage'
@@ -41,6 +46,8 @@ type StatsGeoFeature = {
     name?: string
     level?: string
     regionalschluessel?: string
+    landkreis_id?: string
+    bundesland_id?: string
     road_length?: unknown
     bikelane_length?: unknown
   }
@@ -148,13 +155,6 @@ let peerGemeindeCount = 0
 const demographicsPath = join(outputRoot, 'gemeinde-demographics.json')
 if (existsSync(demographicsPath) && geoFeatures.length) {
   try {
-    const rsById = new Map<string, string>()
-    for (const f of geoFeatures) {
-      const p = f.properties
-      if (p?.id && p.level === '8' && p.regionalschluessel) {
-        rsById.set(String(p.id), String(p.regionalschluessel))
-      }
-    }
     const demo = JSON.parse(await Bun.file(demographicsPath).text()) as {
       gemeinden?: Array<{
         rs: string
@@ -164,32 +164,128 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         areaKm2: number
       }>
     }
+    const demoByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g]))
     const demographicsByRs = new Map<string, PeerDemographics>(
       (demo.gemeinden ?? []).map((g) => [
         g.rs,
         { population: g.population, urbanizationCode: g.urbanizationCode },
       ]),
     )
+
+    const rsById = new Map<string, string>()
+    const areaById = new Map<string, number>()
+    const popById = new Map<string, number>()
+    const densityById: Record<string, number> = {}
+
+    // Group child Gemeinden by landkreis_id and bundesland_id
+    const gemsByLkId = new Map<string, typeof geoFeatures>()
+    const gemsByBlId = new Map<string, typeof geoFeatures>()
+    for (const f of geoFeatures) {
+      const p = f.properties
+      if (p?.id && String(p.level) === '8') {
+        const id = String(p.id)
+        if (p.regionalschluessel) {
+          const rs = String(p.regionalschluessel)
+          rsById.set(id, rs)
+          const d = demoByRs.get(rs)
+          if (d) {
+            areaById.set(id, d.areaKm2)
+            popById.set(id, d.population)
+            densityById[id] = d.densityPerKm2
+          }
+        }
+        if (p.landkreis_id) {
+          const lk = String(p.landkreis_id)
+          const arr = gemsByLkId.get(lk) ?? []
+          arr.push(f)
+          gemsByLkId.set(lk, arr)
+        }
+        if (p.bundesland_id) {
+          const bl = String(p.bundesland_id)
+          const arr = gemsByBlId.get(bl) ?? []
+          arr.push(f)
+          gemsByBlId.set(bl, arr)
+        }
+      }
+    }
+
     const index = buildPeerGroupIndex(rsById, demographicsByRs)
+
+    // Landkreise: populate population, area, density and peer classification
+    for (const f of geoFeatures) {
+      const p = f.properties
+      if (p?.id && String(p.level) === '6') {
+        const id = String(p.id)
+        const children = gemsByLkId.get(id) ?? []
+        let pop = 0
+        let area = 0
+        if (children.length > 0) {
+          for (const c of children) {
+            pop += popById.get(String(c.properties?.id)) ?? 0
+            area += areaById.get(String(c.properties?.id)) ?? 0
+          }
+        } else {
+          // Kreisfreie Stadt
+          const rs = String(p.regionalschluessel ?? '')
+          const item = demoByRs.get(rs) ?? demo.gemeinden?.find((g) => rs && g.rs.startsWith(rs))
+          if (item) {
+            pop = item.population
+            area = item.areaKm2
+          }
+        }
+        if (area > 0) {
+          areaById.set(id, area)
+          popById.set(id, pop)
+          densityById[id] = pop / area
+          const isKreisfrei = children.length <= 1
+          const lkPeerKey = classifyLandkreisPeer(pop, area, isKreisfrei)
+          index.byId[id] = lkPeerKey
+        }
+      }
+    }
+    for (const [k, lbl] of Object.entries(LANDKREIS_PEER_LABELS)) {
+      index.groups[k] = lbl
+    }
+
+    // Bundesländer: populate population, area, density
+    for (const f of geoFeatures) {
+      const p = f.properties
+      if (p?.id && String(p.level) === '4') {
+        const id = String(p.id)
+        const children = gemsByBlId.get(id) ?? []
+        let pop = 0
+        let area = 0
+        for (const c of children) {
+          pop += popById.get(String(c.properties?.id)) ?? 0
+          area += areaById.get(String(c.properties?.id)) ?? 0
+        }
+        if (pop === 0) {
+          // Stadtstaaten (Berlin, Hamburg, Bremen)
+          const rs = String(p.regionalschluessel ?? '')
+          for (const g of demo.gemeinden ?? []) {
+            if (rs && g.rs.startsWith(rs)) {
+              pop += g.population
+              area += g.areaKm2
+            }
+          }
+        }
+        if (area > 0) {
+          areaById.set(id, area)
+          popById.set(id, pop)
+          densityById[id] = pop / area
+        }
+      }
+    }
+
     peerGemeindeCount = Object.keys(index.byId).length
     writeFileSync(join(viewerDir, 'gemeinde-peers.json'), JSON.stringify(index))
     process.stdout.write(
-      `Peer groups: ${peerGemeindeCount} Gemeinden in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
+      `Peer groups: ${peerGemeindeCount} regions in ${Object.keys(index.groups).length} buckets → ${viewerDir}/gemeinde-peers.json\n`,
     )
 
-    // gemeinde-density.json: {id → Einwohner/km²}. Not part of the peer index above (that's
-    // deliberately numbers-free, see buildPeerGroupIndex) since this ships the raw figure for an
-    // experimental region-card line gated behind ?extra=1 — see extraFeaturesEnabled in
-    // viewerRegionNavScript.ts.
-    const densityByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.densityPerKm2]))
-    const densityById: Record<string, number> = {}
-    for (const [id, rs] of rsById) {
-      const density = densityByRs.get(rs)
-      if (typeof density === 'number') densityById[id] = density
-    }
     writeFileSync(join(viewerDir, 'gemeinde-density.json'), JSON.stringify({ byId: densityById }))
     process.stdout.write(
-      `Density: ${Object.keys(densityById).length} Gemeinden → ${viewerDir}/gemeinde-density.json\n`,
+      `Density: ${Object.keys(densityById).length} regions → ${viewerDir}/gemeinde-density.json\n`,
     )
 
     // gemeinde-transit.json: {id → {density?, avgDistanceToStationM?, access?}}, from
@@ -202,7 +298,6 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
     const accessPath = join(outputRoot, 'station-access.json')
     const highwayPath = join(outputRoot, 'highway-access.json')
     if (existsSync(transitCountsPath) || existsSync(accessPath) || existsSync(highwayPath)) {
-      const areaByRs = new Map((demo.gemeinden ?? []).map((g) => [g.rs, g.areaKm2]))
       const counts = existsSync(transitCountsPath)
         ? (JSON.parse(await Bun.file(transitCountsPath).text()) as {
             byId?: Record<string, { stopCount?: number; avgDistanceToStationM?: number }>
@@ -239,8 +334,7 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       for (const id of allIds) {
         const entry = counts.byId?.[id]
         const hwEntry = highwayById[id]
-        const rs = rsById.get(id)
-        const areaKm2 = rs ? areaByRs.get(rs) : undefined
+        const areaKm2 = areaById.get(id)
         const out: TransitEntry = accessById[id] ? { access: accessById[id] } : {}
         if (
           entry &&

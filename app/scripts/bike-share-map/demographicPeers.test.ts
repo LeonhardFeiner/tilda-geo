@@ -2,6 +2,7 @@ import { describe, expect, test } from 'vitest'
 import {
   buildDemographicPeerSummaries,
   buildPeerGroupIndex,
+  classifyLandkreisPeer,
   peerGroupKey,
   peerGroupLabel,
   populationBandIndex,
@@ -113,5 +114,21 @@ describe('buildPeerGroupIndex', () => {
     expect(index.groups['03:4']).toBe('ländlich geprägt, 5.000–10.000 Einwohner')
     expect(index.groups['01:8']).toBe('städtisch geprägt, über 100.000 Einwohner')
     expect(Object.keys(index.groups)).toHaveLength(2)
+  })
+})
+
+describe('classifyLandkreisPeer', () => {
+  test('classifies kreisfreie Großstädte and smaller kreisfreie Städte', () => {
+    expect(classifyLandkreisPeer(300_000, 150, true)).toBe('lk:grossstadt')
+    expect(classifyLandkreisPeer(45_000, 60, true)).toBe('lk:stadt')
+  })
+
+  test('classifies Landkreise by population density', () => {
+    // Dense county: e.g. 300,000 in 600 km² = 500 Einw/km²
+    expect(classifyLandkreisPeer(300_000, 600, false)).toBe('lk:staedtisch')
+    // Rural county: e.g. 130,000 in 760 km² = 171 Einw/km² (LK Pfaffenhofen)
+    expect(classifyLandkreisPeer(130_000, 760, false)).toBe('lk:laendlich')
+    // Sparsely populated county: e.g. 50,000 in 1,000 km² = 50 Einw/km²
+    expect(classifyLandkreisPeer(50_000, 1000, false)).toBe('lk:duenn')
   })
 })

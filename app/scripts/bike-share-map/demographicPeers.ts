@@ -39,6 +39,34 @@ export const URBANIZATION_LABELS: Record<UrbanizationCode, string> = {
 
 export type PeerDemographics = { population: number; urbanizationCode: UrbanizationCode }
 
+export type LandkreisPeerKey =
+  | 'lk:grossstadt'
+  | 'lk:stadt'
+  | 'lk:staedtisch'
+  | 'lk:laendlich'
+  | 'lk:duenn'
+
+export const LANDKREIS_PEER_LABELS: Record<LandkreisPeerKey, string> = {
+  'lk:grossstadt': 'Kreisfreie Großstädte (ab 100.000 Einw.)',
+  'lk:stadt': 'Kreisfreie Städte (unter 100.000 Einw.)',
+  'lk:staedtisch': 'Städtisch geprägte Landkreise (über 200 Einw./km²)',
+  'lk:laendlich': 'Ländliche Landkreise (100–200 Einw./km²)',
+  'lk:duenn': 'Dünn besiedelte ländliche Landkreise (unter 100 Einw./km²)',
+}
+
+export function classifyLandkreisPeer(
+  population: number,
+  areaKm2: number,
+  isKreisfrei: boolean,
+): LandkreisPeerKey {
+  const density = areaKm2 > 0 ? population / areaKm2 : 0
+  if (isKreisfrei && population >= 100_000) return 'lk:grossstadt'
+  if (isKreisfrei) return 'lk:stadt'
+  if (density >= 200) return 'lk:staedtisch'
+  if (density >= 100) return 'lk:laendlich'
+  return 'lk:duenn'
+}
+
 export function peerGroupKey(demo: PeerDemographics) {
   return `${demo.urbanizationCode}:${populationBandIndex(demo.population)}`
 }
