@@ -361,9 +361,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('function getActiveModelSettings')
     expect(html).toContain('RankingDisplay.computeStructuralModelPrediction')
     expect(html).toContain('model-breakdown-details')
-    expect(html).toContain(
-      'Faktoren-Zerlegung (Bundesland, Topografie, Miete, Beruhigung, Dichte)',
-    )
+    expect(html).toContain('Faktoren-Zerlegung (Bundesland, Topografie, Miete, Beruhigung, Dichte)')
     expect(html).toContain("'Mietniveau',")
     expect(html).toContain('Struktureller Erwartungswert')
     expect(html).toContain('Es beschreibt Zusammenhänge, keine Ursachen')
