@@ -2274,6 +2274,98 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     initCountClassFilters();
 
+    let lastActiveModelSettings = {
+      modelType: 'standard',
+      dynamicBaselines: null,
+      rse: 5.64,
+    };
+
+    function getActiveModelSettings() {
+      const isStdRoad =
+        !!lengthClassFilter.road.motorway_like &&
+        !!lengthClassFilter.road.primary_like &&
+        !!lengthClassFilter.road.secondary_like &&
+        !!lengthClassFilter.road.residential_like;
+      const isStdBike = CONFIG.bikelaneClassOptions.every(
+        (opt) =>
+          !!lengthClassFilter.bikelane[opt.id] === !!CONFIG.radinfraDefaultFilter.bikelane[opt.id],
+      );
+
+      const isPrimaryOnly =
+        !lengthClassFilter.road.motorway_like &&
+        !!lengthClassFilter.road.primary_like &&
+        !lengthClassFilter.road.secondary_like &&
+        !lengthClassFilter.road.residential_like &&
+        isStdBike;
+
+      if (isStdRoad && isStdBike) {
+        lastActiveModelSettings = { modelType: 'standard', dynamicBaselines: null, rse: 5.64 };
+        return lastActiveModelSettings;
+      }
+
+      if (isPrimaryOnly) {
+        lastActiveModelSettings = { modelType: 'primary', dynamicBaselines: null, rse: 22.44 };
+        return lastActiveModelSettings;
+      }
+
+      if (!allFeatures.length) {
+        return lastActiveModelSettings;
+      }
+
+      const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
+      let nationalPct = 10.59;
+      if (de?.properties) {
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
+          de.properties.road_length,
+          de.properties.bikelane_length,
+          lengthClassFilter,
+        );
+        if (roadKm > 0) nationalPct = (bikeKm / roadKm) * 100;
+      }
+
+      const landBaselines = {};
+      for (const f of allFeatures) {
+        const lvl = String(f.properties?.level ?? '');
+        const fid = String(f.properties?.id ?? '');
+        if (
+          lvl === '4' ||
+          fid === 'relation/62422' ||
+          fid === 'relation/62782' ||
+          fid === 'relation/62718'
+        ) {
+          const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
+            f.properties?.road_length,
+            f.properties?.bikelane_length,
+            lengthClassFilter,
+          );
+          if (roadKm > 0) landBaselines[fid] = (bikeKm / roadKm) * 100;
+        }
+      }
+
+      const chosenModelType =
+        !lengthClassFilter.road.residential_like &&
+        !lengthClassFilter.road.secondary_like &&
+        lengthClassFilter.road.primary_like
+          ? 'primary'
+          : 'standard';
+
+      const baseCfg =
+        RankingDisplay.STRUCTURAL_MODEL_CONFIGS?.[chosenModelType] ||
+        RankingDisplay.STRUCTURAL_MODEL_CONFIG;
+      const scaleFactor = Math.max(0.01, nationalPct / (baseCfg?.baselinePct || 10.59));
+      const scaledRse = Number(((baseCfg?.residualStdErrorPct || 5.64) * scaleFactor).toFixed(2));
+
+      lastActiveModelSettings = {
+        modelType: chosenModelType,
+        dynamicBaselines: {
+          nationalBaselinePct: nationalPct,
+          bundeslandBaselines: landBaselines,
+        },
+        rse: Math.max(0.5, scaledRse),
+      };
+      return lastActiveModelSettings;
+    }
+
     function enrichFeature(f) {
       const p = f.properties || {};
       const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(
@@ -2315,6 +2407,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             : null;
         const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
 
+        const ms = getActiveModelSettings();
         modelPrediction = RankingDisplay.computeStructuralModelPrediction({
           roadKm: road,
           bikeKm: bike,
@@ -2326,6 +2419,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           carsPer1000: typeof cars === 'number' ? cars : null,
           livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
           bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
+          modelType: ms.modelType,
+          dynamicBaselines: ms.dynamicBaselines,
         });
         if (modelPrediction) {
           modelGapPct = modelPrediction.diffPct;
@@ -2763,11 +2858,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (metricDef) {
         if (metric === 'modelGap') {
+          const rse = lastActiveModelSettings.rse || 5.64;
           metricDef.innerHTML =
             'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
             '<strong>Grün</strong> = über dem Erwartungswert, ' +
             '<strong>Rot</strong> = unter dem Erwartungswert. ' +
-            '<strong>Grau</strong> = im Rahmen der typischen Modellstreuung (±1 Standardfehler, ±5,6 %-Punkte).';
+            '<strong>Grau</strong> = im Rahmen der typischen Modellstreuung (±1 Standardfehler, ±' +
+            formatUiPct(rse) +
+            ' %-Punkte).';
         } else if (metric === 'cars') {
           metricDef.textContent =
             'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
@@ -3004,7 +3102,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const dataMax = sorted[sorted.length - 1];
         const absSorted = sorted.map((v) => Math.abs(v)).sort((a, b) => a - b);
         const p95 = absSorted[Math.min(absSorted.length - 1, Math.floor(0.95 * absSorted.length))];
-        const bound = Math.max(7, Math.ceil(p95));
+        const rse = lastActiveModelSettings.rse || 5.64;
+        const bound = Math.max(Math.ceil(rse * 1.2), Math.ceil(p95));
         return {
           min: -bound,
           max: bound,
@@ -3727,7 +3826,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       metric = metric || currentMapMetric || 'bikeShare';
       const isColorblind = scaleId === 'colorblind';
       if (metric === 'modelGap') {
-        const se = 5.64;
+        const se = lastActiveModelSettings.rse || 5.64;
         if (Math.abs(val) <= se) return '#e2e8f0';
         const low = isColorblind ? '#e69f00' : '#c62828';
         const mid = '#e2e8f0';
@@ -4815,6 +4914,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const carsPer1000 = carsIndex?.byId[p.id]?.carsPer1000;
       const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
 
+      const ms = getActiveModelSettings();
       const m = RankingDisplay.computeStructuralModelPrediction({
         roadKm,
         bikeKm,
@@ -4826,6 +4926,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         carsPer1000: typeof carsPer1000 === 'number' ? carsPer1000 : null,
         livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
         bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
+        modelType: ms.modelType,
+        dynamicBaselines: ms.dynamicBaselines,
       });
 
       if (!m) {
@@ -4848,10 +4950,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         formatUiPct(m.expectedPct) +
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
-        ' km) · R² = ' +
+        ' km) · ' +
+        m.modelName +
+        ' (R² = ' +
         formatUiPct(m.r2TotalPct) +
         ' %, n = ' +
-        deNumber(m.n, 0);
+        deNumber(m.n, 0) +
+        ')';
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -4869,7 +4974,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           ' km) · Im typischen Streubereich (' +
           sign +
           formatUiPct(m.diffPct) +
-          ' %-Punkte ggü. Erwartung; Streuband ±1 SE = ±5,6 %-Punkte).';
+          ' %-Punkte ggü. Erwartung; Streuband ±1 SE = ±' +
+          formatUiPct(m.residualStdErrorPct) +
+          ' %-Punkte).';
       } else if (m.behind) {
         statusText.textContent =
           'Tatsächlich ' +
@@ -5027,8 +5134,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const note = document.createElement('p');
       note.className = 'model-breakdown-note';
       note.textContent =
-        'Strukturmerkmale und Bundesland-Effekte erklären 53,7 % der bundesweiten Unterschiede (10-fache Kreuzvalidierung: 53,3 %, n = 10.396 Gemeinden). ' +
-        'Statistischer Vergleichswert, kein planerischer Zielwert.';
+        m.modelName +
+        ': Strukturmerkmale und Bundesland-Effekte erklären ' +
+        formatUiPct(m.r2TotalPct) +
+        ' % der Unterschiede (10-fache Kreuzvalidierung: ' +
+        formatUiPct(m.r2CvPct) +
+        ' %, n = ' +
+        deNumber(m.n, 0) +
+        ' Gemeinden). Statistischer Vergleichswert, kein planerischer Zielwert.';
       details.appendChild(note);
 
       regionDetailModelGap.appendChild(details);
@@ -8146,7 +8259,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const lowColor = isColorblind ? '#e69f00' : '#c62828';
         const midColor = '#e2e8f0';
         const highColor = isColorblind ? '#3274a1' : '#2e7d32';
-        const se = 5.64;
+        const se = lastActiveModelSettings.rse || 5.64;
         const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'modelGapPct'], 0]]];
         const loStop = Math.min(minVal, -se - 0.01);
         const hiStop = Math.max(maxVal, se + 0.01);
@@ -8290,9 +8403,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const isColorblind = scaleId === 'colorblind';
       let gradient = scale.legendGradient;
       if (metric === 'modelGap') {
+        const rse = lastActiveModelSettings.rse || 5.64;
+        const bound = Math.max(Math.abs(lastPctRange?.max || 10), rse + 0.1);
+        const greyFrac = Math.min(0.48, Math.max(0.1, rse / bound));
+        const loGrey = Math.round((0.5 - greyFrac / 2) * 100);
+        const hiGrey = Math.round((0.5 + greyFrac / 2) * 100);
         gradient = isColorblind
-          ? 'linear-gradient(to right, #e69f00 0%, #e2e8f0 32%, #e2e8f0 68%, #3274a1 100%)'
-          : 'linear-gradient(to right, #c62828 0%, #e2e8f0 32%, #e2e8f0 68%, #2e7d32 100%)';
+          ? 'linear-gradient(to right, #e69f00 0%, #e2e8f0 ' + loGrey + '%, #e2e8f0 ' + hiGrey + '%, #3274a1 100%)'
+          : 'linear-gradient(to right, #c62828 0%, #e2e8f0 ' + loGrey + '%, #e2e8f0 ' + hiGrey + '%, #2e7d32 100%)';
       } else if (metric === 'cars') {
         gradient = isColorblind
           ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'

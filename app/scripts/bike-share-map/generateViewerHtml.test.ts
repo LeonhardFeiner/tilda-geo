@@ -358,12 +358,15 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('id="region-detail-model-gap"')
     expect(html).toContain('region-detail-gap--model')
     expect(html).toContain('function renderRegionModelGap')
+    expect(html).toContain('function getActiveModelSettings')
     expect(html).toContain('RankingDisplay.computeStructuralModelPrediction')
     expect(html).toContain('model-breakdown-details')
-    expect(html).toContain('Faktoren-Zerlegung (Bundesland, Topografie, Wohlstand, Beruhigung, Dichte)')
+    expect(html).toContain(
+      'Faktoren-Zerlegung (Bundesland, Topografie, Wohlstand, Beruhigung, Dichte)',
+    )
     expect(html).toContain('Mietniveau & Wohlstand')
     expect(html).toContain('Struktureller Erwartungswert')
-    expect(html).toContain('53,7 % der bundesweiten Unterschiede')
+    expect(html).toContain('Strukturmerkmale und Bundesland-Effekte erklären')
   })
 
   test('includes Zensus 2022 rent, youth and vacancy metrics in context and CSV columns', () => {

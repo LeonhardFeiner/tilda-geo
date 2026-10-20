@@ -379,6 +379,79 @@ describe('computeStructuralModelPrediction', () => {
     expect(res!.diffKm).toBe(120 - res!.expectedKm)
   })
 
+  test('supports primary roads model configuration', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 35.68,
+      roadSlope: 3.81,
+      elevMean: 272.7,
+      density: 125.89, // 10^2.1 ≈ 125.89
+      stDistKm: 4.32,
+      rent: 5.86,
+      carsPer1000: 668.57,
+      livingSharePct: 1.89,
+      modelType: 'primary',
+    })
+    expect(res).not.toBeNull()
+    expect(res!.modelType).toBe('primary')
+    expect(res!.modelName).toBe('Hauptverkehrsstraßen')
+    expect(res!.expectedPct).toBeCloseTo(35.68, 1)
+    expect(res!.residualStdErrorPct).toBe(22.44)
+    expect(res!.r2TotalPct).toBe(59.7)
+    expect(res!.r2CvPct).toBe(59.4)
+    expect(res!.isWithin1Se).toBe(true)
+  })
+
+  test('dynamically scales baseline and SE for custom counting filters', () => {
+    // Custom filter shifts national average to 20%
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 20.0,
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
+      dynamicBaselines: {
+        nationalBaselinePct: 20.0,
+        bundeslandBaselines: {
+          'relation/62771': 25.0, // Niedersachsen higher under this filter
+        },
+      },
+    })
+    expect(res).not.toBeNull()
+    expect(res!.baselinePct).toBe(20.0)
+    expect(res!.expectedPct).toBeCloseTo(20.0, 1)
+    expect(res!.isWithin1Se).toBe(true)
+    // SE scales by 20.0 / 10.59 ≈ 1.888: 5.64 * 1.888 ≈ 10.65
+    expect(res!.residualStdErrorPct).toBeCloseTo(10.65, 0.5)
+
+    // With Bundesland ID
+    const resNds = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 25.0,
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
+      bundeslandId: 'relation/62771',
+      dynamicBaselines: {
+        nationalBaselinePct: 20.0,
+        bundeslandBaselines: {
+          'relation/62771': 25.0,
+        },
+      },
+    })
+    expect(resNds).not.toBeNull()
+    expect(resNds!.expectedPct).toBeCloseTo(25.0, 1)
+    expect(resNds!.deltaLand).toBeCloseTo(5.0, 1)
+  })
+
   test('returns null when roadKm <= 0 or all predictors are missing', () => {
     expect(
       computeStructuralModelPrediction({

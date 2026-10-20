@@ -283,6 +283,13 @@ export function inPlacePhrase(name: string) {
   return `in ${n}`
 }
 
+export type StructuralModelType = 'standard' | 'primary'
+
+export type StructuralModelDynamicBaselines = {
+  nationalBaselinePct: number
+  bundeslandBaselines?: Record<string, number>
+}
+
 export type StructuralModelParams = {
   roadKm: number
   bikeKm: number
@@ -294,55 +301,142 @@ export type StructuralModelParams = {
   carsPer1000?: number | null
   livingSharePct?: number | null
   bundeslandId?: string | null
+  modelType?: StructuralModelType
+  dynamicBaselines?: StructuralModelDynamicBaselines | null
 }
 
-export const STRUCTURAL_MODEL_CONFIG = {
-  baselinePct: 10.59,
-  residualStdErrorPct: 5.64,
-  n: 10396,
-  r2TotalPct: 53.7,
-  r2CvPct: 53.3,
+export type StructuralModelConfig = {
+  name: string
+  baselinePct: number
+  residualStdErrorPct: number
+  n: number
+  r2TotalPct: number
+  r2CvPct: number
   means: {
-    roadSlope: 3.67,
-    elevMean: 267.7,
-    logDens: 2.19,
-    stDist: 4.02,
-    rent: 6.04,
-    carsPer1000: 662.87,
-    livingSharePct: 2.21,
-  },
+    roadSlope: number
+    elevMean: number
+    logDens: number
+    stDist: number
+    rent: number
+    carsPer1000: number
+    livingSharePct: number
+  }
   betas: {
-    roadSlope: -0.386,
-    elevMean: -0.0018,
-    logDens: 4.3904,
-    stDist: -0.0143,
-    rent: 0.9342,
-    carsPer1000: -0.0038,
-    livingSharePct: 0.5545,
-  },
-  bundeslandBaselines: {
-    'relation/2145268': 8.91, // Bayern
-    'relation/28322': 14.31, // Mecklenburg-Vorpommern
-    'relation/51529': 15.83, // Schleswig-Holstein
-    'relation/62341': 6.39, // Rheinland-Pfalz
-    'relation/62366': 7.99, // Thüringen
-    'relation/62372': 8.45, // Saarland
-    'relation/62422': 28.09, // Berlin
-    'relation/62467': 8.74, // Sachsen
-    'relation/62504': 14.42, // Brandenburg
-    'relation/62607': 10.79, // Sachsen-Anhalt
-    'relation/62611': 7.3, // Baden-Württemberg
-    'relation/62650': 6.27, // Hessen
-    'relation/62718': 42.59, // Bremen
-    'relation/62761': 10.91, // Nordrhein-Westfalen
-    'relation/62771': 16.72, // Niedersachsen
-    'relation/62782': 35.01, // Hamburg
-  } as Record<string, number>,
+    roadSlope: number
+    elevMean: number
+    logDens: number
+    stDist: number
+    rent: number
+    carsPer1000: number
+    livingSharePct: number
+  }
+  bundeslandBaselines: Record<string, number>
   r2: {
-    totalPct: 53.7,
-    cvPct: 53.3,
+    totalPct: number
+    cvPct: number
+  }
+}
+
+export const STRUCTURAL_MODEL_CONFIGS: Record<StructuralModelType, StructuralModelConfig> = {
+  standard: {
+    name: 'Gesamtnetz (Standard)',
+    baselinePct: 10.59,
+    residualStdErrorPct: 5.64,
+    n: 10396,
+    r2TotalPct: 53.7,
+    r2CvPct: 53.3,
+    means: {
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      logDens: 2.19,
+      stDist: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
+    },
+    betas: {
+      roadSlope: -0.386,
+      elevMean: -0.0018,
+      logDens: 4.3904,
+      stDist: -0.0143,
+      rent: 0.9342,
+      carsPer1000: -0.0038,
+      livingSharePct: 0.5545,
+    },
+    bundeslandBaselines: {
+      'relation/2145268': 8.91, // Bayern
+      'relation/28322': 14.31, // Mecklenburg-Vorpommern
+      'relation/51529': 15.83, // Schleswig-Holstein
+      'relation/62341': 6.39, // Rheinland-Pfalz
+      'relation/62366': 7.99, // Thüringen
+      'relation/62372': 8.45, // Saarland
+      'relation/62422': 28.09, // Berlin
+      'relation/62467': 8.74, // Sachsen
+      'relation/62504': 14.42, // Brandenburg
+      'relation/62607': 10.79, // Sachsen-Anhalt
+      'relation/62611': 7.3, // Baden-Württemberg
+      'relation/62650': 6.27, // Hessen
+      'relation/62718': 42.59, // Bremen
+      'relation/62761': 10.91, // Nordrhein-Westfalen
+      'relation/62771': 16.72, // Niedersachsen
+      'relation/62782': 35.01, // Hamburg
+    },
+    r2: {
+      totalPct: 53.7,
+      cvPct: 53.3,
+    },
   },
-} as const
+  primary: {
+    name: 'Hauptverkehrsstraßen',
+    baselinePct: 35.68,
+    residualStdErrorPct: 22.44,
+    n: 10313,
+    r2TotalPct: 59.7,
+    r2CvPct: 59.4,
+    means: {
+      roadSlope: 3.81,
+      elevMean: 272.7,
+      logDens: 2.1,
+      stDist: 4.32,
+      rent: 5.86,
+      carsPer1000: 668.57,
+      livingSharePct: 1.89,
+    },
+    betas: {
+      roadSlope: -1.449,
+      elevMean: -0.0063,
+      logDens: 28.3106,
+      stDist: 0.212,
+      rent: 4.4755,
+      carsPer1000: -0.0178,
+      livingSharePct: 2.6906,
+    },
+    bundeslandBaselines: {
+      'relation/2145268': 31.78, // Bayern
+      'relation/28322': 49.34, // Mecklenburg-Vorpommern
+      'relation/51529': 55.65, // Schleswig-Holstein
+      'relation/62341': 19.55, // Rheinland-Pfalz
+      'relation/62366': 26.06, // Thüringen
+      'relation/62372': 24.58, // Saarland
+      'relation/62422': 100.0, // Berlin (clamped)
+      'relation/62467': 27.72, // Sachsen
+      'relation/62504': 50.29, // Brandenburg
+      'relation/62607': 32.35, // Sachsen-Anhalt
+      'relation/62611': 20.93, // Baden-Württemberg
+      'relation/62650': 18.35, // Hessen
+      'relation/62718': 100.0, // Bremen
+      'relation/62761': 40.33, // Nordrhein-Westfalen
+      'relation/62771': 61.33, // Niedersachsen
+      'relation/62782': 100.0, // Hamburg
+    },
+    r2: {
+      totalPct: 59.7,
+      cvPct: 59.4,
+    },
+  },
+}
+
+export const STRUCTURAL_MODEL_CONFIG = STRUCTURAL_MODEL_CONFIGS.standard
 
 export function computeStructuralModelPrediction(params: StructuralModelParams) {
   const {
@@ -356,6 +450,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     carsPer1000 = null,
     livingSharePct = null,
     bundeslandId = null,
+    modelType = 'standard',
+    dynamicBaselines = null,
   } = params
   if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
   if (
@@ -370,33 +466,58 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     return null
   }
 
-  const c = STRUCTURAL_MODEL_CONFIG
-  const landBaseline =
+  const c = STRUCTURAL_MODEL_CONFIGS[modelType] || STRUCTURAL_MODEL_CONFIGS.standard
+
+  let baselinePct = c.baselinePct
+  let landBaseline =
     bundeslandId && c.bundeslandBaselines[bundeslandId] != null
       ? c.bundeslandBaselines[bundeslandId]
-      : c.baselinePct
-  const deltaLand = landBaseline - c.baselinePct
+      : baselinePct
+  let scaleFactor = 1
 
-  const deltaSlope = roadSlope != null ? c.betas.roadSlope * (roadSlope - c.means.roadSlope) : 0
-  const deltaElev = elevMean != null ? c.betas.elevMean * (elevMean - c.means.elevMean) : 0
+  if (dynamicBaselines && dynamicBaselines.nationalBaselinePct > 0) {
+    scaleFactor = dynamicBaselines.nationalBaselinePct / c.baselinePct
+    baselinePct = dynamicBaselines.nationalBaselinePct
+    if (bundeslandId && dynamicBaselines.bundeslandBaselines?.[bundeslandId] != null) {
+      landBaseline = dynamicBaselines.bundeslandBaselines[bundeslandId]
+    } else if (bundeslandId && c.bundeslandBaselines[bundeslandId] != null) {
+      landBaseline = c.bundeslandBaselines[bundeslandId] * scaleFactor
+    } else {
+      landBaseline = baselinePct
+    }
+  }
+
+  const deltaLand = landBaseline - baselinePct
+
+  const deltaSlope =
+    roadSlope != null ? c.betas.roadSlope * scaleFactor * (roadSlope - c.means.roadSlope) : 0
+  const deltaElev =
+    elevMean != null ? c.betas.elevMean * scaleFactor * (elevMean - c.means.elevMean) : 0
   const deltaTopo = deltaSlope + deltaElev
 
   const deltaDens =
-    density != null ? c.betas.logDens * (Math.log10(Math.max(1, density)) - c.means.logDens) : 0
+    density != null
+      ? c.betas.logDens * scaleFactor * (Math.log10(Math.max(1, density)) - c.means.logDens)
+      : 0
 
-  const deltaTransit = stDistKm != null ? c.betas.stDist * (stDistKm - c.means.stDist) : 0
+  const deltaTransit =
+    stDistKm != null ? c.betas.stDist * scaleFactor * (stDistKm - c.means.stDist) : 0
 
-  const deltaRent = rent != null ? c.betas.rent * (rent - c.means.rent) : 0
+  const deltaRent = rent != null ? c.betas.rent * scaleFactor * (rent - c.means.rent) : 0
   const deltaCars =
-    carsPer1000 != null ? c.betas.carsPer1000 * (carsPer1000 - c.means.carsPer1000) : 0
+    carsPer1000 != null
+      ? c.betas.carsPer1000 * scaleFactor * (carsPer1000 - c.means.carsPer1000)
+      : 0
   const deltaLiving =
-    livingSharePct != null ? c.betas.livingSharePct * (livingSharePct - c.means.livingSharePct) : 0
+    livingSharePct != null
+      ? c.betas.livingSharePct * scaleFactor * (livingSharePct - c.means.livingSharePct)
+      : 0
 
   const expectedPct = Math.max(
     0,
     Math.min(
       100,
-      c.baselinePct +
+      baselinePct +
         deltaLand +
         deltaTopo +
         deltaDens +
@@ -410,10 +531,13 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
   const actualPct = (bikeKm / roadKm) * 100
   const diffPct = actualPct - expectedPct
   const diffKm = bikeKm - expectedKm
-  const isWithin1Se = Math.abs(diffPct) <= c.residualStdErrorPct
+  const residualStdErrorPct = c.residualStdErrorPct * scaleFactor
+  const isWithin1Se = Math.abs(diffPct) <= residualStdErrorPct
 
   return {
-    baselinePct: c.baselinePct,
+    modelType,
+    modelName: c.name,
+    baselinePct,
     landBaselinePct: landBaseline,
     deltaLand: bundeslandId ? deltaLand : null,
     deltaSlope: roadSlope != null ? deltaSlope : null,
@@ -433,7 +557,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     diffKm,
     behind: diffPct < -0.05,
     isWithin1Se,
-    residualStdErrorPct: c.residualStdErrorPct,
+    residualStdErrorPct,
     n: c.n,
     r2TotalPct: c.r2TotalPct,
     r2CvPct: c.r2CvPct,

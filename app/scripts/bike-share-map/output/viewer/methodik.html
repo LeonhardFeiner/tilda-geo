@@ -113,12 +113,12 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   bedeutet, dass vor Ort mehr Radinfrastruktur vorhanden ist, als sich durch Geografie, Dichte, Kaufkraft
   und Landesniveau statistisch erklären lässt.</p>
 
-  <p><strong>Modellgüte &amp; Stichprobe:</strong></p>
+  <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Stichprobe:</strong> <code>n = 10.396</code> Gemeinden mit einem Straßennetz ab 5&nbsp;km.</li>
-    <li><strong>Gewichtung:</strong> Kleinste Quadrate gewichtet nach Straßennetzlänge (<code>w_i = roadKm_i</code>, insgesamt 604.809&nbsp;km Straßennetz), damit kleine Wald- und Streusiedlungsgemeinden die Koeffizienten nicht verzerren.</li>
-    <li><strong>Erklärte Varianz:</strong> <strong>R² = 53,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 53,3&nbsp;%</strong> (bestätigt stabile Vorhersagekraft ohne Überanpassung).</li>
-    <li><strong>Modellunsicherheit:</strong> Residualstandardfehler <strong>SE = ±5,64&nbsp;%-Punkte</strong>. Liegt die Abweichung einer Gemeinde innerhalb dieses Streubands (±1 SE), wird sie auf der Karte neutral (grau) dargestellt. Nur statistisch deutliche Ausreißer jenseits von ±1 SE erhalten Farbe.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.396</code> Gemeinden mit einem Straßennetz ab 5&nbsp;km. Gewichtung nach Netzlänge (604.809&nbsp;km). <strong>R² = 53,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 53,3&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±5,64&nbsp;%-Punkte</strong>.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.313</code>, <strong>R² = 59,7&nbsp;%</strong>, <strong>R²_cv = 59,4&nbsp;%</strong>, Basiswert <strong>35,7&nbsp;%</strong>, <strong>SE = ±22,4&nbsp;%-Punkte</strong>). Hangneigung und städtische Dichte wirken hier noch stärker trennend als im Nebennetz.</li>
+    <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern.</li>
+    <li><strong>Modellunsicherheit:</strong> Liegt die Abweichung einer Gemeinde innerhalb des modelltypischen Streubands (±1 SE), wird sie auf der Karte neutral (grau) dargestellt. Nur statistisch deutliche Ausreißer jenseits von ±1 SE erhalten Farbe.</li>
   </ul>
 
   <table class="model-table">
