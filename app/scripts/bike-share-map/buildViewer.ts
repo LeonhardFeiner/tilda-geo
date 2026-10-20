@@ -497,6 +497,26 @@ if (existsSync(commutersPath)) {
   }
 }
 
+// gemeinde-mapping.json: {id → {roadKm, speedPct, surfacePct, litPct, indexPct}}, from
+// fetchMappingCompleteness.ts — how much of the road network carries surveyed attributes.
+const mappingPath = join(outputRoot, 'mapping-completeness.json')
+if (existsSync(mappingPath)) {
+  try {
+    const mappingData = JSON.parse(await Bun.file(mappingPath).text()) as {
+      byId?: Record<string, unknown>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-mapping.json'),
+      JSON.stringify({ byId: mappingData.byId ?? {} }),
+    )
+    process.stdout.write(
+      `OSM mapping completeness: ${Object.keys(mappingData.byId ?? {}).length} regions → ${viewerDir}/gemeinde-mapping.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-mapping.json skipped: ${err}\n`)
+  }
+}
+
 // daten/radinfra-regionen-<OSM date>.csv: every region's numbers under the default counting
 // filter, plus the context metrics and the model's expected value — the same functions the map
 // uses, so a downloaded value always matches the card. Reads the gemeinde-*.json written above.
@@ -520,6 +540,7 @@ if (geoFeatures.length) {
     calmed: readById('gemeinde-calmed.json'),
     accidents: readById('gemeinde-accidents.json'),
     commuters: readById('gemeinde-commuters.json'),
+    mapping: readById('gemeinde-mapping.json'),
   }
   const osmDataFrom = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom

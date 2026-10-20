@@ -36,6 +36,7 @@ export type DataDownloadContext = {
     bikeAccidentsPer10k?: number
   }>
   commuters?: ById<{ inCommuters?: number; outCommuters?: number; jobCentrality?: number }>
+  mapping?: ById<{ indexPct?: number; speedPct?: number; surfacePct?: number; litPct?: number }>
 }
 
 export type DataDownloadFeature = {
@@ -73,6 +74,12 @@ export const DATA_DOWNLOAD_COLUMNS = {
   radinfra_unklar_km: 'Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km',
   datenlage:
     'gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra',
+  kartierungstiefe_pct:
+    'Mittel der drei folgenden Anteile: wie vollständig das Straßennetz in OSM attributiert ist (ohne Zufahrts- / Service-Wege und Autobahnen), %',
+  kartiert_tempo_pct:
+    'Anteil der Straßenlänge mit erfasstem Tempolimit (maxspeed- oder Zonen-Tag), %',
+  kartiert_belag_pct: 'Anteil der Straßenlänge mit erfasstem Belag (surface), %',
+  kartiert_licht_pct: 'Anteil der Straßenlänge mit erfasster Beleuchtung (lit), %',
   unabhaengig_km: 'Radinfrastruktur abseits von Straßen (Wege durch Feld, Wald, Park), km',
   hauptstr_km: 'Hauptverkehrsstraßen (OSM trunk, primary, secondary, tertiary) in km',
   hauptstr_radinfra_pct: 'Anteil der Hauptverkehrsstraßen mit Radinfrastruktur, %',
@@ -146,6 +153,7 @@ export function buildDataDownloadRow(
   const calmed = ctx.calmed?.[id]
   const accidents = ctx.accidents?.[id]
   const commuters = ctx.commuters?.[id]
+  const mapping = ctx.mapping?.[id]
 
   // Same gate as the map (generateViewerHtml): no expected value below the ranking threshold.
   const model =
@@ -178,6 +186,10 @@ export function buildDataDownloadRow(
     radinfra_anteil_pct: roadKm > 0 ? round((bikeKm / roadKm) * 100, 2) : null,
     radinfra_unklar_km: quality && quality.level !== 'sparse' ? round(quality.unclearKm, 3) : null,
     datenlage: quality ? DATA_LEVEL_KEYS[quality.level] : null,
+    kartierungstiefe_pct: round(mapping?.indexPct, 1),
+    kartiert_tempo_pct: round(mapping?.speedPct, 1),
+    kartiert_belag_pct: round(mapping?.surfacePct, 1),
+    kartiert_licht_pct: round(mapping?.litPct, 1),
     unabhaengig_km: p.bikelane_length_by_road
       ? round(independentBikeKm(p.bikelane_length_by_road), 3)
       : null,

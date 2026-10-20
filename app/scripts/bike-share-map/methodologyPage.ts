@@ -224,6 +224,7 @@ ${li([
     <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.313</code>, <strong>R² = 59,7&nbsp;%</strong>, <strong>R²_cv = 59,4&nbsp;%</strong>, Basiswert <strong>35,7&nbsp;%</strong>, <strong>SE = ±22,4&nbsp;%-Punkte</strong>). Hangneigung und städtische Dichte wirken hier noch stärker trennend als im Nebennetz.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern.</li>
     <li><strong>Modellunsicherheit:</strong> Liegt die Abweichung einer Gemeinde innerhalb des modelltypischen Streubands (±1 SE), wird sie auf der Karte neutral (grau) dargestellt. Nur statistisch deutliche Ausreißer jenseits von ±1 SE erhalten Farbe.</li>
+    <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Einfluss der Miete um rund ein Viertel und der der Dichte um rund ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
   </ul>
 
   <table class="model-table">
@@ -242,12 +243,12 @@ ${li([
       </tr>
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
-        <td>Hangneigung des Straßennetzes in Grad (aus Copernicus DEM)</td>
-        <td class="num">−0,3860 / °</td>
+        <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
+        <td class="num">−0,3860 / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
-        <td>Höhe über Normalnull in Metern (Copernicus DEM)</td>
+        <td>Höhe über Normalnull in Metern (Mapzen/AWS Terrain Tiles)</td>
         <td class="num">−0,0018 / m</td>
       </tr>
       <tr>
@@ -281,7 +282,7 @@ ${li([
   <h2>Grenzen der Aussagekraft</h2>
   <div class="caveat">
   ${li([
-    `<strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein.`,
+    `<strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein. Als Hinweis zeigt die Detailkarte die <em>Kartierungstiefe</em>: den Anteil der Straßenlänge (ohne Zufahrts-/Service-Wege und Autobahnen), für den Tempolimit, Belag und Beleuchtung erfasst sind – Merkmale, die wie Radwege vor Ort erhoben werden, aber nichts darüber sagen, ob es einen Radweg gibt. Ist sie im Vergleich gering, kann auch Radinfrastruktur fehlen. Auf dem Land ist sie von Natur aus etwas niedriger (unbeleuchtete Landstraßen, Tempo 100 ohne Schild), daher am besten mit ähnlichen Gemeinden vergleichen.`,
     `<strong>Unklar getaggte Radwege:</strong> Manche Wege sind in OpenStreetMap als Radinfrastruktur erkennbar, aber so getaggt, dass sich nicht sagen lässt, um welche Art es sich handelt („Klärung nötig“). Sie zählen im Radinfra.de-Standard mit. Die Karte zeigt je Gebiet, wie groß dieser Anteil ist (Datenlage <em>gut</em> unter 15&nbsp;%, <em>mittel</em> bis 40&nbsp;%, <em>unsicher</em> darüber) und nennt bei <em>mittel</em> und <em>unsicher</em> den Anteil ohne diese Wege. Der wahre Wert liegt dann dazwischen.`,
     `<strong>Kaum Radinfrastruktur erfasst:</strong> Bei einem Straßennetz ab 20&nbsp;km mit weniger als 0,5&nbsp;km erfasster Radinfrastruktur lässt sich nicht unterscheiden, ob es keine gibt oder ob sie in OpenStreetMap fehlt. Solche Gebiete sind als „kaum erfasst“ markiert.`,
     `<strong>Kleines Straßennetz:</strong> Bei Gemeinden mit sehr wenig erfasstem Straßennetz ist der Prozentwert instabil (wenige Kilometer verschieben ihn stark). Gebiete mit weniger als 5&nbsp;km erfasster Straße bekommen deshalb keinen Rang und fließen weder in die Farbskala noch in Median und Spitzenwert der Vergleiche ein; auf der Karte und in der Detailkarte sind sie weiterhin zu sehen.`,

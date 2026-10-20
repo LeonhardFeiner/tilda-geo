@@ -75,6 +75,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     calmedUrl: './gemeinde-calmed.json',
     accidentsUrl: './gemeinde-accidents.json',
     commutersUrl: './gemeinde-commuters.json',
+    mappingUrl: './gemeinde-mapping.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1832,6 +1833,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let calmedIndex = null;
     let accidentsIndex = null;
     let commutersIndex = null;
+    let mappingIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1853,6 +1855,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
         load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
         load(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
+        load(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2625,6 +2628,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
+        { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
         { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
@@ -5203,6 +5207,33 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return typeof v === 'number' ? v : null;
       };
       return [
+        {
+          // First: it says how far the main number itself can be trusted. Surveyed street
+          // attributes (fetchMappingCompleteness.ts) — mapped like bike infrastructure, but
+          // independent of whether a street has any.
+          key: 'mappingDepth',
+          label: 'Kartierungstiefe (OSM)',
+          note: 'Straßen mit erfasstem Tempo, Belag, Licht',
+          source: mappingIndex,
+          get: (id) => {
+            const v = mappingIndex?.byId[id]?.indexPct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const m = mappingIndex?.byId[id];
+            if (!m) return deNumber(v, 0) + ' %';
+            return (
+              deNumber(v, 0) +
+              ' % (Tempo ' +
+              deNumber(m.speedPct, 0) +
+              ' %, Belag ' +
+              deNumber(m.surfacePct, 0) +
+              ' %, Licht ' +
+              deNumber(m.litPct, 0) +
+              ' %)'
+            );
+          },
+        },
         {
           key: 'density',
           label: 'Bevölkerungsdichte',

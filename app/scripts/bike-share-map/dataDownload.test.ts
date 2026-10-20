@@ -52,6 +52,18 @@ describe('buildDataDownloadRow', () => {
     expect([0, 1]).toContain(row?.modell_ausserhalb_1se)
   })
 
+  it('passes the mapping completeness through', () => {
+    const row = buildDataDownloadRow(gemeinde, {
+      mapping: { 'relation/1': { indexPct: 45.04, speedPct: 50, surfacePct: 75, litPct: 10 } },
+    })
+    expect(row).toMatchObject({
+      kartierungstiefe_pct: 45,
+      kartiert_tempo_pct: 50,
+      kartiert_belag_pct: 75,
+      kartiert_licht_pct: 10,
+    })
+  })
+
   it('leaves the model out below the ranking threshold', () => {
     const small = { properties: { ...gemeinde.properties, road_length: { residential: 3 } } }
     const row = buildDataDownloadRow(small, {

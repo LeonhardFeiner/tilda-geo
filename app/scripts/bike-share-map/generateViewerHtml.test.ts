@@ -397,6 +397,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
   })
 
+  test('includes the OSM mapping completeness in context and CSV columns', () => {
+    expect(html).toContain('"mappingUrl":"./gemeinde-mapping.json"')
+    expect(html).toContain("key: 'mappingDepth'")
+    expect(html).toContain("label: 'Kartierungstiefe (OSM)'")
+    expect(html).toContain("header: 'Kartierungstiefe OSM (%)'")
+  })
+
   test('includes thematic map metric selector with model gap, cars, rent, accidents, and commuters', () => {
     expect(html).toContain('id="map-metric-select"')
     expect(html).toContain('value="bikeShare"')
