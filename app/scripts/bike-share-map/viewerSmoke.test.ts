@@ -36,6 +36,40 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'clicking a street row highlights that street type, in both breakdowns',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      const rowsOf = (title: string) =>
+        page!
+          .qAll('#region-detail-body .region-detail-section')
+          .find((sec) => sec.querySelector('h4')?.textContent === title)
+          ?.querySelectorAll<HTMLElement>('li.region-detail-row-clickable') ?? []
+      const map = (window as unknown as { __map: { getLayer(id: string): unknown } }).__map
+
+      const [byClass] = rowsOf('Straßen nach Klasse')
+      expect(byClass).toBeDefined()
+      byClass!.click()
+      expect(byClass!.classList.contains('region-detail-row-active')).toBe(true)
+      expect(page.q<HTMLInputElement>('#toggle-roads').checked).toBe(true)
+      expect(map.getLayer('roads-highlight-lines')).toBeDefined()
+
+      const detailBtn = page
+        .qAll('#region-detail-body .detail-mode-btn')
+        .find((b) => b.textContent === 'Detailliert')!
+      detailBtn.click()
+      await page.waitFor(() => rowsOf('Straßen nach Typ').length > 0, 'the detailed street rows')
+      const [byTag] = rowsOf('Straßen nach Typ')
+      byTag!.click()
+      expect(byTag!.dataset.highlightKind).toBe('road-tag')
+      expect(byTag!.classList.contains('region-detail-row-active')).toBe(true)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'searching a Gemeinde selects it, opens its card and shows the whole area',
     async () => {
       page = await bootViewer()

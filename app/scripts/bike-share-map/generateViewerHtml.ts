@@ -4021,17 +4021,25 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return feature?.geometry ?? null;
     }
 
-    function overlayHighlightBikelaneFilter(kind, id) {
-      const categoryFilter = TildaStats.maplibrePropertyInFilter(
-        'category',
-        TildaStats.enabledBikelaneCategoryTags(lengthClassFilter),
-      );
-      const typeFilter =
-        kind === 'bikelane-class'
-          ? TildaStats.maplibreBikelaneOverlayFilterForClass(id)
-          : TildaStats.maplibreBikelaneOverlayFilterForTag(id);
+    const isRoadHighlightKind = (kind) => kind === 'road-class' || kind === 'road-tag';
+
+    /**
+     * Exactly the lines a clicked row stands for, inside the selected region. Not narrowed to
+     * the counting filter: a "nicht gewertet" row should still show where those lines are.
+     */
+    function overlayHighlightFilter(kind, id) {
+      let typeFilter;
+      if (kind === 'road-class') {
+        typeFilter = TildaStats.maplibrePropertyInFilter('road', TildaStats.highwayTagsForRoadClass(id));
+      } else if (kind === 'road-tag') {
+        typeFilter = TildaStats.maplibrePropertyInFilter('road', [id]);
+      } else if (kind === 'bikelane-class') {
+        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForClass(id);
+      } else {
+        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForTag(id);
+      }
       const geometry = selectedRegionGeometry();
-      const filters = [categoryFilter, typeFilter];
+      const filters = [typeFilter];
       if (geometry) filters.push(['within', geometry]);
       return TildaStats.combineMaplibreFilters(...filters);
     }
@@ -4048,18 +4056,25 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function updateOverlayLineHighlightLayers() {
-      if (!map.getLayer('bikelanes-highlight-lines')) return;
-      const visible =
-        overlayLineHighlight && toggleBikelanes.checked ? 'visible' : 'none';
-      map.setLayoutProperty('bikelanes-highlight-casing', 'visibility', visible);
-      map.setLayoutProperty('bikelanes-highlight-lines', 'visibility', visible);
+      const kind = overlayLineHighlight?.kind;
+      const isRoad = isRoadHighlightKind(kind);
+      for (const [prefix, active] of [
+        ['bikelanes', !!overlayLineHighlight && !isRoad && toggleBikelanes.checked],
+        ['roads', !!overlayLineHighlight && isRoad && toggleRoads.checked],
+      ]) {
+        if (!map.getLayer(prefix + '-highlight-lines')) continue;
+        const visible = active ? 'visible' : 'none';
+        map.setLayoutProperty(prefix + '-highlight-casing', 'visibility', visible);
+        map.setLayoutProperty(prefix + '-highlight-lines', 'visibility', visible);
+      }
       if (!overlayLineHighlight) return;
-      const { kind, id } = overlayLineHighlight;
-      const filter = overlayHighlightBikelaneFilter(kind, id);
-      map.setFilter('bikelanes-highlight-casing', filter);
-      map.setFilter('bikelanes-highlight-lines', filter);
-      const bikeColor = overlayBikelaneColorInput.value;
-      const lineColor = bikeColor;
+      const prefix = isRoad ? 'roads' : 'bikelanes';
+      if (!map.getLayer(prefix + '-highlight-lines')) return;
+      const { id } = overlayLineHighlight;
+      const filter = overlayHighlightFilter(kind, id);
+      map.setFilter(prefix + '-highlight-casing', filter);
+      map.setFilter(prefix + '-highlight-lines', filter);
+      const lineColor = isRoad ? overlayRoadColorInput.value : overlayBikelaneColorInput.value;
       const casingColor = '#ffffff';
       const lineWidth = overlayHighlightBlinkOn
         ? ['interpolate', ['linear'], ['zoom'], 10, 3.2, 14, 5.5]
@@ -4068,12 +4083,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ? ['interpolate', ['linear'], ['zoom'], 10, 5, 14, 8]
         : ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5];
       const lineOpacity = overlayHighlightBlinkOn ? 1 : 0.45;
-      map.setPaintProperty('bikelanes-highlight-lines', 'line-color', lineColor);
-      map.setPaintProperty('bikelanes-highlight-casing', 'line-color', casingColor);
-      map.setPaintProperty('bikelanes-highlight-lines', 'line-width', lineWidth);
-      map.setPaintProperty('bikelanes-highlight-casing', 'line-width', casingWidth);
-      map.setPaintProperty('bikelanes-highlight-lines', 'line-opacity', lineOpacity);
-      map.setPaintProperty('bikelanes-highlight-casing', 'line-opacity', lineOpacity);
+      map.setPaintProperty(prefix + '-highlight-lines', 'line-color', lineColor);
+      map.setPaintProperty(prefix + '-highlight-casing', 'line-color', casingColor);
+      map.setPaintProperty(prefix + '-highlight-lines', 'line-width', lineWidth);
+      map.setPaintProperty(prefix + '-highlight-casing', 'line-width', casingWidth);
+      map.setPaintProperty(prefix + '-highlight-lines', 'line-opacity', lineOpacity);
+      map.setPaintProperty(prefix + '-highlight-casing', 'line-opacity', lineOpacity);
       map.triggerRepaint();
     }
 
@@ -4112,12 +4127,35 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       });
     }
 
+    /** Same pulse layers for streets; road tiles are drawn thin, so the highlight carries them. */
+    function ensureRoadHighlightLayers() {
+      if (!map.getSource('roads') || map.getLayer('roads-highlight-lines')) return;
+      const layerMinZoom = CONFIG.overlayMinZoomLimits.min;
+      for (const [id, color, width] of [
+        ['roads-highlight-casing', '#ffffff', ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5]],
+        ['roads-highlight-lines', overlayRoadColorInput.value, ['interpolate', ['linear'], ['zoom'], 10, 2.4, 14, 4]],
+      ]) {
+        map.addLayer({
+          id,
+          type: 'line',
+          source: 'roads',
+          'source-layer': 'roads',
+          minzoom: layerMinZoom,
+          layout: { visibility: 'none' },
+          filter: ['literal', false],
+          paint: { 'line-color': color, 'line-width': width, 'line-opacity': 1 },
+        });
+      }
+    }
+
     function pulseOverlayLineHighlight(kind, id) {
       clearOverlayLineHighlight();
       overlayLineHighlight = { kind, id };
-      toggleBikelanes.checked = true;
+      if (isRoadHighlightKind(kind)) toggleRoads.checked = true;
+      else toggleBikelanes.checked = true;
       updateOverlayVisibility();
       ensureBikelaneHighlightLayers();
+      ensureRoadHighlightLayers();
       syncOverlayHighlightRowStyles();
       updateOverlayLineHighlightLayers();
       overlayHighlightBlinkOn = true;
@@ -6123,7 +6161,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         detailed
           ? TildaStats.listFilteredHighwayTagLengths(p.road_length, filter)
           : TildaStats.listFilteredRoadClassLengths(p.road_length, filter),
-        null,
+        detailed ? 'road-tag' : 'road-class',
         overlayRoadColorInput.value,
       );
       appendLengthRows(
