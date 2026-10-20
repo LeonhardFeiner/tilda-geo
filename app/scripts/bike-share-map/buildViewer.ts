@@ -517,6 +517,26 @@ if (existsSync(mappingPath)) {
   }
 }
 
+// gemeinde-traffic.json: {id → {needKm, coveredKm, coveredPct, byClass}}, Bavaria only, from
+// fetchTrafficVolumes.ts — busy rural sections (ERA 2010 threshold) and how many have a bike path.
+const trafficPath = join(outputRoot, 'traffic-volumes.json')
+if (existsSync(trafficPath)) {
+  try {
+    const trafficData = JSON.parse(await Bun.file(trafficPath).text()) as {
+      byId?: Record<string, unknown>
+    }
+    writeFileSync(
+      join(viewerDir, 'gemeinde-traffic.json'),
+      JSON.stringify({ byId: trafficData.byId ?? {} }),
+    )
+    process.stdout.write(
+      `BAYSIS traffic volumes: ${Object.keys(trafficData.byId ?? {}).length} regions → ${viewerDir}/gemeinde-traffic.json\n`,
+    )
+  } catch (err) {
+    process.stderr.write(`gemeinde-traffic.json skipped: ${err}\n`)
+  }
+}
+
 // daten/radinfra-regionen-<OSM date>.csv: every region's numbers under the default counting
 // filter, plus the context metrics and the model's expected value — the same functions the map
 // uses, so a downloaded value always matches the card. Reads the gemeinde-*.json written above.
@@ -541,6 +561,7 @@ if (geoFeatures.length) {
     accidents: readById('gemeinde-accidents.json'),
     commuters: readById('gemeinde-commuters.json'),
     mapping: readById('gemeinde-mapping.json'),
+    traffic: readById('gemeinde-traffic.json'),
   }
   const osmDataFrom = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom

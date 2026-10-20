@@ -397,6 +397,12 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
   })
 
+  test('includes the BAYSIS busy-road coverage in context and CSV columns', () => {
+    expect(html).toContain('"trafficUrl":"./gemeinde-traffic.json"')
+    expect(html).toContain("key: 'busyRoadsCovered'")
+    expect(html).toContain("header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)'")
+  })
+
   test('includes the OSM mapping completeness in context and CSV columns', () => {
     expect(html).toContain('"mappingUrl":"./gemeinde-mapping.json"')
     expect(html).toContain("key: 'mappingDepth'")

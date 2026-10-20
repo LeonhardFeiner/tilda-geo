@@ -47,6 +47,7 @@
     "bike-share-map:calmed-roads": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchCalmedRoads.ts",
     "bike-share-map:accidents": "bun ./scripts/bike-share-map/fetchAccidents.ts",
     "bike-share-map:commuters": "bun ./scripts/bike-share-map/fetchCommuters.ts",
+    "bike-share-map:traffic-volumes": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTrafficVolumes.ts",
     "bike-share-map:mapping-completeness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchMappingCompleteness.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",

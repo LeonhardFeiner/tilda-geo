@@ -103,6 +103,7 @@ ${li([
   `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas 2023), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
+  `Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.`,
   `Geländehöhe und -neigung: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).`,
 ])}`
     : ''
@@ -166,6 +167,7 @@ ${li([
     `<strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="${input.sourceRepoUrl}">tilda-geo</a> / <a href="${TILDA_URL}">TILDA</a>. Stand der hier verwendeten Auswertung: ${input.dataDateLabel}.`,
     `<strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.`,
     `<strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="${DESTATIS_URL}">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.`,
+    `<strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.`,
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}
 
@@ -204,6 +206,25 @@ ${li([
   meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.</p>
 
   ${peerSection}
+
+  <h2>Vielbefahrene Landstraßen (Bayern)</h2>
+  <p>Ob eine Landstraße einen eigenen Radweg braucht, hängt nach den <strong>Empfehlungen für
+  Radverkehrsanlagen (ERA 2010)</strong> von Verkehrsmenge und Tempo ab. Für regionale Landstraßen
+  (Kategorie LS&nbsp;III) gilt ein fahrbahnbegleitender Radweg als <em>sinnvoll</em> ab einem
+  durchschnittlichen täglichen Verkehr (DTV) von mehr als 2.500&nbsp;Kfz bei 100&nbsp;km/h bzw. mehr
+  als 4.000&nbsp;Kfz bei 70&nbsp;km/h. Die bayerischen Musterblätter Radverkehr (2024) verweisen für
+  die Wahl der Führungsform auf die ERA.</p>
+  <p>Die Detailkarte zeigt für bayerische Gebiete, wie viele Kilometer der gezählten
+  Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über dieser Schwelle liegen und an wie
+  vielen davon Radinfrastruktur verläuft (in bis zu etwa 20&nbsp;m Abstand, alle 50&nbsp;m geprüft).
+  Grundlage ist die Straßenverkehrszählung 2021. Das Tempo stammt aus OpenStreetMap, sonst gilt der
+  Regelwert 100&nbsp;km/h. Diese Kilometer sind <strong>Straßenkilometer</strong>, nicht je
+  Fahrtrichtung gezählt.</p>
+  <p><strong>Einschränkungen:</strong> Ortsdurchfahrten (hier gelten andere Regeln) und
+  Gemeindestraßen sind nicht enthalten, da für sie keine landesweite Zählung vorliegt. Die
+  Straßenkategorie (LS&nbsp;II–IV) ist in den Daten nicht angegeben; die Schwelle wird auf alle
+  gezählten Bundes-, Staats- und Kreisstraßen angewandt. Ein parallel verlaufender Weg in bis zu
+  20&nbsp;m Abstand zählt als vorhanden, auch wenn er nicht durchgehend nutzbar ist.</p>
 
   <h2>Strukturelles Erwartungswert-Modell</h2>
   <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Anteil zusammen:

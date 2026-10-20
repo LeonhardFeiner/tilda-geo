@@ -76,6 +76,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     accidentsUrl: './gemeinde-accidents.json',
     commutersUrl: './gemeinde-commuters.json',
     mappingUrl: './gemeinde-mapping.json',
+    trafficUrl: './gemeinde-traffic.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1834,6 +1835,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let accidentsIndex = null;
     let commutersIndex = null;
     let mappingIndex = null;
+    let trafficIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1856,6 +1858,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
         load(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         load(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
+        load(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2635,6 +2638,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
+        { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
         { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
@@ -5236,6 +5240,30 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
               ' %, Licht ' +
               deNumber(m.litPct, 0) +
               ' %)'
+            );
+          },
+        },
+        {
+          // Bavaria only (fetchTrafficVolumes.ts): open-road B/St/K sections whose 2021 count is
+          // above the ERA 2010 threshold for a bike path, and how much of that has one.
+          key: 'busyRoadsCovered',
+          label: 'Vielbefahrene Landstraßen mit Radweg',
+          note: 'über ERA-Schwelle, Zählung 2021',
+          source: trafficIndex,
+          get: (id) => {
+            const v = trafficIndex?.byId[id]?.coveredPct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const t = trafficIndex?.byId[id];
+            if (!t) return deNumber(v, 0) + ' %';
+            return (
+              deNumber(v, 0) +
+              ' % (' +
+              deNumber(t.coveredKm, 1) +
+              ' von ' +
+              deNumber(t.needKm, 1) +
+              ' km)'
             );
           },
         },

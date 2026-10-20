@@ -37,6 +37,7 @@ export type DataDownloadContext = {
   }>
   commuters?: ById<{ inCommuters?: number; outCommuters?: number; jobCentrality?: number }>
   mapping?: ById<{ indexPct?: number; speedPct?: number; surfacePct?: number; litPct?: number }>
+  traffic?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
 }
 
 export type DataDownloadFeature = {
@@ -87,6 +88,10 @@ export const DATA_DOWNLOAD_COLUMNS = {
   hauptstr_land_pct: 'dito, Baulastträger Land',
   hauptstr_kreis_pct: 'dito, Baulastträger Kreis',
   hauptstr_gemeinde_pct: 'dito, Baulastträger Gemeinde',
+  vielbefahren_km:
+    'Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße',
+  vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
+  vielbefahren_mit_radweg_pct: 'vielbefahren_mit_radweg_km / vielbefahren_km, %',
   einwohner_je_km2: 'Bevölkerungsdichte (Destatis Gemeindeverzeichnis)',
   miete_eur_m2: 'Durchschnittliche Nettokaltmiete je m² (Zensus 2022)',
   pkw_je_1000_ew: 'Pkw je 1000 Einwohner (KBA FZ 3)',
@@ -155,6 +160,7 @@ export function buildDataDownloadRow(
   const accidents = ctx.accidents?.[id]
   const commuters = ctx.commuters?.[id]
   const mapping = ctx.mapping?.[id]
+  const traffic = ctx.traffic?.[id]
 
   // Same gate as the map (generateViewerHtml): no expected value below the ranking threshold.
   const model =
@@ -203,6 +209,9 @@ export function buildDataDownloadRow(
     hauptstr_land_pct: mainPct('land'),
     hauptstr_kreis_pct: mainPct('kreis'),
     hauptstr_gemeinde_pct: mainPct('gemeinde'),
+    vielbefahren_km: round(traffic?.needKm, 1),
+    vielbefahren_mit_radweg_km: round(traffic?.coveredKm, 1),
+    vielbefahren_mit_radweg_pct: round(traffic?.coveredPct, 1),
     einwohner_je_km2: round(density, 1),
     miete_eur_m2: round(rent, 2),
     pkw_je_1000_ew: round(cars, 1),
