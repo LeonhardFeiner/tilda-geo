@@ -1,5 +1,5 @@
-import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from "./basemaps";
-import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from "./colorScales";
+import { BASEMAP_OPTIONS, buildBasemapStyleJson, DEFAULT_BASEMAP } from './basemaps'
+import { COLOR_SCALES, DEFAULT_COLOR_SCALE } from './colorScales'
 import {
   BIKE_SHARE_COLOR_CAP_PCT,
   GEMEINDE_GEOMETRY_DIR,
@@ -15,37 +15,37 @@ import {
   SHARE_PAGE_BASE_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
-} from "./constants";
+} from './constants'
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
   RADINFRA_DEFAULT_FILTER,
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
-} from "./statsClassSums";
-import { viewerRegionNavScript } from "./viewerRegionNavScript";
+} from './statsClassSums'
+import { viewerRegionNavScript } from './viewerRegionNavScript'
 
 // Bottom-sheet ("phone") layout: narrow screens, and short ones too — a phone held sideways is
 // wide but too low for the side panel. DESKTOP_MEDIA is the exact complement.
-const PHONE_MEDIA = "(max-width: 768px), (max-height: 500px)";
-const DESKTOP_MEDIA = "(min-width: 769px) and (min-height: 501px)";
+const PHONE_MEDIA = '(max-width: 768px), (max-height: 500px)'
+const DESKTOP_MEDIA = '(min-width: 769px) and (min-height: 501px)'
 
-export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
+export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
-  );
+  )
 
   const defaultColorScale =
-    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0];
+    COLOR_SCALES.find((s) => s.id === DEFAULT_COLOR_SCALE) ?? COLOR_SCALES[0]
   if (!defaultColorScale) {
-    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`);
+    throw new Error(`Missing color scale configuration for "${DEFAULT_COLOR_SCALE}"`)
   }
 
-  const generatedDateLabel = new Date(generatedAt).toLocaleDateString("de-DE", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
+  const generatedDateLabel = new Date(generatedAt).toLocaleDateString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  })
 
   const config = {
     generatedAt,
@@ -58,23 +58,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: "./stats-core.msgpack",
-    statsExtraMsgpackUrl: "./stats-extra.msgpack",
+    statsMsgpackUrl: './stats-core.msgpack',
+    statsExtraMsgpackUrl: './stats-extra.msgpack',
     gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
-    lazyDarstellungPresenceUrl: "./lazy-darstellung-presence.json",
-    statsUrl: "./stats.geojson",
-    neighborsMsgpackUrl: "./neighbors.msgpack",
-    neighborsUrl: "./neighbors.json",
-    manifestUrl: "./manifest.json",
-    peersUrl: "./gemeinde-peers.json",
-    densityUrl: "./gemeinde-density.json",
-    transitUrl: "./gemeinde-transit.json",
-    terrainUrl: "./gemeinde-terrain.json",
-    zensusUrl: "./gemeinde-zensus.json",
-    carsUrl: "./gemeinde-cars.json",
-    calmedUrl: "./gemeinde-calmed.json",
-    accidentsUrl: "./gemeinde-accidents.json",
-    commutersUrl: "./gemeinde-commuters.json",
+    lazyDarstellungPresenceUrl: './lazy-darstellung-presence.json',
+    statsUrl: './stats.geojson',
+    neighborsMsgpackUrl: './neighbors.msgpack',
+    neighborsUrl: './neighbors.json',
+    manifestUrl: './manifest.json',
+    peersUrl: './gemeinde-peers.json',
+    densityUrl: './gemeinde-density.json',
+    transitUrl: './gemeinde-transit.json',
+    terrainUrl: './gemeinde-terrain.json',
+    zensusUrl: './gemeinde-zensus.json',
+    carsUrl: './gemeinde-cars.json',
+    calmedUrl: './gemeinde-calmed.json',
+    accidentsUrl: './gemeinde-accidents.json',
+    commutersUrl: './gemeinde-commuters.json',
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -98,7 +98,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
       label: BIKELANE_CLASS_LABELS[id],
     })),
     radinfraDefaultFilter: RADINFRA_DEFAULT_FILTER,
-  };
+  }
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -133,7 +133,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     property="og:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
-  <meta property="og:image" content="${new URL("r/og-default.png", SHARE_PAGE_BASE_URL).href}" />
+  <meta property="og:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta name="twitter:card" content="summary_large_image" />
@@ -142,7 +142,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     name="twitter:description"
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
-  <meta name="twitter:image" content="${new URL("r/og-default.png", SHARE_PAGE_BASE_URL).href}" />
+  <meta name="twitter:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
   <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
@@ -1676,7 +1676,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     </details>
     </div>
     <p class="footer">
-      ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ""}Erstellt am ${generatedDateLabel} ·
+      ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
@@ -8878,5 +8878,5 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
   </script>
 </body>
 </html>
-`;
+`
 }

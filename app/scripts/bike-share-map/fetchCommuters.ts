@@ -122,8 +122,7 @@ export function computeCommuterMetrics(entry: ParsedCommuterEntry, population?: 
     typeof entry.employedAtWorkplace === 'number' &&
     entry.employedAtWorkplace > 0
   ) {
-    res.inCommuterSharePct =
-      Math.round((entry.inCommuters / entry.employedAtWorkplace) * 1000) / 10
+    res.inCommuterSharePct = Math.round((entry.inCommuters / entry.employedAtWorkplace) * 1000) / 10
   }
 
   if (
@@ -149,8 +148,7 @@ export function computeCommuterMetrics(entry: ParsedCommuterEntry, population?: 
     typeof population === 'number' &&
     population > 0
   ) {
-    res.jobsPer1000Inhabitants =
-      Math.round((entry.employedAtWorkplace / population) * 10000) / 10
+    res.jobsPer1000Inhabitants = Math.round((entry.employedAtWorkplace / population) * 10000) / 10
   }
 
   return res
