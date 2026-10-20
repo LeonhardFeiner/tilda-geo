@@ -1,3 +1,4 @@
+import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
 import { POPULATION_BANDS, URBANIZATION_LABELS, type UrbanizationCode } from './demographicPeers'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
@@ -12,6 +13,8 @@ export type MethodologyPageInput = {
   sourceRepoUrl: string
   /** Link back to the interactive map (relative). */
   viewerHref: string
+  /** The per-region CSV written by buildViewer, or null when the build had no stats. */
+  dataDownload?: { href: string; rowCount: number } | null
 }
 
 const OSM_TAGGING_URL = 'https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur'
@@ -81,6 +84,28 @@ Gemeinden; sehr kleine Vergleichsgruppen (unter vier) werden nicht gezeigt. Auf 
 Vorschau-Seiten wird der Standard-Zählfilter verwendet, in der interaktiven Karte der gerade
 eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
       : ''
+
+  const downloadSection = input.dataDownload
+    ? `<h2>Daten herunterladen</h2>
+<p><a href="${input.dataDownload.href}" download><strong>Alle Gebiete als CSV</strong></a>
+(${input.dataDownload.rowCount.toLocaleString('de-DE')} Zeilen, Stand der OpenStreetMap-Daten:
+${input.dataDateLabel}). Eine Zeile je Verwaltungseinheit vom Bund bis zum Stadtbezirk, gerechnet
+mit dem Standard-Zählfilter – dieselben Werte wie in der Karte mit Standard-Einstellungen.
+Komma-getrennt, Dezimalpunkt, UTF-8; leere Felder bedeuten „kein Wert“. Der Dateiname enthält das
+Datum des OSM-Datenstands. Mit der nächsten Aktualisierung wird die Datei ersetzt – wer die Zahlen
+zitiert, speichert sich bitte eine eigene Kopie.</p>
+<details><summary>Spalten</summary>
+${li(Object.entries(DATA_DOWNLOAD_COLUMNS).map(([key, text]) => `<code>${key}</code> – ${text}`))}
+</details>
+<p><strong>Quellen &amp; Lizenzen:</strong></p>
+${li([
+  `Längen, Grenzen: © OpenStreetMap-Mitwirkende, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a> – die CSV ist damit eine Datenbank unter ODbL.`,
+  `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas 2023), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
+  `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
+  `Pendler: Statistik der Bundesagentur für Arbeit.`,
+  `Geländehöhe und -neigung: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).`,
+])}`
+    : ''
 
   return `<!DOCTYPE html>
 <html lang="de">
@@ -265,6 +290,8 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
     `<strong>Verwaltungsgrenzen aus OSM</strong> können in Einzelfällen von der amtlichen Abgrenzung abweichen.`,
   ])}
   </div>
+
+  ${downloadSection}
 
   <h2>Fehler gefunden? Mitmachen.</h2>
   <p>Wenn ein Radweg fehlt oder eine Straße falsch erfasst ist, lässt sich das direkt in

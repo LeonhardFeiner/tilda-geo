@@ -7,6 +7,7 @@ import {
   lstatSync,
   mkdirSync,
   readdirSync,
+  readFileSync,
   rmSync,
   symlinkSync,
   unlinkSync,
@@ -27,6 +28,13 @@ import {
   VIEWER_SOURCE_REPO_URL,
 } from './constants'
 import { readDataDateLabel } from './dataDate'
+import {
+  buildDataDownloadRow,
+  DATA_DOWNLOAD_DIR,
+  type DataDownloadContext,
+  dataDownloadCsv,
+  dataDownloadFileName,
+} from './dataDownload'
 import {
   buildPeerGroupIndex,
   classifyLandkreisPeer,
@@ -489,11 +497,49 @@ if (existsSync(commutersPath)) {
   }
 }
 
+// daten/radinfra-regionen-<OSM date>.csv: every region's numbers under the default counting
+// filter, plus the context metrics and the model's expected value — the same functions the map
+// uses, so a downloaded value always matches the card. Reads the gemeinde-*.json written above.
+let dataDownload: { href: string; rowCount: number } | null = null
+if (geoFeatures.length) {
+  const readById = <T>(name: string) => {
+    const path = join(viewerDir, name)
+    return existsSync(path)
+      ? (JSON.parse(readFileSync(path, 'utf8')) as { byId?: Record<string, T> }).byId
+      : undefined
+  }
+  const ctx: DataDownloadContext = {
+    names: Object.fromEntries(
+      geoFeatures.flatMap((f) => (f.properties?.id ? [[f.properties.id, f.properties.name]] : [])),
+    ),
+    density: readById('gemeinde-density.json'),
+    terrain: readById('gemeinde-terrain.json'),
+    transit: readById('gemeinde-transit.json'),
+    zensus: readById('gemeinde-zensus.json'),
+    cars: readById('gemeinde-cars.json'),
+    calmed: readById('gemeinde-calmed.json'),
+    accidents: readById('gemeinde-accidents.json'),
+    commuters: readById('gemeinde-commuters.json'),
+  }
+  const osmDataFrom = existsSync(manifestPath)
+    ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom
+    : undefined
+  const rows = geoFeatures.flatMap((f) => buildDataDownloadRow(f, ctx) ?? [])
+  const fileName = dataDownloadFileName(osmDataFrom)
+  const dataDir = join(viewerDir, DATA_DOWNLOAD_DIR)
+  rmSync(dataDir, { recursive: true, force: true })
+  mkdirSync(dataDir, { recursive: true })
+  writeFileSync(join(dataDir, fileName), dataDownloadCsv(rows), 'utf8')
+  dataDownload = { href: `./${DATA_DOWNLOAD_DIR}/${fileName}`, rowCount: rows.length }
+  process.stdout.write(`Data download: ${rows.length} regions → ${dataDir}/${fileName}\n`)
+}
+
 const dataDateLabel = readDataDateLabel(outputRoot)
 writeFileSync(
   join(viewerDir, 'methodik.html'),
   methodologyPageHtml({
     dataDateLabel,
+    dataDownload,
     nationalSharePct,
     peerGemeindeCount,
     projectLead: PROJECT_LEAD,
