@@ -394,13 +394,14 @@ describe("generateViewerHtml mobile zoom prevention and redirection", () => {
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'");
   });
 
-  test("includes thematic map metric selector with model gap, cars, rent, and accidents", () => {
+  test("includes thematic map metric selector with model gap, cars, rent, accidents, and commuters", () => {
     expect(html).toContain('id="map-metric-select"');
     expect(html).toContain('value="bikeShare"');
     expect(html).toContain('value="modelGap"');
     expect(html).toContain('value="cars"');
     expect(html).toContain('value="rent"');
     expect(html).toContain('value="accidents"');
+    expect(html).toContain('value="commuters"');
     expect(html).toContain("params.set('metrik', currentMapMetric)");
     expect(html).toContain("params.get('metrik')");
     expect(html).toContain("colorScaleRangeForMetric(metric, features)");
@@ -415,6 +416,16 @@ describe("generateViewerHtml mobile zoom prevention and redirection", () => {
     expect(html).toContain("header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)'");
     expect(html).toContain("header: 'Fahrradunfälle je 10.000 Einwohner'");
     expect(html).toContain("header: 'Fahrradunfälle mit Getöteten/Schwerverletzten'");
+  });
+
+  test("includes Bundesagentur für Arbeit commuter statistics in context, map, and CSV columns", () => {
+    expect(html).toContain('"commutersUrl":"./gemeinde-commuters.json"');
+    expect(html).toContain("key: 'netCommuters'");
+    expect(html).toContain("key: 'jobCentrality'");
+    expect(html).toContain("header: 'Pendlersaldo (BA 2025)'");
+    expect(html).toContain("header: 'Einpendler (BA 2025)'");
+    expect(html).toContain("header: 'Auspendler (BA 2025)'");
+    expect(html).toContain("header: 'Arbeitsplatzzentralität (Arbeitsorte / Wohnorte)'");
   });
 });
 

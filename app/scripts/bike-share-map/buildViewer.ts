@@ -473,6 +473,25 @@ if (existsSync(accidentsPath)) {
   }
 }
 
+// gemeinde-commuters.json: {id → {employedAtResidence, employedAtWorkplace, inCommuters, outCommuters, netCommuters, inCommuterSharePct, outCommuterSharePct, jobCentrality, workplaces, jobsPer1000Inhabitants}}
+const commutersPath = join(outputRoot, "commuters.json");
+if (existsSync(commutersPath)) {
+  try {
+    const commutersData = JSON.parse(await Bun.file(commutersPath).text()) as {
+      byId?: Record<string, unknown>;
+    };
+    writeFileSync(
+      join(viewerDir, "gemeinde-commuters.json"),
+      JSON.stringify({ byId: commutersData.byId ?? {} }),
+    );
+    process.stdout.write(
+      `BA commuter statistics: ${Object.keys(commutersData.byId ?? {}).length} regions → ${viewerDir}/gemeinde-commuters.json\n`,
+    );
+  } catch (err) {
+    process.stderr.write(`gemeinde-commuters.json skipped: ${err}\n`);
+  }
+}
+
 const dataDateLabel = readDataDateLabel(outputRoot);
 writeFileSync(
   join(viewerDir, "methodik.html"),

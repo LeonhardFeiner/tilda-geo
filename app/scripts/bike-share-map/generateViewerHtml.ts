@@ -74,6 +74,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     carsUrl: "./gemeinde-cars.json",
     calmedUrl: "./gemeinde-calmed.json",
     accidentsUrl: "./gemeinde-accidents.json",
+    commutersUrl: "./gemeinde-commuters.json",
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -1497,6 +1498,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
           <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
           <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
+          <option value="commuters">Pendlersaldo (BA Beschäftigungsstatistik)</option>
         </select>
         <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
@@ -1804,6 +1806,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
     let carsIndex = null;
     let calmedIndex = null;
     let accidentsIndex = null;
+    let commutersIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1824,6 +1827,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
         load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
+        load(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
       ]).then(() => {
         const selected = selectedFeatureId
           ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
@@ -2261,6 +2265,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
       const bikeAccidentsPer10k = accidents?.bikeAccidentsPer10k ?? null;
       const bikeAccidents = accidents?.bikeAccidents ?? null;
       const bikeFatalOrSevere = accidents?.bikeFatalOrSevere ?? null;
+      const commuters = commutersIndex?.byId[p.id];
+      const netCommuters = commuters?.netCommuters ?? null;
+      const inCommuters = commuters?.inCommuters ?? null;
+      const outCommuters = commuters?.outCommuters ?? null;
+      const inCommuterSharePct = commuters?.inCommuterSharePct ?? null;
+      const outCommuterSharePct = commuters?.outCommuterSharePct ?? null;
+      const jobCentrality = commuters?.jobCentrality ?? null;
+      const employedAtWorkplace = commuters?.employedAtWorkplace ?? null;
+      const employedAtResidence = commuters?.employedAtResidence ?? null;
+      const workplaces = commuters?.workplaces ?? null;
 
       let modelPrediction = null;
       let modelGapPct = null;
@@ -2339,6 +2353,26 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         } else {
           label = name + ': Keine Unfalldaten verfügbar';
         }
+      } else if (currentMapMetric === 'commuters') {
+        if (typeof netCommuters === 'number') {
+          const sign = netCommuters > 0 ? '+' : '';
+          label =
+            name +
+            ': ' +
+            sign +
+            deNumber(netCommuters, 0) +
+            ' Pendlersaldo\\n(' +
+            deNumber(inCommuters, 0) +
+            ' Einpendler, ' +
+            deNumber(outCommuters, 0) +
+            ' Auspendler' +
+            (typeof inCommuterSharePct === 'number'
+              ? ', ' + deNumber(inCommuterSharePct, 1) + ' % Einpendlerquote'
+              : '') +
+            ')';
+        } else {
+          label = name + ': Keine Pendlerdaten verfügbar';
+        }
       } else {
         label =
           name +
@@ -2369,6 +2403,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
           bikeAccidentsPer10k,
           bikeAccidents,
           bikeFatalOrSevere,
+          netCommuters,
+          inCommuters,
+          outCommuters,
+          inCommuterSharePct,
+          outCommuterSharePct,
+          jobCentrality,
+          employedAtWorkplace,
+          employedAtResidence,
+          workplaces,
           lowRoad,
           label,
         },
@@ -2466,6 +2509,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
         { key: 'bikeAccidentsPer10k', header: 'Fahrradunfälle je 10.000 Einwohner', numeric: 'num1' },
         { key: 'bikeFatalOrSevere', header: 'Fahrradunfälle mit Getöteten/Schwerverletzten', numeric: 'num0' },
+        { key: 'netCommuters', header: 'Pendlersaldo (BA 2025)', numeric: 'num0' },
+        { key: 'inCommuters', header: 'Einpendler (BA 2025)', numeric: 'num0' },
+        { key: 'outCommuters', header: 'Auspendler (BA 2025)', numeric: 'num0' },
+        { key: 'inCommuterSharePct', header: 'Einpendlerquote (%)', numeric: 'pct' },
+        { key: 'outCommuterSharePct', header: 'Auspendlerquote (%)', numeric: 'pct' },
+        { key: 'jobCentrality', header: 'Arbeitsplatzzentralität (Arbeitsorte / Wohnorte)', numeric: 'num2' },
+        { key: 'employedAtWorkplace', header: 'Sozialvers. Beschäftigte am Arbeitsort (BA 2025)', numeric: 'num0' },
+        { key: 'employedAtResidence', header: 'Sozialvers. Beschäftigte am Wohnort (BA 2025)', numeric: 'num0' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -2671,6 +2722,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
+        else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
         else cmlTitle.textContent = 'Radinfra-Anteil';
       }
 
@@ -2679,6 +2731,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
+        else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
         else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
       }
 
@@ -2697,6 +2750,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         } else if (metric === 'accidents') {
           metricDef.textContent =
             'Fahrradunfälle mit Personenschaden je 10.000 Einwohner (Quelle: Destatis Unfallatlas 2023).';
+        } else if (metric === 'commuters') {
+          metricDef.innerHTML =
+            'Differenz Einpendler minus Auspendler. ' +
+            '<strong>Grün</strong> = Arbeitsplatzzentrum (Einpendlerüberschuss), ' +
+            '<strong>Rot</strong> = Pendler-Wohnort (Auspendlerüberschuss). Quelle: Bundesagentur für Arbeit (BA 2025).';
         } else {
           metricDef.innerHTML =
             'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
@@ -2710,6 +2768,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
         else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
         else if (metric === 'accidents') cmlMin.textContent = deNumber(min, 1);
+        else if (metric === 'commuters') cmlMin.textContent = (min > 0 ? '+' : '') + deNumber(Math.round(min), 0);
         else cmlMin.textContent = formatUiPct(min) + ' %';
       }
       if (cmlMax) {
@@ -2717,6 +2776,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
         else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
+        else if (metric === 'commuters') cmlMax.textContent = (max > 0 ? '+' : '') + deNumber(Math.round(max), 0);
         else cmlMax.textContent = formatUiPct(max) + ' %';
       }
 
@@ -2738,6 +2798,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
         } else if (metric === 'accidents') {
           text = deNumber(val, 1) + (i === count - 1 ? ' / 10k' : '');
+        } else if (metric === 'commuters') {
+          text = (val > 0 ? '+' : '') + deNumber(Math.round(val), 0);
         } else {
           text = formatUiPct(val) + (i === count - 1 ? ' %' : '');
         }
@@ -2988,6 +3050,27 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
           dataMin,
           dataMax,
           scaleCapped: min > dataMin || max < dataMax,
+        };
+      }
+      if (metric === 'commuters') {
+        const vals = features
+          .map((f) => f.properties?.netCommuters)
+          .filter((v) => typeof v === 'number');
+        if (!vals.length) {
+          return { min: -5000, max: 5000, dataMin: -5000, dataMax: 5000, scaleCapped: false };
+        }
+        const sorted = [...vals].sort((a, b) => a - b);
+        const dataMin = sorted[0];
+        const dataMax = sorted[sorted.length - 1];
+        const absSorted = sorted.map((v) => Math.abs(v)).sort((a, b) => a - b);
+        const p90 = absSorted[Math.min(absSorted.length - 1, Math.floor(0.9 * absSorted.length))];
+        const bound = Math.max(1000, Math.ceil(p90 / 500) * 500);
+        return {
+          min: -bound,
+          max: bound,
+          dataMin,
+          dataMax,
+          scaleCapped: bound < Math.max(Math.abs(dataMin), Math.abs(dataMax)),
         };
       }
       return colorScaleRange(features);
@@ -4867,6 +4950,86 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
               deNumber(v, 0) +
               (typeof fatal === 'number' && fatal > 0 ? ' (davon ' + fatal + ' tödlich)' : '')
             );
+          },
+        },
+        {
+          key: 'jobCentrality',
+          label: 'Arbeitsplatzzentralität',
+          note: 'Arbeitsplätze ÷ Beschäftigte am Wohnort',
+          source: commutersIndex,
+          get: (id) => {
+            const v = commutersIndex?.byId[id]?.jobCentrality;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const jobs = commutersIndex?.byId[id]?.employedAtWorkplace;
+            const res = commutersIndex?.byId[id]?.employedAtResidence;
+            let text = deNumber(v, 2);
+            if (typeof jobs === 'number' && typeof res === 'number') {
+              text +=
+                ' (' +
+                deNumber(jobs, 0) +
+                ' Arbeitsplätze / ' +
+                deNumber(res, 0) +
+                ' Erwerbstätige)';
+            }
+            return text;
+          },
+        },
+        {
+          key: 'netCommuters',
+          label: 'Pendlersaldo',
+          note: 'Einpendler minus Auspendler',
+          source: commutersIndex,
+          get: (id) => {
+            const v = commutersIndex?.byId[id]?.netCommuters;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const sign = v > 0 ? '+' : '';
+            const inp = commutersIndex?.byId[id]?.inCommuters;
+            const outp = commutersIndex?.byId[id]?.outCommuters;
+            let text = sign + deNumber(v, 0);
+            if (typeof inp === 'number' && typeof outp === 'number') {
+              text += ' (' + deNumber(inp, 0) + ' Ein- / ' + deNumber(outp, 0) + ' Auspendler)';
+            }
+            return text;
+          },
+        },
+        {
+          key: 'commuterRates',
+          label: 'Ein- / Auspendlerquote',
+          note: 'Anteil Pendler an Beschäftigten',
+          source: commutersIndex,
+          get: (id) => {
+            const inp = commutersIndex?.byId[id]?.inCommuterSharePct;
+            return typeof inp === 'number' ? inp : null;
+          },
+          format: (v, id) => {
+            const outp = commutersIndex?.byId[id]?.outCommuterSharePct;
+            let text = 'Einpendler: ' + deNumber(v, 1) + ' %';
+            if (typeof outp === 'number') {
+              text += ', Auspendler: ' + deNumber(outp, 1) + ' %';
+            }
+            return text;
+          },
+        },
+        {
+          key: 'employedAtWorkplace',
+          label: 'Sozialvers. Beschäftigte am Arbeitsort',
+          note: 'Bundesagentur für Arbeit 2025',
+          source: commutersIndex,
+          get: (id) => {
+            const v = commutersIndex?.byId[id]?.employedAtWorkplace;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const per1000 = commutersIndex?.byId[id]?.jobsPer1000Inhabitants;
+            let text = deNumber(v, 0);
+            if (typeof per1000 === 'number') {
+              text += ' (' + deNumber(per1000, 0) + ' je 1.000 Einw.)';
+            }
+            return text;
           },
         },
         {
@@ -7419,7 +7582,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         syncRankingModeButtons();
       }
       const metrik = params.get('metrik');
-      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents'].includes(metrik)) {
+      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents', 'commuters'].includes(metrik)) {
         currentMapMetric = metrik;
         if (mapMetricSelect) mapMetricSelect.value = metrik;
       } else if (live && currentMapMetric !== 'bikeShare') {
@@ -7748,6 +7911,29 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         ];
       }
 
+      if (metric === 'commuters') {
+        const lowColor = isColorblind ? '#e69f00' : '#c62828';
+        const midColor = '#f5f5f5';
+        const highColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'netCommuters'], 0]]];
+        return [
+          'case',
+          ['==', ['get', 'netCommuters'], null],
+          '#cfd8dc',
+          [
+            'interpolate',
+            ['linear'],
+            clamped,
+            minVal,
+            lowColor,
+            0,
+            midColor,
+            maxVal,
+            highColor,
+          ],
+        ];
+      }
+
       if (maxVal <= minVal) return scale.mid;
       const mid = (minVal + maxVal) / 2;
       const pct = ['coalesce', ['get', 'bikeSharePct'], 0];
@@ -7786,6 +7972,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = "") {
         gradient = isColorblind
           ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'
           : 'linear-gradient(to right, #2e7d32, #fff59d, #c62828)';
+      } else if (metric === 'commuters') {
+        gradient = isColorblind
+          ? 'linear-gradient(to right, #e69f00, #f5f5f5, #3274a1)'
+          : 'linear-gradient(to right, #c62828, #f5f5f5, #2e7d32)';
       }
       legendBar.style.background = gradient;
       const cmlBar = document.getElementById('cml-bar');
