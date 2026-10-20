@@ -111,6 +111,11 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
   }
   .back { display: inline-block; margin-bottom: 20px; font-weight: 600; text-decoration: none; }
   .caveat { background: #fdf6e9; border: 1px solid #efd9ac; border-radius: 8px; padding: 12px 14px; }
+  table.model-table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; font-size: 0.95rem; }
+  table.model-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; font-weight: 600; }
+  table.model-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
+  table.model-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.model-table th.num { text-align: right; }
   footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid #e2e4e0; color: #5c6560; font-size: 0.9rem; }
 </style>
 </head>
@@ -174,6 +179,79 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
   meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.</p>
 
   ${peerSection}
+
+  <h2>Strukturelles Erwartungswert-Modell</h2>
+  <p>Topografie, Siedlungsdichte und Landespolitik beeinflussen die Rahmenbedingungen für
+  Radinfrastruktur massiv: Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen steht vor anderen
+  Aufgaben als eine flache Küstengemeinde in Schleswig-Holstein. Um lokale Prioritäten von diesen
+  Rahmenbedingungen zu trennen, schätzt ein <strong>multivariates Regressionsmodell</strong>
+  den statistischen Erwartungswert für jede Gemeinde.</p>
+
+  <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
+  Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
+  Normvorgabe für eine verkehrswendegerechte Infrastruktur. Eine positive Abweichung („über Erwartungswert“)
+  bedeutet, dass vor Ort mehr Radinfrastruktur vorhanden ist, als sich durch Geografie, Dichte, Kaufkraft
+  und Landesniveau statistisch erklären lässt.</p>
+
+  <p><strong>Modellgüte &amp; Stichprobe:</strong></p>
+  <ul>
+    <li><strong>Stichprobe:</strong> <code>n = 10.396</code> Gemeinden mit einem Straßennetz ab 5&nbsp;km.</li>
+    <li><strong>Gewichtung:</strong> Kleinste Quadrate gewichtet nach Straßennetzlänge (<code>w_i = roadKm_i</code>, insgesamt 604.809&nbsp;km Straßennetz), damit kleine Wald- und Streusiedlungsgemeinden die Koeffizienten nicht verzerren.</li>
+    <li><strong>Erklärte Varianz:</strong> <strong>R² = 53,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 53,3&nbsp;%</strong> (bestätigt stabile Vorhersagekraft ohne Überanpassung).</li>
+    <li><strong>Modellunsicherheit:</strong> Residualstandardfehler <strong>SE = ±5,64&nbsp;%-Punkte</strong>. Liegt die Abweichung einer Gemeinde innerhalb dieses Streubands (±1 SE), wird sie auf der Karte neutral (grau) dargestellt. Nur statistisch deutliche Ausreißer jenseits von ±1 SE erhalten Farbe.</li>
+  </ul>
+
+  <table class="model-table">
+    <thead>
+      <tr>
+        <th>Einflussfaktor</th>
+        <th>Beschreibung / Quelle</th>
+        <th class="num">Koeffizient (β)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Bundesland-Baselines (α_L)</strong></td>
+        <td>Feste Effekte für Landesrichtlinien, Förderprogramme und Meldekulturen (Niedersachsen 16,7&nbsp;%, Schleswig-Holstein 15,8&nbsp;%, Brandenburg 14,4&nbsp;%, Mecklenburg-Vorpommern 14,3&nbsp;%, NRW 10,9&nbsp;%, Sachsen-Anhalt 10,8&nbsp;%, Bundesmittel 10,6&nbsp;%, Bayern 8,9&nbsp;%, Sachsen 8,7&nbsp;%, Saarland 8,5&nbsp;%, Thüringen 8,0&nbsp;%, Baden-Württemberg 7,3&nbsp;%, Rheinland-Pfalz 6,4&nbsp;%, Hessen 6,3&nbsp;%)</td>
+        <td class="num">Basis</td>
+      </tr>
+      <tr>
+        <td><strong>Mittlere Straßensteigung</strong></td>
+        <td>Hangneigung des Straßennetzes in Grad (aus Copernicus DEM)</td>
+        <td class="num">−0,3860 / °</td>
+      </tr>
+      <tr>
+        <td><strong>Mittlere Geländehöhe</strong></td>
+        <td>Höhe über Normalnull in Metern (Copernicus DEM)</td>
+        <td class="num">−0,0018 / m</td>
+      </tr>
+      <tr>
+        <td><strong>Siedlungsdichte (log10)</strong></td>
+        <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
+        <td class="num">+4,3904 / Dekade</td>
+      </tr>
+      <tr>
+        <td><strong>ÖPNV-Bahnhofsnähe</strong></td>
+        <td>Mittlere Luftliniendistanz zu Personenbahnhöfen in km</td>
+        <td class="num">−0,0143 / km</td>
+      </tr>
+      <tr>
+        <td><strong>Mietniveau &amp; Kaufkraft</strong></td>
+        <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
+        <td class="num">+0,9342 / (€/m²)</td>
+      </tr>
+      <tr>
+        <td><strong>PKW-Dichte</strong></td>
+        <td>Gemeldete PKW je 1.000 Einwohner (KBA)</td>
+        <td class="num">−0,0038 / (PKW/1k)</td>
+      </tr>
+      <tr>
+        <td><strong>Verkehrsberuhigung</strong></td>
+        <td>Anteil verkehrsberuhigter Bereiche / Spielstraßen am Straßennetz in %</td>
+        <td class="num">+0,5545 / %-Punkt</td>
+      </tr>
+    </tbody>
+  </table>
 
   <h2>Grenzen der Aussagekraft</h2>
   <div class="caveat">

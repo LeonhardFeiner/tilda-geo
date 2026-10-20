@@ -293,36 +293,54 @@ export type StructuralModelParams = {
   rent?: number | null
   carsPer1000?: number | null
   livingSharePct?: number | null
+  bundeslandId?: string | null
 }
 
 export const STRUCTURAL_MODEL_CONFIG = {
-  baselinePct: 8.67,
+  baselinePct: 10.59,
+  residualStdErrorPct: 5.64,
+  n: 10396,
+  r2TotalPct: 53.7,
+  r2CvPct: 53.3,
   means: {
-    roadSlope: 4.15,
-    elevMean: 276.74,
-    logDens: 2.01,
-    stDist: 4.92,
-    rent: 5.77,
-    carsPer1000: 687.49,
-    livingSharePct: 1.48,
+    roadSlope: 3.67,
+    elevMean: 267.7,
+    logDens: 2.19,
+    stDist: 4.02,
+    rent: 6.04,
+    carsPer1000: 662.87,
+    livingSharePct: 2.21,
   },
   betas: {
-    roadSlope: -0.4058,
-    elevMean: -0.0126,
-    logDens: 0.7883,
-    stDist: -0.0443,
-    rent: 1.6068,
-    carsPer1000: -0.0014,
-    livingSharePct: 0.3589,
+    roadSlope: -0.386,
+    elevMean: -0.0018,
+    logDens: 4.3904,
+    stDist: -0.0143,
+    rent: 0.9342,
+    carsPer1000: -0.0038,
+    livingSharePct: 0.5545,
   },
+  bundeslandBaselines: {
+    'relation/2145268': 8.91, // Bayern
+    'relation/28322': 14.31, // Mecklenburg-Vorpommern
+    'relation/51529': 15.83, // Schleswig-Holstein
+    'relation/62341': 6.39, // Rheinland-Pfalz
+    'relation/62366': 7.99, // Thüringen
+    'relation/62372': 8.45, // Saarland
+    'relation/62422': 28.09, // Berlin
+    'relation/62467': 8.74, // Sachsen
+    'relation/62504': 14.42, // Brandenburg
+    'relation/62607': 10.79, // Sachsen-Anhalt
+    'relation/62611': 7.3, // Baden-Württemberg
+    'relation/62650': 6.27, // Hessen
+    'relation/62718': 42.59, // Bremen
+    'relation/62761': 10.91, // Nordrhein-Westfalen
+    'relation/62771': 16.72, // Niedersachsen
+    'relation/62782': 35.01, // Hamburg
+  } as Record<string, number>,
   r2: {
-    totalPct: 27.5,
-    topographyPct: 17.0,
-    rentPct: 8.2,
-    trafficCalmingPct: 2.0,
-    densityPct: 0.2,
-    transitPct: 0.1,
-    unexplainedPct: 72.5,
+    totalPct: 53.7,
+    cvPct: 53.3,
   },
 } as const
 
@@ -337,6 +355,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     rent = null,
     carsPer1000 = null,
     livingSharePct = null,
+    bundeslandId = null,
   } = params
   if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
   if (
@@ -352,6 +371,12 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
   }
 
   const c = STRUCTURAL_MODEL_CONFIG
+  const landBaseline =
+    bundeslandId && c.bundeslandBaselines[bundeslandId] != null
+      ? c.bundeslandBaselines[bundeslandId]
+      : c.baselinePct
+  const deltaLand = landBaseline - c.baselinePct
+
   const deltaSlope = roadSlope != null ? c.betas.roadSlope * (roadSlope - c.means.roadSlope) : 0
   const deltaElev = elevMean != null ? c.betas.elevMean * (elevMean - c.means.elevMean) : 0
   const deltaTopo = deltaSlope + deltaElev
@@ -371,16 +396,26 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     0,
     Math.min(
       100,
-      c.baselinePct + deltaTopo + deltaDens + deltaTransit + deltaRent + deltaCars + deltaLiving,
+      c.baselinePct +
+        deltaLand +
+        deltaTopo +
+        deltaDens +
+        deltaTransit +
+        deltaRent +
+        deltaCars +
+        deltaLiving,
     ),
   )
   const expectedKm = (expectedPct / 100) * roadKm
   const actualPct = (bikeKm / roadKm) * 100
   const diffPct = actualPct - expectedPct
   const diffKm = bikeKm - expectedKm
+  const isWithin1Se = Math.abs(diffPct) <= c.residualStdErrorPct
 
   return {
     baselinePct: c.baselinePct,
+    landBaselinePct: landBaseline,
+    deltaLand: bundeslandId ? deltaLand : null,
     deltaSlope: roadSlope != null ? deltaSlope : null,
     deltaElev: elevMean != null ? deltaElev : null,
     deltaTopo,
@@ -397,6 +432,11 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     diffPct,
     diffKm,
     behind: diffPct < -0.05,
+    isWithin1Se,
+    residualStdErrorPct: c.residualStdErrorPct,
+    n: c.n,
+    r2TotalPct: c.r2TotalPct,
+    r2CvPct: c.r2CvPct,
     inputs: {
       roadSlope,
       elevMean,

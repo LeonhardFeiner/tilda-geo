@@ -233,37 +233,112 @@ describe('computeStructuralModelPrediction', () => {
   test('returns baseline expectation when predictors are at national means', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 8.67,
-      roadSlope: 4.15,
-      elevMean: 276.74,
-      density: 102.3, // 10^2.01 ≈ 102.3
-      stDistKm: 4.92,
-      rent: 5.77,
-      carsPer1000: 687.49,
-      livingSharePct: 1.48,
+      bikeKm: 10.59,
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88, // 10^2.19 ≈ 154.88
+      stDistKm: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
     })
     expect(res).not.toBeNull()
-    expect(res!.expectedPct).toBeCloseTo(8.67, 1)
-    expect(res!.expectedKm).toBeCloseTo(8.67, 1)
+    expect(res!.expectedPct).toBeCloseTo(10.59, 1)
+    expect(res!.expectedKm).toBeCloseTo(10.59, 1)
     expect(res!.diffPct).toBeCloseTo(0, 1)
     expect(res!.diffKm).toBeCloseTo(0, 1)
     expect(res!.behind).toBe(false)
+    expect(res!.isWithin1Se).toBe(true)
+    expect(res!.residualStdErrorPct).toBe(5.64)
+    expect(res!.n).toBe(10396)
+    expect(res!.r2TotalPct).toBe(53.7)
+    expect(res!.r2CvPct).toBe(53.3)
+  })
+
+  test('applies Bundesland baseline fixed effect', () => {
+    // Niedersachsen baseline is 16.72% (+6.13%p)
+    const resNds = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 16.72,
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
+      bundeslandId: 'relation/62771', // Niedersachsen
+    })
+    expect(resNds).not.toBeNull()
+    expect(resNds!.expectedPct).toBeCloseTo(16.72, 1)
+    expect(resNds!.deltaLand).toBeCloseTo(6.13, 1)
+
+    // Hessen baseline is 6.27% (-4.32%p)
+    const resHe = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 6.27,
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+      rent: 6.04,
+      carsPer1000: 662.87,
+      livingSharePct: 2.21,
+      bundeslandId: 'relation/62650', // Hessen
+    })
+    expect(resHe).not.toBeNull()
+    expect(resHe!.expectedPct).toBeCloseTo(6.27, 1)
+    expect(resHe!.deltaLand).toBeCloseTo(-4.32, 1)
+  })
+
+  test('correctly identifies whether gap is within 1 standard error (SE = 5.64%p)', () => {
+    const within = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 14.0, // +3.41%p gap (within 5.64%p)
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+    })
+    expect(within!.isWithin1Se).toBe(true)
+
+    const outlierAhead = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 20.0, // +9.41%p gap (> 5.64%p)
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+    })
+    expect(outlierAhead!.isWithin1Se).toBe(false)
+    expect(outlierAhead!.behind).toBe(false)
+
+    const outlierBehind = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 2.0, // -8.59%p gap (< -5.64%p)
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+    })
+    expect(outlierBehind!.isWithin1Se).toBe(false)
+    expect(outlierBehind!.behind).toBe(true)
   })
 
   test('high rent and living streets increase expected bike share', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 15.0,
-      roadSlope: 4.15,
-      elevMean: 276.74,
-      density: 102.3,
-      stDistKm: 4.92,
-      rent: 9.77, // +4 €/m² over mean
+      roadSlope: 3.67,
+      elevMean: 267.7,
+      density: 154.88,
+      stDistKm: 4.02,
+      rent: 10.04, // +4 €/m² over mean
       carsPer1000: 500, // lower motorization
       livingSharePct: 5.0, // higher traffic calming
     })
     expect(res).not.toBeNull()
-    expect(res!.deltaRent).toBeGreaterThan(5.0)
+    expect(res!.deltaRent).toBeGreaterThan(3.0)
     expect(res!.deltaCars).toBeGreaterThan(0)
     expect(res!.deltaLiving).toBeGreaterThan(1.0)
     expect(res!.expectedPct).toBeGreaterThan(15.0)
@@ -273,14 +348,14 @@ describe('computeStructuralModelPrediction', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 3.0,
-      roadSlope: 8.0, // steeper than 4.15%
-      elevMean: 700, // higher than 276.7m
+      roadSlope: 8.0, // steeper than 3.67%
+      elevMean: 700, // higher than 267.7m
       density: 100,
       stDistKm: 5.0,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
-    expect(res!.expectedPct).toBeLessThan(8.67)
+    expect(res!.expectedPct).toBeLessThan(10.59)
     expect(res!.actualPct).toBe(3.0)
   })
 
@@ -288,9 +363,9 @@ describe('computeStructuralModelPrediction', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 500,
       bikeKm: 120,
-      roadSlope: 1.5, // much flatter than 4.15%
-      elevMean: 40, // lower than 276.7m
-      density: 3000, // much denser than 102
+      roadSlope: 1.5, // much flatter than 3.67%
+      elevMean: 40, // lower than 267.7m
+      density: 3000, // much denser than 155
       stDistKm: 1.0, // very close to station
       rent: 9.0, // higher rent typical for dense city
     })

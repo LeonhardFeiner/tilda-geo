@@ -704,6 +704,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-detail-gap--model.region-detail-gap--ahead {
       background: #e8f5e9; border: 1px solid #b7dfba; color: #1b5e20;
     }
+    .region-detail-gap--model.region-detail-gap--neutral {
+      background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155;
+    }
     .region-detail-gap--model .region-detail-gap-headline {
       display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
     }
@@ -1516,7 +1519,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <label for="map-metric-select">Kartenansicht</label>
         <select id="map-metric-select">
           <option value="bikeShare">Radinfrastruktur-Anteil</option>
-          <option value="modelGap">Modell-Abweichung (Über- &amp; Nachzügler)</option>
+          <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
           <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
           <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
@@ -2322,6 +2325,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           rent: typeof rent === 'number' ? rent : null,
           carsPer1000: typeof cars === 'number' ? cars : null,
           livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
+          bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
         });
         if (modelPrediction) {
           modelGapPct = modelPrediction.diffPct;
@@ -2760,9 +2764,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (metricDef) {
         if (metric === 'modelGap') {
           metricDef.innerHTML =
-            'Differenz tatsächlicher Ausbau minus Erwartungswert. ' +
-            '<strong>Grün</strong> = mehr Radinfrastruktur als erwartet (Vorreiter), ' +
-            '<strong>Rot</strong> = weniger als erwartet (Nachzügler).';
+            'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
+            '<strong>Grün</strong> = über dem Erwartungswert, ' +
+            '<strong>Rot</strong> = unter dem Erwartungswert. ' +
+            '<strong>Grau</strong> = im Rahmen der typischen Modellstreuung (±1 Standardfehler, ±5,6 %-Punkte).';
         } else if (metric === 'cars') {
           metricDef.textContent =
             'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
@@ -2999,7 +3004,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const dataMax = sorted[sorted.length - 1];
         const absSorted = sorted.map((v) => Math.abs(v)).sort((a, b) => a - b);
         const p95 = absSorted[Math.min(absSorted.length - 1, Math.floor(0.95 * absSorted.length))];
-        const bound = Math.max(5, Math.ceil(p95));
+        const bound = Math.max(7, Math.ceil(p95));
         return {
           min: -bound,
           max: bound,
@@ -3722,14 +3727,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       metric = metric || currentMapMetric || 'bikeShare';
       const isColorblind = scaleId === 'colorblind';
       if (metric === 'modelGap') {
+        const se = 5.64;
+        if (Math.abs(val) <= se) return '#e2e8f0';
         const low = isColorblind ? '#e69f00' : '#c62828';
-        const mid = '#f5f5f5';
+        const mid = '#e2e8f0';
         const high = isColorblind ? '#3274a1' : '#2e7d32';
-        if (val <= 0) {
-          const t = minVal < 0 ? Math.max(0, Math.min(1, (val - minVal) / (0 - minVal))) : 1;
+        if (val < -se) {
+          const t = minVal < -se ? Math.max(0, Math.min(1, (val - minVal) / (-se - minVal))) : 0;
           return lerpColor(low, mid, t);
         }
-        const t = maxVal > 0 ? Math.max(0, Math.min(1, val / maxVal)) : 1;
+        const t = maxVal > se ? Math.max(0, Math.min(1, (val - se) / (maxVal - se))) : 1;
         return lerpColor(mid, high, t);
       }
       if (metric === 'commuters') {
@@ -4818,6 +4825,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         rent: typeof rent === 'number' ? rent : null,
         carsPer1000: typeof carsPer1000 === 'number' ? carsPer1000 : null,
         livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
+        bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
       });
 
       if (!m) {
@@ -4827,7 +4835,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       regionDetailModelGap.className =
         'region-detail-gap region-detail-gap--model ' +
-        (m.behind ? 'region-detail-gap--behind' : 'region-detail-gap--ahead');
+        (m.isWithin1Se
+          ? 'region-detail-gap--neutral'
+          : m.behind
+            ? 'region-detail-gap--behind'
+            : 'region-detail-gap--ahead');
 
       const headline = document.createElement('span');
       headline.className = 'region-detail-gap-headline';
@@ -4836,15 +4848,29 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         formatUiPct(m.expectedPct) +
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
-        ' km)';
+        ' km) · R² = ' +
+        formatUiPct(m.r2TotalPct) +
+        ' %, n = ' +
+        deNumber(m.n, 0);
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
       const diffKmRounded = Math.abs(Math.round(m.diffKm));
       const diffKmStr = deNumber(diffKmRounded, 0) + ' km';
-      const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %';
+      const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %-Punkte';
 
-      if (m.behind) {
+      if (m.isWithin1Se) {
+        const sign = m.diffPct > 0 ? '+' : '';
+        statusText.textContent =
+          'Tatsächlich ' +
+          formatUiPct(m.actualPct) +
+          ' % (' +
+          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
+          ' km) · Im typischen Streubereich (' +
+          sign +
+          formatUiPct(m.diffPct) +
+          ' %-Punkte ggü. Erwartung; Streuband ±1 SE = ±5,6 %-Punkte).';
+      } else if (m.behind) {
         statusText.textContent =
           'Tatsächlich ' +
           formatUiPct(m.actualPct) +
@@ -4854,7 +4880,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           diffKmStr +
           ' unter Erwartung (−' +
           diffPctStr +
-          ' Lücke trotz Geografie und Dichte).';
+          ' Abweichung vom statistischen Modell).';
       } else {
         statusText.textContent =
           'Tatsächlich ' +
@@ -4865,7 +4891,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           diffKmStr +
           ' über Erwartung (+' +
           diffPctStr +
-          ' Vorsprung gegenüber geografischem Profil).';
+          ' Abweichung vom statistischen Modell).';
       }
       regionDetailModelGap.appendChild(statusText);
 
@@ -4874,7 +4900,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       details.className = 'model-breakdown-details';
       const summary = document.createElement('summary');
       summary.className = 'model-breakdown-summary';
-      summary.textContent = 'Faktoren-Zerlegung (Topografie, Wohlstand, Beruhigung, Dichte)';
+      summary.textContent = 'Faktoren-Zerlegung (Bundesland, Topografie, Wohlstand, Beruhigung, Dichte)';
       details.appendChild(summary);
 
       const table = document.createElement('table');
@@ -4903,7 +4929,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         tbody.appendChild(tr);
       };
 
-      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete', m.baselinePct, formatUiPct(m.baselinePct) + ' %');
+      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete (gewichtet)', m.baselinePct, formatUiPct(m.baselinePct) + ' %');
+
+      if (m.deltaLand != null && Math.abs(m.deltaLand) >= 0.01) {
+        const landName = p.bundesland_id ? regionIndex?.byId.get(p.bundesland_id)?.properties?.name : null;
+        const landLabel = landName ? String(landName) : 'Landesniveau';
+        addRow(
+          'Bundesland-Faktor',
+          'Landesrichtlinie & Meldekultur (' + landLabel + ')',
+          m.deltaLand,
+          m.deltaLand >= 0.05 ? 'überdurchschn.' : m.deltaLand <= -0.05 ? 'unterdurchschn.' : 'neutral',
+        );
+      }
 
       const topoNotes = [];
       if (m.inputs.roadSlope != null) topoNotes.push('Ø ' + deNumber(m.inputs.roadSlope, 1) + ' % Steigung');
@@ -4958,7 +4995,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       addRow(
         'Struktureller Erwartungswert',
-        'Aus Topografie, Wohlstand, Beruhigung & Dichte',
+        'Aus Bundesland, Topografie, Wohlstand, Beruhigung & Dichte',
         formatUiPct(m.expectedPct) + ' %',
         'ca. ' + deNumber(Math.round(m.expectedKm), 0) + ' km',
         'model-row-total',
@@ -4973,8 +5010,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       );
 
       addRow(
-        m.behind ? 'Aufholbedarf (Lücke)' : 'Gestaltungsspielraum (Vorsprung)',
-        'Politische Priorität & Investitionen',
+        'Modell-Abweichung (Residuum)',
+        m.isWithin1Se
+          ? 'Im typischen Streubereich (±1 SE)'
+          : m.behind
+            ? 'Unter Erwartungswert'
+            : 'Über Erwartungswert',
         (m.diffPct > 0 ? '+' : '') + formatUiPct(m.diffPct) + ' %',
         (m.diffKm > 0 ? '+' : '') + deNumber(m.diffKm, 1) + ' km',
         'model-row-diff',
@@ -4986,8 +5027,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const note = document.createElement('p');
       note.className = 'model-breakdown-note';
       note.textContent =
-        'Strukturmerkmale (Topografie, Miete/Wohlstand, Verkehrsberuhigung, Dichte) erklären ~28 % der bundesweiten Unterschiede (Topografie 17 %, Miete 8 %, Beruhigung 2 %). ' +
-        'Über 72 % beruhen auf kommunaler Schwerpunktsetzung.';
+        'Strukturmerkmale und Bundesland-Effekte erklären 53,7 % der bundesweiten Unterschiede (10-fache Kreuzvalidierung: 53,3 %, n = 10.396 Gemeinden). ' +
+        'Statistischer Vergleichswert, kein planerischer Zielwert.';
       details.appendChild(note);
 
       regionDetailModelGap.appendChild(details);
@@ -8103,22 +8144,29 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (metric === 'modelGap') {
         const lowColor = isColorblind ? '#e69f00' : '#c62828';
-        const midColor = '#f5f5f5';
+        const midColor = '#e2e8f0';
         const highColor = isColorblind ? '#3274a1' : '#2e7d32';
+        const se = 5.64;
         const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'modelGapPct'], 0]]];
+        const loStop = Math.min(minVal, -se - 0.01);
+        const hiStop = Math.max(maxVal, se + 0.01);
         return [
           'case',
           ['==', ['get', 'modelGapPct'], null],
           '#cfd8dc',
+          ['<=', ['abs', clamped], se],
+          '#e2e8f0',
           [
             'interpolate',
             ['linear'],
             clamped,
-            minVal,
+            loStop,
             lowColor,
-            0,
-            midColor,
-            maxVal,
+            -se,
+            '#e2e8f0',
+            se,
+            '#e2e8f0',
+            hiStop,
             highColor,
           ],
         ];
@@ -8243,8 +8291,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       let gradient = scale.legendGradient;
       if (metric === 'modelGap') {
         gradient = isColorblind
-          ? 'linear-gradient(to right, #e69f00, #f5f5f5, #3274a1)'
-          : 'linear-gradient(to right, #c62828, #f5f5f5, #2e7d32)';
+          ? 'linear-gradient(to right, #e69f00 0%, #e2e8f0 32%, #e2e8f0 68%, #3274a1 100%)'
+          : 'linear-gradient(to right, #c62828 0%, #e2e8f0 32%, #e2e8f0 68%, #2e7d32 100%)';
       } else if (metric === 'cars') {
         gradient = isColorblind
           ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'
