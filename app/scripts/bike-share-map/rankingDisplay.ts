@@ -438,6 +438,14 @@ export const STRUCTURAL_MODEL_CONFIGS: Record<StructuralModelType, StructuralMod
 
 export const STRUCTURAL_MODEL_CONFIG = STRUCTURAL_MODEL_CONFIGS.standard
 
+/**
+ * The model is fitted on Gemeinden (fitExtendedModel.ts), so it only predicts Gemeinden. Applied
+ * to a Kreis or Land it would mix in averages over very different places — no expected value there.
+ */
+export function isStructuralModelLevel(level: unknown) {
+  return String(level ?? '') === '8'
+}
+
 export function computeStructuralModelPrediction(params: StructuralModelParams) {
   const {
     roadKm,

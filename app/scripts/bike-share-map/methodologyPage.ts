@@ -206,23 +206,25 @@ ${li([
   ${peerSection}
 
   <h2>Strukturelles Erwartungswert-Modell</h2>
-  <p>Topografie, Siedlungsdichte und Landespolitik beeinflussen die Rahmenbedingungen für
-  Radinfrastruktur massiv: Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen steht vor anderen
-  Aufgaben als eine flache Küstengemeinde in Schleswig-Holstein. Um lokale Prioritäten von diesen
-  Rahmenbedingungen zu trennen, schätzt ein <strong>multivariates Regressionsmodell</strong>
-  den statistischen Erwartungswert für jede Gemeinde.</p>
+  <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Anteil zusammen:
+  Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen hat andere Voraussetzungen als eine flache
+  Küstengemeinde in Schleswig-Holstein. Damit Gemeinden unter ähnlichen Bedingungen vergleichbar
+  werden, schätzt ein <strong>multivariates Regressionsmodell</strong> für jede Gemeinde einen
+  statistischen Erwartungswert. Es beschreibt Zusammenhänge, keine Ursachen.</p>
 
   <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
   Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
   Normvorgabe für eine verkehrswendegerechte Infrastruktur. Eine positive Abweichung („über Erwartungswert“)
-  bedeutet, dass vor Ort mehr Radinfrastruktur vorhanden ist, als sich durch Geografie, Dichte, Kaufkraft
-  und Landesniveau statistisch erklären lässt.</p>
+  bedeutet, dass vor Ort mehr Radinfrastruktur erfasst ist, als bei Gemeinden mit ähnlicher Topografie,
+  Dichte, Miete und im selben Bundesland im Mittel zu erwarten wäre. Eine Abweichung kann auf lokale
+  Entscheidungen zurückgehen, aber ebenso auf Merkmale, die das Modell nicht kennt, oder auf die
+  Datenlage in OpenStreetMap.</p>
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
     <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.396</code> Gemeinden mit einem Straßennetz ab 5&nbsp;km. Gewichtung nach Netzlänge (604.809&nbsp;km). <strong>R² = 53,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 53,3&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±5,64&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.313</code>, <strong>R² = 59,7&nbsp;%</strong>, <strong>R²_cv = 59,4&nbsp;%</strong>, Basiswert <strong>35,7&nbsp;%</strong>, <strong>SE = ±22,4&nbsp;%-Punkte</strong>). Hangneigung und städtische Dichte wirken hier noch stärker trennend als im Nebennetz.</li>
-    <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.313</code>, <strong>R² = 59,7&nbsp;%</strong>, <strong>R²_cv = 59,4&nbsp;%</strong>, Basiswert <strong>35,7&nbsp;%</strong>, <strong>SE = ±22,4&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz.</li>
+    <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Liegt die Abweichung einer Gemeinde innerhalb des modelltypischen Streubands (±1 SE), wird sie auf der Karte neutral (grau) dargestellt. Nur statistisch deutliche Ausreißer jenseits von ±1 SE erhalten Farbe.</li>
     <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Einfluss der Miete um rund ein Viertel und der der Dichte um rund ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
   </ul>
@@ -238,7 +240,7 @@ ${li([
     <tbody>
       <tr>
         <td><strong>Bundesland-Baselines (α_L)</strong></td>
-        <td>Feste Effekte für Landesrichtlinien, Förderprogramme und Meldekulturen (Niedersachsen 16,7&nbsp;%, Schleswig-Holstein 15,8&nbsp;%, Brandenburg 14,4&nbsp;%, Mecklenburg-Vorpommern 14,3&nbsp;%, NRW 10,9&nbsp;%, Sachsen-Anhalt 10,8&nbsp;%, Bundesmittel 10,6&nbsp;%, Bayern 8,9&nbsp;%, Sachsen 8,7&nbsp;%, Saarland 8,5&nbsp;%, Thüringen 8,0&nbsp;%, Baden-Württemberg 7,3&nbsp;%, Rheinland-Pfalz 6,4&nbsp;%, Hessen 6,3&nbsp;%)</td>
+        <td>Feste Effekte je Bundesland: fassen alles zusammen, was einem Land gemeinsam ist (etwa Förderprogramme, Planungsrichtlinien, Kartierungsaktivität), ohne es aufzuteilen (Niedersachsen 16,7&nbsp;%, Schleswig-Holstein 15,8&nbsp;%, Brandenburg 14,4&nbsp;%, Mecklenburg-Vorpommern 14,3&nbsp;%, NRW 10,9&nbsp;%, Sachsen-Anhalt 10,8&nbsp;%, Bundesmittel 10,6&nbsp;%, Bayern 8,9&nbsp;%, Sachsen 8,7&nbsp;%, Saarland 8,5&nbsp;%, Thüringen 8,0&nbsp;%, Baden-Württemberg 7,3&nbsp;%, Rheinland-Pfalz 6,4&nbsp;%, Hessen 6,3&nbsp;%)</td>
         <td class="num">Basis</td>
       </tr>
       <tr>
@@ -257,12 +259,12 @@ ${li([
         <td class="num">+4,3904 / Dekade</td>
       </tr>
       <tr>
-        <td><strong>ÖPNV-Bahnhofsnähe</strong></td>
-        <td>Mittlere Luftliniendistanz zu Personenbahnhöfen in km</td>
+        <td><strong>Nähe zu Bahn &amp; Tram</strong></td>
+        <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
         <td class="num">−0,0143 / km</td>
       </tr>
       <tr>
-        <td><strong>Mietniveau &amp; Kaufkraft</strong></td>
+        <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
         <td class="num">+0,9342 / (€/m²)</td>
       </tr>
@@ -273,7 +275,7 @@ ${li([
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
-        <td>Anteil verkehrsberuhigter Bereiche / Spielstraßen am Straßennetz in %</td>
+        <td>Anteil verkehrsberuhigter Bereiche, Fahrradstraßen und Fußgängerzonen am Straßennetz in %</td>
         <td class="num">+0,5545 / %-Punkt</td>
       </tr>
     </tbody>

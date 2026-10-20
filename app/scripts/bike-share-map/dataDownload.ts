@@ -1,5 +1,5 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
-import { computeStructuralModelPrediction } from './rankingDisplay'
+import { computeStructuralModelPrediction, isStructuralModelLevel } from './rankingDisplay'
 import {
   assessBikeDataQuality,
   computeFilteredLengths,
@@ -104,7 +104,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
   einpendler: 'Sozialversicherungspflichtig Beschäftigte, Einpendler (BA)',
   auspendler: 'Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)',
   arbeitsplatzzentralitaet: 'Beschäftigte am Arbeitsort / am Wohnort',
-  modell_erwartung_pct: 'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %',
+  modell_erwartung_pct:
+    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %; nur für Gemeinden (admin_level 8)',
   modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
   modell_ausserhalb_1se:
     '1, wenn die Abweichung größer als ein Residualstandardfehler ist (auf der Karte farbig), sonst 0',
@@ -157,7 +158,10 @@ export function buildDataDownloadRow(
 
   // Same gate as the map (generateViewerHtml): no expected value below the ranking threshold.
   const model =
-    ctx.density && ctx.terrain && roadKm >= DEFAULT_MIN_ROAD_KM_FOR_SCALE
+    isStructuralModelLevel(level) &&
+    ctx.density &&
+    ctx.terrain &&
+    roadKm >= DEFAULT_MIN_ROAD_KM_FOR_SCALE
       ? computeStructuralModelPrediction({
           roadKm,
           bikeKm,

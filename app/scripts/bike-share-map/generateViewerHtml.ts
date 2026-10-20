@@ -2400,7 +2400,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       let modelGapPct = null;
       let expectedPct = null;
 
-      if (densityIndex && terrainIndex && !lowRoad && road > 0) {
+      if (
+        RankingDisplay.isStructuralModelLevel(p.level) &&
+        densityIndex &&
+        terrainIndex &&
+        !lowRoad &&
+        road > 0
+      ) {
         const dens = densityIndex?.byId[p.id];
         const slope = terrainIndex?.byId[p.id]?.road;
         const elev = terrainIndex?.byId[p.id]?.elevationMean;
@@ -2869,7 +2875,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             '<strong>Rot</strong> = unter dem Erwartungswert. ' +
             '<strong>Grau</strong> = im Rahmen der typischen Modellstreuung (±1 Standardfehler, ±' +
             formatUiPct(rse) +
-            ' %-Punkte).';
+            ' %-Punkte). Nur für Gemeinden – auf dieser Ebene ist das Modell geschätzt.';
         } else if (metric === 'cars') {
           metricDef.textContent =
             'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
@@ -4894,8 +4900,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function renderRegionModelGap(p) {
       if (!regionDetailModelGap) return;
       regionDetailModelGap.replaceChildren();
-      const level = String(p.level ?? '');
-      if (level !== '8' && level !== '6') {
+      if (!RankingDisplay.isStructuralModelLevel(p.level)) {
         regionDetailModelGap.hidden = true;
         return;
       }
@@ -5011,16 +5016,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       details.className = 'model-breakdown-details';
       const summary = document.createElement('summary');
       summary.className = 'model-breakdown-summary';
-      summary.textContent = 'Faktoren-Zerlegung (Bundesland, Topografie, Wohlstand, Beruhigung, Dichte)';
+      summary.textContent = 'Faktoren-Zerlegung (Bundesland, Topografie, Miete, Beruhigung, Dichte)';
       details.appendChild(summary);
 
       const table = document.createElement('table');
       table.className = 'model-breakdown-table';
       table.innerHTML =
-        '<thead><tr><th>Faktor</th><th>Einfluss</th><th>Messwert</th></tr></thead>';
+        '<thead><tr><th>Faktor</th><th>Beitrag</th><th>Messwert</th></tr></thead>';
       const tbody = document.createElement('tbody');
 
-      const formatDelta = (d) => (d > 0 ? '+' : '') + formatUiPct(d) + ' %';
+      const formatDelta = (d) => (d > 0 ? '+' : '') + formatUiPct(d) + ' %-Pkt.';
 
       const addRow = (label, note, delta, measVal, rowClass) => {
         const tr = document.createElement('tr');
@@ -5040,14 +5045,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         tbody.appendChild(tr);
       };
 
-      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gebiete (gewichtet)', m.baselinePct, formatUiPct(m.baselinePct) + ' %');
+      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gemeinden (nach Netzlänge gewichtet)', formatUiPct(m.baselinePct) + ' %', '');
 
       if (m.deltaLand != null && Math.abs(m.deltaLand) >= 0.01) {
         const landName = p.bundesland_id ? regionIndex?.byId.get(p.bundesland_id)?.properties?.name : null;
         const landLabel = landName ? String(landName) : 'Landesniveau';
         addRow(
-          'Bundesland-Faktor',
-          'Landesrichtlinie & Meldekultur (' + landLabel + ')',
+          'Bundesland',
+          'Landesniveau (' + landLabel + ')',
           m.deltaLand,
           m.deltaLand >= 0.05 ? 'überdurchschn.' : m.deltaLand <= -0.05 ? 'unterdurchschn.' : 'neutral',
         );
@@ -5060,12 +5065,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         'Topografie & Hanglage',
         topoNotes.join(', ') || null,
         m.deltaTopo,
-        m.deltaTopo <= -0.05 ? 'bremsend' : m.deltaTopo >= 0.05 ? 'begünstigend' : 'neutral',
+        m.deltaTopo <= -0.05 ? 'senkt Erwartung' : m.deltaTopo >= 0.05 ? 'hebt Erwartung' : 'neutral',
       );
 
       if (m.deltaRent != null) {
         addRow(
-          'Mietniveau & Wohlstand',
+          'Mietniveau',
           m.inputs.rent != null ? deNumber(m.inputs.rent, 2) + ' €/m² Kaltmiete' : null,
           m.deltaRent,
           m.deltaRent >= 0.05 ? 'gehobenes Niveau' : m.deltaRent <= -0.05 ? 'niedrigeres Niveau' : 'neutral',
@@ -5106,7 +5111,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       addRow(
         'Struktureller Erwartungswert',
-        'Aus Bundesland, Topografie, Wohlstand, Beruhigung & Dichte',
+        'Summe der Zeilen darüber',
         formatUiPct(m.expectedPct) + ' %',
         'ca. ' + deNumber(Math.round(m.expectedKm), 0) + ' km',
         'model-row-total',
@@ -5127,7 +5132,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           : m.behind
             ? 'Unter Erwartungswert'
             : 'Über Erwartungswert',
-        (m.diffPct > 0 ? '+' : '') + formatUiPct(m.diffPct) + ' %',
+        (m.diffPct > 0 ? '+' : '') + formatDelta(m.diffPct),
         (m.diffKm > 0 ? '+' : '') + deNumber(m.diffKm, 1) + ' km',
         'model-row-diff',
       );
@@ -5139,13 +5144,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       note.className = 'model-breakdown-note';
       note.textContent =
         m.modelName +
-        ': Strukturmerkmale und Bundesland-Effekte erklären ' +
+        ': Das Modell bildet ' +
         formatUiPct(m.r2TotalPct) +
-        ' % der Unterschiede (10-fache Kreuzvalidierung: ' +
+        ' % der Unterschiede zwischen Gemeinden ab (10-fache Kreuzvalidierung: ' +
         formatUiPct(m.r2CvPct) +
         ' %, n = ' +
         deNumber(m.n, 0) +
-        ' Gemeinden). Statistischer Vergleichswert, kein planerischer Zielwert.';
+        ' Gemeinden). Es beschreibt Zusammenhänge, keine Ursachen – ein statistischer Vergleichswert, kein planerischer Zielwert.';
       details.appendChild(note);
 
       regionDetailModelGap.appendChild(details);

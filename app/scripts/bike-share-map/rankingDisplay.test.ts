@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import {
+  isStructuralModelLevel,
   bikelaneGapKm,
   contextBand,
   medianOfSorted,
@@ -474,5 +475,14 @@ describe('computeStructuralModelPrediction', () => {
         stDistKm: null,
       }),
     ).toBeNull()
+  })
+})
+
+describe('isStructuralModelLevel', () => {
+  test('only Gemeinden get an expected value', () => {
+    expect(isStructuralModelLevel('8')).toBe(true)
+    expect(isStructuralModelLevel(8)).toBe(true)
+    expect(isStructuralModelLevel('6')).toBe(false)
+    expect(isStructuralModelLevel(undefined)).toBe(false)
   })
 })

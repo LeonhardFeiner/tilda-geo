@@ -64,6 +64,15 @@ describe('buildDataDownloadRow', () => {
     })
   })
 
+  it('gives no model values above Gemeinde level', () => {
+    const kreis = { properties: { ...gemeinde.properties, level: '6' } }
+    const row = buildDataDownloadRow(kreis, {
+      density: { 'relation/1': 500 },
+      terrain: { 'relation/1': { road: 3, elevationMean: 400 } },
+    })
+    expect(row?.modell_erwartung_pct).toBeNull()
+  })
+
   it('leaves the model out below the ranking threshold', () => {
     const small = { properties: { ...gemeinde.properties, road_length: { residential: 3 } } }
     const row = buildDataDownloadRow(small, {
