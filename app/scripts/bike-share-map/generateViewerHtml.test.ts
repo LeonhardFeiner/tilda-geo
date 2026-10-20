@@ -427,6 +427,16 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Auspendler (BA 2025)'")
     expect(html).toContain("header: 'Arbeitsplatzzentralität (Arbeitsorte / Wohnorte)'")
   })
+
+  test('adapts ranking list sorting, values, and diverging bars to the active map metric', () => {
+    expect(html).toContain('compareByActiveMetric')
+    expect(html).toContain('isRankedActiveMetric')
+    expect(html).toContain('formatRankingMetricValue')
+    expect(html).toContain('formatRankingRowAriaLabel')
+    expect(html).toContain('rankingSummaryMetricLabel')
+    expect(html).toContain('colorForMetricValue')
+    expect(html).toContain('ranking-bar-track--diverging')
+  })
 })
 
 describe('generateViewerHtml inline script', () => {

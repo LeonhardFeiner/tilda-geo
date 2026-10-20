@@ -483,7 +483,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .ranking-list li {
       display: grid;
-      grid-template-columns: 1.6em minmax(0, 1fr) minmax(52px, 80px) 4.75em;
+      grid-template-columns: 1.6em minmax(0, 1fr) minmax(44px, 72px) minmax(4.6em, 6.4em);
       gap: 2px 6px;
       align-items: center;
       margin: 3px 0;
@@ -524,9 +524,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       font-size: 13px;
     }
     .ranking-bar-track {
-      height: 10px; background: #eceff1; border-radius: 2px; overflow: hidden;
+      height: 10px; background: #eceff1; border-radius: 2px; overflow: hidden; position: relative;
     }
-    .ranking-bar-fill { height: 100%; border-radius: 2px; min-width: 2px; }
+    .ranking-bar-track--diverging::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: #94a3b8;
+      z-index: 1;
+    }
+    .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; min-width: 2px; }
     .ranking-pct {
       text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: #444;
       white-space: nowrap;
@@ -1375,8 +1385,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background: #f1f5f9;
       border-radius: 2pt;
       overflow: hidden;
+      position: relative;
+    }
+    .print-sheet .ps-ranking-bar-track--diverging::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 0.5pt;
+      background: #94a3b8;
+      z-index: 1;
     }
     .print-sheet .ps-ranking-bar-fill {
+      position: absolute;
       height: 100%;
       border-radius: 2pt;
       min-width: 2pt;
@@ -2880,7 +2902,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       lastPctRange = { min, max, scaleCapped: activeRange.scaleCapped, dataMax: activeRange.dataMax };
       updateLegendRange(min, max, currentMapMetric);
       lastRankingFeatures = filtered;
-      updateRanking(filtered, bikeRange.min, bikeRange.max);
+      updateRanking(filtered, activeRange.min, activeRange.max);
       updateViewMetaText(filtered, activeRange);
       refreshSelectedRegionIfNeeded();
       const geojson = buildRegionGeojson(filtered);
@@ -3114,10 +3136,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function currentRankingTopN() {
-      const withPct = lastRankingSorted.filter(
-        (f) => typeof f.properties?.bikeSharePct === 'number',
-      );
-      const items = withPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      const withMetric = lastRankingSorted.filter((f) => isRankedActiveMetric(f, currentMapMetric));
+      const items = withMetric.map((f) => ({ id: String(f.properties?.id ?? '') }));
       return RankingDisplay.effectiveRankingTopN({
         mode: rankingMode,
         items,
@@ -3416,23 +3436,146 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       ensureHoverHighlightLayer();
     }
 
+    function getFeatureMetricValue(f, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
+      const p = f?.properties || {};
+      if (metric === 'modelGap') return typeof p.modelGapPct === 'number' ? p.modelGapPct : null;
+      if (metric === 'cars') return typeof p.carsPer1000 === 'number' ? p.carsPer1000 : null;
+      if (metric === 'rent') return typeof p.rentColdM2 === 'number' ? p.rentColdM2 : null;
+      if (metric === 'accidents') return typeof p.bikeAccidentsPer10k === 'number' ? p.bikeAccidentsPer10k : null;
+      if (metric === 'commuters') return typeof p.netCommuters === 'number' ? p.netCommuters : null;
+      return typeof p.bikeSharePct === 'number' ? p.bikeSharePct : null;
+    }
+
+    function isRankedActiveMetric(f, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
+      if (metric === 'bikeShare') {
+        return typeof f.properties?.bikeSharePct === 'number' && !f.properties?.lowRoad;
+      }
+      const val = getFeatureMetricValue(f, metric);
+      return typeof val === 'number' && Number.isFinite(val);
+    }
+
+    function compareByActiveMetric(a, b) {
+      const metric = currentMapMetric || 'bikeShare';
+      const av = getFeatureMetricValue(a, metric);
+      const bv = getFeatureMetricValue(b, metric);
+      const aValid = typeof av === 'number' && Number.isFinite(av);
+      const bValid = typeof bv === 'number' && Number.isFinite(bv);
+      if (!aValid && !bValid) {
+        return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
+      }
+      if (!aValid) return 1;
+      if (!bValid) return -1;
+      if (bv !== av) return bv - av;
+      return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
+    }
+
+    function formatRankingMetricValue(val, metric) {
+      if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '–';
+      metric = metric || currentMapMetric || 'bikeShare';
+      if (metric === 'modelGap') {
+        return (val > 0 ? '+' : '') + formatUiPct(val) + ' %p';
+      }
+      if (metric === 'cars') {
+        return Math.round(val) + ' PKW';
+      }
+      if (metric === 'rent') {
+        return val.toFixed(2).replace('.', ',') + ' €/m²';
+      }
+      if (metric === 'accidents') {
+        return formatUiPct(val) + ' / 10k';
+      }
+      if (metric === 'commuters') {
+        return (val > 0 ? '+' : '') + val.toLocaleString('de-DE');
+      }
+      return formatUiPct(val) + ' %';
+    }
+
+    function formatRankingRowAriaLabel(rank, label, val, metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
+      if (val == null || typeof val !== 'number' || !Number.isFinite(val)) {
+        return 'Platz ' + rank + ', ' + label + ', keine Daten';
+      }
+      if (metric === 'modelGap') {
+        return (
+          'Platz ' +
+          rank +
+          ', ' +
+          label +
+          ', ' +
+          (val > 0 ? '+' : '') +
+          formatUiPct(val) +
+          ' Prozentpunkte Modell-Abweichung'
+        );
+      }
+      if (metric === 'cars') {
+        return 'Platz ' + rank + ', ' + label + ', ' + Math.round(val) + ' PKW je 1.000 Einwohner';
+      }
+      if (metric === 'rent') {
+        return (
+          'Platz ' +
+          rank +
+          ', ' +
+          label +
+          ', ' +
+          val.toFixed(2).replace('.', ',') +
+          ' Euro je Quadratmeter Nettokaltmiete'
+        );
+      }
+      if (metric === 'accidents') {
+        return 'Platz ' + rank + ', ' + label + ', ' + formatUiPct(val) + ' Fahrradunfälle je 10.000 Einwohner';
+      }
+      if (metric === 'commuters') {
+        return (
+          'Platz ' +
+          rank +
+          ', ' +
+          label +
+          ', ' +
+          (val > 0 ? '+' : '') +
+          val.toLocaleString('de-DE') +
+          ' Pendlersaldo'
+        );
+      }
+      return 'Platz ' + rank + ', ' + label + ', ' + formatUiPct(val) + ' Prozent Radinfrastruktur';
+    }
+
+    function rankingSummaryMetricLabel(metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
+      if (metric === 'modelGap') return 'Modell-Abweichung in dieser Ansicht';
+      if (metric === 'cars') return 'PKW je 1.000 EW in dieser Ansicht';
+      if (metric === 'rent') return 'Nettokaltmiete in dieser Ansicht';
+      if (metric === 'accidents') return 'Radunfälle je 10.000 EW in dieser Ansicht';
+      if (metric === 'commuters') return 'Pendlersaldo in dieser Ansicht';
+      return 'Anteil in dieser Ansicht';
+    }
+
+    function rankingMetricRankLabel(metric) {
+      metric = metric || currentMapMetric || 'bikeShare';
+      if (metric === 'modelGap') return 'Modell-Abweichung';
+      if (metric === 'cars') return 'PKW-Dichte';
+      if (metric === 'rent') return 'Nettokaltmiete';
+      if (metric === 'accidents') return 'Radunfälle';
+      if (metric === 'commuters') return 'Pendlersaldo';
+      return 'Radinfrastruktur';
+    }
+
     function appendRankingRow(list, rank, f, minPct, maxPct, span) {
-      const pct = f.properties.bikeSharePct;
+      const metric = currentMapMetric || 'bikeShare';
+      const val = getFeatureMetricValue(f, metric);
       const li = document.createElement('li');
       const featureId = String(f.properties?.id ?? '');
       const label = f.properties?.name || f.properties?.id || '–';
       if (featureId) {
         li.dataset.rankingId = featureId;
         li.classList.add('ranking-row-clickable');
-        // The map polygons themselves can't be reached with a keyboard, so this list is the
-        // only path to a region for keyboard and screen-reader users — it needs real button
-        // semantics, not just a click listener and a title attribute.
         li.setAttribute('role', 'button');
         li.tabIndex = 0;
         li.setAttribute('aria-pressed', String(featureId === selectedFeatureId));
         li.setAttribute(
           'aria-label',
-          'Platz ' + rank + ', ' + label + ', ' + formatUiPct(pct) + ' Prozent Radinfrastruktur',
+          formatRankingRowAriaLabel(rank, label, val, metric),
         );
         li.title = 'Auf der Karte auswählen';
         li.addEventListener('click', () => selectRegionById(featureId, null, true));
@@ -3453,32 +3596,56 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       name.className = 'ranking-name';
       name.textContent = label;
       name.title = label;
+      const isDiverging = metric === 'modelGap' || metric === 'commuters';
       const track = document.createElement('div');
-      track.className = 'ranking-bar-track';
+      track.className = 'ranking-bar-track' + (isDiverging ? ' ranking-bar-track--diverging' : '');
       const fill = document.createElement('div');
       fill.className = 'ranking-bar-fill';
-      const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
-      fill.style.width = widthPct + '%';
-      fill.style.background = colorForPct(pct, minPct, maxPct);
+
+      if (val != null) {
+        fill.style.background = colorForMetricValue(val, minPct, maxPct, colorScaleSelect.value, metric);
+        if (isDiverging) {
+          if (val >= 0) {
+            const bound = Math.max(Math.abs(maxPct), 0.001);
+            const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
+            fill.style.left = '50%';
+            fill.style.width = w + '%';
+          } else {
+            const bound = Math.max(Math.abs(minPct), 0.001);
+            const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
+            fill.style.left = (50 - w) + '%';
+            fill.style.width = w + '%';
+          }
+        } else {
+          const clamped = Math.max(minPct, Math.min(maxPct, val));
+          const widthPct = Math.max(2, Math.min(100, ((clamped - minPct) / span) * 100));
+          fill.style.left = '0';
+          fill.style.width = widthPct + '%';
+        }
+      } else {
+        fill.style.width = '0';
+      }
       track.appendChild(fill);
       const pctEl = document.createElement('span');
       pctEl.className = 'ranking-pct';
-      pctEl.textContent = formatUiPct(pct) + ' %';
+      pctEl.textContent = formatRankingMetricValue(val, metric);
       li.append(rankEl, name, track, pctEl);
-      const quality = TildaStats.assessBikeDataQuality(
-        f.properties?.road_length,
-        f.properties?.bikelane_length,
-      );
-      if (quality && (quality.level === 'poor' || quality.level === 'sparse')) {
-        const flag = document.createElement('span');
-        flag.className = 'ranking-quality';
-        flag.textContent = '⚠';
-        flag.title =
-          quality.level === 'poor'
-            ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
-            : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
-        flag.setAttribute('aria-label', flag.title);
-        pctEl.prepend(flag);
+      if (metric === 'bikeShare') {
+        const quality = TildaStats.assessBikeDataQuality(
+          f.properties?.road_length,
+          f.properties?.bikelane_length,
+        );
+        if (quality && (quality.level === 'poor' || quality.level === 'sparse')) {
+          const flag = document.createElement('span');
+          flag.className = 'ranking-quality';
+          flag.textContent = '⚠';
+          flag.title =
+            quality.level === 'poor'
+              ? 'Viele Radwege sind in OpenStreetMap nicht eindeutig getaggt – Wert unsicher'
+              : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
+          flag.setAttribute('aria-label', flag.title);
+          pctEl.prepend(flag);
+        }
       }
       list.appendChild(li);
     }
@@ -3550,6 +3717,59 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
+    function colorForMetricValue(val, minVal, maxVal, scaleId, metric) {
+      if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '#cfd8dc';
+      metric = metric || currentMapMetric || 'bikeShare';
+      const isColorblind = scaleId === 'colorblind';
+      if (metric === 'modelGap') {
+        const low = isColorblind ? '#e69f00' : '#c62828';
+        const mid = '#f5f5f5';
+        const high = isColorblind ? '#3274a1' : '#2e7d32';
+        if (val <= 0) {
+          const t = minVal < 0 ? Math.max(0, Math.min(1, (val - minVal) / (0 - minVal))) : 1;
+          return lerpColor(low, mid, t);
+        }
+        const t = maxVal > 0 ? Math.max(0, Math.min(1, val / maxVal)) : 1;
+        return lerpColor(mid, high, t);
+      }
+      if (metric === 'commuters') {
+        const low = isColorblind ? '#e69f00' : '#c62828';
+        const mid = '#f5f5f5';
+        const high = isColorblind ? '#3274a1' : '#2e7d32';
+        if (val <= 0) {
+          const t = minVal < 0 ? Math.max(0, Math.min(1, (val - minVal) / (0 - minVal))) : 1;
+          return lerpColor(low, mid, t);
+        }
+        const t = maxVal > 0 ? Math.max(0, Math.min(1, val / maxVal)) : 1;
+        return lerpColor(mid, high, t);
+      }
+      if (metric === 'cars') {
+        const low = isColorblind ? '#3274a1' : '#2e7d32';
+        const mid = isColorblind ? '#f0e442' : '#fff59d';
+        const high = isColorblind ? '#e69f00' : '#c62828';
+        const span = Math.max(0.001, maxVal - minVal);
+        const t = Math.max(0, Math.min(1, (val - minVal) / span));
+        return t <= 0.5 ? lerpColor(low, mid, t * 2) : lerpColor(mid, high, (t - 0.5) * 2);
+      }
+      if (metric === 'rent') {
+        const low = isColorblind ? '#e69f00' : '#e8f5e9';
+        const mid = isColorblind ? '#f0e442' : '#ffb74d';
+        const high = isColorblind ? '#3274a1' : '#c62828';
+        const span = Math.max(0.001, maxVal - minVal);
+        const t = Math.max(0, Math.min(1, (val - minVal) / span));
+        return t <= 0.5 ? lerpColor(low, mid, t * 2) : lerpColor(mid, high, (t - 0.5) * 2);
+      }
+      if (metric === 'accidents') {
+        const low = isColorblind ? '#3274a1' : '#2e7d32';
+        const mid = isColorblind ? '#f0e442' : '#fff59d';
+        const high = isColorblind ? '#e69f00' : '#c62828';
+        const span = Math.max(0.001, maxVal - minVal);
+        const t = Math.max(0, Math.min(1, (val - minVal) / span));
+        return t <= 0.5 ? lerpColor(low, mid, t * 2) : lerpColor(mid, high, (t - 0.5) * 2);
+      }
+      return colorForPct(val, minVal, maxVal);
+    }
+
     /**
      * Whether a region takes part in the ranking. A network of a few km makes the percentage
      * jump with every way mapped — the top of the nationwide list used to be a 100 % forest
@@ -3561,12 +3781,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function rebuildRankIndex(features) {
       rankByFeatureId.clear();
-      const withPct = [...features]
-        .filter(isRanked)
-        .sort(compareByBikeShare);
-      withPct.forEach((f, i) => {
+      const withMetric = [...features]
+        .filter((f) => isRankedActiveMetric(f, currentMapMetric))
+        .sort(compareByActiveMetric);
+      withMetric.forEach((f, i) => {
         const id = f.properties?.id;
-        if (id) rankByFeatureId.set(id, { rank: i + 1, total: withPct.length });
+        if (id) rankByFeatureId.set(id, { rank: i + 1, total: withMetric.length });
       });
     }
 
@@ -3948,16 +4168,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function buildPrintRanking(feature) {
       if (!lastRankingFeatures.length) return null;
-      const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
-      const withPct = sorted.filter(isRanked);
-      if (withPct.length <= 1) return null;
+      const metric = currentMapMetric || 'bikeShare';
+      const sorted = [...lastRankingFeatures].sort(compareByActiveMetric);
+      const withMetric = sorted.filter((f) => isRankedActiveMetric(f, metric));
+      if (withMetric.length <= 1) return null;
 
       const p = feature?.properties || {};
-      const minPct = lastRankingMinPct;
-      const maxPct = lastRankingMaxPct;
-      const span = Math.max(maxPct - minPct, 0.001);
+      const minVal = lastRankingMinPct;
+      const maxVal = lastRankingMaxPct;
+      const span = Math.max(maxVal - minVal, 0.001);
 
-      const items = withPct.map((f) => ({ id: String(f.properties?.id ?? '') }));
+      const items = withMetric.map((f) => ({ id: String(f.properties?.id ?? '') }));
       const topN = currentRankingTopN();
       const built = RankingDisplay.buildRankingExportRows(items, {
         mode: rankingMode,
@@ -3972,19 +4193,21 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const summary = document.createElement('p');
       summary.className = 'ps-ranking-summary';
       const rankInfo = rankByFeatureId.get(p.id);
+      const metricQualifier = metric !== 'bikeShare' ? ' (' + rankingMetricRankLabel(metric) + ')' : '';
       const rankText = rankInfo
-        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
-        : withPct.length + ' Gebiete ' + viewComparisonLabel();
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + metricQualifier + ' ' + viewComparisonLabel()
+        : withMetric.length + ' Gebiete ' + viewComparisonLabel();
       const modeHint =
-        rankingMode === 'topflop' && withPct.length > (topN ?? DEFAULT_RANKING_TOP_N) * 2
+        rankingMode === 'topflop' && withMetric.length > (topN ?? DEFAULT_RANKING_TOP_N) * 2
           ? ' (Top & Flop je ' + (topN ?? DEFAULT_RANKING_TOP_N) + ')'
           : '';
 
-      summary.textContent = rankText + modeHint + ' · Balken = Anteil in dieser Ansicht';
+      summary.textContent = rankText + modeHint + ' · Balken = ' + rankingSummaryMetricLabel(metric);
       wrap.appendChild(summary);
 
       const list = document.createElement('ul');
       list.className = 'ps-ranking-list';
+      const isDiverging = metric === 'modelGap' || metric === 'commuters';
 
       for (const row of built) {
         if (row.type === 'divider') {
@@ -3994,11 +4217,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           list.appendChild(div);
           continue;
         }
-        const f = withPct[row.index];
+        const f = withMetric[row.index];
         if (!f) continue;
         const fProps = f.properties || {};
         const fId = String(fProps.id ?? '');
-        const pct = fProps.bikeSharePct;
+        const val = getFeatureMetricValue(f, metric);
         const name = String(fProps.name || fId || '–');
         const isCurrent = Boolean(fId && fId === p.id);
 
@@ -4014,29 +4237,53 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         nameEl.textContent = name;
 
         const track = document.createElement('div');
-        track.className = 'ps-ranking-bar-track';
+        track.className = 'ps-ranking-bar-track' + (isDiverging ? ' ps-ranking-bar-track--diverging' : '');
         const fill = document.createElement('div');
         fill.className = 'ps-ranking-bar-fill';
-        const widthPct = Math.max(2, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * 100);
-        fill.style.width = widthPct + '%';
-        fill.style.background = colorForPct(pct, minPct, maxPct);
+
+        if (val != null) {
+          fill.style.background = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
+          if (isDiverging) {
+            if (val >= 0) {
+              const bound = Math.max(Math.abs(maxVal), 0.001);
+              const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
+              fill.style.left = '50%';
+              fill.style.width = w + '%';
+            } else {
+              const bound = Math.max(Math.abs(minVal), 0.001);
+              const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
+              fill.style.left = (50 - w) + '%';
+              fill.style.width = w + '%';
+            }
+          } else {
+            const clamped = Math.max(minVal, Math.min(maxVal, val));
+            const widthPct = Math.max(2, Math.min(100, ((clamped - minVal) / span) * 100));
+            fill.style.left = '0';
+            fill.style.width = widthPct + '%';
+          }
+        } else {
+          fill.style.width = '0';
+        }
         track.appendChild(fill);
 
-        const pctEl = document.createElement('span');
-        pctEl.className = 'ps-ranking-pct';
-        pctEl.textContent = formatUiPct(pct) + ' %';
+        const valEl = document.createElement('span');
+        valEl.className = 'ps-ranking-pct';
+        valEl.textContent = formatRankingMetricValue(val, metric);
 
-        li.append(rankEl, nameEl, track, pctEl);
+        li.append(rankEl, nameEl, track, valEl);
         list.appendChild(li);
       }
 
       wrap.appendChild(list);
 
-      const withoutPct = sorted.length - withPct.length;
-      if (withoutPct > 0) {
+      const withoutMetric = sorted.length - withMetric.length;
+      if (withoutMetric > 0) {
         const note = document.createElement('p');
         note.className = 'ps-ranking-note';
-        note.textContent = withoutPct + ' weitere Gebiete ohne Rang (< 5 km erfasste Straße)';
+        note.textContent =
+          metric === 'bikeShare'
+            ? withoutMetric + ' weitere Gebiete ohne Rang (< 5 km erfasste Straße)'
+            : withoutMetric + ' weitere Gebiete ohne Daten in dieser Ansicht';
         wrap.appendChild(note);
       }
 
@@ -5598,14 +5845,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
       const containerName = focusContainerName();
+      const metricQualifier =
+        currentMapMetric !== 'bikeShare' ? ' (' + rankingMetricRankLabel(currentMapMetric) + ')' : '';
       const rankText = rankInfo
-        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel()
+        ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + metricQualifier + ' ' + viewComparisonLabel()
         : containerName
           ? 'In dieser Ansicht Teil von ' + containerName
-          : 'Kein Rang (ohne Straßendaten in der Zählung)';
-      const rankLine = p.lowRoad && p.roadSumKm > 0
-        ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
-        : rankText;
+          : currentMapMetric === 'bikeShare'
+            ? 'Kein Rang (ohne Straßendaten in der Zählung)'
+            : 'Kein Rang (ohne Daten in dieser Ansicht)';
+      const rankLine =
+        currentMapMetric === 'bikeShare' && p.lowRoad && p.roadSumKm > 0
+          ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
+          : rankText;
       const pct =
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
           ? formatUiPct(p.bikeSharePct) + ' %'
@@ -6023,8 +6275,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function updateRanking(features, minPct, maxPct) {
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
-      const sorted = [...features].sort(compareByBikeShare);
-      const withPct = sorted.filter(isRanked);
+      const sorted = [...features].sort(compareByActiveMetric);
+      const withMetric = sorted.filter(isRankedActiveMetric);
       const span = Math.max(maxPct - minPct, 0.001);
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
@@ -6038,22 +6290,28 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const topFlopN =
           RankingDisplay.effectiveRankingTopN({
             mode: 'topflop',
-            items: withPct.map((f) => ({ id: String(f.properties?.id ?? '') })),
+            items: withMetric.map((f) => ({ id: String(f.properties?.id ?? '') })),
             focusChainIds: rankingFocusChainIds(),
           }) ?? DEFAULT_RANKING_TOP_N;
-        modeSwitch.hidden = withPct.length <= topFlopN * 2;
+        modeSwitch.hidden = withMetric.length <= topFlopN * 2;
       }
       const modeHint =
-        rankingMode === 'topflop' && withPct.length > topN * 2
+        rankingMode === 'topflop' && withMetric.length > topN * 2
           ? ' · Top & Flop je ' + topN
           : rankingMode === 'all'
-            ? ' · alle ' + withPct.length
+            ? ' · alle ' + withMetric.length
             : '';
       summary.textContent =
-        '(' + sorted.length + ' Gebiete' + modeHint + ', Balken = Anteil in dieser Ansicht)';
+        '(' +
+        sorted.length +
+        ' Gebiete' +
+        modeHint +
+        ', Balken = ' +
+        rankingSummaryMetricLabel(currentMapMetric) +
+        ')';
 
       list.replaceChildren();
-      for (const row of rankingDisplayRows(withPct)) {
+      for (const row of rankingDisplayRows(withMetric)) {
         if (row.type === 'divider') {
           const gap = document.createElement('li');
           gap.className = 'ranking-divider';
@@ -6063,11 +6321,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         appendRankingRow(list, row.rank, row.f, minPct, maxPct, span);
       }
-      const withoutPct = sorted.length - withPct.length;
-      if (withoutPct > 0) {
+      const withoutMetric = sorted.length - withMetric.length;
+      if (withoutMetric > 0) {
         const note = document.createElement('li');
         note.className = 'ranking-more';
-        note.textContent = withoutPct + ' ohne Rang (weniger als 5 km Straße erfasst)';
+        note.textContent =
+          currentMapMetric === 'bikeShare'
+            ? withoutMetric + ' ohne Rang (weniger als 5 km Straße erfasst)'
+            : withoutMetric + ' ohne Daten in dieser Ansicht';
         list.appendChild(note);
       }
       syncRankingRowHighlights();
@@ -6545,14 +6806,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     function drawRankingExportCanvas() {
       const { width, height, padding } = RankingDisplay.PORTRAIT_EXPORT;
-      const sorted = [...lastRankingFeatures].sort(compareByBikeShare);
-      const withPct = sorted.filter(isRanked);
+      const metric = currentMapMetric || 'bikeShare';
+      const sorted = [...lastRankingFeatures].sort(compareByActiveMetric);
+      const withMetric = sorted.filter(isRankedActiveMetric);
       const topN = currentRankingTopN();
-      const showsAlle = RankingDisplay.rankingShowsAsAlle(withPct.length, rankingMode, topN);
-      const rows = rankingExportRows(withPct);
-      const minPct = lastRankingMinPct;
-      const maxPct = lastRankingMaxPct;
-      const span = Math.max(maxPct - minPct, 0.001);
+      const showsAlle = RankingDisplay.rankingShowsAsAlle(withMetric.length, rankingMode, topN);
+      const rows = rankingExportRows(withMetric);
+      const minVal = lastRankingMinPct;
+      const maxVal = lastRankingMaxPct;
+      const span = Math.max(maxVal - minVal, 0.001);
+      const isDiverging = metric === 'modelGap' || metric === 'commuters';
       const focusIds = new Set(rankingFocusChainIds());
       const canvas = document.createElement('canvas');
       canvas.width = width;
@@ -6570,17 +6833,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       ctx.fillStyle = '#666666';
       ctx.font = '400 28px system-ui, sans-serif';
       const summary = showsAlle
-        ? withPct.length + ' Gebiete'
-        : withPct.length +
+        ? withMetric.length + ' Gebiete · ' + rankingSummaryMetricLabel(metric)
+        : withMetric.length +
           ' Gebiete · Top & Flop je ' +
-          (topN ?? DEFAULT_RANKING_TOP_N);
+          (topN ?? DEFAULT_RANKING_TOP_N) +
+          ' · ' +
+          rankingSummaryMetricLabel(metric);
       y = wrapCanvasText(ctx, summary, padding, y, innerW, 34);
       y += 24;
 
       const rankColW = 72;
-      const pctColW = 120;
+      const valColW = 140;
       const barX = padding + rankColW + 280;
-      const barW = width - padding - pctColW - barX - 16;
+      const barW = width - padding - valColW - barX - 16;
       const rowH = 72;
 
       for (const row of rows) {
@@ -6594,7 +6859,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         const f = row.f;
         const id = String(f.properties?.id ?? '');
-        const pct = f.properties.bikeSharePct;
+        const val = getFeatureMetricValue(f, metric);
         const name = String(f.properties?.name || id || '–');
         const highlighted = focusIds.has(id);
         if (highlighted) {
@@ -6618,13 +6883,33 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ctx.fillText(truncateCanvasText(ctx, name, 268), padding + rankColW, y + 34);
         ctx.fillStyle = '#eceff1';
         ctx.fillRect(barX, y + 22, barW, 16);
-        const barFillW = Math.max(4, ((clampPctForScale(pct, minPct, maxPct) - minPct) / span) * barW);
-        ctx.fillStyle = colorForPct(pct, minPct, maxPct);
-        ctx.fillRect(barX, y + 22, barFillW, 16);
+
+        if (val != null) {
+          ctx.fillStyle = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
+          if (isDiverging) {
+            const midX = barX + barW / 2;
+            if (val >= 0) {
+              const bound = Math.max(Math.abs(maxVal), 0.001);
+              const w = Math.max(3, Math.min(barW / 2, (val / bound) * (barW / 2)));
+              ctx.fillRect(midX, y + 22, w, 16);
+            } else {
+              const bound = Math.max(Math.abs(minVal), 0.001);
+              const w = Math.max(3, Math.min(barW / 2, (Math.abs(val) / bound) * (barW / 2)));
+              ctx.fillRect(midX - w, y + 22, w, 16);
+            }
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillRect(midX, y + 20, 1, 20);
+          } else {
+            const clamped = Math.max(minVal, Math.min(maxVal, val));
+            const barFillW = Math.max(4, Math.min(barW, ((clamped - minVal) / span) * barW));
+            ctx.fillRect(barX, y + 22, barFillW, 16);
+          }
+        }
+
         ctx.fillStyle = '#444444';
         ctx.font = '400 26px system-ui, sans-serif';
         ctx.textAlign = 'right';
-        ctx.fillText(formatUiPct(pct) + ' %', width - padding, y + 34);
+        ctx.fillText(formatRankingMetricValue(val, metric), width - padding, y + 34);
         ctx.textAlign = 'left';
         y += rowH;
         if (y > height - padding - rowH) break;
@@ -8150,7 +8435,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       lastRankingFeatures = filtered;
       updateRankingVisibility();
       updateScaleCapHint();
-      updateRanking(filtered, bikeRange.min, bikeRange.max);
+      updateRanking(filtered, activeRange.min, activeRange.max);
       updateViewMetaText(filtered, activeRange);
       updatePanelSummaryPreview();
       const exitNeighborBtn = document.getElementById('exit-neighbor-view');
@@ -8265,7 +8550,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       applyOverlayLineColors();
       updateRegionColors(lastPctRange.min, lastPctRange.max);
       if (lastRankingFeatures.length) {
-        updateRanking(lastRankingFeatures, lastBikeShareRange.min, lastBikeShareRange.max);
+        updateRanking(lastRankingFeatures, lastPctRange.min, lastPctRange.max);
       }
       if (panelMain) {
         panelMain.scrollTop = prevScrollTop;
