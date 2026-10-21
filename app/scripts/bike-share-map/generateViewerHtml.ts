@@ -538,7 +538,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background: #94a3b8;
       z-index: 1;
     }
-    .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; min-width: 2px; }
+    .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; }
     .ranking-pct {
       text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: #444;
       white-space: nowrap;
@@ -2283,7 +2283,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let lastActiveModelSettings = {
       modelType: 'standard',
       dynamicBaselines: null,
-      rse: 5.64,
+      rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
     };
 
     function getActiveModelSettings() {
@@ -2305,12 +2305,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         isStdBike;
 
       if (isStdRoad && isStdBike) {
-        lastActiveModelSettings = { modelType: 'standard', dynamicBaselines: null, rse: 5.64 };
+        lastActiveModelSettings = {
+          modelType: 'standard',
+          dynamicBaselines: null,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
+        };
         return lastActiveModelSettings;
       }
 
       if (isPrimaryOnly) {
-        lastActiveModelSettings = { modelType: 'primary', dynamicBaselines: null, rse: 22.44 };
+        lastActiveModelSettings = {
+          modelType: 'primary',
+          dynamicBaselines: null,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.primary.residualStdErrorPct,
+        };
         return lastActiveModelSettings;
       }
 
@@ -2319,7 +2327,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
 
       const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
-      let nationalPct = 10.59;
+      let nationalPct = RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.baselinePct;
       if (de?.properties) {
         const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
           de.properties.road_length,
@@ -2358,8 +2366,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const baseCfg =
         RankingDisplay.STRUCTURAL_MODEL_CONFIGS?.[chosenModelType] ||
         RankingDisplay.STRUCTURAL_MODEL_CONFIG;
-      const scaleFactor = Math.max(0.01, nationalPct / (baseCfg?.baselinePct || 10.59));
-      const scaledRse = Number(((baseCfg?.residualStdErrorPct || 5.64) * scaleFactor).toFixed(2));
+      const scaleFactor = Math.max(0.01, nationalPct / (baseCfg?.baselinePct || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.baselinePct));
+      const scaledRse = Number(((baseCfg?.residualStdErrorPct || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct) * scaleFactor).toFixed(2));
 
       lastActiveModelSettings = {
         modelType: chosenModelType,
@@ -3190,13 +3198,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     // ±1 typical deviation of the regions on the map (Gemeinden: the model's residual standard
     // error; Kreise, Bezirke, Länder: measured over their level). Marks the light tints.
-    let lastModelBandPct = 5.64;
+    let lastModelBandPct = RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct;
     function modelBandForFeatures(features) {
       const bands = features
         .map((f) => f.properties?.modelBandPct)
         .filter((v) => typeof v === 'number')
         .sort((a, b) => a - b);
-      if (!bands.length) return lastActiveModelSettings.rse || 5.64;
+      if (!bands.length) return lastActiveModelSettings.rse || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct;
       return bands[Math.floor(bands.length / 2)];
     }
 
@@ -3791,7 +3799,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return 'Radinfrastruktur';
     }
 
-    function appendRankingRow(list, rank, f, minPct, maxPct, span) {
+    function appendRankingRow(list, rank, f, minPct, maxPct) {
       const metric = currentMapMetric || 'bikeShare';
       const val = getFeatureMetricValue(f, metric);
       const li = document.createElement('li');
@@ -3835,22 +3843,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (val != null) {
         fill.style.background = colorForMetricValue(val, minPct, maxPct, colorScaleSelect.value, metric);
         if (isDiverging) {
-          if (val >= 0) {
-            const bound = Math.max(Math.abs(maxPct), 0.001);
-            const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
-            fill.style.left = '50%';
-            fill.style.width = w + '%';
-          } else {
-            const bound = Math.max(Math.abs(minPct), 0.001);
-            const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
-            fill.style.left = (50 - w) + '%';
-            fill.style.width = w + '%';
-          }
+          const bound = val >= 0 ? Math.abs(maxPct) : Math.abs(minPct);
+          const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+          fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
+          fill.style.width = w + '%';
         } else {
-          const clamped = Math.max(minPct, Math.min(maxPct, val));
-          const widthPct = Math.max(2, Math.min(100, ((clamped - minPct) / span) * 100));
           fill.style.left = '0';
-          fill.style.width = widthPct + '%';
+          fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxPct) + '%';
         }
       } else {
         fill.style.width = '0';
@@ -4434,7 +4433,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const p = feature?.properties || {};
       const minVal = lastRankingMinPct;
       const maxVal = lastRankingMaxPct;
-      const span = Math.max(maxVal - minVal, 0.001);
 
       const items = withMetric.map((f) => ({ id: String(f.properties?.id ?? '') }));
       const topN = currentRankingTopN();
@@ -4502,22 +4500,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (val != null) {
           fill.style.background = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
-            if (val >= 0) {
-              const bound = Math.max(Math.abs(maxVal), 0.001);
-              const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
-              fill.style.left = '50%';
-              fill.style.width = w + '%';
-            } else {
-              const bound = Math.max(Math.abs(minVal), 0.001);
-              const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
-              fill.style.left = (50 - w) + '%';
-              fill.style.width = w + '%';
-            }
+            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+            fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
+            fill.style.width = w + '%';
           } else {
-            const clamped = Math.max(minVal, Math.min(maxVal, val));
-            const widthPct = Math.max(2, Math.min(100, ((clamped - minVal) / span) * 100));
             fill.style.left = '0';
-            fill.style.width = widthPct + '%';
+            fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxVal) + '%';
           }
         } else {
           fill.style.width = '0';
@@ -6616,7 +6605,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByActiveMetric);
       const withMetric = sorted.filter(isRankedActiveMetric);
-      const span = Math.max(maxPct - minPct, 0.001);
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
       lastRankingMaxPct = maxPct;
@@ -6658,7 +6646,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           list.appendChild(gap);
           continue;
         }
-        appendRankingRow(list, row.rank, row.f, minPct, maxPct, span);
+        appendRankingRow(list, row.rank, row.f, minPct, maxPct);
       }
       const withoutMetric = sorted.length - withMetric.length;
       if (withoutMetric > 0) {
@@ -7153,7 +7141,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const rows = rankingExportRows(withMetric);
       const minVal = lastRankingMinPct;
       const maxVal = lastRankingMaxPct;
-      const span = Math.max(maxVal - minVal, 0.001);
       const isDiverging = metric === 'modelGap' || metric === 'commuters';
       const focusIds = new Set(rankingFocusChainIds());
       const canvas = document.createElement('canvas');
@@ -7227,21 +7214,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           ctx.fillStyle = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
             const midX = barX + barW / 2;
-            if (val >= 0) {
-              const bound = Math.max(Math.abs(maxVal), 0.001);
-              const w = Math.max(3, Math.min(barW / 2, (val / bound) * (barW / 2)));
-              ctx.fillRect(midX, y + 22, w, 16);
-            } else {
-              const bound = Math.max(Math.abs(minVal), 0.001);
-              const w = Math.max(3, Math.min(barW / 2, (Math.abs(val) / bound) * (barW / 2)));
-              ctx.fillRect(midX - w, y + 22, w, 16);
-            }
+            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const w = (barW / 2) * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+            ctx.fillRect(val >= 0 ? midX : midX - w, y + 22, w, 16);
             ctx.fillStyle = '#94a3b8';
             ctx.fillRect(midX, y + 20, 1, 20);
           } else {
-            const clamped = Math.max(minVal, Math.min(maxVal, val));
-            const barFillW = Math.max(4, Math.min(barW, ((clamped - minVal) / span) * barW));
-            ctx.fillRect(barX, y + 22, barFillW, 16);
+            ctx.fillRect(barX, y + 22, barW * RankingDisplay.barFractionFromZero(val, maxVal), 16);
           }
         }
 

@@ -85,6 +85,26 @@ const varNames = [
   'livingSharePct',
 ] as const
 
+// Kreisfreie Städte are municipalities, but OSM maps them only as a Kreis (level 6) with no
+// Gemeinde inside — the same rule as the viewer's regionNavigation kreisfreieIds. Without them the
+// model never saw a large city.
+const kreiseWithGemeinden = new Set(
+  stats.features.flatMap((f) =>
+    String(f.properties?.level) === '8' && f.properties?.landkreis_id
+      ? [String(f.properties.landkreis_id)]
+      : [],
+  ),
+)
+const kreisfreieIds = new Set(
+  stats.features.flatMap((f) =>
+    String(f.properties?.level) === '6' && !kreiseWithGemeinden.has(String(f.properties?.id ?? ''))
+      ? [String(f.properties?.id ?? '')]
+      : [],
+  ),
+)
+const isModelGemeinde = (p: Record<string, unknown>) =>
+  String(p.level) === '8' || kreisfreieIds.has(String(p.id ?? ''))
+
 function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, minRoadKm = 5) {
   console.log(`\n=======================================================`)
   console.log(`FITTING MODEL: ${name}`)
@@ -94,8 +114,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
 
   for (const f of stats.features) {
     const p = f.properties || {}
-    const level = String(p.level ?? '')
-    if (level !== '8') continue
+    if (!isModelGemeinde(p)) continue
     const id = String(p.id ?? '')
 
     const { roadKm: roadM, bikeKm: bikeM } = TildaStats.computeFilteredLengths(
@@ -150,7 +169,8 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     }
   }
 
-  console.log('Sample count N =', samples.length)
+  const cityCount = samples.filter((x) => kreisfreieIds.has(x.id)).length
+  console.log('Sample count N =', samples.length, `(${cityCount} kreisfreie Städte)`)
 
   const lands = Array.from(new Set(samples.map((s) => s.blId)))
     .filter(Boolean)
@@ -351,10 +371,19 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     n: samples.length,
     r2TotalPct: Number((r2InSample * 100).toFixed(1)),
     r2CvPct: Number((r2Cv * 100).toFixed(1)),
+    // Keys as in rankingDisplay.ts STRUCTURAL_MODEL_CONFIGS (stDistKm is called stDist there).
     means: Object.fromEntries(
-      Object.entries(weightedMeans).map(([key, val]) => [key, Number(val.toFixed(2))]),
+      Object.entries(weightedMeans).map(([key, val]) => [
+        key === 'stDistKm' ? 'stDist' : key,
+        Number(val.toFixed(2)),
+      ]),
     ),
-    betas: Object.fromEntries(varNames.map((v) => [v, Number((fullFit.betas[v] ?? 0).toFixed(4))])),
+    betas: Object.fromEntries(
+      varNames.map((v) => [
+        v === 'stDistKm' ? 'stDist' : v,
+        Number((fullFit.betas[v] ?? 0).toFixed(4)),
+      ]),
+    ),
     bundeslandBaselines: {
       ...Object.fromEntries(
         lands.map((l) => [l, Number((fullFit.landBaselines[l] ?? 0).toFixed(2))]),

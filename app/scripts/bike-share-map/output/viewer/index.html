@@ -434,7 +434,7 @@
       background: #94a3b8;
       z-index: 1;
     }
-    .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; min-width: 2px; }
+    .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; }
     .ranking-pct {
       text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: #444;
       white-space: nowrap;
@@ -1697,7 +1697,7 @@
   <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
   <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-21T09:36:32.979Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","zensusUrl":"./gemeinde-zensus.json","carsUrl":"./gemeinde-cars.json","calmedUrl":"./gemeinde-calmed.json","accidentsUrl":"./gemeinde-accidents.json","commutersUrl":"./gemeinde-commuters.json","mappingUrl":"./gemeinde-mapping.json","trafficUrl":"./gemeinde-traffic.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-21T09:51:13.080Z","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack","statsExtraMsgpackUrl":"./stats-extra.msgpack","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json","statsUrl":"./stats.geojson","neighborsMsgpackUrl":"./neighbors.msgpack","neighborsUrl":"./neighbors.json","manifestUrl":"./manifest.json","peersUrl":"./gemeinde-peers.json","densityUrl":"./gemeinde-density.json","transitUrl":"./gemeinde-transit.json","terrainUrl":"./gemeinde-terrain.json","zensusUrl":"./gemeinde-zensus.json","carsUrl":"./gemeinde-cars.json","calmedUrl":"./gemeinde-calmed.json","accidentsUrl":"./gemeinde-accidents.json","commutersUrl":"./gemeinde-commuters.json","mappingUrl":"./gemeinde-mapping.json","trafficUrl":"./gemeinde-traffic.json","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
 
     let allFeatures = [];
     let manifest = {};
@@ -2838,7 +2838,7 @@
     let lastActiveModelSettings = {
       modelType: 'standard',
       dynamicBaselines: null,
-      rse: 5.64,
+      rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
     };
 
     function getActiveModelSettings() {
@@ -2860,12 +2860,20 @@
         isStdBike;
 
       if (isStdRoad && isStdBike) {
-        lastActiveModelSettings = { modelType: 'standard', dynamicBaselines: null, rse: 5.64 };
+        lastActiveModelSettings = {
+          modelType: 'standard',
+          dynamicBaselines: null,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
+        };
         return lastActiveModelSettings;
       }
 
       if (isPrimaryOnly) {
-        lastActiveModelSettings = { modelType: 'primary', dynamicBaselines: null, rse: 22.44 };
+        lastActiveModelSettings = {
+          modelType: 'primary',
+          dynamicBaselines: null,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.primary.residualStdErrorPct,
+        };
         return lastActiveModelSettings;
       }
 
@@ -2874,7 +2882,7 @@
       }
 
       const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
-      let nationalPct = 10.59;
+      let nationalPct = RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.baselinePct;
       if (de?.properties) {
         const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
           de.properties.road_length,
@@ -2913,8 +2921,8 @@
       const baseCfg =
         RankingDisplay.STRUCTURAL_MODEL_CONFIGS?.[chosenModelType] ||
         RankingDisplay.STRUCTURAL_MODEL_CONFIG;
-      const scaleFactor = Math.max(0.01, nationalPct / (baseCfg?.baselinePct || 10.59));
-      const scaledRse = Number(((baseCfg?.residualStdErrorPct || 5.64) * scaleFactor).toFixed(2));
+      const scaleFactor = Math.max(0.01, nationalPct / (baseCfg?.baselinePct || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.baselinePct));
+      const scaledRse = Number(((baseCfg?.residualStdErrorPct || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct) * scaleFactor).toFixed(2));
 
       lastActiveModelSettings = {
         modelType: chosenModelType,
@@ -3745,13 +3753,13 @@
 
     // ±1 typical deviation of the regions on the map (Gemeinden: the model's residual standard
     // error; Kreise, Bezirke, Länder: measured over their level). Marks the light tints.
-    let lastModelBandPct = 5.64;
+    let lastModelBandPct = RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct;
     function modelBandForFeatures(features) {
       const bands = features
         .map((f) => f.properties?.modelBandPct)
         .filter((v) => typeof v === 'number')
         .sort((a, b) => a - b);
-      if (!bands.length) return lastActiveModelSettings.rse || 5.64;
+      if (!bands.length) return lastActiveModelSettings.rse || RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct;
       return bands[Math.floor(bands.length / 2)];
     }
 
@@ -4346,7 +4354,7 @@
       return 'Radinfrastruktur';
     }
 
-    function appendRankingRow(list, rank, f, minPct, maxPct, span) {
+    function appendRankingRow(list, rank, f, minPct, maxPct) {
       const metric = currentMapMetric || 'bikeShare';
       const val = getFeatureMetricValue(f, metric);
       const li = document.createElement('li');
@@ -4390,22 +4398,13 @@
       if (val != null) {
         fill.style.background = colorForMetricValue(val, minPct, maxPct, colorScaleSelect.value, metric);
         if (isDiverging) {
-          if (val >= 0) {
-            const bound = Math.max(Math.abs(maxPct), 0.001);
-            const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
-            fill.style.left = '50%';
-            fill.style.width = w + '%';
-          } else {
-            const bound = Math.max(Math.abs(minPct), 0.001);
-            const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
-            fill.style.left = (50 - w) + '%';
-            fill.style.width = w + '%';
-          }
+          const bound = val >= 0 ? Math.abs(maxPct) : Math.abs(minPct);
+          const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+          fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
+          fill.style.width = w + '%';
         } else {
-          const clamped = Math.max(minPct, Math.min(maxPct, val));
-          const widthPct = Math.max(2, Math.min(100, ((clamped - minPct) / span) * 100));
           fill.style.left = '0';
-          fill.style.width = widthPct + '%';
+          fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxPct) + '%';
         }
       } else {
         fill.style.width = '0';
@@ -4989,7 +4988,6 @@
       const p = feature?.properties || {};
       const minVal = lastRankingMinPct;
       const maxVal = lastRankingMaxPct;
-      const span = Math.max(maxVal - minVal, 0.001);
 
       const items = withMetric.map((f) => ({ id: String(f.properties?.id ?? '') }));
       const topN = currentRankingTopN();
@@ -5057,22 +5055,13 @@
         if (val != null) {
           fill.style.background = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
-            if (val >= 0) {
-              const bound = Math.max(Math.abs(maxVal), 0.001);
-              const w = Math.max(1.5, Math.min(50, (val / bound) * 50));
-              fill.style.left = '50%';
-              fill.style.width = w + '%';
-            } else {
-              const bound = Math.max(Math.abs(minVal), 0.001);
-              const w = Math.max(1.5, Math.min(50, (Math.abs(val) / bound) * 50));
-              fill.style.left = (50 - w) + '%';
-              fill.style.width = w + '%';
-            }
+            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+            fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
+            fill.style.width = w + '%';
           } else {
-            const clamped = Math.max(minVal, Math.min(maxVal, val));
-            const widthPct = Math.max(2, Math.min(100, ((clamped - minVal) / span) * 100));
             fill.style.left = '0';
-            fill.style.width = widthPct + '%';
+            fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxVal) + '%';
           }
         } else {
           fill.style.width = '0';
@@ -7171,7 +7160,6 @@
       const summary = document.getElementById('ranking-summary');
       const sorted = [...features].sort(compareByActiveMetric);
       const withMetric = sorted.filter(isRankedActiveMetric);
-      const span = Math.max(maxPct - minPct, 0.001);
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
       lastRankingMaxPct = maxPct;
@@ -7213,7 +7201,7 @@
           list.appendChild(gap);
           continue;
         }
-        appendRankingRow(list, row.rank, row.f, minPct, maxPct, span);
+        appendRankingRow(list, row.rank, row.f, minPct, maxPct);
       }
       const withoutMetric = sorted.length - withMetric.length;
       if (withoutMetric > 0) {
@@ -7708,7 +7696,6 @@
       const rows = rankingExportRows(withMetric);
       const minVal = lastRankingMinPct;
       const maxVal = lastRankingMaxPct;
-      const span = Math.max(maxVal - minVal, 0.001);
       const isDiverging = metric === 'modelGap' || metric === 'commuters';
       const focusIds = new Set(rankingFocusChainIds());
       const canvas = document.createElement('canvas');
@@ -7782,21 +7769,13 @@
           ctx.fillStyle = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
             const midX = barX + barW / 2;
-            if (val >= 0) {
-              const bound = Math.max(Math.abs(maxVal), 0.001);
-              const w = Math.max(3, Math.min(barW / 2, (val / bound) * (barW / 2)));
-              ctx.fillRect(midX, y + 22, w, 16);
-            } else {
-              const bound = Math.max(Math.abs(minVal), 0.001);
-              const w = Math.max(3, Math.min(barW / 2, (Math.abs(val) / bound) * (barW / 2)));
-              ctx.fillRect(midX - w, y + 22, w, 16);
-            }
+            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const w = (barW / 2) * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
+            ctx.fillRect(val >= 0 ? midX : midX - w, y + 22, w, 16);
             ctx.fillStyle = '#94a3b8';
             ctx.fillRect(midX, y + 20, 1, 20);
           } else {
-            const clamped = Math.max(minVal, Math.min(maxVal, val));
-            const barFillW = Math.max(4, Math.min(barW, ((clamped - minVal) / span) * barW));
-            ctx.fillRect(barX, y + 22, barFillW, 16);
+            ctx.fillRect(barX, y + 22, barW * RankingDisplay.barFractionFromZero(val, maxVal), 16);
           }
         }
 

@@ -1,5 +1,6 @@
 import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
 import { POPULATION_BANDS, URBANIZATION_LABELS, type UrbanizationCode } from './demographicPeers'
+import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
 export type MethodologyPageInput = {
@@ -24,6 +25,43 @@ const RADINFRA_STATS_URL = 'https://radinfra.de/statistik/'
 const DESTATIS_URL =
   'https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html'
 const DEGURBA_URL = 'https://ec.europa.eu/eurostat/de/web/degree-of-urbanisation'
+
+const STD_MODEL = STRUCTURAL_MODEL_CONFIGS.standard
+const PRIMARY_MODEL = STRUCTURAL_MODEL_CONFIGS.primary
+
+/** German number, e.g. 61,9 or 10.500. */
+const de = (v: number, digits = 1) =>
+  v.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits })
+/** Signed coefficient with a real minus sign, e.g. −0,4745. */
+const beta = (v: number) => (v < 0 ? '−' : '+') + de(Math.abs(v), 4)
+
+const LAND_NAMES: Record<string, string> = {
+  'relation/62611': 'Baden-Württemberg',
+  'relation/2145268': 'Bayern',
+  'relation/62504': 'Brandenburg',
+  'relation/62650': 'Hessen',
+  'relation/28322': 'Mecklenburg-Vorpommern',
+  'relation/62771': 'Niedersachsen',
+  'relation/62761': 'NRW',
+  'relation/62341': 'Rheinland-Pfalz',
+  'relation/62372': 'Saarland',
+  'relation/62467': 'Sachsen',
+  'relation/62607': 'Sachsen-Anhalt',
+  'relation/51529': 'Schleswig-Holstein',
+  'relation/62366': 'Thüringen',
+}
+
+/** Flächenländer by baseline, with the national mean in its place (city states are their own share). */
+function landBaselineList() {
+  const entries: Array<[string, number]> = Object.entries(STD_MODEL.bundeslandBaselines).flatMap(
+    ([id, v]) => (LAND_NAMES[id] ? [[LAND_NAMES[id], v] as [string, number]] : []),
+  )
+  entries.push(['Bundesmittel', STD_MODEL.baselinePct])
+  return entries
+    .sort((a, b) => b[1] - a[1])
+    .map(([name, v]) => `${name} ${de(v)}&nbsp;%`)
+    .join(', ')
+}
 
 function li(items: string[]): string {
   return `<ul>${items.map((i) => `<li>${i}</li>`).join('')}</ul>`
@@ -243,13 +281,13 @@ ${li([
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.396</code> Gemeinden mit einem Straßennetz ab 5&nbsp;km. Gewichtung nach Netzlänge (604.809&nbsp;km). <strong>R² = 53,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 53,3&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±5,64&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.313</code>, <strong>R² = 59,7&nbsp;%</strong>, <strong>R²_cv = 59,4&nbsp;%</strong>, Basiswert <strong>35,7&nbsp;%</strong>, <strong>SE = ±22,4&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Liegt sie innerhalb des modelltypischen Streubands (±1 SE), erscheint sie in hellen Tönen, jenseits davon kräftig. Grau bedeutet: kein Wert.</li>
-    <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie erhalten den Erwartungswert wie eine Gemeinde, waren bei der Schätzung des Modells jedoch nicht dabei – für Großstädte ist er daher eine Übertragung über den Bereich der geschätzten Gemeinden hinaus und mit Vorsicht zu lesen.</li>
+    <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
     <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
-    <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Einfluss der Miete um rund ein Viertel und der der Dichte um rund ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
+    <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
   </ul>
 
   <table class="model-table">
@@ -263,43 +301,43 @@ ${li([
     <tbody>
       <tr>
         <td><strong>Bundesland-Baselines (α_L)</strong></td>
-        <td>Feste Effekte je Bundesland: fassen alles zusammen, was einem Land gemeinsam ist (etwa Förderprogramme, Planungsrichtlinien, Kartierungsaktivität), ohne es aufzuteilen (Niedersachsen 16,7&nbsp;%, Schleswig-Holstein 15,8&nbsp;%, Brandenburg 14,4&nbsp;%, Mecklenburg-Vorpommern 14,3&nbsp;%, NRW 10,9&nbsp;%, Sachsen-Anhalt 10,8&nbsp;%, Bundesmittel 10,6&nbsp;%, Bayern 8,9&nbsp;%, Sachsen 8,7&nbsp;%, Saarland 8,5&nbsp;%, Thüringen 8,0&nbsp;%, Baden-Württemberg 7,3&nbsp;%, Rheinland-Pfalz 6,4&nbsp;%, Hessen 6,3&nbsp;%)</td>
+        <td>Feste Effekte je Bundesland: fassen alles zusammen, was einem Land gemeinsam ist (etwa Förderprogramme, Planungsrichtlinien, Kartierungsaktivität), ohne es aufzuteilen (${landBaselineList()})</td>
         <td class="num">Basis</td>
       </tr>
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
         <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,3860 / %</td>
+        <td class="num">${beta(STD_MODEL.betas.roadSlope)} / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
         <td>Höhe über Normalnull in Metern (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,0018 / m</td>
+        <td class="num">${beta(STD_MODEL.betas.elevMean)} / m</td>
       </tr>
       <tr>
         <td><strong>Siedlungsdichte (log10)</strong></td>
         <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
-        <td class="num">+4,3904 / Dekade</td>
+        <td class="num">${beta(STD_MODEL.betas.logDens)} / Dekade</td>
       </tr>
       <tr>
         <td><strong>Nähe zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
-        <td class="num">−0,0143 / km</td>
+        <td class="num">${beta(STD_MODEL.betas.stDist)} / km</td>
       </tr>
       <tr>
         <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
-        <td class="num">+0,9342 / (€/m²)</td>
+        <td class="num">${beta(STD_MODEL.betas.rent)} / (€/m²)</td>
       </tr>
       <tr>
         <td><strong>PKW-Dichte</strong></td>
         <td>Gemeldete PKW je 1.000 Einwohner (KBA)</td>
-        <td class="num">−0,0038 / (PKW/1k)</td>
+        <td class="num">${beta(STD_MODEL.betas.carsPer1000)} / (PKW/1k)</td>
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
         <td>Anteil verkehrsberuhigter Bereiche, Fahrradstraßen und Fußgängerzonen am Straßennetz in %</td>
-        <td class="num">+0,5545 / %-Punkt</td>
+        <td class="num">${beta(STD_MODEL.betas.livingSharePct)} / %-Punkt</td>
       </tr>
     </tbody>
   </table>

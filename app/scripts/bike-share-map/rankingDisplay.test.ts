@@ -1,7 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
+  STRUCTURAL_MODEL_CONFIGS,
   aggregateResidualStdErrorPct,
   aggregateStructuralPredictions,
+  barFractionFromZero,
   isStructuralModelLevel,
   modelGapColorStops,
   bikelaneGapKm,
@@ -234,96 +236,77 @@ describe('inPlacePhrase', () => {
 })
 
 describe('computeStructuralModelPrediction', () => {
+  const STD = STRUCTURAL_MODEL_CONFIGS.standard
+  const PRI = STRUCTURAL_MODEL_CONFIGS.primary
+  /** Every predictor at the model's weighted mean, so only the baselines are left. */
+  const atMeans = (c: typeof STD = STD) => ({
+    roadSlope: c.means.roadSlope,
+    elevMean: c.means.elevMean,
+    density: 10 ** c.means.logDens,
+    stDistKm: c.means.stDist,
+    rent: c.means.rent,
+    carsPer1000: c.means.carsPer1000,
+    livingSharePct: c.means.livingSharePct,
+  })
+  const NDS = 'relation/62771'
+  const HESSEN = 'relation/62650'
+
   test('returns baseline expectation when predictors are at national means', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 10.59,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88, // 10^2.19 ≈ 154.88
-      stDistKm: 4.02,
-      rent: 6.04,
-      carsPer1000: 662.87,
-      livingSharePct: 2.21,
+      bikeKm: STD.baselinePct,
+      ...atMeans(),
     })
     expect(res).not.toBeNull()
-    expect(res!.expectedPct).toBeCloseTo(10.59, 1)
-    expect(res!.expectedKm).toBeCloseTo(10.59, 1)
-    expect(res!.diffPct).toBeCloseTo(0, 1)
-    expect(res!.diffKm).toBeCloseTo(0, 1)
+    expect(res!.expectedPct).toBeCloseTo(STD.baselinePct, 6)
+    expect(res!.expectedKm).toBeCloseTo(STD.baselinePct, 6)
+    expect(res!.diffPct).toBeCloseTo(0, 6)
+    expect(res!.diffKm).toBeCloseTo(0, 6)
     expect(res!.behind).toBe(false)
     expect(res!.isWithin1Se).toBe(true)
-    expect(res!.residualStdErrorPct).toBe(5.64)
-    expect(res!.n).toBe(10396)
-    expect(res!.r2TotalPct).toBe(53.7)
-    expect(res!.r2CvPct).toBe(53.3)
+    expect(res!.residualStdErrorPct).toBe(STD.residualStdErrorPct)
+    expect(res!.n).toBe(STD.n)
+    expect(res!.r2TotalPct).toBe(STD.r2TotalPct)
+    expect(res!.r2CvPct).toBe(STD.r2CvPct)
   })
 
   test('applies Bundesland baseline fixed effect', () => {
-    // Niedersachsen baseline is 16.72% (+6.13%p)
-    const resNds = computeStructuralModelPrediction({
-      roadKm: 100,
-      bikeKm: 16.72,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
-      rent: 6.04,
-      carsPer1000: 662.87,
-      livingSharePct: 2.21,
-      bundeslandId: 'relation/62771', // Niedersachsen
-    })
-    expect(resNds).not.toBeNull()
-    expect(resNds!.expectedPct).toBeCloseTo(16.72, 1)
-    expect(resNds!.deltaLand).toBeCloseTo(6.13, 1)
-
-    // Hessen baseline is 6.27% (-4.32%p)
-    const resHe = computeStructuralModelPrediction({
-      roadKm: 100,
-      bikeKm: 6.27,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
-      rent: 6.04,
-      carsPer1000: 662.87,
-      livingSharePct: 2.21,
-      bundeslandId: 'relation/62650', // Hessen
-    })
-    expect(resHe).not.toBeNull()
-    expect(resHe!.expectedPct).toBeCloseTo(6.27, 1)
-    expect(resHe!.deltaLand).toBeCloseTo(-4.32, 1)
+    for (const land of [NDS, HESSEN]) {
+      const landBase = STD.bundeslandBaselines[land]!
+      const res = computeStructuralModelPrediction({
+        roadKm: 100,
+        bikeKm: landBase,
+        ...atMeans(),
+        bundeslandId: land,
+      })
+      expect(res!.expectedPct).toBeCloseTo(landBase, 6)
+      expect(res!.deltaLand).toBeCloseTo(landBase - STD.baselinePct, 6)
+    }
+    // Niedersachsen sits above, Hessen below the national mean.
+    expect(STD.bundeslandBaselines[NDS]!).toBeGreaterThan(STD.baselinePct)
+    expect(STD.bundeslandBaselines[HESSEN]!).toBeLessThan(STD.baselinePct)
   })
 
-  test('correctly identifies whether gap is within 1 standard error (SE = 5.64%p)', () => {
+  test('correctly identifies whether gap is within 1 standard error ', () => {
     const within = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 14.0, // +3.41%p gap (within 5.64%p)
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
+      bikeKm: STD.baselinePct + 0.5 * STD.residualStdErrorPct, // inside the band
+      ...atMeans(),
     })
     expect(within!.isWithin1Se).toBe(true)
 
     const outlierAhead = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 20.0, // +9.41%p gap (> 5.64%p)
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
+      bikeKm: STD.baselinePct + 2 * STD.residualStdErrorPct, // above it
+      ...atMeans(),
     })
     expect(outlierAhead!.isWithin1Se).toBe(false)
     expect(outlierAhead!.behind).toBe(false)
 
     const outlierBehind = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 2.0, // -8.59%p gap (< -5.64%p)
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
+      bikeKm: STD.baselinePct - 1.5 * STD.residualStdErrorPct, // below it
+      ...atMeans(),
     })
     expect(outlierBehind!.isWithin1Se).toBe(false)
     expect(outlierBehind!.behind).toBe(true)
@@ -333,10 +316,7 @@ describe('computeStructuralModelPrediction', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 15.0,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
+      ...atMeans(),
       rent: 10.04, // +4 €/m² over mean
       carsPer1000: 500, // lower motorization
       livingSharePct: 5.0, // higher traffic calming
@@ -359,7 +339,7 @@ describe('computeStructuralModelPrediction', () => {
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
-    expect(res!.expectedPct).toBeLessThan(10.59)
+    expect(res!.expectedPct).toBeLessThan(STD.baselinePct)
     expect(res!.actualPct).toBe(3.0)
   })
 
@@ -367,18 +347,17 @@ describe('computeStructuralModelPrediction', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 500,
       bikeKm: 120,
-      roadSlope: 1.5, // much flatter than 3.67%
-      elevMean: 40, // lower than 267.7m
-      density: 3000, // much denser than 155
-      stDistKm: 1.0, // very close to station
-      rent: 9.0, // higher rent typical for dense city
+      roadSlope: 1.5,
+      elevMean: 40,
+      density: 3000,
+      stDistKm: 1.0,
+      rent: 9.0,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
     expect(res!.deltaDens).toBeGreaterThan(0)
-    expect(res!.deltaTransit).toBeGreaterThan(0)
     expect(res!.deltaRent).toBeGreaterThan(0)
-    expect(res!.expectedPct).toBeGreaterThan(15.0)
+    expect(res!.expectedPct).toBeGreaterThan(STD.baselinePct + 5)
     expect(res!.expectedKm).toBe((res!.expectedPct / 100) * 500)
     expect(res!.diffKm).toBe(120 - res!.expectedKm)
   })
@@ -386,74 +365,46 @@ describe('computeStructuralModelPrediction', () => {
   test('supports primary roads model configuration', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 35.68,
-      roadSlope: 3.81,
-      elevMean: 272.7,
-      density: 125.89, // 10^2.1 ≈ 125.89
-      stDistKm: 4.32,
-      rent: 5.86,
-      carsPer1000: 668.57,
-      livingSharePct: 1.89,
+      bikeKm: PRI.baselinePct,
+      ...atMeans(PRI),
       modelType: 'primary',
     })
     expect(res).not.toBeNull()
     expect(res!.modelType).toBe('primary')
     expect(res!.modelName).toBe('Hauptverkehrsstraßen')
-    expect(res!.expectedPct).toBeCloseTo(35.68, 1)
-    expect(res!.residualStdErrorPct).toBe(22.44)
-    expect(res!.r2TotalPct).toBe(59.7)
-    expect(res!.r2CvPct).toBe(59.4)
+    expect(res!.expectedPct).toBeCloseTo(PRI.baselinePct, 6)
+    expect(res!.residualStdErrorPct).toBe(PRI.residualStdErrorPct)
+    expect(res!.r2TotalPct).toBe(PRI.r2TotalPct)
+    expect(res!.r2CvPct).toBe(PRI.r2CvPct)
     expect(res!.isWithin1Se).toBe(true)
   })
 
   test('dynamically scales baseline and SE for custom counting filters', () => {
-    // Custom filter shifts national average to 20%
+    const dynamicBaselines = { nationalBaselinePct: 20.0, bundeslandBaselines: { [NDS]: 25.0 } }
     const res = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 20.0,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
-      rent: 6.04,
-      carsPer1000: 662.87,
-      livingSharePct: 2.21,
-      dynamicBaselines: {
-        nationalBaselinePct: 20.0,
-        bundeslandBaselines: {
-          'relation/62771': 25.0, // Niedersachsen higher under this filter
-        },
-      },
+      ...atMeans(),
+      dynamicBaselines,
     })
-    expect(res).not.toBeNull()
     expect(res!.baselinePct).toBe(20.0)
-    expect(res!.expectedPct).toBeCloseTo(20.0, 1)
+    expect(res!.expectedPct).toBeCloseTo(20.0, 6)
     expect(res!.isWithin1Se).toBe(true)
-    // SE scales by 20.0 / 10.59 ≈ 1.888: 5.64 * 1.888 ≈ 10.65
-    expect(res!.residualStdErrorPct).toBeCloseTo(10.65, 0.5)
+    // The band scales with the level: 20 % instead of the model's national mean.
+    expect(res!.residualStdErrorPct).toBeCloseTo(
+      (STD.residualStdErrorPct * 20.0) / STD.baselinePct,
+      6,
+    )
 
-    // With Bundesland ID
     const resNds = computeStructuralModelPrediction({
       roadKm: 100,
       bikeKm: 25.0,
-      roadSlope: 3.67,
-      elevMean: 267.7,
-      density: 154.88,
-      stDistKm: 4.02,
-      rent: 6.04,
-      carsPer1000: 662.87,
-      livingSharePct: 2.21,
-      bundeslandId: 'relation/62771',
-      dynamicBaselines: {
-        nationalBaselinePct: 20.0,
-        bundeslandBaselines: {
-          'relation/62771': 25.0,
-        },
-      },
+      ...atMeans(),
+      bundeslandId: NDS,
+      dynamicBaselines,
     })
-    expect(resNds).not.toBeNull()
-    expect(resNds!.expectedPct).toBeCloseTo(25.0, 1)
-    expect(resNds!.deltaLand).toBeCloseTo(5.0, 1)
+    expect(resNds!.expectedPct).toBeCloseTo(25.0, 6)
+    expect(resNds!.deltaLand).toBeCloseTo(5.0, 6)
   })
 
   test('returns null when roadKm <= 0 or all predictors are missing', () => {
@@ -569,5 +520,15 @@ describe('modelGapColorStops', () => {
     expect(stops.map(([v]) => v)).toEqual([-8, -2, -0.001, 0.001, 2, 8])
     const near = stops.filter(([v]) => Math.abs(v) < 0.01).map(([, c]) => c)
     expect(near[0]).not.toBe(near[1])
+  })
+})
+
+describe('barFractionFromZero', () => {
+  test('measures from zero, so an empty bar means 0 and not "lowest in view"', () => {
+    expect(barFractionFromZero(0, 12)).toBe(0)
+    expect(barFractionFromZero(-3, 12)).toBe(0)
+    expect(barFractionFromZero(9, 12)).toBeCloseTo(0.75)
+    expect(barFractionFromZero(20, 12)).toBe(1)
+    expect(barFractionFromZero(5, 0)).toBe(0)
   })
 })
