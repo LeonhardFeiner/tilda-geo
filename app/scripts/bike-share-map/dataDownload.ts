@@ -1,5 +1,13 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
-import { computeStructuralModelPrediction, isStructuralModelLevel } from './rankingDisplay'
+import {
+  aggregateResidualStdErrorPct,
+  aggregateStructuralPredictions,
+  computeStructuralModelPrediction,
+  isAggregatedModelLevel,
+  isStructuralModelLevel,
+  MODEL_BAND_MIN_REGIONS,
+  type StructuralModelPrediction,
+} from './rankingDisplay'
 import {
   assessBikeDataQuality,
   computeFilteredLengths,
@@ -38,6 +46,10 @@ export type DataDownloadContext = {
   commuters?: ById<{ inCommuters?: number; outCommuters?: number; jobCentrality?: number }>
   mapping?: ById<{ indexPct?: number; speedPct?: number; surfacePct?: number; litPct?: number }>
   traffic?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
+  /** Kreis-level regions with no Gemeinde inside: kreisfreie Städte (kreisfreieIdsOf). */
+  kreisfreieIds?: Set<string>
+  /** Summed predictions for Kreise, Bezirke, Gemeindeverbände (buildModelAggregates). */
+  modelAggregates?: Map<string, ReturnType<typeof aggregateStructuralPredictions>>
 }
 
 export type DataDownloadFeature = {
@@ -46,6 +58,7 @@ export type DataDownloadFeature = {
     name?: string
     level?: string
     regionalschluessel?: string
+    parent_id?: string
     bundesland_id?: string
     landkreis_id?: string
     road_length?: unknown
@@ -110,10 +123,10 @@ export const DATA_DOWNLOAD_COLUMNS = {
   auspendler: 'Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)',
   arbeitsplatzzentralitaet: 'Beschäftigte am Arbeitsort / am Wohnort',
   modell_erwartung_pct:
-    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %; nur für Gemeinden (admin_level 8)',
+    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: Summe der Erwartungswerte ihrer Gemeinden (Länder: kein Wert, siehe Methodik)',
   modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
   modell_ausserhalb_1se:
-    '1, wenn die Abweichung größer als ein Residualstandardfehler ist (auf der Karte farbig), sonst 0',
+    '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte kräftige Farbe), sonst 0',
 } as const
 
 export type DataDownloadColumn = keyof typeof DATA_DOWNLOAD_COLUMNS
@@ -128,6 +141,110 @@ const DATA_LEVEL_KEYS = {
   poor: 'unsicher',
   sparse: 'kaum_erfasst',
 } as const
+
+/**
+ * Kreis-level regions no Gemeinde points to: kreisfreie Städte, which OSM maps only at that level.
+ * They are municipalities, so the model treats them as Gemeinden (same rule as the viewer's
+ * regionNavigation kreisfreieIds).
+ */
+export function kreisfreieIdsOf(features: DataDownloadFeature[]) {
+  const withGemeinden = new Set(
+    features.flatMap((f) =>
+      f.properties?.level === '8' && f.properties.landkreis_id ? [f.properties.landkreis_id] : [],
+    ),
+  )
+  return new Set(
+    features.flatMap((f) =>
+      f.properties?.level === '6' && f.properties.id && !withGemeinden.has(f.properties.id)
+        ? [f.properties.id]
+        : [],
+    ),
+  )
+}
+
+const isModelGemeinde = (p: DataDownloadFeature['properties'], ctx: DataDownloadContext) =>
+  isStructuralModelLevel(p?.level) || (p?.level === '6' && !!p.id && !!ctx.kreisfreieIds?.has(p.id))
+
+/** The Gemeinde model under the default counting filter — the same gate as the map. */
+function gemeindeModelPrediction(feature: DataDownloadFeature, ctx: DataDownloadContext) {
+  const p = feature.properties
+  if (!p?.id || !isModelGemeinde(p, ctx) || !ctx.density || !ctx.terrain) return null
+  const id = String(p.id)
+  const { roadKm, bikeKm } = computeFilteredLengths(
+    p.road_length,
+    p.bikelane_length,
+    RADINFRA_DEFAULT_FILTER,
+  )
+  if (roadKm < DEFAULT_MIN_ROAD_KM_FOR_SCALE) return null
+  const terrain = ctx.terrain[id]
+  const stationM = ctx.transit?.[id]?.avgDistanceToStationM
+  return computeStructuralModelPrediction({
+    roadKm,
+    bikeKm,
+    roadSlope: terrain?.road ?? null,
+    elevMean: terrain?.elevationMean ?? null,
+    density: ctx.density[id] ?? null,
+    stDistKm: typeof stationM === 'number' ? stationM / 1000 : null,
+    rent: ctx.zensus?.[id]?.rentPerM2 ?? null,
+    carsPer1000: ctx.cars?.[id]?.carsPer1000 ?? null,
+    livingSharePct: ctx.calmed?.[id]?.livingSharePct ?? null,
+    bundeslandId: String(p.bundesland_id || ''),
+  })
+}
+
+/**
+ * Kreise, Bezirke and Gemeindeverbände as the sum of their Gemeinden, each judged against
+ * the typical deviation of its own level — the same rule as the map (generateViewerHtml).
+ */
+export function buildModelAggregates(features: DataDownloadFeature[], ctx: DataDownloadContext) {
+  const byId = new Map(features.flatMap((f) => (f.properties?.id ? [[f.properties.id, f]] : [])))
+  const partsById = new Map<string, StructuralModelPrediction[]>()
+  for (const f of features) {
+    const m = gemeindeModelPrediction(f, ctx)
+    const p = f.properties
+    if (!m || !p?.id) continue
+    const ancestors = new Set<string>()
+    for (const start of [p.parent_id, p.landkreis_id]) {
+      let current = start
+      for (let i = 0; current && i < 8; i++) {
+        ancestors.add(current)
+        current = byId.get(current)?.properties?.parent_id
+      }
+    }
+    if (p.bundesland_id) ancestors.add(p.bundesland_id)
+    for (const id of ancestors) {
+      const list = partsById.get(id) ?? []
+      list.push(m)
+      partsById.set(id, list)
+    }
+  }
+  const byLevel = new Map<string, Array<[string, StructuralModelPrediction[]]>>()
+  for (const [id, parts] of partsById) {
+    const level = String(byId.get(id)?.properties?.level ?? '')
+    if (!isAggregatedModelLevel(level)) continue
+    byLevel.set(level, [...(byLevel.get(level) ?? []), [id, parts]])
+  }
+  const result = new Map<string, ReturnType<typeof aggregateStructuralPredictions>>()
+  for (const regions of byLevel.values()) {
+    if (regions.length < MODEL_BAND_MIN_REGIONS) continue
+    const ownOf = (id: string) => {
+      const p = byId.get(id)?.properties
+      return computeFilteredLengths(p?.road_length, p?.bikelane_length, RADINFRA_DEFAULT_FILTER)
+    }
+    // Single-Gemeinde regions keep the Gemeinde band and would only widen this one.
+    const drafts = regions.flatMap(([id, parts]) => {
+      if (parts.length < 2) return []
+      const d = aggregateStructuralPredictions(parts, Infinity, ownOf(id))
+      return d ? [{ diffPct: d.diffPct, roadKm: d.roadKm }] : []
+    })
+    const band = aggregateResidualStdErrorPct(drafts)
+    if (band == null) continue
+    for (const [id, parts] of regions) {
+      result.set(id, aggregateStructuralPredictions(parts, band, ownOf(id)))
+    }
+  }
+  return result
+}
 
 /**
  * One row per region, using the same functions as the map so a downloaded number always matches
@@ -163,23 +280,10 @@ export function buildDataDownloadRow(
   const traffic = ctx.traffic?.[id]
 
   // Same gate as the map (generateViewerHtml): no expected value below the ranking threshold.
-  const model =
-    isStructuralModelLevel(level) &&
-    ctx.density &&
-    ctx.terrain &&
-    roadKm >= DEFAULT_MIN_ROAD_KM_FOR_SCALE
-      ? computeStructuralModelPrediction({
-          roadKm,
-          bikeKm,
-          roadSlope: terrain?.road ?? null,
-          elevMean: terrain?.elevationMean ?? null,
-          density: density ?? null,
-          stDistKm: typeof stationM === 'number' ? stationM / 1000 : null,
-          rent: rent ?? null,
-          carsPer1000: cars ?? null,
-          livingSharePct: calmed?.livingSharePct ?? null,
-          bundeslandId: String(p.bundesland_id || (level === '4' ? id : '')),
-        })
+  const model = isModelGemeinde(p, ctx)
+    ? gemeindeModelPrediction(feature, ctx)
+    : isAggregatedModelLevel(level)
+      ? (ctx.modelAggregates?.get(id) ?? null)
       : null
 
   return {

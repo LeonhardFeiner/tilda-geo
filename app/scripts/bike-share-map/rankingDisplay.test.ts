@@ -1,6 +1,9 @@
 import { describe, expect, test } from 'vitest'
 import {
+  aggregateResidualStdErrorPct,
+  aggregateStructuralPredictions,
   isStructuralModelLevel,
+  modelGapColorStops,
   bikelaneGapKm,
   contextBand,
   medianOfSorted,
@@ -484,5 +487,87 @@ describe('isStructuralModelLevel', () => {
     expect(isStructuralModelLevel(8)).toBe(true)
     expect(isStructuralModelLevel('6')).toBe(false)
     expect(isStructuralModelLevel(undefined)).toBe(false)
+  })
+})
+
+describe('aggregateStructuralPredictions', () => {
+  const gemeinde = (roadKm: number, bikeKm: number, rent: number) =>
+    computeStructuralModelPrediction({
+      roadKm,
+      bikeKm,
+      roadSlope: 3,
+      elevMean: 400,
+      density: 300,
+      stDistKm: 4,
+      rent,
+      carsPer1000: 650,
+      livingSharePct: 2,
+      bundeslandId: 'relation/2145268',
+    })!
+
+  test('adds expected km and keeps the breakdown summing to the expected value', () => {
+    const a = gemeinde(100, 5, 6)
+    const b = gemeinde(300, 30, 9)
+    const agg = aggregateStructuralPredictions([a, b], 2.5)!
+    expect(agg.roadKm).toBe(400)
+    expect(agg.expectedKm).toBeCloseTo(a.expectedKm + b.expectedKm)
+    expect(agg.expectedPct).toBeCloseTo(((a.expectedKm + b.expectedKm) / 400) * 100)
+    expect(agg.actualPct).toBeCloseTo(8.75)
+    const sum =
+      agg.baselinePct +
+      agg.deltaLand +
+      agg.deltaTopo +
+      agg.deltaDens +
+      agg.deltaTransit +
+      agg.deltaRent +
+      agg.deltaCars +
+      agg.deltaLiving
+    expect(sum).toBeCloseTo(agg.expectedPct, 6)
+    expect(agg.inputs.rent).toBeCloseTo((6 * 100 + 9 * 300) / 400)
+    expect(agg.gemeindeCount).toBe(2)
+  })
+
+  test("compares against the region's own share when given", () => {
+    const a = gemeinde(100, 5, 6)
+    const agg = aggregateStructuralPredictions([a], 3, { roadKm: 120, bikeKm: 12 })!
+    expect(agg.actualPct).toBeCloseTo(10)
+    expect(agg.expectedPct).toBeCloseTo(a.expectedPct)
+    expect(agg.expectedKm).toBeCloseTo((a.expectedPct / 100) * 120)
+    expect(agg.diffPct).toBeCloseTo(10 - a.expectedPct)
+  })
+
+  test('judges the gap against the band of its own level', () => {
+    const a = gemeinde(100, 5, 6)
+    const b2 = gemeinde(100, 5.2, 6)
+    const agg = aggregateStructuralPredictions([a, b2], 50)!
+    expect(agg.isWithin1Se).toBe(true)
+    const b = gemeinde(300, 30, 9)
+    expect(aggregateStructuralPredictions([a, b], 0.01)!.isWithin1Se).toBe(false)
+    // A single Gemeinde keeps its own (Gemeinde) band whatever the level band is.
+    expect(aggregateStructuralPredictions([a], 0.01)!.residualStdErrorPct).toBe(
+      a.residualStdErrorPct,
+    )
+    expect(aggregateStructuralPredictions([], 1)).toBeNull()
+  })
+})
+
+describe('aggregateResidualStdErrorPct', () => {
+  test('is the road-weighted root mean square of the gaps', () => {
+    expect(
+      aggregateResidualStdErrorPct([
+        { diffPct: 3, roadKm: 100 },
+        { diffPct: -1, roadKm: 300 },
+      ]),
+    ).toBeCloseTo(Math.sqrt((9 * 100 + 1 * 300) / 400))
+    expect(aggregateResidualStdErrorPct([])).toBeNull()
+  })
+})
+
+describe('modelGapColorStops', () => {
+  test('changes colour at zero so the sign of a small gap stays visible', () => {
+    const stops = modelGapColorStops(2, 8, false)
+    expect(stops.map(([v]) => v)).toEqual([-8, -2, -0.001, 0.001, 2, 8])
+    const near = stops.filter(([v]) => Math.abs(v) < 0.01).map(([, c]) => c)
+    expect(near[0]).not.toBe(near[1])
   })
 })

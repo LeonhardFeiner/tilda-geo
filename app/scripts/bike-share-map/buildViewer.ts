@@ -30,6 +30,8 @@ import {
 import { readDataDateLabel } from './dataDate'
 import {
   buildDataDownloadRow,
+  buildModelAggregates,
+  kreisfreieIdsOf,
   DATA_DOWNLOAD_DIR,
   type DataDownloadContext,
   dataDownloadCsv,
@@ -566,6 +568,8 @@ if (geoFeatures.length) {
   const osmDataFrom = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom
     : undefined
+  ctx.kreisfreieIds = kreisfreieIdsOf(geoFeatures)
+  ctx.modelAggregates = buildModelAggregates(geoFeatures, ctx)
   const rows = geoFeatures.flatMap((f) => buildDataDownloadRow(f, ctx) ?? [])
   const fileName = dataDownloadFileName(osmDataFrom)
   const dataDir = join(viewerDir, DATA_DOWNLOAD_DIR)

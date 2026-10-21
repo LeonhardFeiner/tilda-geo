@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   buildDataDownloadRow,
+  buildModelAggregates,
+  kreisfreieIdsOf,
   DATA_DOWNLOAD_COLUMNS,
   dataDownloadCsv,
   dataDownloadFileName,
@@ -110,5 +112,66 @@ describe('dataDownloadCsv', () => {
       .slice(1, -1)
       .map((l) => l.split(',')[1])
     expect(names).toEqual(['Bayern', 'Aach', 'Zell'])
+  })
+})
+
+describe('buildModelAggregates', () => {
+  it('sums Gemeinden into their Kreis, but not into the Land', () => {
+    const ctxFor = (ids: string[]) => ({
+      density: Object.fromEntries(ids.map((id) => [id, 300])),
+      terrain: Object.fromEntries(ids.map((id) => [id, { road: 3, elevationMean: 400 }])),
+    })
+    const features = []
+    const ids: string[] = []
+    for (let k = 0; k < 8; k++) {
+      features.push({ properties: { id: `kreis/${k}`, level: '6', bundesland_id: 'land/1' } })
+      for (let g = 0; g < 2; g++) {
+        const id = `gem/${k}/${g}`
+        ids.push(id)
+        features.push({
+          properties: {
+            id,
+            level: '8',
+            parent_id: `kreis/${k}`,
+            landkreis_id: `kreis/${k}`,
+            bundesland_id: 'land/1',
+            road_length: { residential: 50 + 10 * g },
+            bikelane_length: { cycleway_adjoining: k + g },
+          },
+        })
+      }
+    }
+    features.push({ properties: { id: 'land/1', level: '4' } })
+    const agg = buildModelAggregates(features, ctxFor(ids))
+    expect(agg.get('kreis/0')?.gemeindeCount).toBe(2)
+    expect(agg.get('kreis/0')?.roadKm).toBe(110)
+    // Länder get no value: their Gemeinden average out to ~0 by construction.
+    expect(agg.has('land/1')).toBe(false)
+    const row = buildDataDownloadRow(features[0]!, { ...ctxFor(ids), modelAggregates: agg })
+    expect(row?.modell_erwartung_pct).toEqual(expect.any(Number))
+  })
+})
+
+describe('kreisfreieIdsOf', () => {
+  it('finds Kreis-level regions no Gemeinde belongs to', () => {
+    const ids = kreisfreieIdsOf([
+      { properties: { id: 'lk/1', level: '6' } },
+      { properties: { id: 'stadt/1', level: '6' } },
+      { properties: { id: 'gem/1', level: '8', landkreis_id: 'lk/1' } },
+    ])
+    expect([...ids]).toEqual(['stadt/1'])
+  })
+
+  it('lets the model treat a kreisfreie Stadt as a Gemeinde', () => {
+    const stadt = { properties: { ...gemeinde.properties, id: 'stadt/1', level: '6' } }
+    const ctx = {
+      density: { 'stadt/1': 2000 },
+      terrain: { 'stadt/1': { road: 2, elevationMean: 300 } },
+    }
+    expect(buildDataDownloadRow(stadt, ctx)?.modell_erwartung_pct).toBeNull()
+    expect(
+      buildDataDownloadRow(stadt, { ...ctx, kreisfreieIds: new Set(['stadt/1']) })
+        ?.modell_erwartung_pct,
+    ).toEqual(expect.any(Number))
   })
 })

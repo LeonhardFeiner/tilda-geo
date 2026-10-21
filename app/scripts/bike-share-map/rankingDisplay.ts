@@ -438,6 +438,135 @@ export const STRUCTURAL_MODEL_CONFIGS: Record<StructuralModelType, StructuralMod
 
 export const STRUCTURAL_MODEL_CONFIG = STRUCTURAL_MODEL_CONFIGS.standard
 
+export type StructuralModelPrediction = NonNullable<
+  ReturnType<typeof computeStructuralModelPrediction>
+>
+
+const DELTA_KEYS = [
+  'deltaLand',
+  'deltaSlope',
+  'deltaElev',
+  'deltaTopo',
+  'deltaDens',
+  'deltaTransit',
+  'deltaRent',
+  'deltaCars',
+  'deltaLiving',
+] as const
+const INPUT_KEYS = [
+  'roadSlope',
+  'elevMean',
+  'density',
+  'stDistKm',
+  'rent',
+  'carsPer1000',
+  'livingSharePct',
+] as const
+
+/**
+ * A Landkreis, Bezirk or Land as the sum of its Gemeinden: expected km add up, so the expected
+ * share is their total over the Gemeinden's road km. Factor contributions are road-length
+ * weighted means (a missing input contributed 0 to its Gemeinde, so it counts as 0 here too),
+ * which keeps the breakdown adding up to the expected value. `residualStdErrorPct` is the band
+ * for this level (aggregateResidualStdErrorPct), not the Gemeinde one — deviations partly cancel.
+ */
+export function aggregateStructuralPredictions(
+  parts: StructuralModelPrediction[],
+  residualStdErrorPct: number,
+  /**
+   * The region's own lengths. Compared against those, so the actual share matches the map even
+   * where part of the region has no modelled Gemeinde (e.g. unincorporated forest areas).
+   */
+  own?: { roadKm: number; bikeKm: number },
+) {
+  const first = parts[0]
+  if (!first) return null
+  const roadKm = parts.reduce((a, m) => a + m.roadKm, 0)
+  if (!(roadKm > 0)) return null
+  const weighted = (get: (m: StructuralModelPrediction) => number | null) =>
+    parts.reduce((a, m) => a + (get(m) ?? 0) * m.roadKm, 0) / roadKm
+  const expectedPct = (parts.reduce((a, m) => a + m.expectedKm, 0) / roadKm) * 100
+  const ownRoadKm = own && own.roadKm > 0 ? own.roadKm : roadKm
+  const actualKm = own && own.roadKm > 0 ? own.bikeKm : parts.reduce((a, m) => a + m.actualKm, 0)
+  const actualPct = (actualKm / ownRoadKm) * 100
+  const expectedKm = (expectedPct / 100) * ownRoadKm
+  const diffPct = actualPct - expectedPct
+  // A region of a single Gemeinde (kreisfreie Stadt) varies like a Gemeinde: keep its band.
+  const band = parts.length === 1 ? first.residualStdErrorPct : residualStdErrorPct
+  const deltas = Object.fromEntries(DELTA_KEYS.map((k) => [k, weighted((m) => m[k])])) as Record<
+    (typeof DELTA_KEYS)[number],
+    number
+  >
+  const inputs = Object.fromEntries(
+    INPUT_KEYS.map((k) => {
+      const known = parts.filter((m) => m.inputs[k] != null)
+      const w = known.reduce((a, m) => a + m.roadKm, 0)
+      return [k, w > 0 ? known.reduce((a, m) => a + (m.inputs[k] ?? 0) * m.roadKm, 0) / w : null]
+    }),
+  ) as StructuralModelPrediction['inputs']
+  return {
+    ...first,
+    ...deltas,
+    baselinePct: weighted((m) => m.baselinePct),
+    landBaselinePct: weighted((m) => m.landBaselinePct),
+    expectedPct,
+    expectedKm,
+    actualPct,
+    actualKm,
+    roadKm: ownRoadKm,
+    diffPct,
+    diffKm: actualKm - expectedKm,
+    behind: diffPct < -0.05,
+    isWithin1Se: Math.abs(diffPct) <= band,
+    residualStdErrorPct: band,
+    inputs,
+    gemeindeCount: parts.length,
+  }
+}
+
+/**
+ * Typical deviation for regions of one level: the road-length weighted root mean square of their
+ * gaps, the same measure as the Gemeinde model's residual standard error.
+ */
+export function aggregateResidualStdErrorPct(gaps: Array<{ diffPct: number; roadKm: number }>) {
+  const w = gaps.reduce((a, g) => a + g.roadKm, 0)
+  if (!(w > 0)) return null
+  return Math.sqrt(gaps.reduce((a, g) => a + g.roadKm * g.diffPct ** 2, 0) / w)
+}
+
+/**
+ * Levels the Gemeinde predictions are summed up to (Bezirk, Kreis, Gemeindeverband). Not Länder:
+ * the model has one baseline per Land, so a Land's Gemeinden deviate by ~0 on average by
+ * construction and a Land-level gap would say nothing.
+ */
+export function isAggregatedModelLevel(level: unknown) {
+  return ['5', '6', '7'].includes(String(level ?? ''))
+}
+
+/** Below this many regions of a level a typical deviation can't be measured. */
+export const MODEL_BAND_MIN_REGIONS = 8
+
+/**
+ * Colour stops for the model gap: a continuous diverging scale whose light tints near zero still
+ * show the sign, so a small deviation never looks like missing data. `bandPct` (±1 typical
+ * deviation) marks where the tints turn into full colour.
+ */
+export function modelGapColorStops(bandPct: number, boundPct: number, colorblind: boolean) {
+  const band = Math.max(0.1, bandPct)
+  const bound = Math.max(boundPct, band + 0.1)
+  const [low, lowBand, lowNear, highNear, highBand, high] = colorblind
+    ? ['#b35806', '#f1a340', '#fde9c9', '#dbe8f3', '#7fa9d1', '#2166ac']
+    : ['#b71c1c', '#e57373', '#fbe3e1', '#e1f1e2', '#81c784', '#1b5e20']
+  return [
+    [-bound, low],
+    [-band, lowBand],
+    [-0.001, lowNear],
+    [0.001, highNear],
+    [band, highBand],
+    [bound, high],
+  ] as Array<[number, string]>
+}
+
 /**
  * The model is fitted on Gemeinden (fitExtendedModel.ts), so it only predicts Gemeinden. Applied
  * to a Kreis or Land it would mix in averages over very different places — no expected value there.

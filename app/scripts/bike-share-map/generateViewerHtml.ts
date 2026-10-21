@@ -2372,6 +2372,122 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return lastActiveModelSettings;
     }
 
+    /**
+     * Gemeinden, and kreisfreie Städte — municipalities too, but in OSM only a Kreis-level
+     * boundary with no Gemeinde inside (106 of them, Munich and Cologne among them).
+     */
+    function isModelGemeinde(p) {
+      return (
+        RankingDisplay.isStructuralModelLevel(p.level) ||
+        (String(p.level) === '6' && !!regionIndex?.kreisfreieIds?.has(p.id))
+      );
+    }
+
+    /** The Gemeinde model's prediction under the current counting filter, or null. */
+    function gemeindeModelPrediction(p, road, bike) {
+      if (!isModelGemeinde(p) || !densityIndex || !terrainIndex) return null;
+      if (!(road > 0) || TildaStats.isLowRoadNetworkForScale(road)) return null;
+      const num = (v) => (typeof v === 'number' ? v : null);
+      const stationM = transitIndex?.byId[p.id]?.avgDistanceToStationM;
+      const ms = getActiveModelSettings();
+      return RankingDisplay.computeStructuralModelPrediction({
+        roadKm: road,
+        bikeKm: bike,
+        roadSlope: num(terrainIndex?.byId[p.id]?.road),
+        elevMean: num(terrainIndex?.byId[p.id]?.elevationMean),
+        density: num(densityIndex?.byId[p.id]),
+        stDistKm: typeof stationM === 'number' ? stationM / 1000 : null,
+        rent: num(zensusIndex?.byId[p.id]?.rentPerM2),
+        carsPer1000: num(carsIndex?.byId[p.id]?.carsPer1000),
+        livingSharePct: num(calmedIndex?.byId[p.id]?.livingSharePct),
+        bundeslandId: String(p.bundesland_id || ''),
+        modelType: ms.modelType,
+        dynamicBaselines: ms.dynamicBaselines,
+      });
+    }
+
+    /** Every loaded region a Gemeinde lies in (Gemeindeverband, Kreis, Bezirk, Land). */
+    function modelAncestorIds(p) {
+      const ids = new Set();
+      const walk = (start) => {
+        let current = start;
+        for (let i = 0; current && i < 8; i++) {
+          ids.add(current);
+          current = regionIndex?.parentById.get(current);
+        }
+      };
+      walk(regionIndex?.parentById.get(p.id));
+      if (p.landkreis_id) walk(p.landkreis_id);
+      if (p.bundesland_id) ids.add(p.bundesland_id);
+      ids.delete(p.id);
+      return ids;
+    }
+
+    // Higher levels get the sum of their Gemeinden's predictions, judged against the typical
+    // deviation of their own level. Rebuilt when the counting filter or the loaded set changes.
+    let modelAggregateCache = null;
+    function modelAggregateIndex() {
+      if (!densityIndex || !terrainIndex || !regionIndex) return null;
+      const ms = getActiveModelSettings();
+      const key =
+        JSON.stringify(lengthClassFilter) + '|' + ms.modelType + '|' + allFeatures.length;
+      if (modelAggregateCache?.key === key) return modelAggregateCache.byId;
+      const partsById = new Map();
+      for (const f of allFeatures) {
+        const p = f.properties || {};
+        if (!isModelGemeinde(p)) continue;
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
+          p.road_length,
+          p.bikelane_length,
+          lengthClassFilter,
+        );
+        const m = gemeindeModelPrediction(p, roadKm, bikeKm);
+        if (!m) continue;
+        for (const id of modelAncestorIds(p)) {
+          if (!partsById.has(id)) partsById.set(id, []);
+          partsById.get(id).push(m);
+        }
+      }
+      const draftsByLevel = new Map();
+      for (const [id, parts] of partsById) {
+        const level = String(regionIndex.byId.get(id)?.properties?.level ?? '');
+        if (!RankingDisplay.isAggregatedModelLevel(level)) continue;
+        const rp = regionIndex.byId.get(id)?.properties || {};
+        const own = TildaStats.computeFilteredLengths(
+          rp.road_length,
+          rp.bikelane_length,
+          lengthClassFilter,
+        );
+        const draft = RankingDisplay.aggregateStructuralPredictions(parts, Infinity, own);
+        if (!draft) continue;
+        if (!draftsByLevel.has(level)) draftsByLevel.set(level, []);
+        draftsByLevel.get(level).push([id, parts, draft, own]);
+      }
+      const byId = new Map();
+      for (const drafts of draftsByLevel.values()) {
+        if (drafts.length < RankingDisplay.MODEL_BAND_MIN_REGIONS) continue;
+        // Single-Gemeinde regions keep the Gemeinde band and would only widen this one.
+        const band = RankingDisplay.aggregateResidualStdErrorPct(
+          drafts
+            .filter(([, parts]) => parts.length > 1)
+            .map(([, , d]) => ({ diffPct: d.diffPct, roadKm: d.roadKm })),
+        );
+        if (band == null) continue;
+        for (const [id, parts, , own] of drafts) {
+          byId.set(id, RankingDisplay.aggregateStructuralPredictions(parts, band, own));
+        }
+      }
+      modelAggregateCache = { key, byId };
+      return byId;
+    }
+
+    /** Gemeinde: the model itself; Kreis/Bezirk/Land: the sum over its Gemeinden. */
+    function modelPredictionFor(p, road, bike) {
+      if (isModelGemeinde(p)) return gemeindeModelPrediction(p, road, bike);
+      if (RankingDisplay.isAggregatedModelLevel(p.level)) return modelAggregateIndex()?.get(p.id) ?? null;
+      return null;
+    }
+
     function enrichFeature(f) {
       const p = f.properties || {};
       const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(
@@ -2403,41 +2519,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       let modelGapPct = null;
       let expectedPct = null;
 
-      if (
-        RankingDisplay.isStructuralModelLevel(p.level) &&
-        densityIndex &&
-        terrainIndex &&
-        !lowRoad &&
-        road > 0
-      ) {
-        const dens = densityIndex?.byId[p.id];
-        const slope = terrainIndex?.byId[p.id]?.road;
-        const elev = terrainIndex?.byId[p.id]?.elevationMean;
-        const stDist =
-          transitIndex?.byId[p.id]?.avgDistanceToStationM != null
-            ? transitIndex.byId[p.id].avgDistanceToStationM / 1000
-            : null;
-        const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
-
-        const ms = getActiveModelSettings();
-        modelPrediction = RankingDisplay.computeStructuralModelPrediction({
-          roadKm: road,
-          bikeKm: bike,
-          roadSlope: typeof slope === 'number' ? slope : null,
-          elevMean: typeof elev === 'number' ? elev : null,
-          density: typeof dens === 'number' ? dens : null,
-          stDistKm: typeof stDist === 'number' ? stDist : null,
-          rent: typeof rent === 'number' ? rent : null,
-          carsPer1000: typeof cars === 'number' ? cars : null,
-          livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
-          bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
-          modelType: ms.modelType,
-          dynamicBaselines: ms.dynamicBaselines,
-        });
-        if (modelPrediction) {
-          modelGapPct = modelPrediction.diffPct;
-          expectedPct = modelPrediction.expectedPct;
-        }
+      modelPrediction = modelPredictionFor(p, road, bike);
+      if (modelPrediction) {
+        modelGapPct = modelPrediction.diffPct;
+        expectedPct = modelPrediction.expectedPct;
       }
 
       const name = p.name || p.id;
@@ -2531,6 +2616,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           bikeSharePct: pct != null ? pct : 0,
           modelGapPct,
           expectedPct,
+          modelBandPct: modelPrediction ? modelPrediction.residualStdErrorPct : null,
           carsPer1000: cars,
           rentColdM2: rent,
           bikeAccidentsPer10k,
@@ -2872,14 +2958,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (metricDef) {
         if (metric === 'modelGap') {
-          const rse = lastActiveModelSettings.rse || 5.64;
           metricDef.innerHTML =
             'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
-            '<strong>Grün</strong> = über dem Erwartungswert, ' +
-            '<strong>Rot</strong> = unter dem Erwartungswert. ' +
-            '<strong>Grau</strong> = im Rahmen der typischen Modellstreuung (±1 Standardfehler, ±' +
-            formatUiPct(rse) +
-            ' %-Punkte). Nur für Gemeinden – auf dieser Ebene ist das Modell geschätzt.';
+            '<strong>Grün</strong> = darüber, <strong>Rot</strong> = darunter. ' +
+            'Helle Töne liegen innerhalb der typischen Abweichung auf dieser Ebene (±' +
+            formatUiPct(lastModelBandPct) +
+            ' %-Punkte), kräftige Töne außerhalb. Landkreise und Bezirke: Summe ihrer Gemeinden; für Länder kein Wert. ' +
+            '<strong>Grau</strong> = kein Wert.';
         } else if (metric === 'cars') {
           metricDef.textContent =
             'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
@@ -3103,6 +3188,33 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       });
     }
 
+    // ±1 typical deviation of the regions on the map (Gemeinden: the model's residual standard
+    // error; Kreise, Bezirke, Länder: measured over their level). Marks the light tints.
+    let lastModelBandPct = 5.64;
+    function modelBandForFeatures(features) {
+      const bands = features
+        .map((f) => f.properties?.modelBandPct)
+        .filter((v) => typeof v === 'number')
+        .sort((a, b) => a - b);
+      if (!bands.length) return lastActiveModelSettings.rse || 5.64;
+      return bands[Math.floor(bands.length / 2)];
+    }
+
+    function modelGapColorAt(val, minVal, maxVal, isColorblind) {
+      const stops = RankingDisplay.modelGapColorStops(
+        lastModelBandPct,
+        Math.max(Math.abs(minVal), Math.abs(maxVal)),
+        isColorblind,
+      );
+      if (val <= stops[0][0]) return stops[0][1];
+      for (let i = 1; i < stops.length; i++) {
+        const [v1, c1] = stops[i];
+        const [v0, c0] = stops[i - 1];
+        if (val <= v1) return lerpColor(c0, c1, (val - v0) / (v1 - v0));
+      }
+      return stops[stops.length - 1][1];
+    }
+
     function colorScaleRangeForMetric(metric, features) {
       if (metric === 'modelGap') {
         const vals = features
@@ -3116,8 +3228,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const dataMax = sorted[sorted.length - 1];
         const absSorted = sorted.map((v) => Math.abs(v)).sort((a, b) => a - b);
         const p95 = absSorted[Math.min(absSorted.length - 1, Math.floor(0.95 * absSorted.length))];
-        const rse = lastActiveModelSettings.rse || 5.64;
-        const bound = Math.max(Math.ceil(rse * 1.2), Math.ceil(p95));
+        lastModelBandPct = modelBandForFeatures(features);
+        const bound = Math.max(Math.ceil(lastModelBandPct * 1.2), Math.ceil(p95));
         return {
           min: -bound,
           max: bound,
@@ -3839,19 +3951,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '#cfd8dc';
       metric = metric || currentMapMetric || 'bikeShare';
       const isColorblind = scaleId === 'colorblind';
-      if (metric === 'modelGap') {
-        const se = lastActiveModelSettings.rse || 5.64;
-        if (Math.abs(val) <= se) return '#e2e8f0';
-        const low = isColorblind ? '#e69f00' : '#c62828';
-        const mid = '#e2e8f0';
-        const high = isColorblind ? '#3274a1' : '#2e7d32';
-        if (val < -se) {
-          const t = minVal < -se ? Math.max(0, Math.min(1, (val - minVal) / (-se - minVal))) : 0;
-          return lerpColor(low, mid, t);
-        }
-        const t = maxVal > se ? Math.max(0, Math.min(1, (val - se) / (maxVal - se))) : 1;
-        return lerpColor(mid, high, t);
-      }
+      if (metric === 'modelGap') return modelGapColorAt(val, minVal, maxVal, isColorblind);
       if (metric === 'commuters') {
         const low = isColorblind ? '#e69f00' : '#c62828';
         const mid = '#f5f5f5';
@@ -4942,10 +5042,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function renderRegionModelGap(p) {
       if (!regionDetailModelGap) return;
       regionDetailModelGap.replaceChildren();
-      if (!RankingDisplay.isStructuralModelLevel(p.level)) {
-        regionDetailModelGap.hidden = true;
-        return;
-      }
       ensureRegionExtraIndexes();
       const filter = readLengthClassFilterFromUi();
       const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
@@ -4953,38 +5049,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         p.bikelane_length,
         filter,
       );
-      const dens = densityIndex?.byId[p.id];
-      const slope = terrainIndex?.byId[p.id]?.road;
-      const elev = terrainIndex?.byId[p.id]?.elevationMean;
-      const stDist =
-        transitIndex?.byId[p.id]?.avgDistanceToStationM != null
-          ? transitIndex.byId[p.id].avgDistanceToStationM / 1000
-          : null;
-
-      const rent = zensusIndex?.byId[p.id]?.rentPerM2;
-      const carsPer1000 = carsIndex?.byId[p.id]?.carsPer1000;
-      const livingSharePct = calmedIndex?.byId[p.id]?.livingSharePct;
-
-      const ms = getActiveModelSettings();
-      const m = RankingDisplay.computeStructuralModelPrediction({
-        roadKm,
-        bikeKm,
-        roadSlope: typeof slope === 'number' ? slope : null,
-        elevMean: typeof elev === 'number' ? elev : null,
-        density: typeof dens === 'number' ? dens : null,
-        stDistKm: typeof stDist === 'number' ? stDist : null,
-        rent: typeof rent === 'number' ? rent : null,
-        carsPer1000: typeof carsPer1000 === 'number' ? carsPer1000 : null,
-        livingSharePct: typeof livingSharePct === 'number' ? livingSharePct : null,
-        bundeslandId: String(p.bundesland_id || (p.level === '4' ? p.id : '')),
-        modelType: ms.modelType,
-        dynamicBaselines: ms.dynamicBaselines,
-      });
-
+      let m = modelPredictionFor(p, roadKm, bikeKm);
       if (!m) {
         regionDetailModelGap.hidden = true;
         return;
       }
+      const aggregated = !!m.gemeindeCount;
+      // A road-weighted mean of Gemeinde densities says little; show the region's own density.
+      if (aggregated && typeof densityIndex?.byId[p.id] === 'number') {
+        m = { ...m, inputs: { ...m.inputs, density: densityIndex.byId[p.id] } };
+      }
+      const bandLabel = aggregated
+        ? 'typische Abweichung auf dieser Ebene ±'
+        : 'Streuband ±1 SE = ±';
 
       regionDetailModelGap.className =
         'region-detail-gap region-detail-gap--model ' +
@@ -5002,12 +5079,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
         ' km) · ' +
-        m.modelName +
-        ' (R² = ' +
-        formatUiPct(m.r2TotalPct) +
-        ' %, n = ' +
-        deNumber(m.n, 0) +
-        ')';
+        (aggregated
+          ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
+          : m.modelName +
+            ' (R² = ' +
+            formatUiPct(m.r2TotalPct) +
+            ' %, n = ' +
+            deNumber(m.n, 0) +
+            ')');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -5025,7 +5104,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           ' km) · Im typischen Streubereich (' +
           sign +
           formatUiPct(m.diffPct) +
-          ' %-Punkte ggü. Erwartung; Streuband ±1 SE = ±' +
+          ' %-Punkte ggü. Erwartung; ' +
+          bandLabel +
           formatUiPct(m.residualStdErrorPct) +
           ' %-Punkte).';
       } else if (m.behind) {
@@ -5192,7 +5272,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         formatUiPct(m.r2CvPct) +
         ' %, n = ' +
         deNumber(m.n, 0) +
-        ' Gemeinden). Es beschreibt Zusammenhänge, keine Ursachen – ein statistischer Vergleichswert, kein planerischer Zielwert.';
+        ' Gemeinden). Es beschreibt Zusammenhänge, keine Ursachen – ein statistischer Vergleichswert, kein planerischer Zielwert.' +
+        (aggregated
+          ? ' Für dieses Gebiet sind Erwartungswert und Faktoren die nach Straßenlänge gewichtete Summe seiner Gemeinden; das Streuband ist die typische Abweichung aller Gebiete dieser Ebene.'
+          : '');
       details.appendChild(note);
 
       regionDetailModelGap.appendChild(details);
@@ -8358,32 +8441,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const isColorblind = scaleId === 'colorblind';
 
       if (metric === 'modelGap') {
-        const lowColor = isColorblind ? '#e69f00' : '#c62828';
-        const midColor = '#e2e8f0';
-        const highColor = isColorblind ? '#3274a1' : '#2e7d32';
-        const se = lastActiveModelSettings.rse || 5.64;
+        const stops = RankingDisplay.modelGapColorStops(
+          lastModelBandPct,
+          Math.max(Math.abs(minVal), Math.abs(maxVal)),
+          isColorblind,
+        );
         const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'modelGapPct'], 0]]];
-        const loStop = Math.min(minVal, -se - 0.01);
-        const hiStop = Math.max(maxVal, se + 0.01);
         return [
           'case',
           ['==', ['get', 'modelGapPct'], null],
           '#cfd8dc',
-          ['<=', ['abs', clamped], se],
-          '#e2e8f0',
-          [
-            'interpolate',
-            ['linear'],
-            clamped,
-            loStop,
-            lowColor,
-            -se,
-            '#e2e8f0',
-            se,
-            '#e2e8f0',
-            hiStop,
-            highColor,
-          ],
+          ['interpolate', ['linear'], clamped, ...stops.flat()],
         ];
       }
 
@@ -8505,14 +8573,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const isColorblind = scaleId === 'colorblind';
       let gradient = scale.legendGradient;
       if (metric === 'modelGap') {
-        const rse = lastActiveModelSettings.rse || 5.64;
-        const bound = Math.max(Math.abs(lastPctRange?.max || 10), rse + 0.1);
-        const greyFrac = Math.min(0.48, Math.max(0.1, rse / bound));
-        const loGrey = Math.round((0.5 - greyFrac / 2) * 100);
-        const hiGrey = Math.round((0.5 + greyFrac / 2) * 100);
-        gradient = isColorblind
-          ? 'linear-gradient(to right, #e69f00 0%, #e2e8f0 ' + loGrey + '%, #e2e8f0 ' + hiGrey + '%, #3274a1 100%)'
-          : 'linear-gradient(to right, #c62828 0%, #e2e8f0 ' + loGrey + '%, #e2e8f0 ' + hiGrey + '%, #2e7d32 100%)';
+        const bound = Math.max(Math.abs(lastPctRange?.max || 10), lastModelBandPct + 0.1);
+        const stops = RankingDisplay.modelGapColorStops(lastModelBandPct, bound, isColorblind);
+        gradient =
+          'linear-gradient(to right, ' +
+          stops
+            .map(([v, c]) => c + ' ' + (((v + bound) / (2 * bound)) * 100).toFixed(1) + '%')
+            .join(', ') +
+          ')';
       } else if (metric === 'cars') {
         gradient = isColorblind
           ? 'linear-gradient(to right, #3274a1, #f0e442, #e69f00)'

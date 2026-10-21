@@ -36,6 +36,27 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'a Landkreis shows the model gap summed over its Gemeinden',
+    async () => {
+      // Bayern by Landkreise, Landkreis Pfaffenhofen selected.
+      page = await bootViewer(
+        '?gebiet=relation/2145268&darstellung=landkreis_kreisfrei&region=relation/62371',
+      )
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      await page.waitFor(
+        () => !page!.q('#region-detail-model-gap').hidden,
+        'the model gap callout for the Landkreis',
+      )
+      const text = page.q('#region-detail-model-gap').textContent ?? ''
+      expect(text).toMatch(/Summe der Erwartungswerte von \d+ Gemeinden/)
+      expect(text).toMatch(/Erwartet: \d+,\d %/)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'clicking a street row highlights that street type, in both breakdowns',
     async () => {
       page = await bootViewer(IN_LANDKREIS)
