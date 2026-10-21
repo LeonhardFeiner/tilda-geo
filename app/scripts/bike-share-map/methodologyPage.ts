@@ -336,9 +336,9 @@ ${li([
         <td class="num">${beta(STD_MODEL.betas.rent)} / (€/m²)</td>
       </tr>
       <tr>
-        <td><strong>PKW-Dichte</strong></td>
-        <td>Gemeldete PKW je 1.000 Einwohner (KBA)</td>
-        <td class="num">${beta(STD_MODEL.betas.carsPer1000)} / (PKW/1k)</td>
+        <td><strong>Pkw-Dichte</strong></td>
+        <td>Gemeldete Pkw je 1.000 Einwohner (KBA)</td>
+        <td class="num">${beta(STD_MODEL.betas.carsPer1000)} / (Pkw/1k)</td>
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>

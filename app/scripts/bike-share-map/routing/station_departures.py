@@ -245,6 +245,11 @@ def main(argv: list[str]) -> None:
         'stationsFetchedAt': data.get('fetchedAt'),
         # Same order as stations.json; null where no timetable station matched.
         'departures': [int(departures[i]) if matched[i] else None for i in range(len(st))],
+        # The same, keyed by "lng,lat,category" (stationKey in buildViewer.ts), so a re-fetched
+        # stations.json can still be matched; stations without departures are left out.
+        'byStation': {
+            f'{st[i][0]},{st[i][1]},{st[i][2]}': int(departures[i]) for i in range(len(st)) if matched[i]
+        },
     }, separators=(',', ':')))
     log(f'{OUT}')
 

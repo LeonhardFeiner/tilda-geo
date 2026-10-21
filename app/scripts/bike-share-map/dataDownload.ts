@@ -1,4 +1,5 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
+import { CONTEXT_METRIC_LABELS as L } from './contextMetrics'
 import {
   aggregateResidualStdErrorPct,
   aggregateStructuralPredictions,
@@ -12,6 +13,7 @@ import {
 import {
   assessBikeDataQuality,
   computeFilteredLengths,
+  csvField,
   independentBikeKm,
   mainRoadBreakdown,
   RADINFRA_DEFAULT_FILTER,
@@ -106,25 +108,23 @@ export const DATA_DOWNLOAD_COLUMNS = {
     'Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße',
   vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   vielbefahren_mit_radweg_pct: 'vielbefahren_mit_radweg_km / vielbefahren_km, %',
-  einwohner_je_km2: 'Bevölkerungsdichte (Destatis Gemeindeverzeichnis)',
-  miete_eur_m2: 'Durchschnittliche Nettokaltmiete je m² (Zensus 2022)',
-  pkw_je_1000_ew: 'Pkw je 1000 Einwohner (KBA FZ 3)',
-  verkehrsberuhigt_pct:
-    'Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %',
+  einwohner_je_km2: `${L.density}, Einwohner je km² (Destatis Gemeindeverzeichnis)`,
+  miete_eur_m2: `${L.rent}, € je m²`,
+  pkw_je_1000_ew: `${L.carDensity}: Pkw je 1.000 Einwohner (Statistik FZ 3)`,
+  verkehrsberuhigt_pct: `${L.calmedShare}: Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %`,
   spielstrassen_pct:
     'Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz, %; geht ins Modell ein',
-  beruhigt_fahrradstr_pct:
-    'Anteil von verkehrsberuhigten Bereichen, Fahrradstraßen und Fußgängerzonen am Straßennetz, %',
+  beruhigt_fahrradstr_pct: `${L.livingShare}: Anteil am Straßennetz, %`,
   strassen_steigung_pct: 'Mittlere Geländeneigung entlang des Straßennetzes (DGM-Stichproben), %',
-  hoehe_mittel_m: 'Mittlere Geländehöhe, m',
+  hoehe_mittel_m: `${L.elevation}, m`,
   bahnhof_distanz_km:
     'Einwohnergewichtete mittlere Luftlinie (Zensus-100-m-Gitter) zur nächsten Bahn-, Tram- oder Fährstation, km',
-  rad_unfaelle: 'Unfälle mit Personenschaden und Radbeteiligung (Unfallatlas 2023)',
+  rad_unfaelle: `${L.bikeAccidents} (Unfallatlas 2023; 0 = keine erfasst)`,
   rad_unfaelle_schwer: 'davon mit Getöteten oder Schwerverletzten',
-  rad_unfaelle_je_10k_ew: 'Radunfälle je 10.000 Einwohner',
+  rad_unfaelle_je_10k_ew: `${L.bikeAccidentsPer10k}`,
   einpendler: 'Sozialversicherungspflichtig Beschäftigte, Einpendler (BA)',
   auspendler: 'Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)',
-  arbeitsplatzzentralitaet: 'Beschäftigte am Arbeitsort / am Wohnort',
+  arbeitsplatzzentralitaet: `${L.jobCentrality}: Beschäftigte am Arbeitsort / am Wohnort`,
   modell_erwartung_pct:
     'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: Summe der Erwartungswerte ihrer Gemeinden (Länder: kein Wert, siehe Methodik)',
   modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
@@ -344,12 +344,9 @@ const UTF8_BOM = '\uFEFF'
 type CsvDialect = { separator: ',' | ';'; decimalComma: boolean }
 
 function csvCell(value: Cell, dialect: CsvDialect) {
-  if (value == null) return ''
   const s =
-    typeof value === 'number' && dialect.decimalComma
-      ? String(value).replace('.', ',')
-      : String(value)
-  return s.includes(dialect.separator) || /["\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
+    typeof value === 'number' && dialect.decimalComma ? String(value).replace('.', ',') : value
+  return csvField(s, dialect.separator)
 }
 
 /**

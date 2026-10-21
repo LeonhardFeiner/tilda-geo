@@ -1,5 +1,8 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, test } from 'vitest'
 import {
+  csvField,
+  formatMapMetricValue,
+  formatMinutes,
   assessBikeDataQuality,
   BIKELANE_TAG_LABELS,
   bikelaneCategoryTags,
@@ -127,5 +130,32 @@ describe('mainRoadBreakdown', () => {
   it('reports bike km away from roads', () => {
     expect(independentBikeKm(bikes)).toBe(100)
     expect(independentBikeKm(null)).toBe(0)
+  })
+})
+
+describe('csvField', () => {
+  test('quotes only when needed, for either separator', () => {
+    expect(csvField(null, ',')).toBe('')
+    expect(csvField('Musterstadt, "Alt"', ',')).toBe('"Musterstadt, ""Alt"""')
+    expect(csvField('a;b', ',')).toBe('a;b')
+    expect(csvField('a;b', ';')).toBe('"a;b"')
+    expect(csvField('zwei\nZeilen', ';')).toBe('"zwei\nZeilen"')
+    expect(csvField(12.5, ';')).toBe('12.5')
+  })
+})
+
+describe('formatters', () => {
+  test('minutes', () => {
+    expect(formatMinutes(7.46)).toBe('7,5 min')
+    expect(formatMinutes(34.2)).toBe('34 min')
+    expect(formatMinutes(130)).toBe('2 h 10 min')
+    expect(formatMinutes(120)).toBe('2 h')
+  })
+  test('map metric values carry their unit', () => {
+    expect(formatMapMetricValue(null, 'bikeShare')).toBe('–')
+    expect(formatMapMetricValue(2.5, 'modelGap')).toMatch(/^\+2,5\d* %p$/)
+    expect(formatMapMetricValue(648.7, 'cars')).toBe('649 Pkw')
+    expect(formatMapMetricValue(6.191, 'rent')).toBe('6,19 €/m²')
+    expect(formatMapMetricValue(-1200, 'commuters')).toBe('-1.200')
   })
 })

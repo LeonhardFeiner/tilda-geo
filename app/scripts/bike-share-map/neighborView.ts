@@ -1,3 +1,9 @@
+/**
+ * The neighbour view ("this Landkreis/Gemeinde and its neighbours"): presets, focus resolution
+ * and the neighbour filter. It began as the separate "simple" UI, hence the `SimplePreset` /
+ * `simple=` names that remain in the URL format; since Oct 2026 it is one Darstellung option of
+ * the single UI (see the Nachbarn group in #darstellung-select).
+ */
 import {
   DEUTSCHLAND_GEBIET,
   filterFeaturesForView,
@@ -740,7 +746,7 @@ function _matchesDarstellungLevel(
   return filterFeaturesForView([f], scope, index).length > 0
 }
 
-export function expertViewScopeFromFocus(focusId: string, index: RegionIndex) {
+export function viewScopeFromFocus(focusId: string, index: RegionIndex) {
   const ctx = resolveFocusContext(focusId, index)
   if (!ctx) return null
   const preset = defaultSimplePresetForFocus(ctx, index)
@@ -766,7 +772,7 @@ export function expertViewScopeFromFocus(focusId: string, index: RegionIndex) {
 /**
  * The view that shows a region *among its own siblings*, so it can be compared.
  *
- * expertViewScopeFromFocus drills *into* a region instead — the simple view of a Landkreis
+ * viewScopeFromFocus drills *into* a region instead — the simple view of a Landkreis
  * lists its Gemeinden, and the expert equivalent has to match that. Search needs the opposite:
  * whatever level you typed, that region is the one that ends up selected, never the container
  * whose contents you are suddenly looking at. Keeping the two rules apart is what makes a

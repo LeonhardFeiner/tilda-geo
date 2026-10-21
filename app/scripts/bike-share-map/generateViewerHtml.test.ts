@@ -310,7 +310,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
 
   test('includes population-weighted highway distance in context metrics and CSV columns', () => {
     expect(html).toContain("key: 'highwayDistance'")
-    expect(html).toContain("label: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.highwayDistance,')
     expect(html).toContain('transitIndex?.byId[id]?.avgDistanceToHighwayM')
     expect(html).toContain(
       "header: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße (km, einwohnergewichtet)'",
@@ -382,27 +382,27 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   test('includes Zensus 2022 rent, youth and vacancy metrics in context and CSV columns', () => {
     expect(html).toContain('"zensusUrl":"./gemeinde-zensus.json?v=20261011000000"')
     expect(html).toContain("key: 'rent'")
-    expect(html).toContain("label: 'Ø Nettokaltmiete (Zensus 2022)'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.rent,')
     expect(html).toContain("key: 'youth'")
-    expect(html).toContain("label: 'Kinder & Jugendliche (< 18 Jahre)'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.youth,')
     expect(html).toContain("key: 'vacancy'")
-    expect(html).toContain("label: 'Wohnungsleerstand'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.vacancy,')
     expect(html).toContain("header: 'Ø Nettokaltmiete (€/m², Zensus 2022)'")
   })
 
   test('includes KBA car density metric in context and CSV columns', () => {
     expect(html).toContain('"carsUrl":"./gemeinde-cars.json?v=20261011000000"')
     expect(html).toContain("key: 'carDensity'")
-    expect(html).toContain("label: 'PKW-Dichte (KBA)'")
-    expect(html).toContain("header: 'PKW je 1.000 Einwohner (KBA)'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.carDensity,')
+    expect(html).toContain("header: 'Pkw je 1.000 Einwohner (KBA)'")
   })
 
   test('includes traffic calmed and Tempo-30 road metrics in context and CSV columns', () => {
     expect(html).toContain('"calmedUrl":"./gemeinde-calmed.json?v=20261011000000"')
     expect(html).toContain("key: 'calmedShare'")
-    expect(html).toContain("label: 'Wohn- & Tempo-30-Netz'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.calmedShare,')
     expect(html).toContain("key: 'livingShare'")
-    expect(html).toContain("label: 'Verkehrsberuhigt & Fahrradstraßen'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.livingShare,')
     expect(html).toContain("header: 'Wohn- & Tempo-30-Netz Anteil (%)'")
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
   })
@@ -416,7 +416,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   test('includes the OSM mapping completeness in context and CSV columns', () => {
     expect(html).toContain('"mappingUrl":"./gemeinde-mapping.json?v=20261011000000"')
     expect(html).toContain("key: 'mappingDepth'")
-    expect(html).toContain("label: 'Kartierungstiefe (OSM)'")
+    expect(html).toContain('label: RankingDisplay.CONTEXT_METRIC_LABELS.mappingDepth,')
     expect(html).toContain("header: 'Kartierungstiefe OSM (%)'")
   })
 

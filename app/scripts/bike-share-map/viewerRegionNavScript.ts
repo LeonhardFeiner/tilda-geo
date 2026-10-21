@@ -72,13 +72,13 @@ export function viewerRegionNavScript() {
     function filteredFeaturesForCurrentView() {
       if (isNeighborView()) {
         const neighbors = ensureNeighborIndex();
-        const allowed = SimpleView.computeSimpleAllowedIds(
+        const allowed = NeighborView.computeSimpleAllowedIds(
           neighborPreset,
           neighborFocus,
           regionIndex,
           neighbors,
         );
-        const filtered = SimpleView.filterFeaturesForSimpleView(
+        const filtered = NeighborView.filterFeaturesForSimpleView(
           allFeatures,
           neighborPreset,
           neighborFocus,
@@ -94,7 +94,7 @@ export function viewerRegionNavScript() {
       return RegionNav.filterFeaturesForView(allFeatures, currentViewScope, regionIndex);
     }
 
-    function applyExpertScopeToUi(scope) {
+    function writeViewScopeToSelects(scope) {
       if (!scope) return;
       gebietSelect.value = scope.gebiet;
       populateUntergebietSelect();
@@ -136,13 +136,13 @@ export function viewerRegionNavScript() {
      * Zeige options stay the ones that make sense there.
      */
     function enterNeighborView(focusId, preset) {
-      const ctx = regionIndex ? SimpleView.resolveFocusContext(focusId, regionIndex) : null;
-      if (!ctx || !SimpleView.presetUsesNeighborFilter(preset)) return false;
+      const ctx = regionIndex ? NeighborView.resolveFocusContext(focusId, regionIndex) : null;
+      if (!ctx || !NeighborView.presetUsesNeighborFilter(preset)) return false;
       neighborFocus = ctx;
       neighborPreset = preset;
       neighborViewActive = true;
-      const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
-      if (scope) applyExpertScopeToUi(scope);
+      const scope = NeighborView.viewScopeFromFocus(ctx.focusId, regionIndex);
+      if (scope) writeViewScopeToSelects(scope);
       else populateDarstellungSelect();
       return true;
     }
@@ -150,10 +150,10 @@ export function viewerRegionNavScript() {
     /** The neighbour presets that make sense for a region, or [] while the index is unknown. */
     function neighborPresetsFor(ctx) {
       if (!ctx || !regionIndex) return [];
-      return SimpleView.listSimplePresetsForFocus(ctx, regionIndex, {
+      return NeighborView.listSimplePresetsForFocus(ctx, regionIndex, {
         features: allFeatures,
         neighbors: neighborIndex,
-      }).filter((preset) => SimpleView.presetUsesNeighborFilter(preset));
+      }).filter((preset) => NeighborView.presetUsesNeighborFilter(preset));
     }
 
     /** The Landkreis whose neighbours the "Zeige" select can offer: the one you are looking at. */
@@ -165,7 +165,7 @@ export function viewerRegionNavScript() {
         return null;
       }
       const id = RegionNav.scopeIdFor(gebiet, untergebiet);
-      const ctx = id ? SimpleView.resolveFocusContext(id, regionIndex) : null;
+      const ctx = id ? NeighborView.resolveFocusContext(id, regionIndex) : null;
       return ctx && ctx.kind === 'landkreis' ? ctx : null;
     }
 
@@ -283,7 +283,7 @@ export function viewerRegionNavScript() {
       // A jump up is a step of its own in the browser history.
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi({
+      writeViewScopeToSelects({
         gebiet: crumb.gebiet,
         untergebiet: crumb.untergebiet,
         darstellung: RegionNav.defaultDarstellungForScope(
@@ -438,7 +438,7 @@ export function viewerRegionNavScript() {
       for (const preset of presets) {
         const el = document.createElement('option');
         el.value = NEIGHBOR_OPTION_PREFIX + preset + '|' + focus.focusId;
-        el.textContent = SimpleView.simplePresetLabel(preset, focus, regionIndex);
+        el.textContent = NeighborView.simplePresetLabel(preset, focus, regionIndex);
         group.appendChild(el);
       }
       darstellungSelect.appendChild(group);
@@ -490,7 +490,7 @@ export function viewerRegionNavScript() {
 
     /** From a region card: show that Landkreis/Gemeinde together with the ones around it. */
     async function showWithNeighbors(focusId) {
-      const ctx = regionIndex ? SimpleView.resolveFocusContext(focusId, regionIndex) : null;
+      const ctx = regionIndex ? NeighborView.resolveFocusContext(focusId, regionIndex) : null;
       if (!ctx) return false;
       await whenNeighborsReady();
       const presets = neighborPresetsFor(ctx);
@@ -530,14 +530,14 @@ export function viewerRegionNavScript() {
 
     function viewLabelForCurrentMode(opts) {
       if (isNeighborView()) {
-        return SimpleView.simplePresetLabel(neighborPreset, neighborFocus, regionIndex);
+        return NeighborView.simplePresetLabel(neighborPreset, neighborFocus, regionIndex);
       }
       return RegionNav.viewLabel(currentViewScope, regionIndex, opts);
     }
 
     function viewShowsGemeindenLevelForCurrentView() {
       if (isNeighborView()) {
-        const darstellung = SimpleView.simplePresetDarstellung(neighborPreset, neighborFocus);
+        const darstellung = NeighborView.simplePresetDarstellung(neighborPreset, neighborFocus);
         return darstellung === 'gemeinden' || darstellung === 'gemeinden_kreisfrei';
       }
       return RegionNav.viewShowsGemeindenLevel(currentViewScope);
@@ -571,12 +571,12 @@ export function viewerRegionNavScript() {
      * doesn't name one, so the plain gebiet/untergebiet/darstellung scope applies.
      */
     function resolveFocusViewFromUrl(params) {
-      const ctx = SimpleView.resolveFocusContext(params.get('focus'), regionIndex);
-      const preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
-      if (!params.get('focus') || !ctx || !preset || !SimpleView.presetUsesNeighborFilter(preset)) {
+      const ctx = NeighborView.resolveFocusContext(params.get('focus'), regionIndex);
+      const preset = NeighborView.parseSimpleViewPreset(params.get('simple'));
+      if (!params.get('focus') || !ctx || !preset || !NeighborView.presetUsesNeighborFilter(preset)) {
         return null;
       }
-      const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
+      const scope = NeighborView.viewScopeFromFocus(ctx.focusId, regionIndex);
       if (!scope) return null;
       neighborFocus = ctx;
       neighborPreset = preset;
@@ -612,7 +612,7 @@ export function viewerRegionNavScript() {
 
     function applyViewScopeToUi(scope) {
       applyUiModeClass();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
     }
 
     function rankingFocusChainIds() {

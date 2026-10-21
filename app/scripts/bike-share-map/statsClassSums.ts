@@ -633,3 +633,41 @@ export {
   DEFAULT_PERCENTILE_HIGH,
   isLowRoadNetworkForScale,
 } from './choroplethScale'
+
+/**
+ * One CSV field: empty for null/'', quoted when it contains the separator, a quote or a line
+ * break (RFC 4180). Shared by the per-region download (dataDownload.ts) and the page's
+ * "this view as CSV" export.
+ */
+export function csvField(value: string | number | null | undefined, separator: string) {
+  if (value == null || value === '') return ''
+  const s = String(value)
+  return s.includes(separator) || /["\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
+}
+
+/** German number with at most `digits` decimals: 1.234,5 */
+export function formatDeNumber(value: number, digits: number) {
+  return value.toLocaleString('de-DE', { maximumFractionDigits: digits })
+}
+
+/** 7,5 min · 34 min · 2 h 10 min */
+export function formatMinutes(v: number) {
+  if (v < 10) return `${formatDeNumber(v, 1)} min`
+  if (v < 60) return `${formatDeNumber(Math.round(v), 0)} min`
+  const total = Math.round(v)
+  return `${Math.floor(total / 60)} h${total % 60 ? ` ${total % 60} min` : ''}`
+}
+
+export type MapMetric = 'bikeShare' | 'modelGap' | 'cars' | 'rent' | 'accidents' | 'commuters'
+
+/** A ranking/legend value of one map metric with its unit; "–" when there is none. */
+export function formatMapMetricValue(val: number | null | undefined, metric: MapMetric) {
+  if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '–'
+  const sign = val > 0 ? '+' : ''
+  if (metric === 'modelGap') return `${sign}${formatStatPctUi(val)} %p`
+  if (metric === 'cars') return `${Math.round(val)} Pkw`
+  if (metric === 'rent') return `${val.toFixed(2).replace('.', ',')} €/m²`
+  if (metric === 'accidents') return `${formatStatPctUi(val)} / 10k`
+  if (metric === 'commuters') return `${sign}${val.toLocaleString('de-DE')}`
+  return `${formatStatPctUi(val)} %`
+}

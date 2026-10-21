@@ -27,6 +27,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { BAYERN_ID } from './constants'
 import { writeDataset } from './fetchCommon'
 
 const WFS_URL =
@@ -38,7 +39,6 @@ export const ERA_DTV_THRESHOLD_100 = 2500
 export const ERA_DTV_THRESHOLD_70 = 4000
 const SAMPLE_STEP_M = 50
 const COVER_DISTANCE_M = 20
-const BAYERN_ID = 'relation/2145268'
 
 /** Bike infrastructure a cyclist can use instead of the carriageway. */
 export const COVERING_CATEGORIES = [

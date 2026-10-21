@@ -36,6 +36,23 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'a Gemeindeverbände view loads the extra stats pack and ranks its regions',
+    async () => {
+      page = await bootViewer(
+        '?gebiet=relation/2145268&untergebiet=lk:relation/62371&darstellung=gemeindeverbaende',
+      )
+      const p = page
+      await p.waitFor(
+        () => p.window.__fetches.some((url) => url.startsWith('stats-extra.msgpack')),
+        'the stats-extra fetch',
+      )
+      await p.waitFor(() => names(p).length > 0, 'a ranked Gemeindeverband')
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'a Landkreis shows the model gap summed over its Gemeinden',
     async () => {
       // Bayern by Landkreise, Landkreis Pfaffenhofen selected.

@@ -22,7 +22,7 @@ const BUNDLES = [
   'statsClassSums.js',
   'regionNavigation.js',
   'statsMsgpack.js',
-  'simpleView.js',
+  'neighborView.js',
   'regionSearch.js',
   'rankingDisplay.js',
 ]

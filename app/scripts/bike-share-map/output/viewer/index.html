@@ -18,8 +18,8 @@
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack?v=20261021112854" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261021112854" as="script" />
+  <link rel="preload" href="./stats-core.msgpack?v=20261021121513" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261021121513" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -1445,7 +1445,7 @@
         <select id="map-metric-select">
           <option value="bikeShare">Radinfrastruktur-Anteil</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
-          <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
+          <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
           <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
           <option value="commuters">Pendlersaldo (BA Beschäftigungsstatistik)</option>
@@ -1726,18 +1726,23 @@
       <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js?v=20261021112854"></script>
-  <script src="./regionNavigation.js?v=20261021112854"></script>
-  <script src="./statsMsgpack.js?v=20261021112854"></script>
-  <script src="./simpleView.js?v=20261021112854"></script>
-  <script src="./regionSearch.js?v=20261021112854"></script>
-  <script src="./rankingDisplay.js?v=20261021112854"></script>
-  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261021112854"></script>
+  <script src="./statsClassSums.js?v=20261021121513"></script>
+  <script src="./regionNavigation.js?v=20261021121513"></script>
+  <script src="./statsMsgpack.js?v=20261021121513"></script>
+  <script src="./neighborView.js?v=20261021121513"></script>
+  <script src="./regionSearch.js?v=20261021121513"></script>
+  <script src="./rankingDisplay.js?v=20261021121513"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261021121513"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-21T11:28:54.799Z","dataDateLabel":"16.10.2026","assetVersion":"20261021112854","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261021112854","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261021112854","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261021112854","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261021112854","neighborsUrl":"./neighbors.json?v=20261021112854","manifestUrl":"./manifest.json?v=20261021112854","peersUrl":"./gemeinde-peers.json?v=20261021112854","densityUrl":"./gemeinde-density.json?v=20261021112854","transitUrl":"./gemeinde-transit.json?v=20261021112854","terrainUrl":"./gemeinde-terrain.json?v=20261021112854","zensusUrl":"./gemeinde-zensus.json?v=20261021112854","carsUrl":"./gemeinde-cars.json?v=20261021112854","calmedUrl":"./gemeinde-calmed.json?v=20261021112854","accidentsUrl":"./gemeinde-accidents.json?v=20261021112854","commutersUrl":"./gemeinde-commuters.json?v=20261021112854","mappingUrl":"./gemeinde-mapping.json?v=20261021112854","trafficUrl":"./gemeinde-traffic.json?v=20261021112854","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-21T12:15:13.391Z","dataDateLabel":"16.10.2026","assetVersion":"20261021121513","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261021121513","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261021121513","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261021121513","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261021121513","neighborsUrl":"./neighbors.json?v=20261021121513","peersUrl":"./gemeinde-peers.json?v=20261021121513","densityUrl":"./gemeinde-density.json?v=20261021121513","transitUrl":"./gemeinde-transit.json?v=20261021121513","terrainUrl":"./gemeinde-terrain.json?v=20261021121513","zensusUrl":"./gemeinde-zensus.json?v=20261021121513","carsUrl":"./gemeinde-cars.json?v=20261021121513","calmedUrl":"./gemeinde-calmed.json?v=20261021121513","accidentsUrl":"./gemeinde-accidents.json?v=20261021121513","commutersUrl":"./gemeinde-commuters.json?v=20261021121513","mappingUrl":"./gemeinde-mapping.json?v=20261021121513","trafficUrl":"./gemeinde-traffic.json?v=20261021121513","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
+    // function below can use them regardless of where it is defined.
+    const deNumber = TildaStats.formatDeNumber;
+    const formatMinutes = TildaStats.formatMinutes;
+
+    // ==== Data loading: stats packs, Gemeinde polygons, context indexes ====
 
     let allFeatures = [];
-    let manifest = {};
     let rawLoaded = false;
     // Start before MapLibre (tile requests can starve this fetch on HTTP/1).
     const statsDataPromise = fetch(CONFIG.statsMsgpackUrl).then(async (res) => {
@@ -1904,13 +1909,13 @@
     function filteredFeaturesForCurrentView() {
       if (isNeighborView()) {
         const neighbors = ensureNeighborIndex();
-        const allowed = SimpleView.computeSimpleAllowedIds(
+        const allowed = NeighborView.computeSimpleAllowedIds(
           neighborPreset,
           neighborFocus,
           regionIndex,
           neighbors,
         );
-        const filtered = SimpleView.filterFeaturesForSimpleView(
+        const filtered = NeighborView.filterFeaturesForSimpleView(
           allFeatures,
           neighborPreset,
           neighborFocus,
@@ -1926,7 +1931,7 @@
       return RegionNav.filterFeaturesForView(allFeatures, currentViewScope, regionIndex);
     }
 
-    function applyExpertScopeToUi(scope) {
+    function writeViewScopeToSelects(scope) {
       if (!scope) return;
       gebietSelect.value = scope.gebiet;
       populateUntergebietSelect();
@@ -1968,13 +1973,13 @@
      * Zeige options stay the ones that make sense there.
      */
     function enterNeighborView(focusId, preset) {
-      const ctx = regionIndex ? SimpleView.resolveFocusContext(focusId, regionIndex) : null;
-      if (!ctx || !SimpleView.presetUsesNeighborFilter(preset)) return false;
+      const ctx = regionIndex ? NeighborView.resolveFocusContext(focusId, regionIndex) : null;
+      if (!ctx || !NeighborView.presetUsesNeighborFilter(preset)) return false;
       neighborFocus = ctx;
       neighborPreset = preset;
       neighborViewActive = true;
-      const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
-      if (scope) applyExpertScopeToUi(scope);
+      const scope = NeighborView.viewScopeFromFocus(ctx.focusId, regionIndex);
+      if (scope) writeViewScopeToSelects(scope);
       else populateDarstellungSelect();
       return true;
     }
@@ -1982,10 +1987,10 @@
     /** The neighbour presets that make sense for a region, or [] while the index is unknown. */
     function neighborPresetsFor(ctx) {
       if (!ctx || !regionIndex) return [];
-      return SimpleView.listSimplePresetsForFocus(ctx, regionIndex, {
+      return NeighborView.listSimplePresetsForFocus(ctx, regionIndex, {
         features: allFeatures,
         neighbors: neighborIndex,
-      }).filter((preset) => SimpleView.presetUsesNeighborFilter(preset));
+      }).filter((preset) => NeighborView.presetUsesNeighborFilter(preset));
     }
 
     /** The Landkreis whose neighbours the "Zeige" select can offer: the one you are looking at. */
@@ -1997,7 +2002,7 @@
         return null;
       }
       const id = RegionNav.scopeIdFor(gebiet, untergebiet);
-      const ctx = id ? SimpleView.resolveFocusContext(id, regionIndex) : null;
+      const ctx = id ? NeighborView.resolveFocusContext(id, regionIndex) : null;
       return ctx && ctx.kind === 'landkreis' ? ctx : null;
     }
 
@@ -2115,7 +2120,7 @@
       // A jump up is a step of its own in the browser history.
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi({
+      writeViewScopeToSelects({
         gebiet: crumb.gebiet,
         untergebiet: crumb.untergebiet,
         darstellung: RegionNav.defaultDarstellungForScope(
@@ -2270,7 +2275,7 @@
       for (const preset of presets) {
         const el = document.createElement('option');
         el.value = NEIGHBOR_OPTION_PREFIX + preset + '|' + focus.focusId;
-        el.textContent = SimpleView.simplePresetLabel(preset, focus, regionIndex);
+        el.textContent = NeighborView.simplePresetLabel(preset, focus, regionIndex);
         group.appendChild(el);
       }
       darstellungSelect.appendChild(group);
@@ -2322,7 +2327,7 @@
 
     /** From a region card: show that Landkreis/Gemeinde together with the ones around it. */
     async function showWithNeighbors(focusId) {
-      const ctx = regionIndex ? SimpleView.resolveFocusContext(focusId, regionIndex) : null;
+      const ctx = regionIndex ? NeighborView.resolveFocusContext(focusId, regionIndex) : null;
       if (!ctx) return false;
       await whenNeighborsReady();
       const presets = neighborPresetsFor(ctx);
@@ -2362,14 +2367,14 @@
 
     function viewLabelForCurrentMode(opts) {
       if (isNeighborView()) {
-        return SimpleView.simplePresetLabel(neighborPreset, neighborFocus, regionIndex);
+        return NeighborView.simplePresetLabel(neighborPreset, neighborFocus, regionIndex);
       }
       return RegionNav.viewLabel(currentViewScope, regionIndex, opts);
     }
 
     function viewShowsGemeindenLevelForCurrentView() {
       if (isNeighborView()) {
-        const darstellung = SimpleView.simplePresetDarstellung(neighborPreset, neighborFocus);
+        const darstellung = NeighborView.simplePresetDarstellung(neighborPreset, neighborFocus);
         return darstellung === 'gemeinden' || darstellung === 'gemeinden_kreisfrei';
       }
       return RegionNav.viewShowsGemeindenLevel(currentViewScope);
@@ -2403,12 +2408,12 @@
      * doesn't name one, so the plain gebiet/untergebiet/darstellung scope applies.
      */
     function resolveFocusViewFromUrl(params) {
-      const ctx = SimpleView.resolveFocusContext(params.get('focus'), regionIndex);
-      const preset = SimpleView.parseSimpleViewPreset(params.get('simple'));
-      if (!params.get('focus') || !ctx || !preset || !SimpleView.presetUsesNeighborFilter(preset)) {
+      const ctx = NeighborView.resolveFocusContext(params.get('focus'), regionIndex);
+      const preset = NeighborView.parseSimpleViewPreset(params.get('simple'));
+      if (!params.get('focus') || !ctx || !preset || !NeighborView.presetUsesNeighborFilter(preset)) {
         return null;
       }
-      const scope = SimpleView.expertViewScopeFromFocus(ctx.focusId, regionIndex);
+      const scope = NeighborView.viewScopeFromFocus(ctx.focusId, regionIndex);
       if (!scope) return null;
       neighborFocus = ctx;
       neighborPreset = preset;
@@ -2444,7 +2449,7 @@
 
     function applyViewScopeToUi(scope) {
       applyUiModeClass();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
     }
 
     function rankingFocusChainIds() {
@@ -2498,6 +2503,8 @@
     const toggleRoads = document.getElementById('toggle-roads');
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
+
+    // ==== Load status and error UI ====
 
     /**
      * Visitors got the raw exception text here, up to and including build instructions
@@ -2555,7 +2562,7 @@
     function ensureExtraLevelsLoaded() {
       if (extraLevelsLoaded) return Promise.resolve();
       if (extraLevelsPromise) return extraLevelsPromise;
-      extraLevelsPromise = loadRegionFeaturesInWorker(CONFIG.statsExtraMsgpackUrl)
+      extraLevelsPromise = loadRegionFeatures(CONFIG.statsExtraMsgpackUrl)
         .then((extraFeatures) => {
           allFeatures = allFeatures.concat(extraFeatures);
           rebuildRegionIndex();
@@ -2858,6 +2865,8 @@
       }
     }
 
+    // ==== Counting filter (Zählung) ====
+
     function initCountClassFilters() {
       const roadRoot = document.getElementById('road-class-filters');
       const bikeRoot = document.getElementById('bikelane-class-filters');
@@ -2886,6 +2895,8 @@
     }
 
     initCountClassFilters();
+
+    // ==== Structural model: settings, Gemeinde predictions, aggregates ====
 
     let lastActiveModelSettings = {
       modelType: 'standard',
@@ -3161,9 +3172,9 @@
         }
       } else if (currentMapMetric === 'cars') {
         if (typeof cars === 'number') {
-          label = name + ': ' + deNumber(Math.round(cars), 0) + ' PKW je 1.000 Einw.';
+          label = name + ': ' + deNumber(Math.round(cars), 0) + ' Pkw je 1.000 Einw.';
         } else {
-          label = name + ': Keine PKW-Daten verfügbar';
+          label = name + ': Keine Pkw-Daten verfügbar';
         }
       } else if (currentMapMetric === 'rent') {
         if (typeof rent === 'number') {
@@ -3286,25 +3297,15 @@
       return {};
     }
 
+    // ==== "This view as CSV" export ====
+
     const CSV_SEP = ';';
 
     function formatUiPct(value) {
       return TildaStats.formatStatPctUi(value);
     }
 
-    function csvEscape(value) {
-      if (value == null || value === '') return '';
-      const s = String(value);
-      if (
-        s.includes('"') ||
-        s.includes(CSV_SEP) ||
-        s.includes('\n') ||
-        s.includes('\r')
-      ) {
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      return s;
-    }
+    const csvEscape = (value) => TildaStats.csvField(value, CSV_SEP);
 
     function formatCsvStatValue(raw, kind) {
       if (raw === '' || raw == null) return '';
@@ -3336,7 +3337,7 @@
         { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
-        { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
+        { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
@@ -3554,7 +3555,7 @@
 
       if (cmlTitle) {
         if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
-        else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
+        else if (metric === 'cars') cmlTitle.textContent = 'Pkw / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
@@ -3565,7 +3566,7 @@
 
       if (choroplethTitle) {
         if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
-        else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
+        else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (Pkw je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
@@ -3583,7 +3584,7 @@
             '<strong>Grau</strong> = kein Wert.';
         } else if (metric === 'cars') {
           metricDef.textContent =
-            'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
+            'Bestand an gemeldeten Personenkraftwagen (Pkw) je 1.000 Einwohner (Quelle: KBA).';
         } else if (metric === 'rent') {
           metricDef.textContent =
             'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
@@ -3613,7 +3614,7 @@
       }
       if (cmlMax) {
         if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
-        else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
+        else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' Pkw';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
         else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
         else if (metric === 'commuters') cmlMax.textContent = (max > 0 ? '+' : '') + deNumber(Math.round(max), 0);
@@ -3633,7 +3634,7 @@
         if (metric === 'modelGap') {
           text = (val > 0 ? '+' : '') + formatUiPct(val) + (i === count - 1 ? ' %' : '');
         } else if (metric === 'cars') {
-          text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' PKW' : '');
+          text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' Pkw' : '');
         } else if (metric === 'rent') {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
         } else if (metric === 'accidents') {
@@ -4282,6 +4283,8 @@
       ensureHoverHighlightLayer();
     }
 
+    // ==== Map metrics and the ranking list ====
+
     function getFeatureMetricValue(f, metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       const p = f?.properties || {};
@@ -4328,24 +4331,7 @@
     }
 
     function formatRankingMetricValue(val, metric) {
-      if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '–';
-      metric = metric || currentMapMetric || 'bikeShare';
-      if (metric === 'modelGap') {
-        return (val > 0 ? '+' : '') + formatUiPct(val) + ' %p';
-      }
-      if (metric === 'cars') {
-        return Math.round(val) + ' PKW';
-      }
-      if (metric === 'rent') {
-        return val.toFixed(2).replace('.', ',') + ' €/m²';
-      }
-      if (metric === 'accidents') {
-        return formatUiPct(val) + ' / 10k';
-      }
-      if (metric === 'commuters') {
-        return (val > 0 ? '+' : '') + val.toLocaleString('de-DE');
-      }
-      return formatUiPct(val) + ' %';
+      return TildaStats.formatMapMetricValue(val, metric || currentMapMetric || 'bikeShare');
     }
 
     function formatRankingRowAriaLabel(rank, label, val, metric) {
@@ -4366,7 +4352,7 @@
         );
       }
       if (metric === 'cars') {
-        return 'Platz ' + rank + ', ' + label + ', ' + Math.round(val) + ' PKW je 1.000 Einwohner';
+        return 'Platz ' + rank + ', ' + label + ', ' + Math.round(val) + ' Pkw je 1.000 Einwohner';
       }
       if (metric === 'rent') {
         return (
@@ -4400,7 +4386,7 @@
     function rankingSummaryMetricLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (metric === 'modelGap') return 'Modell-Abweichung in dieser Ansicht';
-      if (metric === 'cars') return 'PKW je 1.000 EW in dieser Ansicht';
+      if (metric === 'cars') return 'Pkw je 1.000 EW in dieser Ansicht';
       if (metric === 'rent') return 'Nettokaltmiete in dieser Ansicht';
       if (metric === 'accidents') return 'Radunfälle je 10.000 EW in dieser Ansicht';
       if (metric === 'commuters') return 'Pendlersaldo in dieser Ansicht';
@@ -4410,7 +4396,7 @@
     function rankingMetricRankLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (metric === 'modelGap') return 'Modell-Abweichung';
-      if (metric === 'cars') return 'PKW-Dichte';
+      if (metric === 'cars') return 'Pkw-Dichte';
       if (metric === 'rent') return 'Nettokaltmiete';
       if (metric === 'accidents') return 'Radunfälle';
       if (metric === 'commuters') return 'Pendlersaldo';
@@ -5365,6 +5351,8 @@
       return mainRoadBreakdownCache.get(p.id);
     }
 
+    // ==== Region card ====
+
     /**
      * "Who has to build it": road length and bike share split by road authority. Turns one percentage
      * into an address — Kreistag, Landesbauamt or Gemeinderat.
@@ -5855,9 +5843,9 @@
       if (m.deltaCars != null) {
         addRow(
           'Motorisierungsgrad',
-          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' PKW / 1k Einw.' : null,
+          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' Pkw / 1k Einw.' : null,
           m.deltaCars,
-          m.deltaCars >= 0.05 ? 'wenig PKW' : m.deltaCars <= -0.05 ? 'viele PKW' : 'neutral',
+          m.deltaCars >= 0.05 ? 'wenig Pkw' : m.deltaCars <= -0.05 ? 'viele Pkw' : 'neutral',
         );
       }
 
@@ -5921,19 +5909,6 @@
       '4': { nom: 'Bundesländer', gen: 'Bundesländer' },
     };
 
-    function deNumber(value, digits) {
-      return value.toLocaleString('de-DE', { maximumFractionDigits: digits });
-    }
-
-    /** Each figure the card shows next to the bike share, and how to read it off the data. */
-    /** 7,5 min · 34 min · 2 h 10 min */
-    function formatMinutes(v) {
-      if (v < 10) return deNumber(v, 1) + ' min';
-      if (v < 60) return deNumber(Math.round(v), 0) + ' min';
-      const total = Math.round(v);
-      return Math.floor(total / 60) + ' h' + (total % 60 ? ' ' + (total % 60) + ' min' : '');
-    }
-
     const STATION_ACCESS_MODES = [
       { key: 'foot', label: 'zu Fuß', csv: 'zu Fuß' },
       { key: 'bike', label: 'Rad', csv: 'mit dem Rad' },
@@ -5961,6 +5936,8 @@
       };
     }
 
+    // ==== Context metrics ("Mehr Zahlen") and scatter plots ====
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -5972,7 +5949,7 @@
           // attributes (fetchMappingCompleteness.ts) — mapped like bike infrastructure, but
           // independent of whether a street has any.
           key: 'mappingDepth',
-          label: 'Kartierungstiefe (OSM)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.mappingDepth,
           note: 'Straßen mit erfasstem Tempo, Belag, Licht',
           source: mappingIndex,
           get: (id) => {
@@ -5998,7 +5975,7 @@
           // Bavaria only (fetchTrafficVolumes.ts): open-road B/St/K sections whose 2021 count is
           // above the ERA 2010 threshold for a bike path, and how much of that has one.
           key: 'busyRoadsCovered',
-          label: 'Vielbefahrene Landstraßen mit Radweg',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.busyRoadsCovered,
           note: 'über ERA-Schwelle, Zählung 2021',
           source: trafficIndex,
           get: (id) => {
@@ -6020,14 +5997,14 @@
         },
         {
           key: 'density',
-          label: 'Bevölkerungsdichte',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.density,
           source: densityIndex,
           get: (id) => (typeof densityIndex?.byId[id] === 'number' ? densityIndex.byId[id] : null),
           format: (v) => deNumber(Math.round(v), 0) + ' Einw./km²',
         },
         {
           key: 'rent',
-          label: 'Ø Nettokaltmiete (Zensus 2022)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.rent,
           note: 'Wohn- & Bodenwert',
           source: zensusIndex,
           get: (id) => {
@@ -6038,7 +6015,7 @@
         },
         {
           key: 'youth',
-          label: 'Kinder & Jugendliche (< 18 Jahre)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.youth,
           note: 'Schulweg-Bedarf',
           source: zensusIndex,
           get: (id) => {
@@ -6049,7 +6026,7 @@
         },
         {
           key: 'vacancy',
-          label: 'Wohnungsleerstand',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.vacancy,
           source: zensusIndex,
           get: (id) => {
             const v = zensusIndex?.byId[id]?.vacancyRatePct;
@@ -6059,7 +6036,7 @@
         },
         {
           key: 'carDensity',
-          label: 'PKW-Dichte (KBA)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.carDensity,
           note: 'Motorisierungsgrad',
           source: carsIndex,
           get: (id) => {
@@ -6070,14 +6047,14 @@
             const comm = carsIndex?.byId[id]?.commercialSharePct;
             return (
               deNumber(Math.round(v), 0) +
-              ' PKW / 1.000 Einw.' +
+              ' Pkw / 1.000 Einw.' +
               (typeof comm === 'number' ? ' (davon ' + deNumber(comm, 1) + ' % gewerblich)' : '')
             );
           },
         },
         {
           key: 'calmedShare',
-          label: 'Wohn- & Tempo-30-Netz',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.calmedShare,
           note: 'Erschließungsstraßen',
           source: calmedIndex,
           get: (id) => {
@@ -6095,7 +6072,7 @@
         },
         {
           key: 'livingShare',
-          label: 'Verkehrsberuhigt & Fahrradstraßen',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.livingShare,
           note: 'Spielstraßen & Vorrang Rad',
           source: calmedIndex,
           get: (id) => {
@@ -6113,7 +6090,7 @@
         },
         {
           key: 'bikeAccidents',
-          label: 'Fahrradunfälle mit Personenschaden',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidents,
           note: 'Unfallatlas 2023',
           source: accidentsIndex,
           get: (id) => {
@@ -6135,7 +6112,7 @@
         },
         {
           key: 'bikeAccidentsPer10k',
-          label: 'Fahrradunfälle je 10.000 Einw.',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidentsPer10k,
           note: 'Verunglückte relativ zur Bevölkerung',
           source: accidentsIndex,
           get: (id) => {
@@ -6153,7 +6130,7 @@
         },
         {
           key: 'bikeFatalOrSevere',
-          label: 'Schwere Fahrradunfälle (Getötete & Schwerverletzte)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeFatalOrSevere,
           note: 'Unfallschwere (Kategorie 1 & 2)',
           source: accidentsIndex,
           get: (id) => {
@@ -6170,7 +6147,7 @@
         },
         {
           key: 'jobCentrality',
-          label: 'Arbeitsplatzzentralität',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.jobCentrality,
           note: 'Arbeitsplätze ÷ Beschäftigte am Wohnort',
           source: commutersIndex,
           get: (id) => {
@@ -6194,7 +6171,7 @@
         },
         {
           key: 'netCommuters',
-          label: 'Pendlersaldo',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.netCommuters,
           note: 'Einpendler minus Auspendler',
           source: commutersIndex,
           get: (id) => {
@@ -6214,7 +6191,7 @@
         },
         {
           key: 'commuterRates',
-          label: 'Ein- / Auspendlerquote',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.commuterRates,
           note: 'Anteil Pendler an Beschäftigten',
           source: commutersIndex,
           get: (id) => {
@@ -6232,7 +6209,7 @@
         },
         {
           key: 'employedAtWorkplace',
-          label: 'Sozialvers. Beschäftigte am Arbeitsort',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.employedAtWorkplace,
           note: 'Bundesagentur für Arbeit 2025',
           source: commutersIndex,
           get: (id) => {
@@ -6250,7 +6227,7 @@
         },
         {
           key: 'stops',
-          label: 'Bahn-/Tram-/Fährhaltestellen',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.stops,
           source: transitIndex,
           get: (id) => {
             const v = transitIndex?.byId[id]?.density;
@@ -6260,7 +6237,7 @@
         },
         {
           key: 'stationDistance',
-          label: 'Ø Luftlinie zur nächsten Haltestelle',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.stationDistance,
           note: 'einwohnergewichtet',
           source: transitIndex,
           get: (id) => {
@@ -6273,7 +6250,7 @@
         stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
         {
           key: 'highwayDistance',
-          label: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.highwayDistance,
           note: 'einwohnergewichtet',
           source: transitIndex,
           get: (id) => {
@@ -6284,7 +6261,7 @@
         },
         {
           key: 'elevation',
-          label: 'Höhenlage (Ø)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.elevation,
           source: terrainIndex,
           get: slope('elevationMean'),
           format: (v, id) => {
@@ -6298,21 +6275,21 @@
         },
         {
           key: 'areaSlope',
-          label: 'Geländesteigung (Ø, Fläche)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.areaSlope,
           source: terrainIndex,
           get: slope('area'),
           format: (v) => deNumber(v, 1) + ' %',
         },
         {
           key: 'roadSlope',
-          label: 'Straßensteigung (Ø)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.roadSlope,
           source: terrainIndex,
           get: slope('road'),
           format: (v) => deNumber(v, 1) + ' %',
         },
         {
           key: 'roadSteep',
-          label: 'Steilste Straßenabschnitte',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.roadSteep,
           note: 'P95',
           source: terrainIndex,
           get: slope('roadSteepP95'),
@@ -6783,7 +6760,7 @@
      */
     function regionDrillScope(id, level) {
       if (!regionIndex || String(level) === '8') return null;
-      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      const scope = NeighborView.viewScopeFromFocus(id, regionIndex);
       if (!scope) return null;
       const current = currentViewScope;
       const changes =
@@ -6798,7 +6775,7 @@
       if (!scope) return false;
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
       updateScaleCapDefaultForView();
       void applyScopeChange();
       return true;
@@ -7433,6 +7410,8 @@
     const initialMapPos = getMapPositionFromUrl();
     let explicitMapPositionPending = Boolean(initialMapPos);
 
+    // ==== The map ====
+
     const map = new maplibregl.Map({
       container: 'map',
       style: CONFIG.basemapStyles[CONFIG.basemap],
@@ -7969,6 +7948,8 @@
     function sheetState() {
       return document.body.dataset.sheet || 'peek';
     }
+    // ==== Phone bottom sheet ====
+
     function setSheetState(next) {
       const state = SHEET_ORDER.includes(next) ? next : 'peek';
       document.body.dataset.sheet = state;
@@ -8477,6 +8458,8 @@
      * deliberately drop them (buildShareUrl starts from empty).
      */
     const PRESERVED_URL_PARAMS = ['chrome', 'embed'];
+
+    // ==== URL state, Back/Forward ====
 
     function currentStateUrl() {
       const params = new URLSearchParams();
@@ -9613,12 +9596,12 @@
     }
     function jumpToRegionBySearch(id) {
       if (!regionIndex) return;
-      const scope = SimpleView.siblingViewScopeFromFocus(id, regionIndex);
+      const scope = NeighborView.siblingViewScopeFromFocus(id, regionIndex);
       if (!scope) return;
       // A jump is a step of its own in the browser history.
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
       updateScaleCapDefaultForView();
       void applyScopeChange().then(() => {
         // The sibling scope always contains the searched region, so this always opens its card —
@@ -9631,6 +9614,8 @@
         fitMapToCurrentView(true);
       });
     }
+    // ==== Search and "Mein Standort" ====
+
     function renderRegionSearchResults(query) {
       if (!regionSearchResults) return;
       if (!query) {
@@ -9966,7 +9951,7 @@
     let neighborsBuildStarted = false;
 
     function neighborIndexFromFile(file) {
-      return SimpleView.neighborIndexFromPrecomputed(file);
+      return NeighborView.neighborIndexFromPrecomputed(file);
     }
 
     let neighborsReadyResolvers = [];
@@ -10002,7 +9987,7 @@
         return;
       }
       if (typeof Worker === 'undefined') {
-        neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+        neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
         refreshViewAfterNeighborsLoaded();
         return;
       }
@@ -10023,7 +10008,7 @@
         }
         setLoadStatus('');
         if (!neighborIndex && regionIndex) {
-          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
           refreshViewAfterNeighborsLoaded();
         }
       };
@@ -10031,7 +10016,7 @@
         finish();
         setLoadStatus('');
         if (!neighborIndex && regionIndex) {
-          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
           refreshViewAfterNeighborsLoaded();
         }
       };
@@ -10053,7 +10038,7 @@
         const msgpackRes = await fetch(CONFIG.neighborsMsgpackUrl);
         if (msgpackRes.ok) {
           const bytes = new Uint8Array(await msgpackRes.arrayBuffer());
-          onNeighborsFileLoaded(SimpleView.decodeNeighborsPack(bytes));
+          onNeighborsFileLoaded(NeighborView.decodeNeighborsPack(bytes));
           return;
         }
         const res = await fetch(CONFIG.neighborsUrl);
@@ -10061,7 +10046,7 @@
           onNeighborsLoadFailed();
           return;
         }
-        const file = SimpleView.precomputedNeighborsFileFromJson(await res.json());
+        const file = NeighborView.precomputedNeighborsFileFromJson(await res.json());
         if (file) onNeighborsFileLoaded(file);
         else onNeighborsLoadFailed();
       } catch {
@@ -10114,51 +10099,28 @@
 
     const STATS_MSGPACK_LOAD_TIMEOUT_MS = 120_000;
 
-    function loadRegionFeaturesInWorker(url) {
-      return new Promise((resolve, reject) => {
-        if (typeof Worker === 'undefined') {
-          reject(new Error('Web Worker nicht verfügbar'));
-          return;
-        }
-        const worker = new Worker('./statsMsgpack.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
-        let settled = false;
-        const finish = (fn) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timeoutId);
-          worker.onmessage = null;
-          worker.onerror = null;
-          worker.terminate();
-          fn();
-        };
-        const timeoutId = setTimeout(() => {
-          finish(() => reject(new Error('Timeout beim Laden der Gebietsdaten')));
-        }, STATS_MSGPACK_LOAD_TIMEOUT_MS);
-        worker.onmessage = (event) => {
-          const data = event.data;
-          if (data?.type === 'ok' && data.bytes) {
-            finish(() => resolve(StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes))));
-            return;
-          }
-          if (data?.type === 'error') {
-            finish(() => reject(new Error(data.message || 'Worker-Fehler')));
-          }
-        };
-        worker.onerror = () => {
-          finish(() => reject(new Error('Worker-Fehler beim Laden')));
-        };
-        worker.postMessage({ type: 'load', url });
-      });
+    /**
+     * Fetch and decode a stats pack. (A worker used to do the fetch, but the decode still ran
+     * here, so it only added a file and a failure mode.)
+     */
+    async function loadRegionFeatures(url) {
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timeoutId = setTimeout(() => controller?.abort(), STATS_MSGPACK_LOAD_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + url);
+        return StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
+
+    // ==== Boot ====
 
     async function init() {
       try {
         await statsReadyPromise;
         await lazyDarstellungPresencePromise; // tiny fetch, in flight since page load — just a safety margin
-        const manifestPromise = fetch(CONFIG.manifestUrl)
-          .catch(() => ({ ok: false }))
-          .then(async (res) => (res.ok ? res.json() : {}));
-        manifest = await manifestPromise;
         setPanelActionsEnabled(true);
         colorScaleSelect.innerHTML = '';
         for (const scale of CONFIG.colorScales) {

@@ -2,6 +2,7 @@ import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { decode } from '@msgpack/msgpack'
+import { VIEWER_FILES } from './constants'
 import * as TildaStats from './statsClassSums'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -14,32 +15,32 @@ const stats = decode(readFileSync(statsPackPath)) as {
   features: Array<{ properties?: Record<string, unknown> }>
 }
 const density = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-density.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.density), 'utf8')) as {
     byId: Record<string, number>
   }
 ).byId
 const terrain = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-terrain.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.terrain), 'utf8')) as {
     byId: Record<string, { road?: number; elevationMean?: number }>
   }
 ).byId
 const transit = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-transit.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.transit), 'utf8')) as {
     byId: Record<string, { avgDistanceToStationM?: number }>
   }
 ).byId
 const zensus = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-zensus.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.zensus), 'utf8')) as {
     byId: Record<string, { rentPerM2?: number; youthSharePct?: number; vacancyRatePct?: number }>
   }
 ).byId
 const cars = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-cars.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.cars), 'utf8')) as {
     byId: Record<string, { carsPer1000?: number }>
   }
 ).byId
 const calmed = (
-  JSON.parse(readFileSync(join(dir, 'gemeinde-calmed.json'), 'utf8')) as {
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.calmed), 'utf8')) as {
     byId: Record<string, { calmedSharePct?: number; livingStreetSharePct?: number }>
   }
 ).byId

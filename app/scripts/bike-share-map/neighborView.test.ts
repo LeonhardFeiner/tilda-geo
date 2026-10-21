@@ -1,7 +1,4 @@
 import { describe, expect, test } from 'vitest'
-import { buildRegionIndex, filterFeaturesForView } from './regionNavigation'
-import type { StatsFeature } from './regionNavigation'
-import { neighborIndexFromPrecomputed } from './regionNeighbors'
 import {
   computeSimpleAllowedIds,
   defaultSimplePresetForFocus,
@@ -12,7 +9,10 @@ import {
   siblingViewScopeFromFocus,
   simplePresetLabel,
   simplePresetToViewScope,
-} from './simpleView'
+} from './neighborView'
+import { buildRegionIndex, filterFeaturesForView } from './regionNavigation'
+import type { StatsFeature } from './regionNavigation'
+import { neighborIndexFromPrecomputed } from './regionNeighbors'
 
 const features = [
   {
@@ -107,7 +107,7 @@ const features = [
   },
 ] satisfies StatsFeature[]
 
-describe('simpleView', () => {
+describe('neighborView', () => {
   const index = buildRegionIndex(features)
   const neighbors = neighborIndexFromPrecomputed({
     version: 1,
@@ -445,7 +445,7 @@ describe('siblingViewScopeFromFocus', () => {
   })
 
   test('the searched region is always in the view it lands in', () => {
-    // This is the whole point: expertViewScopeFromFocus drills in, so only a Gemeinde ended up
+    // This is the whole point: viewScopeFromFocus drills in, so only a Gemeinde ended up
     // selected, and a kreisfreie Stadt landed on an empty map.
     for (const id of ['relation/BY', 'relation/LK', 'relation/KF', 'relation/G']) {
       const scope = scopeFor(id)!

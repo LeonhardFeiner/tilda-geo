@@ -15,6 +15,7 @@ import {
   SHARE_PAGE_BASE_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
+  VIEWER_FILES,
 } from './constants'
 import {
   BIKELANE_CLASS_LABELS,
@@ -71,24 +72,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: v('./stats-core.msgpack'),
-    statsExtraMsgpackUrl: v('./stats-extra.msgpack'),
+    statsMsgpackUrl: v(`./${VIEWER_FILES.statsCore}`),
+    statsExtraMsgpackUrl: v(`./${VIEWER_FILES.statsExtra}`),
     gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
-    lazyDarstellungPresenceUrl: v('./lazy-darstellung-presence.json'),
-    neighborsMsgpackUrl: v('./neighbors.msgpack'),
-    neighborsUrl: v('./neighbors.json'),
-    manifestUrl: v('./manifest.json'),
-    peersUrl: v('./gemeinde-peers.json'),
-    densityUrl: v('./gemeinde-density.json'),
-    transitUrl: v('./gemeinde-transit.json'),
-    terrainUrl: v('./gemeinde-terrain.json'),
-    zensusUrl: v('./gemeinde-zensus.json'),
-    carsUrl: v('./gemeinde-cars.json'),
-    calmedUrl: v('./gemeinde-calmed.json'),
-    accidentsUrl: v('./gemeinde-accidents.json'),
-    commutersUrl: v('./gemeinde-commuters.json'),
-    mappingUrl: v('./gemeinde-mapping.json'),
-    trafficUrl: v('./gemeinde-traffic.json'),
+    lazyDarstellungPresenceUrl: v(`./${VIEWER_FILES.lazyDarstellungPresence}`),
+    neighborsMsgpackUrl: v(`./${VIEWER_FILES.neighborsMsgpack}`),
+    neighborsUrl: v(`./${VIEWER_FILES.neighborsJson}`),
+    peersUrl: v(`./${VIEWER_FILES.peers}`),
+    densityUrl: v(`./${VIEWER_FILES.density}`),
+    transitUrl: v(`./${VIEWER_FILES.transit}`),
+    terrainUrl: v(`./${VIEWER_FILES.terrain}`),
+    zensusUrl: v(`./${VIEWER_FILES.zensus}`),
+    carsUrl: v(`./${VIEWER_FILES.cars}`),
+    calmedUrl: v(`./${VIEWER_FILES.calmed}`),
+    accidentsUrl: v(`./${VIEWER_FILES.accidents}`),
+    commutersUrl: v(`./${VIEWER_FILES.commuters}`),
+    mappingUrl: v(`./${VIEWER_FILES.mapping}`),
+    trafficUrl: v(`./${VIEWER_FILES.traffic}`),
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -134,7 +134,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack?v=${assetVersion}" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./${VIEWER_FILES.statsCore}?v=${assetVersion}" as="fetch" crossorigin="anonymous" />
   <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
@@ -1561,7 +1561,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <select id="map-metric-select">
           <option value="bikeShare">Radinfrastruktur-Anteil</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
-          <option value="cars">PKW je 1.000 Einwohner (KBA)</option>
+          <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
           <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
           <option value="commuters">Pendlersaldo (BA Beschäftigungsstatistik)</option>
@@ -1845,15 +1845,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <script src="./statsClassSums.js?v=${assetVersion}"></script>
   <script src="./regionNavigation.js?v=${assetVersion}"></script>
   <script src="./statsMsgpack.js?v=${assetVersion}"></script>
-  <script src="./simpleView.js?v=${assetVersion}"></script>
+  <script src="./neighborView.js?v=${assetVersion}"></script>
   <script src="./regionSearch.js?v=${assetVersion}"></script>
   <script src="./rankingDisplay.js?v=${assetVersion}"></script>
   <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
+    // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
+    // function below can use them regardless of where it is defined.
+    const deNumber = TildaStats.formatDeNumber;
+    const formatMinutes = TildaStats.formatMinutes;
+
+    // ==== Data loading: stats packs, Gemeinde polygons, context indexes ====
 
     let allFeatures = [];
-    let manifest = {};
     let rawLoaded = false;
     // Start before MapLibre (tile requests can starve this fetch on HTTP/1).
     const statsDataPromise = fetch(CONFIG.statsMsgpackUrl).then(async (res) => {
@@ -1956,6 +1961,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
 
+    // ==== Load status and error UI ====
+
     /**
      * Visitors got the raw exception text here, up to and including build instructions
      * ("bun run bike-share-map:export-stats-geojson"). They get a sentence they can act on;
@@ -2012,7 +2019,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function ensureExtraLevelsLoaded() {
       if (extraLevelsLoaded) return Promise.resolve();
       if (extraLevelsPromise) return extraLevelsPromise;
-      extraLevelsPromise = loadRegionFeaturesInWorker(CONFIG.statsExtraMsgpackUrl)
+      extraLevelsPromise = loadRegionFeatures(CONFIG.statsExtraMsgpackUrl)
         .then((extraFeatures) => {
           allFeatures = allFeatures.concat(extraFeatures);
           rebuildRegionIndex();
@@ -2315,6 +2322,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
 
+    // ==== Counting filter (Zählung) ====
+
     function initCountClassFilters() {
       const roadRoot = document.getElementById('road-class-filters');
       const bikeRoot = document.getElementById('bikelane-class-filters');
@@ -2343,6 +2352,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     initCountClassFilters();
+
+    // ==== Structural model: settings, Gemeinde predictions, aggregates ====
 
     let lastActiveModelSettings = {
       modelType: 'standard',
@@ -2618,9 +2629,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
       } else if (currentMapMetric === 'cars') {
         if (typeof cars === 'number') {
-          label = name + ': ' + deNumber(Math.round(cars), 0) + ' PKW je 1.000 Einw.';
+          label = name + ': ' + deNumber(Math.round(cars), 0) + ' Pkw je 1.000 Einw.';
         } else {
-          label = name + ': Keine PKW-Daten verfügbar';
+          label = name + ': Keine Pkw-Daten verfügbar';
         }
       } else if (currentMapMetric === 'rent') {
         if (typeof rent === 'number') {
@@ -2743,25 +2754,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return {};
     }
 
+    // ==== "This view as CSV" export ====
+
     const CSV_SEP = ';';
 
     function formatUiPct(value) {
       return TildaStats.formatStatPctUi(value);
     }
 
-    function csvEscape(value) {
-      if (value == null || value === '') return '';
-      const s = String(value);
-      if (
-        s.includes('"') ||
-        s.includes(CSV_SEP) ||
-        s.includes('\\n') ||
-        s.includes('\\r')
-      ) {
-        return '"' + s.replace(/"/g, '""') + '"';
-      }
-      return s;
-    }
+    const csvEscape = (value) => TildaStats.csvField(value, CSV_SEP);
 
     function formatCsvStatValue(raw, kind) {
       if (raw === '' || raw == null) return '';
@@ -2793,7 +2794,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
-        { key: 'carDensity', header: 'PKW je 1.000 Einwohner (KBA)', numeric: 'num0' },
+        { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
@@ -3011,7 +3012,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (cmlTitle) {
         if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
-        else if (metric === 'cars') cmlTitle.textContent = 'PKW / 1.000 Einw.';
+        else if (metric === 'cars') cmlTitle.textContent = 'Pkw / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
@@ -3022,7 +3023,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (choroplethTitle) {
         if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
-        else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (PKW je 1.000 Einw.)';
+        else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (Pkw je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
@@ -3040,7 +3041,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             '<strong>Grau</strong> = kein Wert.';
         } else if (metric === 'cars') {
           metricDef.textContent =
-            'Bestand an gemeldeten Personenkraftwagen (PKW) je 1.000 Einwohner (Quelle: KBA).';
+            'Bestand an gemeldeten Personenkraftwagen (Pkw) je 1.000 Einwohner (Quelle: KBA).';
         } else if (metric === 'rent') {
           metricDef.textContent =
             'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
@@ -3070,7 +3071,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       if (cmlMax) {
         if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
-        else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' PKW';
+        else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' Pkw';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
         else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
         else if (metric === 'commuters') cmlMax.textContent = (max > 0 ? '+' : '') + deNumber(Math.round(max), 0);
@@ -3090,7 +3091,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (metric === 'modelGap') {
           text = (val > 0 ? '+' : '') + formatUiPct(val) + (i === count - 1 ? ' %' : '');
         } else if (metric === 'cars') {
-          text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' PKW' : '');
+          text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' Pkw' : '');
         } else if (metric === 'rent') {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
         } else if (metric === 'accidents') {
@@ -3739,6 +3740,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       ensureHoverHighlightLayer();
     }
 
+    // ==== Map metrics and the ranking list ====
+
     function getFeatureMetricValue(f, metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       const p = f?.properties || {};
@@ -3785,24 +3788,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function formatRankingMetricValue(val, metric) {
-      if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '–';
-      metric = metric || currentMapMetric || 'bikeShare';
-      if (metric === 'modelGap') {
-        return (val > 0 ? '+' : '') + formatUiPct(val) + ' %p';
-      }
-      if (metric === 'cars') {
-        return Math.round(val) + ' PKW';
-      }
-      if (metric === 'rent') {
-        return val.toFixed(2).replace('.', ',') + ' €/m²';
-      }
-      if (metric === 'accidents') {
-        return formatUiPct(val) + ' / 10k';
-      }
-      if (metric === 'commuters') {
-        return (val > 0 ? '+' : '') + val.toLocaleString('de-DE');
-      }
-      return formatUiPct(val) + ' %';
+      return TildaStats.formatMapMetricValue(val, metric || currentMapMetric || 'bikeShare');
     }
 
     function formatRankingRowAriaLabel(rank, label, val, metric) {
@@ -3823,7 +3809,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         );
       }
       if (metric === 'cars') {
-        return 'Platz ' + rank + ', ' + label + ', ' + Math.round(val) + ' PKW je 1.000 Einwohner';
+        return 'Platz ' + rank + ', ' + label + ', ' + Math.round(val) + ' Pkw je 1.000 Einwohner';
       }
       if (metric === 'rent') {
         return (
@@ -3857,7 +3843,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function rankingSummaryMetricLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (metric === 'modelGap') return 'Modell-Abweichung in dieser Ansicht';
-      if (metric === 'cars') return 'PKW je 1.000 EW in dieser Ansicht';
+      if (metric === 'cars') return 'Pkw je 1.000 EW in dieser Ansicht';
       if (metric === 'rent') return 'Nettokaltmiete in dieser Ansicht';
       if (metric === 'accidents') return 'Radunfälle je 10.000 EW in dieser Ansicht';
       if (metric === 'commuters') return 'Pendlersaldo in dieser Ansicht';
@@ -3867,7 +3853,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function rankingMetricRankLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (metric === 'modelGap') return 'Modell-Abweichung';
-      if (metric === 'cars') return 'PKW-Dichte';
+      if (metric === 'cars') return 'Pkw-Dichte';
       if (metric === 'rent') return 'Nettokaltmiete';
       if (metric === 'accidents') return 'Radunfälle';
       if (metric === 'commuters') return 'Pendlersaldo';
@@ -4822,6 +4808,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return mainRoadBreakdownCache.get(p.id);
     }
 
+    // ==== Region card ====
+
     /**
      * "Who has to build it": road length and bike share split by road authority. Turns one percentage
      * into an address — Kreistag, Landesbauamt or Gemeinderat.
@@ -5312,9 +5300,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (m.deltaCars != null) {
         addRow(
           'Motorisierungsgrad',
-          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' PKW / 1k Einw.' : null,
+          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' Pkw / 1k Einw.' : null,
           m.deltaCars,
-          m.deltaCars >= 0.05 ? 'wenig PKW' : m.deltaCars <= -0.05 ? 'viele PKW' : 'neutral',
+          m.deltaCars >= 0.05 ? 'wenig Pkw' : m.deltaCars <= -0.05 ? 'viele Pkw' : 'neutral',
         );
       }
 
@@ -5378,19 +5366,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       '4': { nom: 'Bundesländer', gen: 'Bundesländer' },
     };
 
-    function deNumber(value, digits) {
-      return value.toLocaleString('de-DE', { maximumFractionDigits: digits });
-    }
-
-    /** Each figure the card shows next to the bike share, and how to read it off the data. */
-    /** 7,5 min · 34 min · 2 h 10 min */
-    function formatMinutes(v) {
-      if (v < 10) return deNumber(v, 1) + ' min';
-      if (v < 60) return deNumber(Math.round(v), 0) + ' min';
-      const total = Math.round(v);
-      return Math.floor(total / 60) + ' h' + (total % 60 ? ' ' + (total % 60) + ' min' : '');
-    }
-
     const STATION_ACCESS_MODES = [
       { key: 'foot', label: 'zu Fuß', csv: 'zu Fuß' },
       { key: 'bike', label: 'Rad', csv: 'mit dem Rad' },
@@ -5418,6 +5393,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       };
     }
 
+    // ==== Context metrics ("Mehr Zahlen") and scatter plots ====
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -5429,7 +5406,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           // attributes (fetchMappingCompleteness.ts) — mapped like bike infrastructure, but
           // independent of whether a street has any.
           key: 'mappingDepth',
-          label: 'Kartierungstiefe (OSM)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.mappingDepth,
           note: 'Straßen mit erfasstem Tempo, Belag, Licht',
           source: mappingIndex,
           get: (id) => {
@@ -5455,7 +5432,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           // Bavaria only (fetchTrafficVolumes.ts): open-road B/St/K sections whose 2021 count is
           // above the ERA 2010 threshold for a bike path, and how much of that has one.
           key: 'busyRoadsCovered',
-          label: 'Vielbefahrene Landstraßen mit Radweg',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.busyRoadsCovered,
           note: 'über ERA-Schwelle, Zählung 2021',
           source: trafficIndex,
           get: (id) => {
@@ -5477,14 +5454,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'density',
-          label: 'Bevölkerungsdichte',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.density,
           source: densityIndex,
           get: (id) => (typeof densityIndex?.byId[id] === 'number' ? densityIndex.byId[id] : null),
           format: (v) => deNumber(Math.round(v), 0) + ' Einw./km²',
         },
         {
           key: 'rent',
-          label: 'Ø Nettokaltmiete (Zensus 2022)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.rent,
           note: 'Wohn- & Bodenwert',
           source: zensusIndex,
           get: (id) => {
@@ -5495,7 +5472,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'youth',
-          label: 'Kinder & Jugendliche (< 18 Jahre)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.youth,
           note: 'Schulweg-Bedarf',
           source: zensusIndex,
           get: (id) => {
@@ -5506,7 +5483,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'vacancy',
-          label: 'Wohnungsleerstand',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.vacancy,
           source: zensusIndex,
           get: (id) => {
             const v = zensusIndex?.byId[id]?.vacancyRatePct;
@@ -5516,7 +5493,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'carDensity',
-          label: 'PKW-Dichte (KBA)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.carDensity,
           note: 'Motorisierungsgrad',
           source: carsIndex,
           get: (id) => {
@@ -5527,14 +5504,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             const comm = carsIndex?.byId[id]?.commercialSharePct;
             return (
               deNumber(Math.round(v), 0) +
-              ' PKW / 1.000 Einw.' +
+              ' Pkw / 1.000 Einw.' +
               (typeof comm === 'number' ? ' (davon ' + deNumber(comm, 1) + ' % gewerblich)' : '')
             );
           },
         },
         {
           key: 'calmedShare',
-          label: 'Wohn- & Tempo-30-Netz',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.calmedShare,
           note: 'Erschließungsstraßen',
           source: calmedIndex,
           get: (id) => {
@@ -5552,7 +5529,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'livingShare',
-          label: 'Verkehrsberuhigt & Fahrradstraßen',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.livingShare,
           note: 'Spielstraßen & Vorrang Rad',
           source: calmedIndex,
           get: (id) => {
@@ -5570,7 +5547,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'bikeAccidents',
-          label: 'Fahrradunfälle mit Personenschaden',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidents,
           note: 'Unfallatlas 2023',
           source: accidentsIndex,
           get: (id) => {
@@ -5592,7 +5569,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'bikeAccidentsPer10k',
-          label: 'Fahrradunfälle je 10.000 Einw.',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidentsPer10k,
           note: 'Verunglückte relativ zur Bevölkerung',
           source: accidentsIndex,
           get: (id) => {
@@ -5610,7 +5587,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'bikeFatalOrSevere',
-          label: 'Schwere Fahrradunfälle (Getötete & Schwerverletzte)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeFatalOrSevere,
           note: 'Unfallschwere (Kategorie 1 & 2)',
           source: accidentsIndex,
           get: (id) => {
@@ -5627,7 +5604,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'jobCentrality',
-          label: 'Arbeitsplatzzentralität',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.jobCentrality,
           note: 'Arbeitsplätze ÷ Beschäftigte am Wohnort',
           source: commutersIndex,
           get: (id) => {
@@ -5651,7 +5628,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'netCommuters',
-          label: 'Pendlersaldo',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.netCommuters,
           note: 'Einpendler minus Auspendler',
           source: commutersIndex,
           get: (id) => {
@@ -5671,7 +5648,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'commuterRates',
-          label: 'Ein- / Auspendlerquote',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.commuterRates,
           note: 'Anteil Pendler an Beschäftigten',
           source: commutersIndex,
           get: (id) => {
@@ -5689,7 +5666,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'employedAtWorkplace',
-          label: 'Sozialvers. Beschäftigte am Arbeitsort',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.employedAtWorkplace,
           note: 'Bundesagentur für Arbeit 2025',
           source: commutersIndex,
           get: (id) => {
@@ -5707,7 +5684,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'stops',
-          label: 'Bahn-/Tram-/Fährhaltestellen',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.stops,
           source: transitIndex,
           get: (id) => {
             const v = transitIndex?.byId[id]?.density;
@@ -5717,7 +5694,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'stationDistance',
-          label: 'Ø Luftlinie zur nächsten Haltestelle',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.stationDistance,
           note: 'einwohnergewichtet',
           source: transitIndex,
           get: (id) => {
@@ -5730,7 +5707,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
         {
           key: 'highwayDistance',
-          label: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.highwayDistance,
           note: 'einwohnergewichtet',
           source: transitIndex,
           get: (id) => {
@@ -5741,7 +5718,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'elevation',
-          label: 'Höhenlage (Ø)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.elevation,
           source: terrainIndex,
           get: slope('elevationMean'),
           format: (v, id) => {
@@ -5755,21 +5732,21 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         },
         {
           key: 'areaSlope',
-          label: 'Geländesteigung (Ø, Fläche)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.areaSlope,
           source: terrainIndex,
           get: slope('area'),
           format: (v) => deNumber(v, 1) + ' %',
         },
         {
           key: 'roadSlope',
-          label: 'Straßensteigung (Ø)',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.roadSlope,
           source: terrainIndex,
           get: slope('road'),
           format: (v) => deNumber(v, 1) + ' %',
         },
         {
           key: 'roadSteep',
-          label: 'Steilste Straßenabschnitte',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.roadSteep,
           note: 'P95',
           source: terrainIndex,
           get: slope('roadSteepP95'),
@@ -6240,7 +6217,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function regionDrillScope(id, level) {
       if (!regionIndex || String(level) === '8') return null;
-      const scope = SimpleView.expertViewScopeFromFocus(id, regionIndex);
+      const scope = NeighborView.viewScopeFromFocus(id, regionIndex);
       if (!scope) return null;
       const current = currentViewScope;
       const changes =
@@ -6255,7 +6232,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (!scope) return false;
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
       updateScaleCapDefaultForView();
       void applyScopeChange();
       return true;
@@ -6890,6 +6867,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const initialMapPos = getMapPositionFromUrl();
     let explicitMapPositionPending = Boolean(initialMapPos);
 
+    // ==== The map ====
+
     const map = new maplibregl.Map({
       container: 'map',
       style: CONFIG.basemapStyles[CONFIG.basemap],
@@ -7426,6 +7405,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function sheetState() {
       return document.body.dataset.sheet || 'peek';
     }
+    // ==== Phone bottom sheet ====
+
     function setSheetState(next) {
       const state = SHEET_ORDER.includes(next) ? next : 'peek';
       document.body.dataset.sheet = state;
@@ -7934,6 +7915,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * deliberately drop them (buildShareUrl starts from empty).
      */
     const PRESERVED_URL_PARAMS = ['chrome', 'embed'];
+
+    // ==== URL state, Back/Forward ====
 
     function currentStateUrl() {
       const params = new URLSearchParams();
@@ -9070,12 +9053,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     function jumpToRegionBySearch(id) {
       if (!regionIndex) return;
-      const scope = SimpleView.siblingViewScopeFromFocus(id, regionIndex);
+      const scope = NeighborView.siblingViewScopeFromFocus(id, regionIndex);
       if (!scope) return;
       // A jump is a step of its own in the browser history.
       scheduleUrlSync('push');
       exitNeighborView();
-      applyExpertScopeToUi(scope);
+      writeViewScopeToSelects(scope);
       updateScaleCapDefaultForView();
       void applyScopeChange().then(() => {
         // The sibling scope always contains the searched region, so this always opens its card —
@@ -9088,6 +9071,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         fitMapToCurrentView(true);
       });
     }
+    // ==== Search and "Mein Standort" ====
+
     function renderRegionSearchResults(query) {
       if (!regionSearchResults) return;
       if (!query) {
@@ -9423,7 +9408,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let neighborsBuildStarted = false;
 
     function neighborIndexFromFile(file) {
-      return SimpleView.neighborIndexFromPrecomputed(file);
+      return NeighborView.neighborIndexFromPrecomputed(file);
     }
 
     let neighborsReadyResolvers = [];
@@ -9459,7 +9444,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return;
       }
       if (typeof Worker === 'undefined') {
-        neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+        neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
         refreshViewAfterNeighborsLoaded();
         return;
       }
@@ -9480,7 +9465,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         setLoadStatus('');
         if (!neighborIndex && regionIndex) {
-          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
           refreshViewAfterNeighborsLoaded();
         }
       };
@@ -9488,7 +9473,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         finish();
         setLoadStatus('');
         if (!neighborIndex && regionIndex) {
-          neighborIndex = SimpleView.buildNeighborIndex(regionIndex);
+          neighborIndex = NeighborView.buildNeighborIndex(regionIndex);
           refreshViewAfterNeighborsLoaded();
         }
       };
@@ -9510,7 +9495,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const msgpackRes = await fetch(CONFIG.neighborsMsgpackUrl);
         if (msgpackRes.ok) {
           const bytes = new Uint8Array(await msgpackRes.arrayBuffer());
-          onNeighborsFileLoaded(SimpleView.decodeNeighborsPack(bytes));
+          onNeighborsFileLoaded(NeighborView.decodeNeighborsPack(bytes));
           return;
         }
         const res = await fetch(CONFIG.neighborsUrl);
@@ -9518,7 +9503,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           onNeighborsLoadFailed();
           return;
         }
-        const file = SimpleView.precomputedNeighborsFileFromJson(await res.json());
+        const file = NeighborView.precomputedNeighborsFileFromJson(await res.json());
         if (file) onNeighborsFileLoaded(file);
         else onNeighborsLoadFailed();
       } catch {
@@ -9571,51 +9556,28 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     const STATS_MSGPACK_LOAD_TIMEOUT_MS = 120_000;
 
-    function loadRegionFeaturesInWorker(url) {
-      return new Promise((resolve, reject) => {
-        if (typeof Worker === 'undefined') {
-          reject(new Error('Web Worker nicht verfügbar'));
-          return;
-        }
-        const worker = new Worker('./statsMsgpack.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
-        let settled = false;
-        const finish = (fn) => {
-          if (settled) return;
-          settled = true;
-          clearTimeout(timeoutId);
-          worker.onmessage = null;
-          worker.onerror = null;
-          worker.terminate();
-          fn();
-        };
-        const timeoutId = setTimeout(() => {
-          finish(() => reject(new Error('Timeout beim Laden der Gebietsdaten')));
-        }, STATS_MSGPACK_LOAD_TIMEOUT_MS);
-        worker.onmessage = (event) => {
-          const data = event.data;
-          if (data?.type === 'ok' && data.bytes) {
-            finish(() => resolve(StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes))));
-            return;
-          }
-          if (data?.type === 'error') {
-            finish(() => reject(new Error(data.message || 'Worker-Fehler')));
-          }
-        };
-        worker.onerror = () => {
-          finish(() => reject(new Error('Worker-Fehler beim Laden')));
-        };
-        worker.postMessage({ type: 'load', url });
-      });
+    /**
+     * Fetch and decode a stats pack. (A worker used to do the fetch, but the decode still ran
+     * here, so it only added a file and a failure mode.)
+     */
+    async function loadRegionFeatures(url) {
+      const controller = typeof AbortController === 'function' ? new AbortController() : null;
+      const timeoutId = setTimeout(() => controller?.abort(), STATS_MSGPACK_LOAD_TIMEOUT_MS);
+      try {
+        const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
+        if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + url);
+        return StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
+      } finally {
+        clearTimeout(timeoutId);
+      }
     }
+
+    // ==== Boot ====
 
     async function init() {
       try {
         await statsReadyPromise;
         await lazyDarstellungPresencePromise; // tiny fetch, in flight since page load — just a safety margin
-        const manifestPromise = fetch(CONFIG.manifestUrl)
-          .catch(() => ({ ok: false }))
-          .then(async (res) => (res.ok ? res.json() : {}));
-        manifest = await manifestPromise;
         setPanelActionsEnabled(true);
         colorScaleSelect.innerHTML = '';
         for (const scale of CONFIG.colorScales) {

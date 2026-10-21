@@ -1,11 +1,4 @@
-import type { MapScopeConfig } from './types'
-
 export const BAYERN_ID = 'relation/2145268'
-
-export const DEFAULT_STATS_CSV = new URL(
-  '../stats-export/aggregated_lengths_wide_2026-05-14_204302.csv',
-  import.meta.url,
-)
 
 export const TILDA_BIKELANES_TILES =
   'https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}'
@@ -64,31 +57,55 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
   max: OVERLAY_LINE_MIN_ZOOM_LIMITS.max,
 } as const
 
-export const BAYERN_SCOPES = {
-  'bayern-landkreise': {
-    id: 'bayern-landkreise',
-    title: 'Bayern – Landkreise & kreisfreie Städte',
-    filter: { bundeslandId: BAYERN_ID, level: '6' },
-    center: { lng: 11.5, lat: 48.9 },
-    zoom: 7,
-    outputSubdir: 'bayern-landkreise',
-    labelMinZoom: 8,
-    bikelanesMinZoom: 9,
-  },
-  'bayern-gemeinden': {
-    id: 'bayern-gemeinden',
-    title: 'Bayern – Gemeinden',
-    filter: { bundeslandId: BAYERN_ID, level: '8' },
-    center: { lng: 11.5, lat: 48.9 },
-    zoom: 7,
-    outputSubdir: 'bayern-gemeinden',
-    labelMinZoom: 10,
-    bikelanesMinZoom: 11,
-  },
-} satisfies Record<string, MapScopeConfig>
-
 /**
  * Unlisted "nearest station" map (stationAreasPage.ts) — linked from nowhere and marked
  * noindex. Its data file uses the same stem.
  */
 export const STATION_AREAS_PAGE_STEM = 'naechste-station'
+
+/**
+ * File names inside output/viewer/ that the build writes and the page fetches. One place, so the
+ * build, the page (generateViewerHtml CONFIG), the CSV and the model fit can't drift apart.
+ */
+export const VIEWER_FILES = {
+  statsCore: 'stats-core.msgpack',
+  statsExtra: 'stats-extra.msgpack',
+  lazyDarstellungPresence: 'lazy-darstellung-presence.json',
+  neighborsMsgpack: 'neighbors.msgpack',
+  neighborsJson: 'neighbors.json',
+  manifest: 'manifest.json',
+  peers: 'gemeinde-peers.json',
+  density: 'gemeinde-density.json',
+  transit: 'gemeinde-transit.json',
+  terrain: 'gemeinde-terrain.json',
+  zensus: 'gemeinde-zensus.json',
+  cars: 'gemeinde-cars.json',
+  calmed: 'gemeinde-calmed.json',
+  accidents: 'gemeinde-accidents.json',
+  commuters: 'gemeinde-commuters.json',
+  mapping: 'gemeinde-mapping.json',
+  traffic: 'gemeinde-traffic.json',
+} as const
+
+/**
+ * Context datasets copied from output/<source> into output/viewer/<VIEWER_FILES[key]> as
+ * {byId}. Each is optional: absent until its fetch script has run, and the page then omits it.
+ */
+export const VIEWER_PASS_THROUGH_DATASETS = [
+  { key: 'terrain', source: 'terrain-flatness.json', label: 'Terrain' },
+  {
+    key: 'zensus',
+    source: 'zensus-housing-demographics.json',
+    label: 'Zensus housing & demographics',
+  },
+  { key: 'cars', source: 'car-density.json', label: 'KBA car density' },
+  { key: 'calmed', source: 'calmed-roads.json', label: 'Traffic calmed road share' },
+  { key: 'accidents', source: 'accidents.json', label: 'Destatis Unfallatlas' },
+  { key: 'commuters', source: 'commuters.json', label: 'BA commuter statistics' },
+  { key: 'mapping', source: 'mapping-completeness.json', label: 'OSM mapping completeness' },
+  { key: 'traffic', source: 'traffic-volumes.json', label: 'BAYSIS traffic volumes (Bayern)' },
+] as const satisfies ReadonlyArray<{
+  key: keyof typeof VIEWER_FILES
+  source: string
+  label: string
+}>

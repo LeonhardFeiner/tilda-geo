@@ -1,16 +1,7 @@
-import {
-  decodeNeighborsPack,
-  parsePrecomputedNeighborsJsonText,
-  type PrecomputedNeighborsFile,
-} from './regionNeighbors'
+import { decodeNeighborsPack, parsePrecomputedNeighborsJsonText } from './regionNeighbors'
+import { type NeighborsWorkerRequest, postWorkerResponse } from './workerMessages'
 
-type LoadNeighborsMessage = {
-  type: 'load'
-  msgpackUrl: string
-  jsonUrl: string
-}
-
-self.onmessage = async (event: MessageEvent<LoadNeighborsMessage>) => {
+self.onmessage = async (event: MessageEvent<NeighborsWorkerRequest>) => {
   if (event.data.type !== 'load') return
 
   const { msgpackUrl, jsonUrl } = event.data
@@ -18,11 +9,7 @@ self.onmessage = async (event: MessageEvent<LoadNeighborsMessage>) => {
     const msgpackRes = await fetch(msgpackUrl)
     if (msgpackRes.ok) {
       const bytes = new Uint8Array(await msgpackRes.arrayBuffer())
-      const file = decodeNeighborsPack(bytes)
-      self.postMessage({ type: 'ok', file } satisfies {
-        type: 'ok'
-        file: PrecomputedNeighborsFile
-      })
+      postWorkerResponse({ type: 'ok', file: decodeNeighborsPack(bytes) })
       return
     }
   } catch {
@@ -32,17 +19,17 @@ self.onmessage = async (event: MessageEvent<LoadNeighborsMessage>) => {
   try {
     const jsonRes = await fetch(jsonUrl)
     if (!jsonRes.ok) {
-      self.postMessage({ type: 'error', message: `Nachbarn nicht gefunden (${jsonRes.status})` })
+      postWorkerResponse({ type: 'error', message: `Nachbarn nicht gefunden (${jsonRes.status})` })
       return
     }
     const file = parsePrecomputedNeighborsJsonText(await jsonRes.text())
     if (!file) {
-      self.postMessage({ type: 'error', message: 'Ungültige neighbors.json' })
+      postWorkerResponse({ type: 'error', message: 'Ungültige neighbors.json' })
       return
     }
-    self.postMessage({ type: 'ok', file })
+    postWorkerResponse({ type: 'ok', file })
   } catch (e) {
-    self.postMessage({
+    postWorkerResponse({
       type: 'error',
       message: e instanceof Error ? e.message : 'Nachbarn laden fehlgeschlagen',
     })
