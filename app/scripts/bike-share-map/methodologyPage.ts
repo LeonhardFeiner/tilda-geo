@@ -15,7 +15,7 @@ export type MethodologyPageInput = {
   /** Link back to the interactive map (relative). */
   viewerHref: string
   /** The per-region CSV written by buildViewer, or null when the build had no stats. */
-  dataDownload?: { href: string; rowCount: number } | null
+  dataDownload?: { href: string; excelHref: string; rowCount: number } | null
 }
 
 const OSM_TAGGING_URL = 'https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur'
@@ -127,9 +127,11 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
     ? `<h2>Daten herunterladen</h2>
 <p><a href="${input.dataDownload.href}" download><strong>Alle Gebiete als CSV</strong></a>
 (${input.dataDownload.rowCount.toLocaleString('de-DE')} Zeilen, Stand der OpenStreetMap-Daten:
-${input.dataDateLabel}). Eine Zeile je Verwaltungseinheit vom Bund bis zum Stadtbezirk, gerechnet
+${input.dataDateLabel}) · <a href="${input.dataDownload.excelHref}" download>Variante für Excel</a>.
+Eine Zeile je Verwaltungseinheit vom Bund bis zum Stadtbezirk, gerechnet
 mit dem Standard-Zählfilter – dieselben Werte wie in der Karte mit Standard-Einstellungen.
-Komma-getrennt, Dezimalpunkt, UTF-8; leere Felder bedeuten „kein Wert“. Der Dateiname enthält das
+Komma-getrennt, Dezimalpunkt, UTF-8; die Excel-Variante ist mit Semikolon und Dezimalkomma
+geschrieben und öffnet sich per Doppelklick. Leere Felder bedeuten „kein Wert“. Der Dateiname enthält das
 Datum des OSM-Datenstands. Mit der nächsten Aktualisierung wird die Datei ersetzt – wer die Zahlen
 zitiert, speichert sich bitte eine eigene Kopie.</p>
 <details><summary>Spalten</summary>
@@ -175,6 +177,7 @@ ${li([
   }
   .back { display: inline-block; margin-bottom: 20px; font-weight: 600; text-decoration: none; }
   .caveat { background: #fdf6e9; border: 1px solid #efd9ac; border-radius: 8px; padding: 12px 14px; }
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
   table.model-table { width: 100%; border-collapse: collapse; margin: 14px 0 18px; font-size: 0.95rem; }
   table.model-table th { text-align: left; padding: 6px 8px; border-bottom: 2px solid #cbd5e1; font-weight: 600; }
   table.model-table td { padding: 6px 8px; border-bottom: 1px solid #e2e8f0; }
@@ -282,7 +285,9 @@ ${li([
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
     <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
+    <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle sieben Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
+    <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Liegt sie innerhalb des modelltypischen Streubands (±1 SE), erscheint sie in hellen Tönen, jenseits davon kräftig. Grau bedeutet: kein Wert.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
@@ -290,6 +295,7 @@ ${li([
     <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
   </ul>
 
+  <div class="table-scroll">
   <table class="model-table">
     <thead>
       <tr>
@@ -336,11 +342,12 @@ ${li([
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
-        <td>Anteil verkehrsberuhigter Bereiche, Fahrradstraßen und Fußgängerzonen am Straßennetz in %</td>
-        <td class="num">${beta(STD_MODEL.betas.livingSharePct)} / %-Punkt</td>
+        <td>Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz in %. Fahrradstraßen und Fußgängerzonen zählen nicht dazu, weil sie schon im Radinfra-Anteil stecken.</td>
+        <td class="num">${beta(STD_MODEL.betas.livingStreetSharePct)} / %-Punkt</td>
       </tr>
     </tbody>
   </table>
+  </div>
 
   <h2>Grenzen der Aussagekraft</h2>
   <div class="caveat">

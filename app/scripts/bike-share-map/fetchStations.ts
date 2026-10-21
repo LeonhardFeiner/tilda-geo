@@ -12,10 +12,11 @@
  *
  * Output: output/stations.json (committed, like transit-stop-counts.json).
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 const outDir = join(import.meta.dir, 'output')
 const outPath = join(outDir, 'stations.json')
@@ -96,14 +97,15 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      fetchedAt: new Date().toISOString(),
+    {
+      source: 'OpenStreetMap (public_transport stations via TILDA publicTransport)',
       categories: STATION_CATEGORIES,
       stations,
       germany,
-    }),
+    },
+    { minCount: 10_000 },
   )
   process.stdout.write(`${outPath} (${stations.length} stations after merging)\n`)
 }

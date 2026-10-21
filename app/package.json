@@ -49,6 +49,8 @@
     "bike-share-map:commuters": "bun ./scripts/bike-share-map/fetchCommuters.ts",
     "bike-share-map:traffic-volumes": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTrafficVolumes.ts",
     "bike-share-map:mapping-completeness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchMappingCompleteness.ts",
+    "bike-share-map:populate-context": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/populateRegionContextMetrics.ts",
+    "bike-share-map:fit-model": "bun ./scripts/bike-share-map/fitExtendedModel.ts",
     "build": "vite build",
     "preview": "cd .output && NITRO_PORT=4000 NITRO_HOST=127.0.0.1 bun --env-file=../.env --env-file=../.env.local ./server/index.mjs",
     "bleach": "rm -rf node_modules/ && rm -rf .output/ && bun install",

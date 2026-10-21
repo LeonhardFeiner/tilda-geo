@@ -1,7 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import * as turf from '@turf/turf'
 import { JSDOM, VirtualConsole } from 'jsdom'
 import { generateViewerHtml } from './generateViewerHtml'
 
@@ -18,7 +17,7 @@ import { generateViewerHtml } from './generateViewerHtml'
 
 const viewerDir = join(dirname(fileURLToPath(import.meta.url)), 'output', 'viewer')
 
-// Same order as the <script src> tags in index.html (turf and MapLibre come from a CDN there).
+// Same order as the <script src> tags in index.html (MapLibre is vendored next to them).
 const BUNDLES = [
   'statsClassSums.js',
   'regionNavigation.js',
@@ -262,7 +261,6 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
     structuredClone,
     TextDecoder,
     TextEncoder,
-    turf,
     print: () => {},
   })
   window.Element.prototype.scrollIntoView = () => {}

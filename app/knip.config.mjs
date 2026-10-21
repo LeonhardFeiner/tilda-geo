@@ -13,7 +13,7 @@ export default {
     'prisma/seeds/**/*.ts',
   ],
   ignore: ['.agents/**'],
-  ignoreFiles: ['scripts/StaticDatasets/geojson/**'],
+  ignoreFiles: ['scripts/StaticDatasets/geojson/**', 'scripts/bike-share-map/vendor/**'],
   ignoreIssues: {
     'scripts/StaticDatasets/types.ts': ['exports', 'types'],
     // Consumed by ../.github/scripts/generate-deploy-env.ts (outside app/ workspace)

@@ -10,11 +10,12 @@
  * Output: output/station-access.json (committed), merged into gemeinde-transit.json by
  * buildViewer.ts as `access: {foot|bike|car: [minutes, km, % of residents within 10 min]}`.
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { gunzipSync } from 'node:zlib'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 const outDir = join(import.meta.dir, 'output')
 const outPath = join(outDir, 'station-access.json')
@@ -117,14 +118,15 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      fetchedAt: new Date().toISOString(),
+    {
+      source: 'routing/station_access.py over the OSM road network and Zensus 2022 100 m grid',
       withinMinutes: WITHIN_MINUTES,
       modes,
       byId,
-    }),
+    },
+    { minCount: 10_000 },
   )
   process.stdout.write(`${outPath} (${Object.keys(byId).length} regions)\n`)
 }

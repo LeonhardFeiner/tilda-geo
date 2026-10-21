@@ -19,7 +19,6 @@
     "relation/62658",
     "relation/62594",
     "relation/62717",
-    "relation/3659532",
     "relation/62430",
     "relation/62581",
     "relation/62414",
@@ -113,6 +112,6 @@
     "relation/62422",
     "relation/62782"
   ],
-  "featureCount": 23050,
+  "featureCount": 22997,
   "osmDataFrom": "2026-10-16T20:21:21.000Z"
 }

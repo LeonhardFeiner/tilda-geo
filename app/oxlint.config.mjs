@@ -10,6 +10,7 @@ export default defineConfig({
     '.output/**',
     // bike-share-map viewer build output (bundled/minified; rebuilt by bun run bike-share-map:viewer)
     '**/bike-share-map/output/**',
+    '**/bike-share-map/vendor/**',
     // Playwright HTML report from `e2e` (gitignored)
     // "playwright-report/**",
   ],

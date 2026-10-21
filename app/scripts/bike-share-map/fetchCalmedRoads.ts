@@ -9,12 +9,16 @@
  *   - calmedSharePct: share of residential and traffic-calmed streets over total road network in % (Tempo 30 zone proxy)
  *   - livingKm: length of explicit living streets (Verkehrsberuhigter Bereich), bicycle roads, and pedestrian zones in km
  *   - livingSharePct: share of living streets, bicycle roads, and pedestrian zones over total road network in %
+ *   - livingStreetSharePct: share of living streets (Verkehrsberuhigter Bereich) alone, in %. The
+ *     structural model uses this one: Fahrradstraßen and Fußgängerzonen with bicycle=yes are part
+ *     of the bike-infra outcome, so they must not also be a predictor.
  *
  * Output: output/calmed-roads.json
  */
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { decode } from '@msgpack/msgpack'
+import { writeDataset } from './fetchCommon'
 
 export type CalmedRoadMetrics = {
   totalRoadKm: number
@@ -22,6 +26,7 @@ export type CalmedRoadMetrics = {
   calmedSharePct: number
   livingKm: number
   livingSharePct: number
+  livingStreetSharePct: number
 }
 
 export type CalmedRoadsOutput = {
@@ -55,6 +60,7 @@ export function computeCalmedMetricsFromRoadLength(
   let totalKm = 0
   let calmedKm = 0
   let livingKm = 0
+  let livingStreetKm = 0
 
   for (const [key, raw] of Object.entries(roadLength)) {
     const km = typeof raw === 'number' && Number.isFinite(raw) ? raw : Number(raw)
@@ -67,12 +73,16 @@ export function computeCalmedMetricsFromRoadLength(
     if (LIVING_ROAD_KEYS.has(key)) {
       livingKm += km
     }
+    if (key === 'living_street') {
+      livingStreetKm += km
+    }
   }
 
   if (totalKm < 0.2) return null
 
   const calmedSharePct = Math.round((calmedKm / totalKm) * 1000) / 10
   const livingSharePct = Math.round((livingKm / totalKm) * 1000) / 10
+  const livingStreetSharePct = Math.round((livingStreetKm / totalKm) * 1000) / 10
 
   return {
     totalRoadKm: Math.round(totalKm * 10) / 10,
@@ -80,6 +90,7 @@ export function computeCalmedMetricsFromRoadLength(
     calmedSharePct,
     livingKm: Math.round(livingKm * 10) / 10,
     livingSharePct,
+    livingStreetSharePct,
   }
 }
 
@@ -149,7 +160,11 @@ if (import.meta.main) {
 
   process.stdout.write('Calculating traffic calmed & Tempo-30 road metrics...\n')
   const result = await fetchCalmedRoads()
-  writeFileSync(outputPath, JSON.stringify(result, null, 2))
+  writeDataset(
+    outputPath,
+    { source: result.metadata.source, metadata: result.metadata, byId: result.byId },
+    { minCount: 20_000, pretty: true },
+  )
   process.stdout.write(
     `Wrote traffic calmed road metrics for ${result.metadata.regionCount} regions to ${outputPath}\n`,
   )

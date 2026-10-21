@@ -10,10 +10,11 @@ import { join } from 'node:path'
 import { inflateRawSync } from 'node:zlib'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 const outDir = join(import.meta.dir, 'output')
 const outPath = join(outDir, 'highway-access.json')
-const cacheZipPath = '/tmp/Zensus2022_Bevoelkerungszahl.zip'
+const cacheZipPath = downloadCachePath('Zensus2022_Bevoelkerungszahl.zip')
 
 const POPULATION_GRID_ZIP_URL =
   'https://www.destatis.de/static/DE/zensus/gitterdaten/Zensus2022_Bevoelkerungszahl.zip'
@@ -145,7 +146,11 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
+  writeDataset(
+    outPath,
+    { source: 'OpenStreetMap motorways/motorroads; Zensus 2022 100 m grid', byId },
+    { minCount: 10_000 },
+  )
   process.stdout.write(
     `${outPath} (${distanceRows.length} Gemeinden with population-weighted highway distance)\n`,
   )

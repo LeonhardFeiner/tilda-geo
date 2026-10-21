@@ -28,11 +28,12 @@
  * lookup (`ORDER BY geom <-> point LIMIT 1`) finds each cell's nearest station — the same
  * "materialize and index first" fix as the road sampling in fetchTerrainFlatness.ts.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { inflateRawSync } from 'node:zlib'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 const outDir = join(import.meta.dir, 'output')
 const outPath = join(outDir, 'transit-stop-counts.json')
@@ -167,7 +168,11 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
+  writeDataset(
+    outPath,
+    { source: 'OpenStreetMap public transport stops; Zensus 2022 100 m grid', byId },
+    { minCount: 10_000 },
+  )
   const withStops = Object.values(byId).filter((v) => v.stopCount > 0).length
   const withDistance = Object.values(byId).filter(
     (v) => v.avgDistanceToStationM !== undefined,

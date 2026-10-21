@@ -3,14 +3,13 @@
  * Interactive viewer: stats.msgpack + neighbors + HTML.
  */
 import {
+  cpSync,
   existsSync,
-  lstatSync,
   mkdirSync,
   readdirSync,
   readFileSync,
   rmSync,
   symlinkSync,
-  unlinkSync,
   writeFileSync,
 } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
@@ -36,6 +35,7 @@ import {
   type DataDownloadContext,
   dataDownloadCsv,
   dataDownloadFileName,
+  excelDataDownloadFileName,
 } from './dataDownload'
 import {
   buildPeerGroupIndex,
@@ -73,18 +73,13 @@ const msgpackPath = join(outputRoot, 'stats.msgpack')
 const neighborsMsgpackPath = join(outputRoot, 'neighbors.msgpack')
 const neighborsJsonPath = join(outputRoot, 'neighbors.json')
 const manifestPath = join(outputRoot, 'manifest.json')
-const geojsonPath = join(outputRoot, 'stats.geojson')
 
 function symlinkOutputFile(sourcePath: string, linkPath: string) {
   if (!existsSync(sourcePath)) return false
-  if (existsSync(linkPath)) {
-    try {
-      if (lstatSync(linkPath).isSymbolicLink()) unlinkSync(linkPath)
-    } catch {
-      /* keep existing copy */
-    }
-  }
-  if (!existsSync(linkPath)) symlinkSync(`../${basename(sourcePath)}`, linkPath)
+  // Replace whatever is there, a stale regular copy included: an old copy once kept a May
+  // manifest.json in the deploy folder for months.
+  rmSync(linkPath, { recursive: true, force: true })
+  symlinkSync(`../${basename(sourcePath)}`, linkPath)
   return true
 }
 
@@ -136,16 +131,23 @@ if (!hasNeighborsMsgpack) {
   )
 }
 symlinkOutputFile(manifestPath, join(viewerDir, 'manifest.json'))
-symlinkOutputFile(geojsonPath, join(viewerDir, 'stats.geojson'))
+// stats.geojson (49 MB) is a local analysis file only; the page reads the msgpack packs.
+rmSync(join(viewerDir, 'stats.geojson'), { force: true })
+
+// Third-party scripts are served from our own origin: a CDN outage used to leave a blank page
+// (the inline script throws on `new maplibregl.Map` before any error UI exists).
+rmSync(join(viewerDir, 'vendor'), { recursive: true, force: true })
+cpSync(join(scriptDir, 'vendor'), join(viewerDir, 'vendor'), { recursive: true })
 
 // gemeinde-peers.json: {region id → demographic-peer bucket key} + {key → label}, for the
 // region card's "compared to similar Gemeinden nationwide" line. The ranking is computed
 // client-side from the loaded stats, so this stays small (~one line per Gemeinde). Absent
 // when the Destatis dataset has not been fetched — the viewer just omits that line.
-const geoFeatures: StatsGeoFeature[] = existsSync(geojsonPath)
-  ? ((JSON.parse(await Bun.file(geojsonPath).text()) as { features?: StatsGeoFeature[] })
-      .features ?? [])
-  : []
+const geoFeatures = (
+  existsSync(msgpackPath)
+    ? decodeStatsRegionPack(new Uint8Array(await Bun.file(msgpackPath).arrayBuffer()))
+    : []
+) as StatsGeoFeature[]
 
 /** Nationwide bike-infra share (%) under the default counting filter — for the methodology page. */
 let nationalSharePct: number | null = null
@@ -542,7 +544,7 @@ if (existsSync(trafficPath)) {
 // daten/radinfra-regionen-<OSM date>.csv: every region's numbers under the default counting
 // filter, plus the context metrics and the model's expected value — the same functions the map
 // uses, so a downloaded value always matches the card. Reads the gemeinde-*.json written above.
-let dataDownload: { href: string; rowCount: number } | null = null
+let dataDownload: { href: string; excelHref: string; rowCount: number } | null = null
 if (geoFeatures.length) {
   const readById = <T>(name: string) => {
     const path = join(viewerDir, name)
@@ -575,8 +577,14 @@ if (geoFeatures.length) {
   const dataDir = join(viewerDir, DATA_DOWNLOAD_DIR)
   rmSync(dataDir, { recursive: true, force: true })
   mkdirSync(dataDir, { recursive: true })
+  const excelFileName = excelDataDownloadFileName(osmDataFrom)
   writeFileSync(join(dataDir, fileName), dataDownloadCsv(rows), 'utf8')
-  dataDownload = { href: `./${DATA_DOWNLOAD_DIR}/${fileName}`, rowCount: rows.length }
+  writeFileSync(join(dataDir, excelFileName), dataDownloadCsv(rows, 'excel'), 'utf8')
+  dataDownload = {
+    href: `./${DATA_DOWNLOAD_DIR}/${fileName}`,
+    excelHref: `./${DATA_DOWNLOAD_DIR}/${excelFileName}`,
+    rowCount: rows.length,
+  }
   process.stdout.write(`Data download: ${rows.length} regions → ${dataDir}/${fileName}\n`)
 }
 

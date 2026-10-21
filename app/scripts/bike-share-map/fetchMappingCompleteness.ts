@@ -22,10 +22,11 @@
  * Needs local Postgres with the processing run that produced the current stats.
  * Output: output/mapping-completeness.json
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 /** Below this much attributed road a share says nothing. */
 export const MAPPING_COMPLETENESS_MIN_ROAD_KM = 5
@@ -127,6 +128,10 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), osmDataFrom, byId }))
+  writeDataset(
+    outPath,
+    { source: 'OpenStreetMap via TILDA roads (maxspeed/surface/lit tags)', osmDataFrom, byId },
+    { minCount: 10_000 },
+  )
   process.stdout.write(`${outPath} (${Object.keys(byId).length} regions, OSM ${osmDataFrom})\n`)
 }

@@ -28,6 +28,8 @@ describe('computeCalmedMetricsFromRoadLength', () => {
     expect(metrics?.calmedSharePct).toBe(50.0)
     expect(metrics?.livingKm).toBe(10)
     expect(metrics?.livingSharePct).toBe(5.0)
+    // Living streets alone: 8 km of 200 (bicycle roads are bike infra, not a predictor)
+    expect(metrics?.livingStreetSharePct).toBe(4.0)
   })
 
   test('handles rural municipality without living streets', () => {

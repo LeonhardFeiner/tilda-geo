@@ -7,6 +7,7 @@ import {
   isStructuralModelLevel,
   MODEL_BAND_MIN_REGIONS,
   type StructuralModelPrediction,
+  structuralModelInputs,
 } from './rankingDisplay'
 import {
   assessBikeDataQuality,
@@ -37,7 +38,7 @@ export type DataDownloadContext = {
   transit?: ById<{ avgDistanceToStationM?: number }>
   zensus?: ById<{ rentPerM2?: number }>
   cars?: ById<{ carsPer1000?: number }>
-  calmed?: ById<{ calmedSharePct?: number; livingSharePct?: number }>
+  calmed?: ById<{ calmedSharePct?: number; livingSharePct?: number; livingStreetSharePct?: number }>
   accidents?: ById<{
     bikeAccidents?: number
     bikeFatalOrSevere?: number
@@ -111,6 +112,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
   verkehrsberuhigt_pct:
     'Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %',
   spielstrassen_pct:
+    'Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz, %; geht ins Modell ein',
+  beruhigt_fahrradstr_pct:
     'Anteil von verkehrsberuhigten Bereichen, Fahrradstraßen und Fußgängerzonen am Straßennetz, %',
   strassen_steigung_pct: 'Mittlere Geländeneigung entlang des Straßennetzes (DGM-Stichproben), %',
   hoehe_mittel_m: 'Mittlere Geländehöhe, m',
@@ -127,6 +130,10 @@ export const DATA_DOWNLOAD_COLUMNS = {
   modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
   modell_ausserhalb_1se:
     '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte kräftige Farbe), sonst 0',
+  modell_begrenzt:
+    '1, wenn das lineare Modell rechnerisch unter 0 % lag und die Erwartung auf 0 % gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0',
+  hinweise:
+    'Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt, das Straßennetz ist sehr klein)',
 } as const
 
 export type DataDownloadColumn = keyof typeof DATA_DOWNLOAD_COLUMNS
@@ -176,18 +183,10 @@ function gemeindeModelPrediction(feature: DataDownloadFeature, ctx: DataDownload
     RADINFRA_DEFAULT_FILTER,
   )
   if (roadKm < DEFAULT_MIN_ROAD_KM_FOR_SCALE) return null
-  const terrain = ctx.terrain[id]
-  const stationM = ctx.transit?.[id]?.avgDistanceToStationM
   return computeStructuralModelPrediction({
     roadKm,
     bikeKm,
-    roadSlope: terrain?.road ?? null,
-    elevMean: terrain?.elevationMean ?? null,
-    density: ctx.density[id] ?? null,
-    stDistKm: typeof stationM === 'number' ? stationM / 1000 : null,
-    rent: ctx.zensus?.[id]?.rentPerM2 ?? null,
-    carsPer1000: ctx.cars?.[id]?.carsPer1000 ?? null,
-    livingSharePct: ctx.calmed?.[id]?.livingSharePct ?? null,
+    ...structuralModelInputs(id, ctx),
     bundeslandId: String(p.bundesland_id || ''),
   })
 }
@@ -320,7 +319,8 @@ export function buildDataDownloadRow(
     miete_eur_m2: round(rent, 2),
     pkw_je_1000_ew: round(cars, 1),
     verkehrsberuhigt_pct: round(calmed?.calmedSharePct, 1),
-    spielstrassen_pct: round(calmed?.livingSharePct, 1),
+    spielstrassen_pct: round(calmed?.livingStreetSharePct, 1),
+    beruhigt_fahrradstr_pct: round(calmed?.livingSharePct, 1),
     strassen_steigung_pct: round(terrain?.road, 2),
     hoehe_mittel_m: round(terrain?.elevationMean, 0),
     bahnhof_distanz_km: typeof stationM === 'number' ? round(stationM / 1000, 2) : null,
@@ -333,17 +333,38 @@ export function buildDataDownloadRow(
     modell_erwartung_pct: round(model?.expectedPct, 2),
     modell_abweichung_pp: round(model?.diffPct, 2),
     modell_ausserhalb_1se: model ? (model.isWithin1Se ? 0 : 1) : null,
+    modell_begrenzt: model ? (model.clamped ? 1 : 0) : null,
+    hinweise: roadKm > 0 && bikeKm > roadKm ? 'anteil_ueber_100' : null,
   }
 }
 
-function csvCell(value: Cell) {
+/** Excel only detects UTF-8 (umlauts) when the file starts with a byte order mark. */
+const UTF8_BOM = '\uFEFF'
+
+type CsvDialect = { separator: ',' | ';'; decimalComma: boolean }
+
+function csvCell(value: Cell, dialect: CsvDialect) {
   if (value == null) return ''
-  const s = String(value)
-  return /[",\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
+  const s =
+    typeof value === 'number' && dialect.decimalComma
+      ? String(value).replace('.', ',')
+      : String(value)
+  return s.includes(dialect.separator) || /["\n\r]/.test(s) ? `"${s.replaceAll('"', '""')}"` : s
 }
 
-/** RFC 4180: comma-separated, dot decimals, empty = no value. Sorted by admin level, then name. */
-export function dataDownloadCsv(rows: DataDownloadRow[]) {
+/**
+ * RFC 4180 by default: comma-separated, dot decimals, empty = no value. `excel` writes the variant
+ * German Excel opens with a double-click (semicolon, decimal comma). Both start with a BOM.
+ * Sorted by admin level, then name.
+ */
+export function dataDownloadCsv(
+  rows: DataDownloadRow[],
+  variant: 'standard' | 'excel' = 'standard',
+) {
+  const dialect: CsvDialect =
+    variant === 'excel'
+      ? { separator: ';', decimalComma: true }
+      : { separator: ',', decimalComma: false }
   const columns = Object.keys(DATA_DOWNLOAD_COLUMNS) as DataDownloadColumn[]
   const sorted = [...rows].sort(
     (a, b) =>
@@ -351,7 +372,14 @@ export function dataDownloadCsv(rows: DataDownloadRow[]) {
       String(a.name ?? '').localeCompare(String(b.name ?? ''), 'de') ||
       String(a.osm_id).localeCompare(String(b.osm_id)),
   )
-  const lines = [columns.join(',')]
-  for (const row of sorted) lines.push(columns.map((c) => csvCell(row[c])).join(','))
-  return `${lines.join('\r\n')}\r\n`
+  const lines = [columns.join(dialect.separator)]
+  for (const row of sorted) {
+    lines.push(columns.map((c) => csvCell(row[c], dialect)).join(dialect.separator))
+  }
+  return `${UTF8_BOM}${lines.join('\r\n')}\r\n`
+}
+
+/** `radinfra-regionen-2026-10-16-excel.csv` next to the standard file. */
+export function excelDataDownloadFileName(osmDataFrom: string | null | undefined) {
+  return dataDownloadFileName(osmDataFrom).replace(/\.csv$/, '-excel.csv')
 }

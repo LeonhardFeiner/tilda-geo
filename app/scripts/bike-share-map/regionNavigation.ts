@@ -989,7 +989,22 @@ export function defaultDarstellungForScope(
   return defaultDarstellungPresetForScope(gebiet, untergebiet, index, features)
 }
 
-export function viewLabel(view: ViewScope, index: RegionIndex) {
+/** Compact names for the phone's one-line preview, where the full ones get cut off. */
+const SHORT_PRESET_LABELS: Partial<Record<DisplayPresetId, string>> = {
+  landkreis_kreisfrei: 'Kreise',
+  gemeindeverbaende_kreisfrei: 'Gemeindeverbände',
+  gemeindeverbaende: 'Gemeindeverbände',
+  gemeinden_kreisfrei: 'Gemeinden',
+}
+
+/** "Gemeinden", "Kreise", … — the short name of a Darstellung, for buttons and previews. */
+export function presetShortLabel(id: string) {
+  const preset = DISPLAY_PRESETS.find((p) => p.id === id)
+  if (!preset) return null
+  return SHORT_PRESET_LABELS[preset.id] ?? preset.label
+}
+
+export function viewLabel(view: ViewScope, index: RegionIndex, opts?: { short?: boolean }) {
   const parts: string[] = []
   if (view.gebiet === DEUTSCHLAND_GEBIET) {
     parts.push('Deutschland')
@@ -1013,7 +1028,11 @@ export function viewLabel(view: ViewScope, index: RegionIndex) {
   }
 
   const preset = DISPLAY_PRESETS.find((p) => p.id === view.darstellung)
-  parts.push(preset ? presetLabelForScope(preset, view.gebiet, view.untergebiet) : view.darstellung)
+  const short = opts?.short && preset ? SHORT_PRESET_LABELS[preset.id] : undefined
+  parts.push(
+    short ??
+      (preset ? presetLabelForScope(preset, view.gebiet, view.untergebiet) : view.darstellung),
+  )
   return parts.join(' · ')
 }
 
@@ -1077,4 +1096,51 @@ export function scopeBoundsFeatures(
   }
   const bl = index.byId.get(gebiet)
   return bl?.geometry ? [bl] : []
+}
+
+type BboxInput = {
+  type?: string
+  geometry?: { coordinates?: unknown } | null
+  features?: BboxInput[]
+  coordinates?: unknown
+}
+
+/**
+ * [west, south, east, north] of a Feature, FeatureCollection or Geometry — the one thing the page
+ * used turf for (with `geoDistanceKm`), so it no longer loads the 143 KB library.
+ */
+export function featureBbox(input: BboxInput | null | undefined): [number, number, number, number] {
+  let w = Infinity
+  let s = Infinity
+  let e = -Infinity
+  let n = -Infinity
+  const visit = (c: unknown) => {
+    if (!Array.isArray(c)) return
+    if (typeof c[0] === 'number' && typeof c[1] === 'number') {
+      if (c[0] < w) w = c[0]
+      if (c[0] > e) e = c[0]
+      if (c[1] < s) s = c[1]
+      if (c[1] > n) n = c[1]
+      return
+    }
+    for (const child of c) visit(child)
+  }
+  const walk = (x: BboxInput | null | undefined) => {
+    if (!x) return
+    if (Array.isArray(x.features)) for (const f of x.features) walk(f)
+    else if (x.geometry !== undefined) visit(x.geometry?.coordinates)
+    else visit(x.coordinates)
+  }
+  walk(input)
+  return [w, s, e, n]
+}
+
+/** Great-circle distance in km between two [lng, lat] points (haversine, mean Earth radius). */
+export function geoDistanceKm(a: [number, number], b: [number, number]) {
+  const rad = Math.PI / 180
+  const dLat = (b[1] - a[1]) * rad
+  const dLng = (b[0] - a[0]) * rad
+  const h =
+    Math.sin(dLat / 2) ** 2 + Math.cos(a[1] * rad) * Math.cos(b[1] * rad) * Math.sin(dLng / 2) ** 2
+  return 2 * 6371.0088 * Math.asin(Math.min(1, Math.sqrt(h)))
 }

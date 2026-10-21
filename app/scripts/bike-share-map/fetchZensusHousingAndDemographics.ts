@@ -16,14 +16,15 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 export const ZENSUS_HOUSING_URL =
   'https://www.destatis.de/static/DE/zensus/gitterdaten/Regionaltabelle_Gebaeude_Wohnungen.xlsx'
 export const ZENSUS_DEMO_URL =
   'https://www.destatis.de/static/DE/zensus/gitterdaten/Regionaltabelle_Demografie.xlsx'
 
-const CACHE_HOUSING_XLSX = '/tmp/Regionaltabelle_Gebaeude_Wohnungen.xlsx'
-const CACHE_DEMO_XLSX = '/tmp/Regionaltabelle_Demografie.xlsx'
+const CACHE_HOUSING_XLSX = downloadCachePath('Regionaltabelle_Gebaeude_Wohnungen.xlsx')
+const CACHE_DEMO_XLSX = downloadCachePath('Regionaltabelle_Demografie.xlsx')
 
 export type ZensusHousingDemographics = {
   rentPerM2?: number
@@ -204,9 +205,8 @@ if (import.meta.main) {
 
   // Map to region IDs (relation/...) using stats-core.msgpack or stats.msgpack
   process.stdout.write('Mapping RS to region IDs...\n')
-  const statsMsgpackPath = existsSync(join(outDir, 'viewer', 'stats-core.msgpack'))
-    ? join(outDir, 'viewer', 'stats-core.msgpack')
-    : join(outDir, 'stats.msgpack')
+  // The export itself, not the viewer's copy: that one is from the previous build.
+  const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   const byId: Record<string, ZensusHousingDemographics> = {}
   if (existsSync(statsMsgpackPath)) {
@@ -225,14 +225,10 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      source: 'Destatis Zensus 2022 Regionaltabellen',
-      fetchedAt: new Date().toISOString(),
-      byRs,
-      byId,
-    }),
+    { source: 'Destatis Zensus 2022 Regionaltabellen', byRs, byId },
+    { minCount: 10_000 },
   )
   process.stdout.write(
     `Wrote ${outPath}: ${Object.keys(byRs).length} RS records, ${Object.keys(byId).length} mapped region IDs\n`,

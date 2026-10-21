@@ -20,12 +20,15 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 export const UNFALLATLAS_2023_ZIP_URL =
   'https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/Unfallorte2023_EPSG25832_CSV.zip'
-const CACHE_ZIP_PATH = '/tmp/Unfallorte2023_EPSG25832_CSV.zip'
+const CACHE_ZIP_PATH = downloadCachePath('Unfallorte2023_EPSG25832_CSV.zip')
 
 export type AccidentMetrics = {
+  /** Residents the rate is based on (Destatis); lets the viewer skip tiny denominators. */
+  population?: number
   totalAccidents: number
   bikeAccidents: number
   bikeFatal: number
@@ -42,6 +45,17 @@ export type ParsedAccidentEntry = {
   bikeSevere: number
   bikeLight: number
   bikeFatalOrSevere: number
+}
+
+export function emptyAccidentEntry(): ParsedAccidentEntry {
+  return {
+    totalAccidents: 0,
+    bikeAccidents: 0,
+    bikeFatal: 0,
+    bikeSevere: 0,
+    bikeLight: 0,
+    bikeFatalOrSevere: 0,
+  }
 }
 
 export function parseUnfallatlasCsv(csvText: string): Map<string, ParsedAccidentEntry> {
@@ -160,14 +174,7 @@ if (import.meta.main) {
     const kreisCode = ags.slice(0, 5)
     const landCode = ags.slice(0, 2)
 
-    const kEntry = kreiseData.get(kreisCode) ?? {
-      totalAccidents: 0,
-      bikeAccidents: 0,
-      bikeFatal: 0,
-      bikeSevere: 0,
-      bikeLight: 0,
-      bikeFatalOrSevere: 0,
-    }
+    const kEntry = kreiseData.get(kreisCode) ?? emptyAccidentEntry()
     kEntry.totalAccidents += data.totalAccidents
     kEntry.bikeAccidents += data.bikeAccidents
     kEntry.bikeFatal += data.bikeFatal
@@ -176,14 +183,7 @@ if (import.meta.main) {
     kEntry.bikeFatalOrSevere += data.bikeFatalOrSevere
     kreiseData.set(kreisCode, kEntry)
 
-    const lEntry = laenderData.get(landCode) ?? {
-      totalAccidents: 0,
-      bikeAccidents: 0,
-      bikeFatal: 0,
-      bikeSevere: 0,
-      bikeLight: 0,
-      bikeFatalOrSevere: 0,
-    }
+    const lEntry = laenderData.get(landCode) ?? emptyAccidentEntry()
     lEntry.totalAccidents += data.totalAccidents
     lEntry.bikeAccidents += data.bikeAccidents
     lEntry.bikeFatal += data.bikeFatal
@@ -215,9 +215,8 @@ if (import.meta.main) {
   const byId: Record<string, AccidentMetrics> = {}
   const byCode: Record<string, AccidentMetrics> = {}
 
-  const statsMsgpackPath = existsSync(join(outDir, 'viewer', 'stats-core.msgpack'))
-    ? join(outDir, 'viewer', 'stats-core.msgpack')
-    : join(outDir, 'stats.msgpack')
+  // The export itself, not the viewer's copy: that one is from the previous build.
+  const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   if (existsSync(statsMsgpackPath)) {
     const { decode } = await import('@msgpack/msgpack')
@@ -237,12 +236,17 @@ if (import.meta.main) {
         const ags = rs.slice(0, 5) + rs.slice(9, 12)
         const d = gemeindenData.get(ags)
         const pop = rsToGemeinde.get(rs)?.population
-        if (d) {
+        // The atlas lists only Gemeinden with at least one accident. A Gemeinde with residents
+        // in a Land the atlas covers had none, which is 0 and not "no data".
+        const covered = laenderData.has(rs.slice(0, 2))
+        const row = d ?? (covered && pop && pop > 0 ? emptyAccidentEntry() : undefined)
+        if (row) {
           const bikeAccidentsPer10k =
-            pop && pop > 0 ? Math.round((d.bikeAccidents / pop) * 100000) / 10 : undefined
+            pop && pop > 0 ? Math.round((row.bikeAccidents / pop) * 100000) / 10 : undefined
           const entry: AccidentMetrics = {
-            ...d,
+            ...row,
             bikeAccidentsPer10k,
+            population: pop,
           }
           byId[id] = entry
           byCode[ags] = entry
@@ -257,6 +261,7 @@ if (import.meta.main) {
           const entry: AccidentMetrics = {
             ...d,
             bikeAccidentsPer10k,
+            population: pop,
           }
           byId[id] = entry
           byCode[kreisCode] = entry
@@ -271,6 +276,7 @@ if (import.meta.main) {
           const entry: AccidentMetrics = {
             ...d,
             bikeAccidentsPer10k,
+            population: pop,
           }
           byId[id] = entry
           byCode[landCode] = entry
@@ -280,14 +286,10 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      source: 'Statistische Ämter des Bundes und der Länder – Unfallatlas 2023',
-      fetchedAt: new Date().toISOString(),
-      byCode,
-      byId,
-    }),
+    { source: 'Statistische Ämter des Bundes und der Länder – Unfallatlas 2023', byCode, byId },
+    { minCount: 9000 },
   )
   process.stdout.write(
     `Wrote ${outPath}: ${Object.keys(byCode).length} codes, ${Object.keys(byId).length} mapped region IDs\n`,

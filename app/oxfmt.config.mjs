@@ -25,6 +25,7 @@ export default defineConfig({
     '**/routeTree.gen.ts',
     'scripts/StaticDatasets/geojson/**',
     '**/bike-share-map/output/**',
+    '**/bike-share-map/vendor/**',
   ],
   overrides: [
     {

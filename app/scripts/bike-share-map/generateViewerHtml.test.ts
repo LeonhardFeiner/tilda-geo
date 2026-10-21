@@ -5,6 +5,16 @@ import { generateViewerHtml } from './generateViewerHtml'
 describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   const html = generateViewerHtml('2026-10-11T00:00:00.000Z', '11.10.2026')
 
+  test('loads no third-party script at runtime (vendored, same origin)', () => {
+    expect(html).not.toMatch(/<script[^>]+src="https?:/)
+    expect(html).not.toContain('unpkg.com')
+  })
+
+  test('versions same-origin assets so a deploy never mixes old and new files', () => {
+    expect(html).toContain('"statsMsgpackUrl":"./stats-core.msgpack?v=20261011000000"')
+    expect(html).toContain('<script src="./rankingDisplay.js?v=20261011000000"></script>')
+  })
+
   test('viewport meta tag disables user scaling', () => {
     expect(html).toContain('user-scalable=no')
     expect(html).toContain('maximum-scale=1')
@@ -217,7 +227,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes social sharing cards, favicon, theme-color, and canonical URL in head', () => {
-    expect(html).toContain('<meta name="theme-color" content="#1e293b" />')
+    expect(html).toContain('<meta name="theme-color" content="#ffffff" />')
     expect(html).toContain('<link rel="icon"')
     expect(html).toContain('<link rel="canonical"')
     expect(html).toContain('<meta property="og:image"')
@@ -323,7 +333,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
 
   test('preloads MapLibre JS and preconnects to map tile origins for faster Core Web Vitals', () => {
     expect(html).toContain(
-      '<link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script"',
+      '<link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261011000000" as="script"',
     )
     expect(html).toContain('<link rel="preconnect" href="https://api.maptiler.com"')
     expect(html).toContain('<link rel="preconnect" href="https://tiles.tilda-geo.de"')
@@ -361,7 +371,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('function getActiveModelSettings')
     expect(html).toContain('RankingDisplay.computeStructuralModelPrediction')
     expect(html).toContain('model-breakdown-details')
-    expect(html).toContain('Faktoren-Zerlegung (Bundesland, Topografie, Miete, Beruhigung, Dichte)')
+    expect(html).toContain("summary.textContent = 'Faktoren-Zerlegung'")
     expect(html).toContain("'Mietniveau',")
     expect(html).toContain('Struktureller Erwartungswert')
     expect(html).toContain('Es beschreibt Zusammenhänge, keine Ursachen')
@@ -370,7 +380,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes Zensus 2022 rent, youth and vacancy metrics in context and CSV columns', () => {
-    expect(html).toContain('"zensusUrl":"./gemeinde-zensus.json"')
+    expect(html).toContain('"zensusUrl":"./gemeinde-zensus.json?v=20261011000000"')
     expect(html).toContain("key: 'rent'")
     expect(html).toContain("label: 'Ø Nettokaltmiete (Zensus 2022)'")
     expect(html).toContain("key: 'youth'")
@@ -381,14 +391,14 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes KBA car density metric in context and CSV columns', () => {
-    expect(html).toContain('"carsUrl":"./gemeinde-cars.json"')
+    expect(html).toContain('"carsUrl":"./gemeinde-cars.json?v=20261011000000"')
     expect(html).toContain("key: 'carDensity'")
     expect(html).toContain("label: 'PKW-Dichte (KBA)'")
     expect(html).toContain("header: 'PKW je 1.000 Einwohner (KBA)'")
   })
 
   test('includes traffic calmed and Tempo-30 road metrics in context and CSV columns', () => {
-    expect(html).toContain('"calmedUrl":"./gemeinde-calmed.json"')
+    expect(html).toContain('"calmedUrl":"./gemeinde-calmed.json?v=20261011000000"')
     expect(html).toContain("key: 'calmedShare'")
     expect(html).toContain("label: 'Wohn- & Tempo-30-Netz'")
     expect(html).toContain("key: 'livingShare'")
@@ -398,13 +408,13 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes the BAYSIS busy-road coverage in context and CSV columns', () => {
-    expect(html).toContain('"trafficUrl":"./gemeinde-traffic.json"')
+    expect(html).toContain('"trafficUrl":"./gemeinde-traffic.json?v=20261011000000"')
     expect(html).toContain("key: 'busyRoadsCovered'")
     expect(html).toContain("header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)'")
   })
 
   test('includes the OSM mapping completeness in context and CSV columns', () => {
-    expect(html).toContain('"mappingUrl":"./gemeinde-mapping.json"')
+    expect(html).toContain('"mappingUrl":"./gemeinde-mapping.json?v=20261011000000"')
     expect(html).toContain("key: 'mappingDepth'")
     expect(html).toContain("label: 'Kartierungstiefe (OSM)'")
     expect(html).toContain("header: 'Kartierungstiefe OSM (%)'")
@@ -425,7 +435,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes Destatis Unfallatlas bicycle accident metrics in context, map, and CSV columns', () => {
-    expect(html).toContain('"accidentsUrl":"./gemeinde-accidents.json"')
+    expect(html).toContain('"accidentsUrl":"./gemeinde-accidents.json?v=20261011000000"')
     expect(html).toContain("key: 'bikeAccidents'")
     expect(html).toContain("key: 'bikeAccidentsPer10k'")
     expect(html).toContain("key: 'bikeFatalOrSevere'")
@@ -435,7 +445,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes Bundesagentur für Arbeit commuter statistics in context, map, and CSV columns', () => {
-    expect(html).toContain('"commutersUrl":"./gemeinde-commuters.json"')
+    expect(html).toContain('"commutersUrl":"./gemeinde-commuters.json?v=20261011000000"')
     expect(html).toContain("key: 'netCommuters'")
     expect(html).toContain("key: 'jobCentrality'")
     expect(html).toContain("header: 'Pendlersaldo (BA 2025)'")

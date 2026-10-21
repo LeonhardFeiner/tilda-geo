@@ -13,9 +13,10 @@
  * 31.12.2025). Re-run via `bun run bike-share-map:gemeinde-demographics` whenever you want
  * current numbers; the output is committed since it's small (~1MB) and changes only quarterly.
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
+import { writeDataset } from './fetchCommon'
 
 const GEMEINDEVERZEICHNIS_URL =
   'https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/AuszugGV4QAktuell.xlsx?__blob=publicationFile'
@@ -110,14 +111,10 @@ if (import.meta.main) {
   const outPath = join(outDir, 'gemeinde-demographics.json')
   const { sourceSheet, gemeinden } = await fetchGemeindeDemographics()
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      source: GEMEINDEVERZEICHNIS_URL,
-      sourceSheet,
-      fetchedAt: new Date().toISOString(),
-      gemeinden,
-    }),
+    { source: GEMEINDEVERZEICHNIS_URL, sourceSheet, gemeinden },
+    { minCount: 10_000 },
   )
   process.stdout.write(`${outPath} (${gemeinden.length} Gemeinden, from "${sourceSheet}")\n`)
 }

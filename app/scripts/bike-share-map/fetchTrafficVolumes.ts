@@ -27,6 +27,7 @@ import { mkdirSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { Client } from 'pg'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 const WFS_URL =
   'https://gisportal-stmb.bayern.de/server/services/WFS/BAYSIS_Verkehrsdaten/MapServer/WFSServer' +
@@ -276,7 +277,7 @@ if (import.meta.main) {
     fetchedAt: new Date().toISOString(),
   }
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(join(outDir, 'traffic-volumes.json'), JSON.stringify({ ...meta, byId }))
+  writeDataset(join(outDir, 'traffic-volumes.json'), { ...meta, byId }, { minCount: 1000 })
   writeFileSync(
     join(outDir, 'traffic-sections-bayern.json'),
     JSON.stringify({

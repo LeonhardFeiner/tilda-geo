@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import type { DataDownloadContext } from './dataDownload'
 import {
   buildDataDownloadRow,
   buildModelAggregates,
@@ -7,6 +8,19 @@ import {
   dataDownloadCsv,
   dataDownloadFileName,
 } from './dataDownload'
+
+/** Every model input, for each id: the model only predicts with all seven present. */
+function fullModelCtx(ids: string[], density = 300): DataDownloadContext {
+  const each = <T>(v: T) => Object.fromEntries(ids.map((id) => [id, v]))
+  return {
+    density: each(density),
+    terrain: each({ road: 3, elevationMean: 400 }),
+    transit: each({ avgDistanceToStationM: 3000 }),
+    zensus: each({ rentPerM2: 6.5 }),
+    cars: each({ carsPer1000: 640 }),
+    calmed: each({ livingStreetSharePct: 2 }),
+  }
+}
 
 const gemeinde = {
   properties: {
@@ -44,11 +58,22 @@ describe('buildDataDownloadRow', () => {
     })
   })
 
-  it('adds the model expectation once its inputs exist', () => {
-    const row = buildDataDownloadRow(gemeinde, {
-      density: { 'relation/1': 500 },
-      terrain: { 'relation/1': { road: 3, elevationMean: 400 } },
-    })
+  const allInputs = {
+    density: { 'relation/1': 500 },
+    terrain: { 'relation/1': { road: 3, elevationMean: 400 } },
+    transit: { 'relation/1': { avgDistanceToStationM: 3000 } },
+    zensus: { 'relation/1': { rentPerM2: 6.5 } },
+    cars: { 'relation/1': { carsPer1000: 640 } },
+    calmed: { 'relation/1': { livingStreetSharePct: 2 } },
+  }
+
+  it('leaves the model expectation empty while an input is missing', () => {
+    const { cars: _cars, ...withoutCars } = allInputs
+    expect(buildDataDownloadRow(gemeinde, withoutCars)?.modell_erwartung_pct).toBeNull()
+  })
+
+  it('adds the model expectation once all its inputs exist', () => {
+    const row = buildDataDownloadRow(gemeinde, allInputs)
     expect(row?.modell_erwartung_pct).toEqual(expect.any(Number))
     expect(row?.modell_abweichung_pp).toBeCloseTo(10 - (row?.modell_erwartung_pct as number), 1)
     expect([0, 1]).toContain(row?.modell_ausserhalb_1se)
@@ -88,7 +113,9 @@ describe('buildDataDownloadRow', () => {
 describe('dataDownloadCsv', () => {
   it('writes every column, quotes where needed and leaves missing values empty', () => {
     const row = buildDataDownloadRow(gemeinde, {})!
-    const [header, line] = dataDownloadCsv([row]).split('\r\n')
+    const csv = dataDownloadCsv([row])
+    expect(csv.startsWith('\uFEFF')).toBe(true)
+    const [header, line] = csv.slice(1).split('\r\n')
     expect(header).toBe(Object.keys(DATA_DOWNLOAD_COLUMNS).join(','))
     expect(line).toContain('"Musterstadt, ""Alt"""')
     expect(line?.split(',').length).toBeGreaterThan(Object.keys(DATA_DOWNLOAD_COLUMNS).length - 1)
@@ -113,14 +140,41 @@ describe('dataDownloadCsv', () => {
       .map((l) => l.split(',')[1])
     expect(names).toEqual(['Bayern', 'Aach', 'Zell'])
   })
+
+  it('writes a semicolon / decimal-comma variant for German Excel', () => {
+    const row = buildDataDownloadRow(
+      {
+        properties: {
+          ...gemeinde.properties,
+          road_length: { residential: 80.5, primary: 20 },
+        },
+      },
+      {},
+    )!
+    const [header, line] = dataDownloadCsv([row], 'excel').slice(1).split('\r\n')
+    expect(header).toBe(Object.keys(DATA_DOWNLOAD_COLUMNS).join(';'))
+    expect(line).toMatch(/;\d+,\d+;/)
+    expect(line).not.toMatch(/;\d+\.\d+;/)
+  })
+
+  it('flags shares above 100 %', () => {
+    const row = buildDataDownloadRow(
+      {
+        properties: {
+          ...gemeinde.properties,
+          road_length: { residential: 1 },
+          bikelane_length: { cycleway_adjoining: 3 },
+        },
+      },
+      {},
+    )
+    expect(row?.hinweise).toBe('anteil_ueber_100')
+  })
 })
 
 describe('buildModelAggregates', () => {
   it('sums Gemeinden into their Kreis, but not into the Land', () => {
-    const ctxFor = (ids: string[]) => ({
-      density: Object.fromEntries(ids.map((id) => [id, 300])),
-      terrain: Object.fromEntries(ids.map((id) => [id, { road: 3, elevationMean: 400 }])),
-    })
+    const ctxFor = (ids: string[]) => fullModelCtx(ids)
     const features = []
     const ids: string[] = []
     for (let k = 0; k < 8; k++) {
@@ -164,10 +218,7 @@ describe('kreisfreieIdsOf', () => {
 
   it('lets the model treat a kreisfreie Stadt as a Gemeinde', () => {
     const stadt = { properties: { ...gemeinde.properties, id: 'stadt/1', level: '6' } }
-    const ctx = {
-      density: { 'stadt/1': 2000 },
-      terrain: { 'stadt/1': { road: 2, elevationMean: 300 } },
-    }
+    const ctx = fullModelCtx(['stadt/1'], 2000)
     expect(buildDataDownloadRow(stadt, ctx)?.modell_erwartung_pct).toBeNull()
     expect(
       buildDataDownloadRow(stadt, { ...ctx, kreisfreieIds: new Set(['stadt/1']) })

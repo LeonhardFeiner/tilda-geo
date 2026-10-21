@@ -199,7 +199,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       await new Promise((resolve) => setTimeout(resolve, 50))
       expect(basemapStyles()).toEqual([])
 
-      tileError(429) // the third auth/quota failure
+      tileError(429) // the third failure (auth, quota, or a network error without status)
       await page.waitFor(() => basemapStyles().length === 1, 'the fallback style')
       expect(basemapStyles()).toEqual(['background']) // the "blank" style
       expect(page.q('#basemap-hint').textContent).toContain('nicht erreichbar')
@@ -235,7 +235,9 @@ describe('viewer smoke test (page from source, jsdom)', () => {
         )
         expect(polygonFiles(page)).toEqual(['gemeinde-geometry/relation-62371.msgpack'])
         // Needs the other Gemeinden's centres, which now travel as properties, not polygons.
-        expect(page.q('#region-detail-peer-gap').textContent).toContain('Vorbild in der Nähe')
+        expect(page.q('#region-detail-peer-gap').textContent).toContain(
+          'Vergleichbare Gemeinde in der Nähe',
+        )
         expect(page.errors).toEqual([])
       },
       TIMEOUT,

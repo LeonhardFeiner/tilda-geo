@@ -29,20 +29,42 @@ jobs:
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
+        with:
+          # Same version the pre-push hook ran the tests with; bump both together.
+          bun-version: 1.3.13
+
+      - name: Cache Bun dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('app/bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
 
       - name: Install app dependencies
         working-directory: app
         run: bun install --frozen-lockfile
 
+      # The pre-push hook runs these too, but `git push --no-verify` or a manual dispatch skips it.
+      # Includes the check that every inline <script> parses and the jsdom boot of the real page.
+      - name: Test bike-share viewer
+        working-directory: app
+        run: bun x vitest run scripts/bike-share-map
+
       - name: Build bike-share viewer output
         working-directory: app
         run: bun run bike-share-map:viewer
+
+      - name: Test the built page boots
+        working-directory: app
+        run: bun x vitest run scripts/bike-share-map/viewerSmoke.test.ts
 
       - name: Prepare Pages artifact (dereference symlinks)
         run: |
           mkdir -p _site
           cp -LR app/scripts/bike-share-map/output/viewer/. _site/
+          rm -rf _site/node_modules _site/stats.geojson
           touch _site/.nojekyll
+          du -sh _site
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

@@ -1,6 +1,9 @@
+import * as turf from '@turf/turf'
 import { describe, expect, test } from 'vitest'
 import {
   buildRegionIndex,
+  featureBbox,
+  geoDistanceKm,
   comparePresetUnitLevelHierarchy,
   computeLazyDarstellungPresence,
   defaultDarstellungPresetForScope,
@@ -461,5 +464,46 @@ describe('lazy Darstellung presence (Gemeindeverbände / Stadtbezirke before sta
       presence,
     )
     expect(withPresence.some((p) => p.id === 'stadtbezirke')).toBe(true)
+  })
+})
+
+describe('featureBbox / geoDistanceKm', () => {
+  test('matches turf on a feature collection with a multipolygon', () => {
+    const fc = {
+      type: 'FeatureCollection',
+      features: [
+        {
+          type: 'Feature',
+          geometry: {
+            type: 'MultiPolygon',
+            coordinates: [
+              [
+                [
+                  [10, 50],
+                  [11, 50],
+                  [11, 51],
+                  [10, 50],
+                ],
+              ],
+              [
+                [
+                  [12, 49.5],
+                  [12.5, 49.5],
+                  [12.5, 49.8],
+                  [12, 49.5],
+                ],
+              ],
+            ],
+          },
+        },
+        { type: 'Feature', geometry: { type: 'Point', coordinates: [9.5, 52] } },
+      ],
+    }
+    expect(featureBbox(fc)).toEqual(turf.bbox(fc as never))
+  })
+  test('distance agrees with turf within a metre', () => {
+    const a: [number, number] = [11.576, 48.137]
+    const b: [number, number] = [13.405, 52.52]
+    expect(geoDistanceKm(a, b)).toBeCloseTo(turf.distance(a, b, { units: 'kilometers' }), 3)
   })
 })

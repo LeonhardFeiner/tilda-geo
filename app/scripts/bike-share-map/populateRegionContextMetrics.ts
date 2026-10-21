@@ -10,7 +10,7 @@
  *
  * buildViewer.ts then uses these to generate the viewer JSON files.
  */
-import { readFileSync, writeFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { inflateRawSync } from 'node:zlib'
 import { bbox as bboxFn, booleanPointInPolygon, point } from '@turf/turf'
@@ -18,6 +18,8 @@ import type { MultiPolygon, Polygon } from 'geojson'
 import { Client } from 'pg'
 import sharp from 'sharp'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { decodeStatsRegionPack } from '../stats-export/statsRegionPack'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 const scriptDir = import.meta.dir
 const outDir = join(scriptDir, 'output')
@@ -25,13 +27,10 @@ const transitCountsPath = join(outDir, 'transit-stop-counts.json')
 const highwayPath = join(outDir, 'highway-access.json')
 const terrainPath = join(outDir, 'terrain-flatness.json')
 const demographicsPath = join(outDir, 'gemeinde-demographics.json')
-const statsMsgpackPath = join(outDir, 'viewer', 'stats-core.msgpack')
+// The export itself, not the viewer's copy: that one is from the previous build.
+const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
-const cacheZipPath = '/tmp/Zensus2022_Bevoelkerungszahl.zip'
-
-require('./output/viewer/statsMsgpack.js')
-// @ts-expect-error StatsPack is global
-const StatsPack = globalThis.StatsPack
+const cacheZipPath = downloadCachePath('Zensus2022_Bevoelkerungszahl.zip')
 
 function extractZipEntry(zip: Buffer, entryName: string) {
   const EOCD_SIGNATURE = 0x06054b50
@@ -232,7 +231,7 @@ async function main() {
   await client.connect()
   await client.query('SET statement_timeout = 0')
 
-  const features = StatsPack.decodeRegionFeatures(readFileSync(statsMsgpackPath)) as Array<{
+  const features = decodeStatsRegionPack(readFileSync(statsMsgpackPath)) as unknown as Array<{
     properties: {
       id: string
       name: string
@@ -275,6 +274,7 @@ async function main() {
     >
   }
   const terrainById = terrainData.byId ?? {}
+  const { byId: _terrainRows, ...terrainSource } = terrainData
 
   // Group child Gemeinden by landkreis_id and bundesland_id
   const gemsByLkId = new Map<string, typeof features>()
@@ -318,7 +318,7 @@ async function main() {
     }
     if (
       String(f.properties?.level) === '4' &&
-      ['relation/62422', 'relation/62782', 'relation/62559'].includes(f.properties.id)
+      ['relation/62422', 'relation/62782', 'relation/62718'].includes(f.properties.id)
     ) {
       targetCityIds.push(f.properties.id)
     }
@@ -417,7 +417,7 @@ async function main() {
 
   // Aggregate for Bundesländer (excluding Stadtstaaten which were already queried directly)
   for (const blId of gemsByBlId.keys()) {
-    if (['relation/62422', 'relation/62782', 'relation/62559'].includes(blId)) continue
+    if (['relation/62422', 'relation/62782', 'relation/62718'].includes(blId)) continue
     const gems = gemsByBlId.get(blId) ?? []
     let sumPop = 0
     let sumDistSt = 0
@@ -566,7 +566,7 @@ async function main() {
 
   // Aggregate terrain for Bundesländer (excluding Stadtstaaten)
   for (const blId of gemsByBlId.keys()) {
-    if (['relation/62422', 'relation/62782', 'relation/62559'].includes(blId)) continue
+    if (['relation/62422', 'relation/62782', 'relation/62718'].includes(blId)) continue
     const gems = gemsByBlId.get(blId) ?? []
     let sumArea = 0
     let sumRoad = 0
@@ -618,11 +618,19 @@ async function main() {
 
   // Write updated files
   process.stdout.write('Writing updated JSON files...\n')
-  writeFileSync(transitCountsPath, JSON.stringify(transitData))
-  writeFileSync(highwayPath, JSON.stringify(highwayData))
-  writeFileSync(
+  // Keep each file's upstream fetchedAt; aggregatedAt records this run.
+  writeDataset(transitCountsPath, transitData as Record<string, unknown>, {
+    minCount: 10_000,
+    stamp: 'aggregatedAt',
+  })
+  writeDataset(highwayPath, highwayData as Record<string, unknown>, {
+    minCount: 10_000,
+    stamp: 'aggregatedAt',
+  })
+  writeDataset(
     terrainPath,
-    JSON.stringify({ fetchedAt: new Date().toISOString(), byId: terrainById }),
+    { ...terrainSource, byId: terrainById },
+    { minCount: 10_000, stamp: 'aggregatedAt' },
   )
 
   process.stdout.write('Done! Updated transit-stop-counts, highway-access, and terrain-flatness.\n')

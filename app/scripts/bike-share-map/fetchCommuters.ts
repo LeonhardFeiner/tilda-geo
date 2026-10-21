@@ -24,10 +24,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as XLSX from 'xlsx'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 export const BA_COMMUTER_2025_XLSX_URL =
   'https://statistik.arbeitsagentur.de/Statistikdaten/Detail/202506/iiia6/beschaeftigung-sozbe-gemband/gemband-dlk-0-202506-xlsx.xlsx?__blob=publicationFile&v=1'
-const CACHE_XLSX_PATH = '/tmp/gemband-dlk-0-202506-xlsx.xlsx'
+const CACHE_XLSX_PATH = downloadCachePath('gemband-dlk-0-202506-xlsx.xlsx')
 
 export type CommuterMetrics = {
   employedAtResidence?: number
@@ -239,9 +240,8 @@ if (import.meta.main) {
   }
 
   // Populate byId using stats.msgpack
-  const statsMsgpackPath = existsSync(join(outDir, 'viewer', 'stats-core.msgpack'))
-    ? join(outDir, 'viewer', 'stats-core.msgpack')
-    : join(outDir, 'stats.msgpack')
+  // The export itself, not the viewer's copy: that one is from the previous build.
+  const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   if (existsSync(statsMsgpackPath)) {
     const { decode } = await import('@msgpack/msgpack')
@@ -262,8 +262,11 @@ if (import.meta.main) {
         const ags = rs.slice(0, 5) + rs.slice(9, 12)
         metrics = byCode[ags]
       } else if (level === '6' && rs.length >= 5) {
+        // The BA sheet lists Landkreise by their 5-digit code but kreisfreie Städte only as a
+        // Gemeinde (8-digit AGS, e.g. 09162000 for München), so fall back to that.
         const kreisCode = rs.slice(0, 5)
-        metrics = byCode[kreisCode]
+        metrics =
+          byCode[kreisCode] ?? (rs.length === 12 ? byCode[kreisCode + rs.slice(9, 12)] : undefined)
       } else if (level === '4' && rs.length >= 2) {
         const landCode = rs.slice(0, 2)
         metrics = byCode[landCode]
@@ -276,15 +279,15 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
+    {
       source:
         'Bundesagentur für Arbeit (BA) – Gemeindedaten der sozialversicherungspflichtig Beschäftigten nach Wohn- und Arbeitsort (Stichtag 30.06.2025)',
-      fetchedAt: new Date().toISOString(),
       byCode,
       byId,
-    }),
+    },
+    { minCount: 10_000 },
   )
   process.stdout.write(
     `Wrote ${outPath}: ${Object.keys(byCode).length} codes, ${Object.keys(byId).length} mapped region IDs\n`,

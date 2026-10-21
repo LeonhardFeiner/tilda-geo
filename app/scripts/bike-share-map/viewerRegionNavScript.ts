@@ -528,11 +528,11 @@ export function viewerRegionNavScript() {
       return 9;
     }
 
-    function viewLabelForCurrentMode() {
+    function viewLabelForCurrentMode(opts) {
       if (isNeighborView()) {
         return SimpleView.simplePresetLabel(neighborPreset, neighborFocus, regionIndex);
       }
-      return RegionNav.viewLabel(currentViewScope, regionIndex);
+      return RegionNav.viewLabel(currentViewScope, regionIndex, opts);
     }
 
     function viewShowsGemeindenLevelForCurrentView() {

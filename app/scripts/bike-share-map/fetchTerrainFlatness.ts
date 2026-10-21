@@ -30,13 +30,14 @@
  * Needs local Postgres with `public.aggregated_lengths` and `public.roads` populated, and
  * network access to the tile bucket (~1,100 small PNGs at TILE_ZOOM=10 for all of Germany).
  */
-import { mkdirSync, writeFileSync } from 'node:fs'
+import { mkdirSync } from 'node:fs'
 import { join } from 'node:path'
 import { bbox as bboxFn, booleanPointInPolygon, point } from '@turf/turf'
 import type { MultiPolygon, Polygon } from 'geojson'
 import { Client } from 'pg'
 import sharp from 'sharp'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
+import { writeDataset } from './fetchCommon'
 
 const outDir = join(import.meta.dir, 'output')
 const outPath = join(outDir, 'terrain-flatness.json')
@@ -339,7 +340,11 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(outPath, JSON.stringify({ fetchedAt: new Date().toISOString(), byId }))
+  writeDataset(
+    outPath,
+    { source: 'Mapzen/AWS Terrain Tiles (SRTM, EU-DEM) sampled along TILDA roads', byId },
+    { minCount: 10_000 },
+  )
   process.stdout.write(
     `${outPath} (${Object.keys(areaById).length} area, ${Object.keys(roadById).length} road, ` +
       `${regions.length} Gemeinden total, ${roadPoints.length} road sample points)\n`,

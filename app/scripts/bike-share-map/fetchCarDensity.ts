@@ -15,15 +15,18 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
+import { downloadCachePath, writeDataset } from './fetchCommon'
 
 export const KBA_FZ3_URL =
   'https://www.kba.de/SharedDocs/Downloads/DE/Statistik/Fahrzeuge/FZ3/fz3_2024.xlsx?__blob=publicationFile'
-const CACHE_XLSX_PATH = '/tmp/fz3_2024.xlsx'
+const CACHE_XLSX_PATH = downloadCachePath('fz3_2024.xlsx')
 
 export type CarDensityMetrics = {
   cars: number
   commercialCars?: number
   carsPer1000?: number
+  /** Residents the rate is based on (Destatis); lets the viewer skip tiny denominators. */
+  population?: number
   commercialSharePct?: number
 }
 
@@ -155,9 +158,8 @@ if (import.meta.main) {
   }
 
   // Load stats.msgpack or stats-core.msgpack for region ID mappings
-  const statsMsgpackPath = existsSync(join(outDir, 'viewer', 'stats-core.msgpack'))
-    ? join(outDir, 'viewer', 'stats-core.msgpack')
-    : join(outDir, 'stats.msgpack')
+  // The export itself, not the viewer's copy: that one is from the previous build.
+  const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   const byId: Record<string, CarDensityMetrics> = {}
   const byCode: Record<string, CarDensityMetrics> = {}
@@ -198,6 +200,7 @@ if (import.meta.main) {
             commercialCars: kba.commercialCars,
             carsPer1000,
             commercialSharePct,
+            population: pop,
           }
           byId[id] = entry
           byCode[ags] = entry
@@ -217,6 +220,7 @@ if (import.meta.main) {
             commercialCars: kba.commercialCars,
             carsPer1000,
             commercialSharePct,
+            population: pop,
           }
           byId[id] = entry
           byCode[kreisCode] = entry
@@ -241,6 +245,7 @@ if (import.meta.main) {
             commercialCars: totalCommercial,
             carsPer1000,
             commercialSharePct,
+            population: totalPop,
           }
           byId[id] = entry
           byCode[landCode] = entry
@@ -250,14 +255,10 @@ if (import.meta.main) {
   }
 
   mkdirSync(outDir, { recursive: true })
-  writeFileSync(
+  writeDataset(
     outPath,
-    JSON.stringify({
-      source: 'Kraftfahrt-Bundesamt (KBA) Reihe FZ 3',
-      fetchedAt: new Date().toISOString(),
-      byCode,
-      byId,
-    }),
+    { source: 'Kraftfahrt-Bundesamt (KBA) Reihe FZ 3', byCode, byId },
+    { minCount: 10_000 },
   )
   process.stdout.write(
     `Wrote ${outPath}: ${Object.keys(byCode).length} KBA code entries, ${Object.keys(byId).length} mapped region IDs\n`,

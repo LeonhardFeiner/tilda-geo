@@ -59,4 +59,10 @@ test-results/
 # OSM extract, parsed network and per-square results stay local.
 scripts/bike-share-map/routing/.venv/
 scripts/bike-share-map/routing/cache/
+scripts/bike-share-map/cache/
+# Optional full GeoJSON export (`export-stats-geojson -- --geojson`, 49 MB) for local analysis;
+# the build reads stats.msgpack.
+scripts/bike-share-map/output/stats.geojson
+# Copied from scripts/bike-share-map/vendor/ by every build.
+scripts/bike-share-map/output/viewer/vendor/
 scripts/bike-share-map/routing/__pycache__/

@@ -20,6 +20,7 @@ import {
   mergeFocusChains,
   rankingShowsAsAlle,
   computeStructuralModelPrediction,
+  rankingBarBounds,
 } from './rankingDisplay'
 
 const items = () => [...Array(30).keys()].map((i) => ({ id: `r${i + 1}` }))
@@ -236,6 +237,38 @@ describe('inPlacePhrase', () => {
 })
 
 describe('computeStructuralModelPrediction', () => {
+  test('gives no prediction while any input is missing (outside the fit domain)', () => {
+    const full = {
+      roadKm: 100,
+      bikeKm: 10,
+      roadSlope: 3,
+      elevMean: 300,
+      density: 200,
+      stDistKm: 3,
+      rent: 6,
+      carsPer1000: 650,
+      livingStreetSharePct: 2,
+    }
+    expect(computeStructuralModelPrediction(full)).not.toBeNull()
+    expect(computeStructuralModelPrediction({ ...full, rent: null })).toBeNull()
+  })
+
+  test('flags a prediction clamped at 0 %', () => {
+    const res = computeStructuralModelPrediction({
+      roadKm: 100,
+      bikeKm: 1,
+      roadSlope: 30,
+      elevMean: 1500,
+      density: 5,
+      stDistKm: 3,
+      rent: 3,
+      carsPer1000: 900,
+      livingStreetSharePct: 0,
+    })
+    expect(res?.expectedPct).toBe(0)
+    expect(res?.clamped).toBe(true)
+  })
+
   const STD = STRUCTURAL_MODEL_CONFIGS.standard
   const PRI = STRUCTURAL_MODEL_CONFIGS.primary
   /** Every predictor at the model's weighted mean, so only the baselines are left. */
@@ -246,7 +279,7 @@ describe('computeStructuralModelPrediction', () => {
     stDistKm: c.means.stDist,
     rent: c.means.rent,
     carsPer1000: c.means.carsPer1000,
-    livingSharePct: c.means.livingSharePct,
+    livingStreetSharePct: c.means.livingStreetSharePct,
   })
   const NDS = 'relation/62771'
   const HESSEN = 'relation/62650'
@@ -319,7 +352,7 @@ describe('computeStructuralModelPrediction', () => {
       ...atMeans(),
       rent: 10.04, // +4 €/m² over mean
       carsPer1000: 500, // lower motorization
-      livingSharePct: 5.0, // higher traffic calming
+      livingStreetSharePct: 6.0, // ~3× the mean share of living streets
     })
     expect(res).not.toBeNull()
     expect(res!.deltaRent).toBeGreaterThan(3.0)
@@ -336,6 +369,9 @@ describe('computeStructuralModelPrediction', () => {
       elevMean: 700, // higher than 267.7m
       density: 100,
       stDistKm: 5.0,
+      rent: STD.means.rent,
+      carsPer1000: STD.means.carsPer1000,
+      livingStreetSharePct: STD.means.livingStreetSharePct,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
@@ -352,6 +388,8 @@ describe('computeStructuralModelPrediction', () => {
       density: 3000,
       stDistKm: 1.0,
       rent: 9.0,
+      carsPer1000: STD.means.carsPer1000,
+      livingStreetSharePct: STD.means.livingStreetSharePct,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
@@ -452,7 +490,7 @@ describe('aggregateStructuralPredictions', () => {
       stDistKm: 4,
       rent,
       carsPer1000: 650,
-      livingSharePct: 2,
+      livingStreetSharePct: 2,
       bundeslandId: 'relation/2145268',
     })!
 
@@ -530,5 +568,12 @@ describe('barFractionFromZero', () => {
     expect(barFractionFromZero(9, 12)).toBeCloseTo(0.75)
     expect(barFractionFromZero(20, 12)).toBe(1)
     expect(barFractionFromZero(5, 0)).toBe(0)
+  })
+})
+
+describe('rankingBarBounds', () => {
+  test('uses the list extremes, so ranks above the colour cap still differ', () => {
+    expect(rankingBarBounds([44.6, 34.9, 12, null, Number.NaN])).toEqual({ max: 44.6, min: 0 })
+    expect(rankingBarBounds([-3, 2.5, -7.25])).toEqual({ max: 2.5, min: -7.25 })
   })
 })

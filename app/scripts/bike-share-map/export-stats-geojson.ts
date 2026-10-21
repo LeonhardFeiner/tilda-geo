@@ -15,6 +15,7 @@ import { fetchPrecomputedRegionNeighbors } from '../stats-export/regionNeighbors
 import { encodeStatsRegionPack } from '../stats-export/statsRegionPack'
 import { buildRegionIndex } from './regionNavigation'
 import { encodeNeighborsPack } from './regionNeighbors'
+import { regionExclusionReason, regionalschluesselFor } from './regionScope'
 import { MAIN_ROAD_CLASS, roadClassForKey } from './statsClassSums'
 
 const outDir = join(import.meta.dir, 'output')
@@ -100,15 +101,22 @@ const [rows, geoms, osmDataFrom] = await Promise.all([
 
 const geometryById = new Map(geoms.map((g) => [g.id, g.geometry]))
 
+const excluded: string[] = []
 const features = rows
   .map((row) => {
     const geometry = geometryById.get(row.id)
     if (!geometry) return null
+    const reason = regionExclusionReason({ ...row, level: row.level ?? '' })
+    if (reason) {
+      excluded.push(`${row.id} ${row.name ?? ''} (level ${row.level}): ${reason}`)
+      return null
+    }
+    const regionalschluessel = regionalschluesselFor({ ...row, level: row.level ?? '' })
     return feature(geometry as Geometry, {
       id: row.id,
       name: row.name ?? '',
       level: row.level ?? '',
-      ...(row.regionalschluessel ? { regionalschluessel: row.regionalschluessel } : {}),
+      ...(regionalschluessel ? { regionalschluessel } : {}),
       ...(row.parent_id ? { parent_id: row.parent_id } : {}),
       ...(row.bundesland_id ? { bundesland_id: row.bundesland_id } : {}),
       ...(row.landkreis_id ? { landkreis_id: row.landkreis_id } : {}),
@@ -125,6 +133,9 @@ const features = rows
   .filter((f) => f != null)
 
 mkdirSync(outDir, { recursive: true })
+process.stdout.write(
+  `Excluded ${excluded.length} non-German or duplicate regions:\n  ${excluded.join('\n  ')}\n`,
+)
 
 const msgpackBytes = encodeStatsRegionPack(features)
 writeFileSync(msgpackPath, msgpackBytes)

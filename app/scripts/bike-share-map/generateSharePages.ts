@@ -1,7 +1,10 @@
 #!/usr/bin/env bun
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
+import { join } from 'node:path'
+import sharp from 'sharp'
 /**
  * Per-region share pages (see sharePages.ts for the text/HTML/SVG logic). Reads
- * output/stats.geojson (already produced by export-stats-geojson.ts) and, for every
+ * output/stats.msgpack (already produced by export-stats-geojson.ts) and, for every
  * Gemeinde/Landkreis/Bundesland that has at least one comparable peer, writes:
  *   output/viewer/r/<slug>.html  – OG-tagged stub that redirects into the live viewer
  *   output/viewer/r/<slug>.png   – rendered Open Graph card (only within SHARE_PAGE_OG_IMAGE_BUNDESLAENDER;
@@ -9,9 +12,7 @@
  * Run standalone via `bun run bike-share-map:share-pages`, or automatically at the end of
  * `bike-share-map:viewer`.
  */
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
-import sharp from 'sharp'
+import { decodeStatsRegionPack } from '../stats-export/statsRegionPack'
 import { SHARE_PAGE_BASE_URL, SHARE_PAGE_OG_IMAGE_BUNDESLAENDER } from './constants'
 import { readDataDateLabel } from './dataDate'
 import {
@@ -35,7 +36,7 @@ import {
 
 const scriptDir = import.meta.dir
 const outDir = join(scriptDir, 'output')
-const geojsonPath = join(outDir, 'stats.geojson')
+const packPath = join(outDir, 'stats.msgpack')
 const demographicsPath = join(outDir, 'gemeinde-demographics.json')
 const shareDir = join(outDir, 'viewer', 'r')
 
@@ -44,14 +45,13 @@ type StatsFeature = {
 }
 
 async function loadFeatures(): Promise<StatsFeature[]> {
-  if (!existsSync(geojsonPath)) {
+  if (!existsSync(packPath)) {
     process.stderr.write(
-      `Skipping share pages: ${geojsonPath} missing – run bike-share-map:export-stats-geojson first.\n`,
+      `Skipping share pages: ${packPath} missing – run bike-share-map:export-stats-geojson first.\n`,
     )
     return []
   }
-  const raw = JSON.parse(await Bun.file(geojsonPath).text()) as { features?: StatsFeature[] }
-  return raw.features ?? []
+  return decodeStatsRegionPack(new Uint8Array(await Bun.file(packPath).arrayBuffer()))
 }
 
 /** RS → population/urbanization from fetchGemeindeDemographics.ts; absent if not fetched yet. */

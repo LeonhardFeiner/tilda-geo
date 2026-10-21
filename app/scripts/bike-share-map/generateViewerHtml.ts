@@ -25,10 +25,16 @@ import {
 } from './statsClassSums'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
 
-// Bottom-sheet ("phone") layout: narrow screens, and short ones too — a phone held sideways is
-// wide but too low for the side panel. DESKTOP_MEDIA is the exact complement.
-const PHONE_MEDIA = '(max-width: 768px), (max-height: 500px)'
-const DESKTOP_MEDIA = '(min-width: 769px) and (min-height: 501px)'
+// Bottom-sheet ("phone") layout: narrow screens, short ones (a phone held sideways is wide but
+// too low for the side panel), and touch tablets up to 1024 px, where the 400 px panel plus the
+// 460 px card left almost no map. DESKTOP_MEDIA is the exact complement (pointer is one of
+// none / coarse / fine).
+const PHONE_MEDIA =
+  '(max-width: 768px), (max-height: 500px), (max-width: 1024px) and (pointer: coarse)'
+const DESKTOP_MEDIA =
+  '(min-width: 1025px) and (min-height: 501px), ' +
+  '(min-width: 769px) and (min-height: 501px) and (pointer: fine), ' +
+  '(min-width: 769px) and (min-height: 501px) and (pointer: none)'
 
 export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   const basemapStyles = Object.fromEntries(
@@ -47,8 +53,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     year: 'numeric',
   })
 
+  // Appended to every same-origin asset URL. GitHub Pages lets browsers cache for 10 minutes, so
+  // without it a page loaded just before a deploy could combine an old index.html with new data.
+  const assetVersion = generatedAt.replace(/\D/g, '').slice(0, 14) || '0'
+  const v = (url: string) => `${url}?v=${assetVersion}`
+
   const config = {
     generatedAt,
+    dataDateLabel,
+    assetVersion,
     basemap: DEFAULT_BASEMAP,
     basemapStyles,
     basemapOptions: BASEMAP_OPTIONS.map((b) => ({
@@ -58,25 +71,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     })),
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
-    statsMsgpackUrl: './stats-core.msgpack',
-    statsExtraMsgpackUrl: './stats-extra.msgpack',
+    statsMsgpackUrl: v('./stats-core.msgpack'),
+    statsExtraMsgpackUrl: v('./stats-extra.msgpack'),
     gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
-    lazyDarstellungPresenceUrl: './lazy-darstellung-presence.json',
-    statsUrl: './stats.geojson',
-    neighborsMsgpackUrl: './neighbors.msgpack',
-    neighborsUrl: './neighbors.json',
-    manifestUrl: './manifest.json',
-    peersUrl: './gemeinde-peers.json',
-    densityUrl: './gemeinde-density.json',
-    transitUrl: './gemeinde-transit.json',
-    terrainUrl: './gemeinde-terrain.json',
-    zensusUrl: './gemeinde-zensus.json',
-    carsUrl: './gemeinde-cars.json',
-    calmedUrl: './gemeinde-calmed.json',
-    accidentsUrl: './gemeinde-accidents.json',
-    commutersUrl: './gemeinde-commuters.json',
-    mappingUrl: './gemeinde-mapping.json',
-    trafficUrl: './gemeinde-traffic.json',
+    lazyDarstellungPresenceUrl: v('./lazy-darstellung-presence.json'),
+    neighborsMsgpackUrl: v('./neighbors.msgpack'),
+    neighborsUrl: v('./neighbors.json'),
+    manifestUrl: v('./manifest.json'),
+    peersUrl: v('./gemeinde-peers.json'),
+    densityUrl: v('./gemeinde-density.json'),
+    transitUrl: v('./gemeinde-transit.json'),
+    terrainUrl: v('./gemeinde-terrain.json'),
+    zensusUrl: v('./gemeinde-zensus.json'),
+    carsUrl: v('./gemeinde-cars.json'),
+    calmedUrl: v('./gemeinde-calmed.json'),
+    accidentsUrl: v('./gemeinde-accidents.json'),
+    commutersUrl: v('./gemeinde-commuters.json'),
+    mappingUrl: v('./gemeinde-mapping.json'),
+    trafficUrl: v('./gemeinde-traffic.json'),
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -107,16 +119,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
-  <meta name="theme-color" content="#1e293b" />
+  <meta name="theme-color" content="#ffffff" />
+  <script>
+    // Text size is a per-browser convenience (Einstellungen › Schriftgröße). Applied before the
+    // first paint; page zoom stays off because pinches on the panel zoom the map instead.
+    try {
+      const size = localStorage.getItem('radinfra-text-size');
+      if (size === '115' || size === '130') document.documentElement.style.fontSize = size + '%';
+    } catch (e) {}
+  </script>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚲</text></svg>" />
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
        browser only discovers it once the inline controller script runs, after every script tag
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" as="script" crossorigin="anonymous" />
-  <link rel="preconnect" href="https://unpkg.com" crossorigin />
+  <link rel="preload" href="./stats-core.msgpack?v=${assetVersion}" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -145,7 +164,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
   <meta name="twitter:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
-  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; }
     html, body { margin: 0; height: 100%; font-family: system-ui, sans-serif; }
@@ -159,23 +178,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       padding: 12px 14px; border-radius: 8px;
       background: rgba(255, 255, 255, 0.95);
       box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
-      font-size: 14px; line-height: 1.45;
+      font-size: 0.875rem; line-height: 1.45;
       touch-action: pan-y;
     }
     .panel > summary {
       display: flex; align-items: center; justify-content: space-between; gap: 10px;
       cursor: pointer; list-style: none; user-select: none;
-      font-size: 15px; font-weight: 600; color: #222; margin: 0 0 10px;
+      font-size: 0.9375rem; font-weight: 600; color: #222; margin: 0 0 10px;
     }
     .panel > summary::-webkit-details-marker { display: none; }
     .panel > summary::after {
-      content: '▼'; flex-shrink: 0; font-size: 10px; color: #475569;
+      content: '▼'; flex-shrink: 0; font-size: 0.75rem; color: #475569;
       transition: transform 0.15s ease;
     }
     .panel:not([open]) > summary { margin-bottom: 0; }
     .panel:not([open]) > summary::after { transform: rotate(-90deg); }
     .panel-summary-preview {
-      flex: 1; min-width: 0; font-size: 11px; font-weight: normal; color: #475569;
+      flex: 1; min-width: 0; font-size: 0.75rem; font-weight: normal; color: #475569;
       text-align: right; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .panel-body { margin: 0; }
@@ -190,7 +209,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         height: 30px; padding: 0 10px;
         border: none; border-radius: 4px;
         background: #fff; color: #333; cursor: pointer;
-        font: inherit; font-size: 12px; font-weight: 600;
+        font: inherit; font-size: 0.75rem; font-weight: 600;
         box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
       }
       #share-fab svg { width: 16px; height: 16px; fill: currentColor; flex: none; }
@@ -246,12 +265,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         border-radius: 999px; background: #d2d2d2;
       }
       .panel > summary::after { display: none; }
-      .panel-summary-preview { font-size: 12px; }
+      .panel-summary-preview { font-size: 0.75rem; }
       .panel-body { padding-bottom: 8px; }
       /* Peek shows the title row only — the body would otherwise be sliced mid-line. */
       body[data-sheet="peek"] .panel-body { visibility: hidden; }
-      /* The region card below already leads with the name and percentage. */
-      body[data-region-detail] .panel-summary-preview { visibility: hidden; }
+      /* The region card below already leads with the name and percentage — except in peek,
+         where the card is out of sight and the preview is all that says what is selected. */
+      body[data-region-detail]:not([data-sheet="peek"]) .panel-summary-preview { visibility: hidden; }
 
       /* Primary sections are permanently open on the phone (see lockOpenSectionsForViewport). */
       .panel-section[data-lock-open] > summary {
@@ -286,7 +306,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       #region-detail-mount .region-detail-close::before {
         content: '‹ Zurück zur Karte';
-        font-size: 13px; font-weight: 600;
+        font-size: 0.8125rem; font-weight: 600;
       }
       #region-detail-mount .region-detail-header { padding-right: 0; }
 
@@ -314,7 +334,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         min-height: 44px; height: 44px; padding: 0 14px;
         border: none; border-radius: 999px;
         background: #fff; color: #444; cursor: pointer;
-        font: inherit; font-size: 15px; text-align: left;
+        font: inherit; font-size: 0.9375rem; text-align: left;
         box-shadow: 0 1px 6px rgba(0, 0, 0, 0.25);
       }
       #search-fab svg { flex: none; width: 20px; height: 20px; fill: #1565c0; }
@@ -323,7 +343,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       /* With nothing selected the half sheet shows the real search field — one is enough. */
       body[data-sheet="half"]:not([data-region-detail]) #search-fab { display: none; }
       .exit-neighbor-view {
-        top: calc(62px + env(safe-area-inset-top, 0px)); font-size: 12px; padding: 6px 14px;
+        top: calc(62px + env(safe-area-inset-top, 0px)); font-size: 0.75rem; padding: 6px 14px;
       }
       body[data-sheet="full"] .exit-neighbor-view {
         display: none !important;
@@ -331,6 +351,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       .region-search-results {
         max-height: min(220px, calc(100dvh - 320px));
       }
+      /* The sheet's sticky header (title + handle) is ~4.5rem tall. */
+      .region-search-block { scroll-margin-top: 5rem; }
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-in,
       .maplibregl-ctrl-group > .maplibregl-ctrl-zoom-out { display: none; }
       #copy-view-link-feedback {
@@ -341,16 +363,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.24);
       }
     }
-    .panel label { display: block; font-size: 13px; margin: 8px 0 4px; font-weight: 600; }
+    .panel label { display: block; font-size: 0.8125rem; margin: 8px 0 4px; font-weight: 600; }
     /* Field labels in the panel read as quiet captions, like "Gebiet suchen". */
     .region-nav > label, .settings-group > label {
-      font-size: 12px; font-weight: 600; color: #555; margin: 8px 0 3px;
+      font-size: 0.75rem; font-weight: 600; color: #555; margin: 8px 0 3px;
     }
     .panel label[hidden], .panel select[hidden] { display: none !important; }
-    .panel select { width: 100%; font-size: 13px; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
+    .panel select { width: 100%; font-size: 0.8125rem; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
-    .hint { font-size: 11px; color: #475569; margin-top: 4px; }
+    .hint { font-size: 0.75rem; color: #475569; margin-top: 4px; }
     .panel-section {
       border-top: 1px solid #e8e8e8;
       margin: 0;
@@ -359,7 +381,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: list-item;
       list-style-position: inside;
       cursor: pointer;
-      font-size: 13px;
+      font-size: 0.8125rem;
       font-weight: 600;
       color: #333;
       user-select: none;
@@ -372,36 +394,36 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .map-legend-section .map-legend { padding: 0; }
     .counting-state {
       display: flex; align-items: center; justify-content: space-between; gap: 8px;
-      margin: 0 0 6px; font-size: 13px; font-weight: 600; color: #333;
+      margin: 0 0 6px; font-size: 0.8125rem; font-weight: 600; color: #333;
     }
     .counting-state--custom #counting-state-label { color: #8a4b00; }
     #counting-reset {
-      font: inherit; font-size: 12px; font-weight: 600; padding: 3px 10px; cursor: pointer;
+      font: inherit; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; cursor: pointer;
       border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
     }
     #counting-reset[hidden] { display: none !important; }
     #counting-reset:hover { background: #f2f6fb; }
     .counting-group { border-top: 1px solid #eee; }
     .counting-group > summary {
-      cursor: pointer; padding: 6px 0; font-size: 12px; font-weight: 600; color: #333;
+      cursor: pointer; padding: 6px 0; font-size: 0.75rem; font-weight: 600; color: #333;
     }
     .counting-count { font-weight: 400; color: #475569; margin-left: 4px; }
     .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
     .settings-group + .settings-group { margin-top: 12px; padding-top: 10px; border-top: 1px solid #eee; }
-    .settings-heading { margin: 0 0 6px; font-size: 13px; font-weight: 700; color: #222; }
-    .metric-definition { margin: 0 0 6px; font-size: 11px; line-height: 1.45; color: #555; }
+    .settings-heading { margin: 0 0 6px; font-size: 0.8125rem; font-weight: 700; color: #222; }
+    .metric-definition { margin: 0 0 6px; font-size: 0.75rem; line-height: 1.45; color: #555; }
     .metric-definition a { color: #1565c0; text-decoration: none; white-space: nowrap; }
     .metric-definition a:hover { text-decoration: underline; }
     .class-filters { margin: 8px 0; }
-    .class-filters strong { display: block; font-size: 12px; margin-bottom: 4px; }
+    .class-filters strong { display: block; font-size: 0.75rem; margin-bottom: 4px; }
     .class-filters label {
       display: flex; align-items: flex-start; gap: 6px;
-      font-size: 12px; font-weight: normal; margin: 3px 0; cursor: pointer;
+      font-size: 0.75rem; font-weight: normal; margin: 3px 0; cursor: pointer;
     }
     #copy-view-link-feedback {
       position: fixed; z-index: 6;
       top: 50px; right: 50px;
-      padding: 6px 12px; font-size: 12px; font-weight: 500;
+      padding: 6px 12px; font-size: 0.75rem; font-weight: 500;
       color: #2e7d32; background: #fff;
       border-radius: 6px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     }
@@ -412,10 +434,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .scale-cap-controls label {
       display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: normal; margin: 4px 0; cursor: pointer;
+      font-size: 0.75rem; font-weight: normal; margin: 4px 0; cursor: pointer;
     }
     .scale-cap-value {
-      display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 12px;
+      display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.75rem;
     }
     .scale-cap-value input[type="number"] {
       width: 4.5em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
@@ -426,13 +448,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       margin: 10px 0 4px; padding-top: 8px; border-top: 1px solid #e8e8e8;
     }
     .overlay-section-title {
-      display: block; font-size: 12px; font-weight: 600; color: #444; margin-bottom: 2px;
+      display: block; font-size: 0.75rem; font-weight: 600; color: #444; margin-bottom: 2px;
     }
     .overlay-color-row {
       display: flex; align-items: center; gap: 10px; margin: 6px 0;
     }
     .overlay-color-row label {
-      flex: 1; font-size: 12px; font-weight: normal; margin: 0;
+      flex: 1; font-size: 0.75rem; font-weight: normal; margin: 0;
     }
     .overlay-color-row input[type="color"] {
       width: 2.75rem; height: 1.75rem; padding: 2px; border: 1px solid #ccc;
@@ -444,14 +466,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: flex; align-items: center; gap: 10px; margin: 4px 0 0;
     }
     .overlay-minzoom-row label {
-      flex: 1; font-size: 12px; font-weight: normal; margin: 0;
+      flex: 1; font-size: 0.75rem; font-weight: normal; margin: 0;
     }
     .overlay-minzoom-row input[type="number"] {
       width: 4em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
     }
     .overlay-layer-hint { margin: 2px 0 0; }
     .choropleth-legend { margin: 0; }
-    .choropleth-legend-title { font-size: 12px; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
+    .choropleth-legend-title { font-size: 0.75rem; font-weight: 600; color: #444; display: block; margin-bottom: 4px; }
     .legend-bar { height: 10px; border-radius: 3px; margin: 4px 0 0; }
     /* Tick labels sit at their value's own position on the bar, so a mid-tone can be read off
        the scale instead of only the two ends. */
@@ -459,7 +481,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .legend-ticks span { position: absolute; top: 0; width: 1px; height: 4px; background: #b5b5b5; }
     .legend-labels {
       position: relative; height: 15px;
-      font-size: 11px; color: #555; line-height: 1.25;
+      font-size: 0.75rem; color: #555; line-height: 1.25;
     }
     .legend-labels span { position: absolute; top: 0; white-space: nowrap; transform: translateX(-50%); }
     .legend-labels span.legend-label--start { left: 0; transform: none; }
@@ -473,19 +495,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .map-legend-toggles label {
       display: flex; align-items: center; gap: 6px;
-      font-size: 12px; font-weight: normal; margin: 0; cursor: pointer;
+      font-size: 0.75rem; font-weight: normal; margin: 0; cursor: pointer;
     }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
     .ranking { padding-top: 0; }
-    .ranking-hint { font-weight: normal; font-size: 11px; color: #475569; }
+    .ranking-hint { font-weight: normal; font-size: 0.75rem; color: #475569; }
     .ranking-list {
       margin: 0; padding: 0;
-      font-size: 12px; line-height: 1.45; color: #444;
+      font-size: 0.75rem; line-height: 1.45; color: #444;
       list-style: none;
     }
     .ranking-list li {
       display: grid;
-      grid-template-columns: 1.6em minmax(0, 1fr) minmax(44px, 72px) minmax(4.6em, 6.4em);
+      grid-template-columns: 2.4em minmax(0, 1fr) minmax(44px, 72px) minmax(4.6em, 6.4em);
       gap: 2px 6px;
       align-items: center;
       margin: 3px 0;
@@ -518,12 +540,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .ranking-list li.ranking-row-container .ranking-name { font-weight: 600; color: #1565c0; }
     .ranking-focus-note {
-      grid-column: 2 / -1; font-size: 11px; color: #1565c0; line-height: 1.3;
+      grid-column: 2 / -1; font-size: 0.75rem; color: #1565c0; line-height: 1.3;
     }
-    .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 11px; }
+    .ranking-rank { color: #475569; font-variant-numeric: tabular-nums; font-size: 0.75rem; }
     .ranking-name {
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      font-size: 13px;
+      font-size: 0.8125rem;
     }
     .ranking-bar-track {
       height: 10px; background: #eceff1; border-radius: 2px; overflow: hidden; position: relative;
@@ -540,13 +562,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .ranking-bar-fill { position: absolute; height: 100%; border-radius: 2px; }
     .ranking-pct {
-      text-align: right; font-variant-numeric: tabular-nums; font-size: 12px; color: #444;
+      text-align: right; font-variant-numeric: tabular-nums; font-size: 0.75rem; color: #444;
       white-space: nowrap;
     }
     .ranking-list .ranking-more,
     .ranking-list .ranking-divider {
       display: block; grid-column: 1 / -1;
-      color: #475569; font-style: italic; font-size: 11px; padding: 2px 0;
+      color: #475569; font-style: italic; font-size: 0.75rem; padding: 2px 0;
     }
     .ranking-divider { text-align: center; font-style: normal; color: #aaa; }
     .ranking-toolbar {
@@ -558,7 +580,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .ranking-mode[hidden] { display: none; }
     .ranking-mode-btn {
-      font-size: 12px; padding: 5px 10px; border: none; background: #f5f5f5;
+      font-size: 0.75rem; padding: 5px 10px; border: none; background: #f5f5f5;
       color: #444; cursor: pointer;
     }
     .ranking-mode-btn:hover { background: #ebebeb; }
@@ -567,7 +589,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .view-csv-row { margin-top: 6px; }
     .view-csv-btn {
-      font-size: 12px; padding: 5px 10px;
+      font-size: 0.75rem; padding: 5px 10px;
     }
     .ranking-csv-actions {
       display: flex;
@@ -596,26 +618,26 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       overflow: visible;
     }
     .view-meta {
-      font-size: 11px; color: #475569; margin: 0; line-height: 1.45;
+      font-size: 0.75rem; color: #475569; margin: 0; line-height: 1.45;
     }
     .view-meta-more > summary {
-      cursor: pointer; font-size: 11px; color: #1565c0; margin-top: 2px;
+      cursor: pointer; font-size: 0.75rem; color: #1565c0; margin-top: 2px;
     }
     .view-meta-more[hidden] { display: none !important; }
     .national-context {
-      font-size: 12px; font-weight: 600; color: #333;
+      font-size: 0.75rem; font-weight: 600; color: #333;
       margin: 6px 0 0; line-height: 1.4;
     }
     .national-context[hidden] { display: none !important; }
     .footer {
-      font-size: 11px; color: #475569; margin-top: 6px; padding-top: 6px;
+      font-size: 0.75rem; color: #475569; margin-top: 6px; padding-top: 6px;
       border-top: 1px solid #eee; line-height: 1.55;
     }
     .footer a { color: #1565c0; text-decoration: none; }
     .footer a:hover { text-decoration: underline; }
     #tooltip {
       position: absolute; z-index: 3; pointer-events: none; display: none;
-      padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.85); color: #fff; font-size: 12px; max-width: 320px;
+      padding: 6px 8px; border-radius: 4px; background: rgba(0,0,0,0.85); color: #fff; font-size: 0.75rem; max-width: 320px;
       white-space: pre-line;
     }
     .region-detail {
@@ -628,7 +650,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       border-radius: 8px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
       padding: 10px 12px 12px;
-      font-size: 12px;
+      font-size: 0.75rem;
       color: #333;
       touch-action: pan-y;
     }
@@ -647,13 +669,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       margin-bottom: 8px; padding-right: 24px;
     }
     .region-detail-header h2 {
-      margin: 0; font-size: 14px; line-height: 1.3; color: #111;
+      margin: 0; font-size: 0.875rem; line-height: 1.3; color: #111;
     }
     .region-detail-close {
       position: absolute; top: 6px; right: 8px;
       width: 32px; height: 32px;
       display: flex; align-items: center; justify-content: center;
-      border: none; background: transparent; font-size: 20px; line-height: 1;
+      border: none; background: transparent; font-size: 1.25rem; line-height: 1;
       color: #475569; cursor: pointer; padding: 0;
     }
     .region-detail-close::after {
@@ -663,29 +685,29 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .region-detail-close:hover { color: #111; }
     .region-detail-meta { margin: 0 0 10px; color: #555; line-height: 1.45; }
-    .region-detail-pct { font-size: 28px; font-weight: 800; line-height: 1.1; color: #111; }
-    .region-detail-pct-label { font-size: 13px; color: #333; }
+    .region-detail-pct { font-size: 1.75rem; font-weight: 800; line-height: 1.1; color: #111; }
+    .region-detail-pct-label { font-size: 0.8125rem; color: #333; }
     .region-detail-rank { display: block; margin-top: 2px; font-weight: 600; color: #333; }
-    .region-detail-km { display: block; font-size: 12px; }
-    .region-detail-main-road { display: block; margin-top: 4px; font-size: 13px; color: #333; }
-    .region-detail-main-road strong { font-size: 16px; color: #111; }
-    .region-detail-authority { margin: 0 0 10px; font-size: 12px; color: #333; }
+    .region-detail-km { display: block; font-size: 0.75rem; }
+    .region-detail-main-road { display: block; margin-top: 4px; font-size: 0.8125rem; color: #333; }
+    .region-detail-main-road strong { font-size: 1rem; color: #111; }
+    .region-detail-authority { margin: 0 0 10px; font-size: 0.75rem; color: #333; }
     .region-detail-authority[hidden] { display: none !important; }
     .ra-title { font-weight: 700; margin: 0 0 4px; }
     .ra-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-    .ra-table th { font-size: 10px; font-weight: 600; color: #475569; text-align: right; padding: 2px 0 2px 6px; }
+    .ra-table th { font-size: 0.75rem; font-weight: 600; color: #475569; text-align: right; padding: 2px 0 2px 6px; }
     .ra-table th:first-child, .ra-table td:first-child { text-align: left; padding-left: 0; }
     .ra-table td { text-align: right; padding: 3px 0 3px 6px; border-top: 1px solid #eee; }
     .ra-table td.ra-gap { font-weight: 700; color: #8a1c11; }
-    .ra-note { margin: 4px 0 0; font-size: 10.5px; line-height: 1.4; color: #475569; }
+    .ra-note { margin: 4px 0 0; font-size: 0.75rem; line-height: 1.4; color: #475569; }
     .region-detail-more { margin: 4px 0 0; border-top: 1px solid #e8e8e8; }
     .region-detail-more > summary {
-      cursor: pointer; padding: 8px 0; font-size: 12px; font-weight: 600; color: #1565c0;
+      cursor: pointer; padding: 8px 0; font-size: 0.75rem; font-weight: 600; color: #1565c0;
     }
     .region-detail-more[open] > summary { margin-bottom: 6px; }
     .region-detail-gap {
       margin: 0 0 10px; padding: 8px 10px; border-radius: 6px;
-      font-size: 12px; line-height: 1.45;
+      font-size: 0.75rem; line-height: 1.45;
     }
     .region-detail-gap[hidden] { display: none !important; }
     .region-detail-gap strong { font-weight: 700; }
@@ -710,16 +732,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155;
     }
     .region-detail-gap--model .region-detail-gap-headline {
-      display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
+      display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--model::before {
-      content: 'Struktureller Erwartungswert (Faktoren-Modell)'; display: block;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      content: 'Erwartungswert aus Strukturdaten'; display: block;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
     .model-breakdown-details {
       margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.1);
-      font-size: 11.5px;
+      font-size: 0.75rem;
     }
     .model-breakdown-summary {
       cursor: pointer; font-weight: 600; color: #1565c0; padding: 2px 0; user-select: none;
@@ -727,11 +749,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-detail-gap--behind .model-breakdown-summary { color: #8a1c11; }
     .region-detail-gap--ahead .model-breakdown-summary { color: #1b5e20; }
     .model-breakdown-table {
-      width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px;
+      width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
     }
     .model-breakdown-table th {
-      font-size: 10px; font-weight: 600; color: #475569; text-align: right;
+      font-size: 0.75rem; font-weight: 600; color: #475569; text-align: right;
       padding: 2px 4px; border-bottom: 1px solid #cbd5e1;
     }
     .model-breakdown-table th:first-child { text-align: left; padding-left: 0; }
@@ -739,7 +761,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       padding: 3px 4px; text-align: right; border-top: 1px solid rgba(0, 0, 0, 0.05);
     }
     .model-breakdown-table td:first-child { text-align: left; padding-left: 0; }
-    .model-breakdown-table td small { display: block; font-size: 9.5px; color: #64748b; font-weight: normal; }
+    .model-breakdown-table td small { display: block; font-size: 0.75rem; color: #475569; font-weight: normal; }
     .model-breakdown-table tr.model-row-total td {
       border-top: 1.5px solid #94a3b8; font-weight: 700;
     }
@@ -750,11 +772,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       border-top: 1.5px solid #94a3b8; font-weight: 700;
     }
     .model-breakdown-note {
-      margin: 6px 0 0; font-size: 10px; line-height: 1.35; color: #64748b;
+      margin: 6px 0 0; font-size: 0.75rem; line-height: 1.35; color: #475569;
     }
     .region-detail-quality {
       margin: 0 0 10px; padding: 6px 10px; border-radius: 6px;
-      font-size: 11px; line-height: 1.45; color: #555;
+      font-size: 0.75rem; line-height: 1.45; color: #555;
       background: #f5f5f5; border-left: 3px solid #9e9e9e;
     }
     .region-detail-quality[hidden] { display: none !important; }
@@ -763,13 +785,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
     .region-detail-quality--poor,
     .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
-    .ranking-quality { margin-right: 3px; color: #b45309; font-size: 11px; cursor: help; }
+    .ranking-quality { margin-right: 3px; color: #b45309; font-size: 0.75rem; cursor: help; }
     .region-detail-gap--peer .region-detail-gap-headline {
-      display: block; font-size: 13px; font-weight: 700; margin-bottom: 2px;
+      display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--peer::before {
       content: var(--peer-gap-label, 'Ähnlich große Gemeinden bundesweit'); display: block;
-      font-size: 10px; font-weight: 700; letter-spacing: 0.06em;
+      font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
     .region-detail-role-model {
@@ -779,15 +801,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       padding: 0; border: 0; background: none; cursor: pointer;
       font: inherit; font-weight: 700; color: inherit; text-decoration: underline;
     }
-    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 12px; }
-    .ctx-caption { margin: 0 0 4px; font-size: 10px; letter-spacing: 0.04em; text-transform: uppercase; color: #475569; font-weight: 700; }
+    .region-detail-extra { margin: 0 0 8px; color: #555; font-size: 0.75rem; }
+    .ctx-caption { margin: 0 0 4px; font-size: 0.75rem; letter-spacing: 0.04em; text-transform: uppercase; color: #475569; font-weight: 700; }
     .ctx-scope {
-      font: inherit; font-size: 11px; font-weight: 600; letter-spacing: 0;
+      font: inherit; font-size: 0.75rem; font-weight: 600; letter-spacing: 0;
       text-transform: none; color: #333; padding: 2px 4px; margin: 2px 0 0; display: block;
       border: 1px solid #c8d3e0; border-radius: 4px; background: #fff; width: 100%;
     }
     .ctx-row { padding: 2px 0; cursor: help; }
-    .ctx-hint { margin: 0 0 4px; font-size: 11px; color: #475569; }
+    .ctx-hint { margin: 0 0 4px; font-size: 0.75rem; color: #475569; }
     /* Rows that unfold a scatter: a disclosure arrow and a hover state say they open something. */
     .ctx-row--plot { cursor: pointer; margin: 0 -4px; padding: 3px 4px; border-radius: 4px; }
     .ctx-row--plot:hover { background: #eef3fa; }
@@ -802,9 +824,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet .ctx-row--plot .ctx-label::before { content: none; }
     .ctx-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
     .ctx-label { color: #444; }
-    .ctx-label small { color: #475569; font-size: 10px; }
+    .ctx-label small { color: #475569; font-size: 0.75rem; }
     .ctx-value { font-variant-numeric: tabular-nums; color: #222; text-align: right; }
-    .ctx-band { font-style: normal; font-size: 10px; font-weight: 700; color: #1565c0; margin-left: 6px; white-space: nowrap; }
+    .ctx-band { font-style: normal; font-size: 0.75rem; font-weight: 700; color: #1565c0; margin-left: 6px; white-space: nowrap; }
     .ctx-track {
       position: relative; height: 6px; margin-top: 3px; border-radius: 3px;
       background: linear-gradient(to right, #e6edf5, #cfdcec);
@@ -816,19 +838,19 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .region-detail-extra[hidden] { display: none !important; }
     .ctx-plot { margin: 8px 0 6px; padding-top: 8px; border-top: 1px dashed #ccc; cursor: default; }
-    .ctx-plot-title { font-size: 11px; color: #475569; margin-bottom: 4px; }
+    .ctx-plot-title { font-size: 0.75rem; color: #475569; margin-bottom: 4px; }
     .ctx-plot-chart { width: 100%; }
-    .ctx-plot-chart svg { display: block; font-size: 10px; }
+    .ctx-plot-chart svg { display: block; font-size: 0.75rem; }
     .ctx-plot-chart text { fill: #475569; }
     .ctx-plot-chart .grid { stroke: #e6e6e6; }
     .ctx-plot-chart .axis-title { fill: #333; font-weight: 600; }
     .ctx-plot-chart .dots circle { fill: #1565c0; fill-opacity: var(--dot-opacity, 0.25); }
     .ctx-plot-chart .trend { stroke: #475569; stroke-width: 1.5; stroke-dasharray: 4 3; stroke-linecap: round; opacity: 0.85; }
     .ctx-plot-chart .selected { fill: #e20613; stroke: #fff; stroke-width: 2; }
-    .ctx-plot-chart .selected-label { fill: #e20613; font-size: 11px; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
+    .ctx-plot-chart .selected-label { fill: #e20613; font-size: 0.75rem; font-weight: 700; paint-order: stroke; stroke: #fff; stroke-width: 3; }
     .region-detail-section { margin-top: 8px; }
     .region-detail-section h4 {
-      margin: 0 0 4px; font-size: 11px; font-weight: 600;
+      margin: 0 0 4px; font-size: 0.75rem; font-weight: 600;
       text-transform: uppercase; letter-spacing: 0.02em; color: #475569;
     }
     .region-detail-rows { margin: 0; padding: 0; list-style: none; }
@@ -856,15 +878,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background: #b0bec5 !important; opacity: 0.4;
     }
     .region-detail-excluded-badge {
-      display: inline-block; font-size: 10px; font-weight: 500;
-      color: #64748b; background: #f1f5f9; padding: 0 4px;
+      display: inline-block; font-size: 0.75rem; font-weight: 500;
+      color: #475569; background: #f1f5f9; padding: 0 4px;
       border-radius: 3px; margin-left: 5px; vertical-align: 1px;
     }
     .detail-mode {
       display: inline-flex; margin: 6px 0 0; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
     }
     .detail-mode-btn {
-      font: inherit; font-size: 11px; padding: 3px 9px; border: none; background: #f5f5f5;
+      font: inherit; font-size: 0.75rem; padding: 3px 9px; border: none; background: #f5f5f5;
       color: #444; cursor: pointer;
     }
     .detail-mode-btn:hover { background: #ebebeb; }
@@ -872,16 +894,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     #load-error {
       display: none; margin: 0 0 8px; padding: 8px 10px;
       border: 1px solid #f5c6c0; border-radius: 6px; background: #fdecea;
-      color: #8a1c11; font-size: 12px; line-height: 1.45;
+      color: #8a1c11; font-size: 0.75rem; line-height: 1.45;
     }
     .load-error-retry {
       display: inline-block; margin-top: 6px;
-      font-size: 12px; font-weight: 600; color: #8a1c11;
+      font-size: 0.75rem; font-weight: 600; color: #8a1c11;
       background: #fff; border: 1px solid #e0a9a2; border-radius: 6px;
       padding: 4px 9px; cursor: pointer;
     }
     .load-error-retry:hover { background: #fff5f4; }
-    #load-status { color: #555; font-size: 13px; margin: 0 0 8px; display: none; }
+    #load-status { color: #555; font-size: 0.8125rem; margin: 0 0 8px; display: none; }
     body.ui-minimal #panel-main, body.ui-minimal #search-fab { display: none !important; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
@@ -901,7 +923,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       background-color: rgba(255, 255, 255, 0.9);
       border-color: #555;
       color: #333;
-      font-size: 11px;
+      font-size: 0.75rem;
       font-weight: 600;
       box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
     }
@@ -923,20 +945,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: inline-flex; align-items: center; gap: 4px;
       margin: 8px 0 0; padding: 4px 10px 4px 7px; cursor: pointer;
       border: 1px solid #c5d7ee; border-radius: 999px; background: #f3f8fe;
-      font: inherit; font-size: 12px; font-weight: 600; color: #1565c0;
+      font: inherit; font-size: 0.75rem; font-weight: 600; color: #1565c0;
     }
     .region-locate svg { width: 14px; height: 14px; fill: currentColor; }
     .region-locate:hover { background: #e6f0fc; }
     .region-locate[hidden], .region-locate-status[hidden] { display: none !important; }
-    .region-locate-status { margin: 4px 0 0; font-size: 11px; color: #8a1c11; }
+    .region-locate-status { margin: 4px 0 0; font-size: 0.75rem; color: #8a1c11; }
     .region-search-results li.region-search-empty { cursor: default; color: #475569; }
     .region-search-results li.region-search-empty:hover { background: none; }
-    .region-search-block label { display: block; font-size: 14px; font-weight: 700; color: #222; margin: 4px 0 6px; }
+    .region-search-block label { display: block; font-size: 0.875rem; font-weight: 700; color: #222; margin: 4px 0 6px; }
     #region-search-input {
-      width: 100%; box-sizing: border-box; font-size: 14px; padding: 8px 10px;
+      width: 100%; box-sizing: border-box; font-size: 0.875rem; padding: 8px 10px;
       border-radius: 6px; border: 1.5px solid #1565c0;
     }
-    #region-search-input:focus { outline: 3px solid rgba(21, 101, 192, 0.25); outline-offset: 0; }
+    #region-search-input:focus { outline: 3px solid #1565c0; outline-offset: 1px; }
     .region-search-results {
       position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
       padding: 4px 0; list-style: none;
@@ -948,26 +970,34 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .region-search-results[hidden] { display: none !important; }
     .region-search-results li {
-      padding: 6px 10px; font-size: 13px; cursor: pointer;
+      padding: 6px 10px; font-size: 0.8125rem; cursor: pointer;
     }
     .region-search-results li:hover,
-    .region-search-results li:focus { background: #eef4fc; outline: none; }
-    .region-search-results li .region-search-result-level { color: #475569; font-size: 11px; }
+    .region-search-results li:focus,
+    .region-search-results li[aria-selected="true"] { background: #eef4fc; }
+    .region-search-results li:focus-visible { outline: 2px solid #1565c0; outline-offset: -2px; }
+    .region-search-results li .region-search-result-level { color: #475569; font-size: 0.75rem; }
+    .visually-hidden {
+      position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
+      overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+    }
+    .legend-cvd-toggle { display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 0.75rem; color: #334155; }
+    .legend-data-date { margin-top: 2px; }
     .panel-options { display: flex; flex-direction: column; }
     .region-scope-block[hidden] { display: none !important; }
     .site-title {
-      margin: 0; font-size: 15px; font-weight: 600; color: #222;
+      margin: 0; font-size: 0.9375rem; font-weight: 600; color: #222;
       line-height: 1.3; min-width: 0;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .site-tagline {
-      margin: 0 0 10px; font-size: 12px; line-height: 1.45; color: #555;
+      margin: 0 0 10px; font-size: 0.75rem; line-height: 1.45; color: #555;
     }
     .site-tagline a { color: #1565c0; text-decoration: none; }
     .site-tagline a:hover { text-decoration: underline; }
     .region-detail-view-link {
       margin: 0; padding: 0; border: none;
-      font-size: 11px;
+      font-size: 0.75rem;
     }
     .region-detail-view-link a { color: #1565c0; text-decoration: none; }
     .region-detail-view-link a:hover { text-decoration: underline; }
@@ -977,7 +1007,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .region-breadcrumb {
       display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 4px;
-      margin-bottom: 8px; font-size: 12px; line-height: 1.5;
+      margin-bottom: 8px; font-size: 0.75rem; line-height: 1.5;
     }
     .region-breadcrumb .region-breadcrumb-sep { color: #767676; }
     .region-breadcrumb button {
@@ -990,7 +1020,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-breadcrumb .region-breadcrumb-up { margin-left: auto; color: #555; }
     .region-detail-drill {
       display: inline-flex; align-items: center; gap: 5px;
-      font: inherit; font-size: 12px; font-weight: 500;
+      font: inherit; font-size: 0.75rem; font-weight: 500;
       color: #1565c0; background: #f0f6ff;
       border: 1px solid #c8ddf6; border-radius: 5px;
       padding: 5px 10px; cursor: pointer; text-align: left;
@@ -1006,7 +1036,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       position: fixed; z-index: 2;
       left: 428px; bottom: 16px;
       display: flex; flex-direction: column; gap: 4px;
-      width: 140px; padding: 7px 10px;
+      min-width: 150px; max-width: 240px; padding: 7px 10px;
       background: rgba(255, 255, 255, 0.92);
       -webkit-backdrop-filter: blur(6px);
       backdrop-filter: blur(6px);
@@ -1031,15 +1061,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
     }
     .cml-title {
-      font-size: 10px; font-weight: 600; color: #555;
+      font-size: 0.75rem; font-weight: 600; color: #555;
       white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
+    .cml-def { font-size: 0.75rem; color: #475569; margin-top: -3px; white-space: nowrap; }
+    .cml-def[hidden] { display: none; }
     .cml-bar {
       height: 6px; border-radius: 3px; width: 100%;
     }
     .cml-labels {
       display: flex; justify-content: space-between;
-      font-size: 10px; font-weight: 600; color: #444;
+      font-size: 0.75rem; font-weight: 600; color: #444;
     }
     .exit-neighbor-view {
       position: fixed; z-index: 5;
@@ -1047,7 +1079,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: inline-flex; align-items: center; gap: 6px;
       background: #fff; color: #1565c0;
       border: 1px solid #bbdefb; border-radius: 999px;
-      padding: 7px 16px; font: inherit; font-size: 13px; font-weight: 600;
+      padding: 7px 16px; font: inherit; font-size: 0.8125rem; font-weight: 600;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.16);
       cursor: pointer; white-space: nowrap;
       transition: background 0.15s, box-shadow 0.15s, transform 0.15s;
@@ -1089,7 +1121,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .methodology-dialog-header h2 {
       margin: 0;
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: 700;
       color: #1f2421;
     }
@@ -1099,7 +1131,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       gap: 12px;
     }
     .methodology-dialog-actions a {
-      font-size: 12px;
+      font-size: 0.75rem;
       color: #1565c0;
       text-decoration: none;
     }
@@ -1110,7 +1142,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       position: relative;
       border: none;
       background: none;
-      font-size: 22px;
+      font-size: 1.375rem;
       line-height: 1;
       color: #475569;
       cursor: pointer;
@@ -1134,7 +1166,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .methodology-dialog-body {
       padding: 20px 24px;
       overflow-y: auto;
-      font-size: 14px;
+      font-size: 0.875rem;
       line-height: 1.6;
     }
     @media ${PHONE_MEDIA} {
@@ -1178,7 +1210,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     .export-dialog-header h2 {
       margin: 0;
-      font-size: 16px;
+      font-size: 1rem;
       font-weight: 700;
       color: #1e293b;
     }
@@ -1186,9 +1218,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       position: relative;
       background: none;
       border: none;
-      font-size: 24px;
+      font-size: 1.5rem;
       line-height: 1;
-      color: #64748b;
+      color: #475569;
       cursor: pointer;
       padding: 0;
       width: 36px;
@@ -1269,20 +1301,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       min-width: 0;
     }
     .export-dialog-name {
-      font-size: 13px;
+      font-size: 0.8125rem;
       font-weight: 600;
       color: #1e293b;
     }
     .export-dialog-desc {
-      font-size: 11px;
-      color: #64748b;
+      font-size: 0.75rem;
+      color: #475569;
     }
     .export-dialog-footer {
       padding: 0 18px 12px;
     }
     .export-dialog-feedback {
       display: block;
-      font-size: 12px;
+      font-size: 0.75rem;
       font-weight: 600;
       color: #166534;
       background: #f0fdf4;
@@ -1372,7 +1404,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       border-radius: 2pt;
     }
     .print-sheet .ps-ranking-rank {
-      color: #64748b;
+      color: #475569;
       font-variant-numeric: tabular-nums;
       text-align: right;
     }
@@ -1425,7 +1457,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .print-sheet .ps-ranking-note {
       font-size: 8pt;
       font-style: italic;
-      color: #64748b;
+      color: #475569;
       margin: 4pt 0 0;
     }
     .print-sheet .ps-foot { margin-top: 10pt; padding-top: 6pt; border-top: 1pt solid #ccc; font-size: 8.5pt; color: #444; }
@@ -1435,16 +1467,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
     @media (pointer: coarse) {
       .panel select, #region-search-input {
-        min-height: 44px; font-size: 16px;
+        min-height: 44px; font-size: 1rem;
       }
       .panel input[type="checkbox"], .panel input[type="radio"] { width: 20px; height: 20px; }
       .panel .row label { min-height: 44px; }
       .panel-body summary { padding-top: 12px; padding-bottom: 12px; }
-      .ranking-row-clickable { min-height: 40px; }
+      .ranking-row-clickable { min-height: 44px; }
+      .region-search-results li { min-height: 44px; display: flex; align-items: center; flex-wrap: wrap; gap: 0 0.3em; }
       #view-csv-btn-toolbar { min-height: 36px; padding-left: 12px; padding-right: 12px; }
       .ranking-mode-btn { min-height: 36px; padding-left: 12px; padding-right: 12px; }
       .region-locate { display: inline-flex; align-items: center; min-height: 44px; }
-      .hint { font-size: 12px; }
+      .hint { font-size: 0.75rem; }
       #share-fab::after { content: ''; position: absolute; inset: -7px; }
     }
     @media (prefers-reduced-motion: reduce) {
@@ -1473,6 +1506,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
     <div class="cml-title">Radinfra-Anteil</div>
+    <div class="cml-def" id="cml-def">km Radinfra ÷ km Straße</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
       <span id="cml-min">0 %</span>
@@ -1490,19 +1524,24 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       Anteil der Straßen mit Radinfrastruktur – je Gemeinde, Landkreis und Bundesland,
       berechnet aus OpenStreetMap-Daten. <a href="./methodik.html">Wie wird gerechnet?</a>
     </p>
-    <p id="load-status">Lade Gebietsdaten…</p>
-    <p id="load-error"></p>
+    <p id="load-status" role="status" aria-live="polite">Lade Gebietsdaten…</p>
+    <p id="load-error" role="alert"></p>
     <div class="panel-options" id="panel-options">
     <div class="region-search-block" id="region-search-block">
       <label for="region-search-input">Wie steht deine Gemeinde da?</label>
       <input
         type="search"
         id="region-search-input"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded="false"
+        aria-controls="region-search-results"
         autocomplete="off"
         enterkeyhint="search"
         placeholder="Gemeinde oder Landkreis, z. B. Erding"
       />
-      <ul id="region-search-results" class="region-search-results" hidden></ul>
+      <ul id="region-search-results" class="region-search-results" role="listbox" aria-label="Suchergebnisse" hidden></ul>
+      <p class="visually-hidden" id="region-search-status" role="status" aria-live="polite"></p>
       <button type="button" id="region-locate" class="region-locate" hidden>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a7 7 0 0 1 7 7c0 5-7 13-7 13S5 14 5 9a7 7 0 0 1 7-7zm0 4.5a2.5 2.5 0 1 0 0 5 2.5 2.5 0 0 0 0-5z"/></svg>
         Mein Standort verwenden
@@ -1510,15 +1549,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
-      <summary>Gebiet &amp; Darstellung</summary>
+      <summary>Gebiet &amp; Karte</summary>
       <div class="region-nav" id="region-nav">
         <!-- Two orthogonal axes, one control each: the breadcrumb picks the area, the select
              picks how fine the polygons in it are. The picker under "Zeige" steps one level into
              the area (Bundesland from Deutschland, Landkreis from a Bundesland). -->
         <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
-        <label for="darstellung-select">Zeige</label>
+        <label for="darstellung-select">Flächen</label>
         <select id="darstellung-select"></select>
-        <label for="map-metric-select">Kartenansicht</label>
+        <label for="map-metric-select">Färben nach</label>
         <select id="map-metric-select">
           <option value="bikeShare">Radinfrastruktur-Anteil</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
@@ -1565,6 +1604,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <label for="color-scale-select">Farbskala (Flächen)</label>
         <select id="color-scale-select"></select>
         <p class="hint" id="color-scale-hint"></p>
+        <label for="text-size-select">Schriftgröße</label>
+        <select id="text-size-select">
+          <option value="100">Normal</option>
+          <option value="115">Groß</option>
+          <option value="130">Sehr groß</option>
+        </select>
         <!-- Not user-facing. Cap/outlier handling, overlay zoom levels and line colours stay as
              the state behind their URL parameters (cap, robustScale, radfarbe, strassenfarbe,
              radwegeMinZoom, …), so shared links and the colour-scale presets keep working. -->
@@ -1647,8 +1692,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           <div class="legend-bar" id="legend-bar"></div>
           <div class="legend-ticks" id="legend-ticks"></div>
           <div class="legend-labels" id="legend-labels"></div>
+          <label class="legend-cvd-toggle">
+            <input type="checkbox" id="legend-cvd-toggle" />
+            Farben für Rot-Grün-Sehschwäche
+          </label>
         </div>
         <p class="view-meta" id="view-meta"></p>
+        ${dataDateLabel ? `<p class="view-meta legend-data-date">Stand der OSM-Daten: ${dataDateLabel}</p>` : ''}
         <details class="view-meta-more" id="view-meta-more" hidden>
           <summary>Mehr zur Farbskala</summary>
           <p class="view-meta" id="view-meta-more-text"></p>
@@ -1792,14 +1842,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js"></script>
-  <script src="./regionNavigation.js"></script>
-  <script src="./statsMsgpack.js"></script>
-  <script src="./simpleView.js"></script>
-  <script src="./regionSearch.js"></script>
-  <script src="./rankingDisplay.js"></script>
-  <script src="https://unpkg.com/@turf/turf@7.2.0/turf.min.js"></script>
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="./statsClassSums.js?v=${assetVersion}"></script>
+  <script src="./regionNavigation.js?v=${assetVersion}"></script>
+  <script src="./statsMsgpack.js?v=${assetVersion}"></script>
+  <script src="./simpleView.js?v=${assetVersion}"></script>
+  <script src="./regionSearch.js?v=${assetVersion}"></script>
+  <script src="./rankingDisplay.js?v=${assetVersion}"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
 
@@ -1808,12 +1857,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let rawLoaded = false;
     // Start before MapLibre (tile requests can starve this fetch on HTTP/1).
     const statsDataPromise = fetch(CONFIG.statsMsgpackUrl).then(async (res) => {
-      if (res.ok) return { type: 'msgpack', bytes: await res.arrayBuffer() };
-      const geoRes = await fetch(CONFIG.statsUrl);
-      if (!geoRes.ok) {
-        throw new Error('stats.msgpack fehlt – bun run bike-share-map:export-stats-geojson');
-      }
-      return { type: 'geojson', data: await geoRes.json() };
+      if (!res.ok) throw new Error('stats-core.msgpack: HTTP ' + res.status);
+      return await res.arrayBuffer();
     });
     // {id → demographic-peer bucket key, key → label}; used by the region card. Optional.
     let peerGroupIndex = null;
@@ -1839,37 +1884,49 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
+    const loadIndex = (url, assign) =>
+      fetch(url)
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
+          if (data && data.byId) assign(data);
+        })
+        .catch(() => {});
+    function rerenderSelectedRegionContext() {
+      const selected = selectedFeatureId
+        ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
+          regionIndex?.byId.get(selectedFeatureId)
+        : null;
+      if (selected) {
+        const props = selected.properties || {};
+        renderRegionExtra(props);
+        renderRegionModelGap(props);
+      }
+    }
+    // The six inputs of the structural model: the card shows the expected value right away.
+    let modelIndexesPromise = null;
+    function ensureModelIndexes() {
+      if (modelIndexesPromise) return modelIndexesPromise;
+      modelIndexesPromise = Promise.all([
+        loadIndex(CONFIG.densityUrl, (data) => { densityIndex = data; }),
+        loadIndex(CONFIG.transitUrl, (data) => { transitIndex = data; }),
+        loadIndex(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
+        loadIndex(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
+        loadIndex(CONFIG.carsUrl, (data) => { carsIndex = data; }),
+        loadIndex(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
+      ]).then(rerenderSelectedRegionContext);
+      return modelIndexesPromise;
+    }
+    // Everything, the four context-only files included (~2.3 MB of the ~3.3 MB). Loaded when
+    // "Mehr Zahlen" opens, a map mode or an export needs them — not for every shared link.
     function ensureRegionExtraIndexes() {
       if (regionExtraIndexesPromise) return regionExtraIndexesPromise;
-      const load = (url, assign) =>
-        fetch(url)
-          .then((res) => (res.ok ? res.json() : null))
-          .then((data) => {
-            if (data && data.byId) assign(data);
-          })
-          .catch(() => {});
       regionExtraIndexesPromise = Promise.all([
-        load(CONFIG.densityUrl, (data) => { densityIndex = data; }),
-        load(CONFIG.transitUrl, (data) => { transitIndex = data; }),
-        load(CONFIG.terrainUrl, (data) => { terrainIndex = data; }),
-        load(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
-        load(CONFIG.carsUrl, (data) => { carsIndex = data; }),
-        load(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
-        load(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
-        load(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
-        load(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
-        load(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
-      ]).then(() => {
-        const selected = selectedFeatureId
-          ? lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
-            regionIndex?.byId.get(selectedFeatureId)
-          : null;
-        if (selected) {
-          const props = selected.properties || {};
-          renderRegionExtra(props);
-          renderRegionModelGap(props);
-        }
-      });
+        ensureModelIndexes(),
+        loadIndex(CONFIG.accidentsUrl, (data) => { accidentsIndex = data; }),
+        loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
+        loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
+        loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
+      ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
     // Precomputed (build time, from the full feature set) presence of Gemeindeverbände/
@@ -1921,6 +1978,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       loadError.style.display = 'block';
     }
 
+    // Anything that goes wrong outside the guarded load paths (a UI handler, a worker that an old
+    // browser can't start) used to reach only the console while the page looked frozen.
+    window.addEventListener('unhandledrejection', (event) => {
+      showLoadError(event.reason, 'Etwas ist schiefgelaufen. Bitte die Seite neu laden.');
+    });
+    window.addEventListener('error', (event) => {
+      // Resource errors (a failing image) bubble here without an error object; ignore those.
+      if (!event.error) return;
+      showLoadError(event.error, 'Etwas ist schiefgelaufen. Bitte die Seite neu laden.');
+    });
+
     function clearLoadError() {
       if (!loadError) return;
       loadError.replaceChildren();
@@ -1965,7 +2033,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const gemeindeGeometryLoads = new Map(); // shard key → Promise, kept so a file is fetched once
     function loadGemeindeGeometryShard(key) {
       if (!gemeindeGeometryLoads.has(key)) {
-        const load = fetch(CONFIG.gemeindeGeometryBase + key + '.msgpack')
+        const load = fetch(CONFIG.gemeindeGeometryBase + key + '.msgpack?v=' + CONFIG.assetVersion)
           .then(async (res) => {
             if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + key);
             const shard = StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
@@ -2003,15 +2071,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     const statsReadyPromise = statsDataPromise
-      .then((data) => {
-        if (data.type === 'msgpack') {
-          allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(data.bytes));
-        } else {
-          // The geojson fallback (msgpack fetch failed) ships every level in one file, so
-          // there is no separate "extra" chunk left to fetch afterwards.
-          allFeatures = data.data.features || [];
-          extraLevelsLoaded = true;
-        }
+      .then((bytes) => {
+        allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(bytes));
         rebuildRegionIndex();
         rawLoaded = true;
         if (loadStatus) loadStatus.textContent = '';
@@ -2094,7 +2155,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const regionDetailModelGap = document.getElementById('region-detail-model-gap');
     const regionDetailExtra = document.getElementById('region-detail-extra');
     const regionDetailMore = document.getElementById('region-detail-more');
-    regionDetailMore?.addEventListener('toggle', () => reopenContextPlot());
+    regionDetailMore?.addEventListener('toggle', () => {
+      if (regionDetailMore.open) ensureRegionExtraIndexes();
+      reopenContextPlot();
+    });
     const regionDetailQuality = document.getElementById('region-detail-quality');
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
@@ -2395,19 +2459,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function gemeindeModelPrediction(p, road, bike) {
       if (!isModelGemeinde(p) || !densityIndex || !terrainIndex) return null;
       if (!(road > 0) || TildaStats.isLowRoadNetworkForScale(road)) return null;
-      const num = (v) => (typeof v === 'number' ? v : null);
-      const stationM = transitIndex?.byId[p.id]?.avgDistanceToStationM;
       const ms = getActiveModelSettings();
       return RankingDisplay.computeStructuralModelPrediction({
         roadKm: road,
         bikeKm: bike,
-        roadSlope: num(terrainIndex?.byId[p.id]?.road),
-        elevMean: num(terrainIndex?.byId[p.id]?.elevationMean),
-        density: num(densityIndex?.byId[p.id]),
-        stDistKm: typeof stationM === 'number' ? stationM / 1000 : null,
-        rent: num(zensusIndex?.byId[p.id]?.rentPerM2),
-        carsPer1000: num(carsIndex?.byId[p.id]?.carsPer1000),
-        livingSharePct: num(calmedIndex?.byId[p.id]?.livingSharePct),
+        ...RankingDisplay.structuralModelInputs(p.id, {
+          density: densityIndex?.byId,
+          terrain: terrainIndex?.byId,
+          transit: transitIndex?.byId,
+          zensus: zensusIndex?.byId,
+          cars: carsIndex?.byId,
+          calmed: calmedIndex?.byId,
+        }),
         bundeslandId: String(p.bundesland_id || ''),
         modelType: ms.modelType,
         dynamicBaselines: ms.dynamicBaselines,
@@ -2954,6 +3017,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
         else cmlTitle.textContent = 'Radinfra-Anteil';
       }
+      const cmlDef = document.getElementById('cml-def');
+      if (cmlDef) cmlDef.hidden = metric !== 'bikeShare';
 
       if (choroplethTitle) {
         if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
@@ -3685,13 +3750,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return typeof p.bikeSharePct === 'number' ? p.bikeSharePct : null;
     }
 
+    const MIN_RATE_POPULATION = 1000;
+
     function isRankedActiveMetric(f, metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (metric === 'bikeShare') {
         return typeof f.properties?.bikeSharePct === 'number' && !f.properties?.lowRoad;
       }
       const val = getFeatureMetricValue(f, metric);
-      return typeof val === 'number' && Number.isFinite(val);
+      if (typeof val !== 'number' || !Number.isFinite(val)) return false;
+      // Per-resident rates of tiny places are dominated by single events or a fleet registered
+      // at one address (Gyhum: 4.154 cars per 1.000). They keep their colour, but no rank.
+      if (metric === 'cars' || metric === 'accidents') {
+        const index = metric === 'cars' ? carsIndex : accidentsIndex;
+        const population = index?.byId[f.properties?.id]?.population;
+        if (typeof population === 'number' && population < MIN_RATE_POPULATION) return false;
+      }
+      return true;
     }
 
     function compareByActiveMetric(a, b) {
@@ -3799,17 +3874,23 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return 'Radinfrastruktur';
     }
 
+    // Bars measure from zero to the largest value in the list (see RankingDisplay.rankingBarBounds).
+    let rankingBarBounds = { max: 0, min: 0 };
+
     function appendRankingRow(list, rank, f, minPct, maxPct) {
       const metric = currentMapMetric || 'bikeShare';
       const val = getFeatureMetricValue(f, metric);
       const li = document.createElement('li');
       const featureId = String(f.properties?.id ?? '');
       const label = f.properties?.name || f.properties?.id || '–';
+      // "Landkreis Altenkirchen (Westerwald)" got cut off; the list shows one level anyway.
+      const shortLabel = String(label).replace(/^(Landkreis|Kreis|Regionalverband) /, '');
       if (featureId) {
         li.dataset.rankingId = featureId;
         li.classList.add('ranking-row-clickable');
         li.setAttribute('role', 'button');
-        li.tabIndex = 0;
+        // Roving tabindex (syncRankingTabStop): one Tab stop for the whole list, arrows move.
+        li.tabIndex = -1;
         li.setAttribute('aria-pressed', String(featureId === selectedFeatureId));
         li.setAttribute(
           'aria-label',
@@ -3832,7 +3913,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       rankEl.textContent = rank + '.';
       const name = document.createElement('span');
       name.className = 'ranking-name';
-      name.textContent = label;
+      name.textContent = shortLabel;
       name.title = label;
       const isDiverging = metric === 'modelGap' || metric === 'commuters';
       const track = document.createElement('div');
@@ -3843,13 +3924,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (val != null) {
         fill.style.background = colorForMetricValue(val, minPct, maxPct, colorScaleSelect.value, metric);
         if (isDiverging) {
-          const bound = val >= 0 ? Math.abs(maxPct) : Math.abs(minPct);
+          const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
           const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
           fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
           fill.style.width = w + '%';
         } else {
           fill.style.left = '0';
-          fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxPct) + '%';
+          fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, rankingBarBounds.max) + '%';
         }
       } else {
         fill.style.width = '0';
@@ -4342,7 +4423,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function osmEditLink(feature, text) {
       if (!feature?.geometry) return null;
-      const [w, s, e, n] = turf.bbox(feature);
+      const [w, s, e, n] = RegionNav.featureBbox(feature);
       const span = Math.max(e - w, (n - s) * 1.5, 1e-4);
       const zoom = Math.min(16, Math.max(12, Math.round(Math.log2(360 / span))));
       const a = document.createElement('a');
@@ -4500,13 +4581,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (val != null) {
           fill.style.background = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
-            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
             const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
             fill.style.left = (val >= 0 ? 50 : 50 - w) + '%';
             fill.style.width = w + '%';
           } else {
             fill.style.left = '0';
-            fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, maxVal) + '%';
+            fill.style.width = 100 * RankingDisplay.barFractionFromZero(val, rankingBarBounds.max) + '%';
           }
         } else {
           fill.style.width = '0';
@@ -4920,7 +5001,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (!f.geometry) return null;
       const id = f.properties?.id;
       if (featureCenterCache.has(id)) return featureCenterCache.get(id);
-      const [w, s, e, n] = turf.bbox(f);
+      const [w, s, e, n] = RegionNav.featureBbox(f);
       const center = [(w + e) / 2, (s + n) / 2];
       featureCenterCache.set(id, center);
       return center;
@@ -4949,7 +5030,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (q.id === p.id || q.lowRoad || q.bikeSharePct < minPct) continue;
         const center = featureCenter(f);
         if (!center) continue;
-        const km = turf.distance(origin, center, { units: 'kilometers' });
+        const km = RegionNav.geoDistanceKm(origin, center);
         if (km > maxKm || (best && km >= best.km)) continue;
         // A lead that rests on unclear tagging is exactly what a critic would point at.
         const quality = TildaStats.assessBikeDataQuality(q.road_length, q.bikelane_length);
@@ -5010,11 +5091,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         link.title = s.roleModel.name + ' anzeigen';
         link.addEventListener('click', () => jumpToRegionBySearch(s.roleModel.id));
         line.append(
-          'Vorbild in der Nähe: ',
+          'Vergleichbare Gemeinde in der Nähe: ',
           link,
           ' (' +
             Math.max(1, Math.round(s.roleModel.km)) +
-            ' km entfernt, gleiches Profil) schafft ' +
+            ' km entfernt, gleiches Profil): ' +
             formatUiPct(s.roleModel.pct) +
             ' %.',
         );
@@ -5031,7 +5112,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     function renderRegionModelGap(p) {
       if (!regionDetailModelGap) return;
       regionDetailModelGap.replaceChildren();
-      ensureRegionExtraIndexes();
+      ensureModelIndexes();
       const filter = readLengthClassFilterFromUi();
       const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
         p.road_length,
@@ -5070,12 +5151,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ' km) · ' +
         (aggregated
           ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : m.modelName +
-            ' (R² = ' +
-            formatUiPct(m.r2TotalPct) +
-            ' %, n = ' +
-            deNumber(m.n, 0) +
-            ')');
+          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte und Spielstraßen');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -5122,13 +5198,35 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       regionDetailModelGap.appendChild(statusText);
 
+      if (m.clamped) {
+        const clampNote = document.createElement('span');
+        clampNote.className = 'model-breakdown-note';
+        clampNote.textContent =
+          'Das Modell ergibt hier rechnerisch weniger als 0 %; als Erwartung gilt 0 %. ' +
+          'Die Abweichung ist deshalb eine Untergrenze.';
+        regionDetailModelGap.appendChild(clampNote);
+      }
+
       // Expandable waterfall table (Variant B)
       const details = document.createElement('details');
       details.className = 'model-breakdown-details';
       const summary = document.createElement('summary');
       summary.className = 'model-breakdown-summary';
-      summary.textContent = 'Faktoren-Zerlegung (Bundesland, Topografie, Miete, Beruhigung, Dichte)';
+      summary.textContent = 'Faktoren-Zerlegung';
       details.appendChild(summary);
+      if (!aggregated) {
+        const fitNote = document.createElement('p');
+        fitNote.className = 'model-breakdown-note';
+        fitNote.textContent =
+          'Lineares Modell ' +
+          m.modelName +
+          ', angepasst an ' +
+          deNumber(m.n, 0) +
+          ' Gemeinden; es erklärt ' +
+          formatUiPct(m.r2TotalPct) +
+          ' % der Unterschiede (R²).';
+        details.appendChild(fitNote);
+      }
 
       const table = document.createElement('table');
       table.className = 'model-breakdown-table';
@@ -5190,8 +5288,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
       if (m.deltaLiving != null) {
         addRow(
-          'Verkehrsberuhigung & Spielstraßen',
-          m.inputs.livingSharePct != null ? deNumber(m.inputs.livingSharePct, 1) + ' % des Netzes' : null,
+          'Spielstraßen (verkehrsberuhigte Bereiche)',
+          m.inputs.livingStreetSharePct != null ? deNumber(m.inputs.livingStreetSharePct, 1) + ' % des Netzes' : null,
           m.deltaLiving,
           m.deltaLiving >= 0.05 ? 'hohe Beruhigung' : m.deltaLiving <= -0.05 ? 'wenig Beruhigung' : 'neutral',
         );
@@ -5789,7 +5887,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * a lower-lying river valley).
      */
     function renderRegionExtra(p) {
-      ensureRegionExtraIndexes();
+      if (regionDetailMore?.open) ensureRegionExtraIndexes();
+      else ensureModelIndexes();
       const level = String(p.level ?? '');
       const noun = CONTEXT_REFERENCE_NOUN[level] || { nom: 'Gebiete', gen: 'Gebiete' };
       const scopes = contextScopesFor(p, noun);
@@ -6205,7 +6304,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
         ' km Radinfrastruktur bei ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
-        ' km Straße';
+        ' km Straße' +
+        (CONFIG.dataDateLabel ? ' · Stand ' + CONFIG.dataDateLabel : '');
       regionDetailMeta.replaceChildren(pctEl, pctLabel, rankEl, kmEl);
       const mainRoads = mainRoadBreakdownFor(p);
       if (mainRoads) {
@@ -6248,7 +6348,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       // Drilling into a region is a deliberate click (here, or a double-click on the map).
       // Search used to do it implicitly and only for some levels, which is why a Landkreis
       // search never showed a card at all.
-      const drillChangesView = regionDrillScope(p.id, p.level) !== null;
+      const drillScope = regionDrillScope(p.id, p.level);
+      const drillChangesView = drillScope !== null;
       // Only Landkreise and Gemeinden have neighbours worth comparing with.
       const offerNeighbors =
         (String(p.level) === '6' || String(p.level) === '8') &&
@@ -6260,7 +6361,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const drillButton = document.createElement('button');
         drillButton.type = 'button';
         drillButton.className = 'region-detail-drill';
-        drillButton.textContent = 'Untergebiete anzeigen';
+        drillButton.textContent =
+          (RegionNav.presetShortLabel(drillScope.darstellung) || 'Untergebiete') + ' anzeigen';
         drillButton.title = 'Die Ansicht in dieses Gebiet hineinzoomen';
         drillButton.addEventListener('click', () => {
           drillIntoRegion(p.id, p.level);
@@ -6385,7 +6487,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      */
     function revealSelectedRegion(feature, allowZoomOut) {
       if (!feature?.geometry || typeof map.project !== 'function') return;
-      const bbox = turf.bbox(feature);
+      const bbox = RegionNav.featureBbox(feature);
       if (!bbox.every(Number.isFinite)) return;
       const pad = (typeof map.getPadding === 'function' && map.getPadding()) || {};
       const box = map.getContainer();
@@ -6600,6 +6702,32 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       });
     }
 
+    /** Keeps exactly one ranking row in the Tab order: the selected one, else the first. */
+    function syncRankingTabStop(list) {
+      const rows = [...list.querySelectorAll('li.ranking-row-clickable')];
+      if (!rows.length) return;
+      const target = rows.find((r) => r.dataset.rankingId === selectedFeatureId) || rows[0];
+      for (const r of rows) r.tabIndex = r === target ? 0 : -1;
+    }
+    const rankingListEl = document.getElementById('ranking-list');
+    rankingListEl?.addEventListener('keydown', (event) => {
+      const keys = ['ArrowDown', 'ArrowUp', 'Home', 'End'];
+      if (!keys.includes(event.key)) return;
+      const rows = [...rankingListEl.querySelectorAll('li.ranking-row-clickable')];
+      const i = rows.indexOf(document.activeElement);
+      if (i < 0) return;
+      event.preventDefault();
+      const next =
+        event.key === 'Home'
+          ? 0
+          : event.key === 'End'
+            ? rows.length - 1
+            : Math.max(0, Math.min(rows.length - 1, i + (event.key === 'ArrowDown' ? 1 : -1)));
+      for (const r of rows) r.tabIndex = -1;
+      rows[next].tabIndex = 0;
+      rows[next].focus();
+    });
+
     function updateRanking(features, minPct, maxPct) {
       const list = document.getElementById('ranking-list');
       const summary = document.getElementById('ranking-summary');
@@ -6608,6 +6736,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       lastRankingSorted = sorted;
       lastRankingMinPct = minPct;
       lastRankingMaxPct = maxPct;
+      rankingBarBounds = RankingDisplay.rankingBarBounds(
+        withMetric.map((f) => getFeatureMetricValue(f, currentMapMetric || 'bikeShare')),
+      );
       rebuildRankIndex(sorted);
 
       const topN = currentRankingTopN() ?? DEFAULT_RANKING_TOP_N;
@@ -6648,6 +6779,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
         appendRankingRow(list, row.rank, row.f, minPct, maxPct);
       }
+      syncRankingTabStop(list);
       const withoutMetric = sorted.length - withMetric.length;
       if (withoutMetric > 0) {
         const note = document.createElement('li');
@@ -6655,7 +6787,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         note.textContent =
           currentMapMetric === 'bikeShare'
             ? withoutMetric + ' ohne Rang (weniger als 5 km Straße erfasst)'
-            : withoutMetric + ' ohne Daten in dieser Ansicht';
+            : currentMapMetric === 'cars' || currentMapMetric === 'accidents'
+              ? withoutMetric + ' ohne Rang (keine Daten oder unter 1.000 Einwohnern)'
+              : withoutMetric + ' ohne Daten in dieser Ansicht';
         list.appendChild(note);
       }
       syncRankingRowHighlights();
@@ -6795,7 +6929,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         }
       }
       if (regionIndex) {
-        panelSummaryPreview.textContent = viewLabelForCurrentMode();
+        panelSummaryPreview.textContent = viewLabelForCurrentMode({ short: true });
       }
     }
 
@@ -6844,7 +6978,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
      * explicitly, crop, and put the camera back afterwards.
      */
     async function capturePrintMapCanvas(feature) {
-      const bbox = feature?.geometry ? turf.bbox(feature) : null;
+      const bbox = feature?.geometry ? RegionNav.featureBbox(feature) : null;
       if (!bbox || !bbox.every(Number.isFinite)) return captureLiveMapCanvas();
       const saved = {
         center: map.getCenter(),
@@ -6916,7 +7050,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const boundsFeatures = filtered.length
         ? { type: 'FeatureCollection', features: filtered }
         : { type: 'FeatureCollection', features: scopeBoundsFeaturesForCurrentView() };
-      return turf.bbox(boundsFeatures);
+      return RegionNav.featureBbox(boundsFeatures);
     }
 
     /**
@@ -7214,13 +7348,13 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           ctx.fillStyle = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
           if (isDiverging) {
             const midX = barX + barW / 2;
-            const bound = val >= 0 ? Math.abs(maxVal) : Math.abs(minVal);
+            const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
             const w = (barW / 2) * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
             ctx.fillRect(val >= 0 ? midX : midX - w, y + 22, w, 16);
             ctx.fillStyle = '#94a3b8';
             ctx.fillRect(midX, y + 20, 1, 20);
           } else {
-            ctx.fillRect(barX, y + 22, barW * RankingDisplay.barFractionFromZero(val, maxVal), 16);
+            ctx.fillRect(barX, y + 22, barW * RankingDisplay.barFractionFromZero(val, rankingBarBounds.max), 16);
           }
         }
 
@@ -7990,7 +8124,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
               model.name +
               ' (' +
               Math.max(1, Math.round(model.km)) +
-              ' km entfernt, ähnlich groß) schafft ' +
+              ' km entfernt, ähnlich groß) hat ' +
               formatUiPct(model.pct) +
               ' %.';
           }
@@ -8584,6 +8718,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     function updateColorScaleHint() {
+      const cvdToggle = document.getElementById('legend-cvd-toggle');
+      if (cvdToggle) cvdToggle.checked = colorScaleSelect?.value === 'colorblind';
       if (!colorScaleHint) return;
       if (colorScaleSelect.value === 'colorblind') {
         colorScaleHint.textContent =
@@ -8820,8 +8956,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
 
     // "Hell" and "Gedeckt" come from MapTiler: a key that is locked to this domain and has a
-    // quota. When it stops answering (401/403/429) the tiles fail silently and the map shows
-    // gaps behind the colours. After a few such failures switch to the neutral background and
+    // quota. When it stops answering (401/403/429, but also 5xx, DNS or CORS failures, which
+    // carry no status) the tiles fail silently and the map shows gaps behind the colours. After a few such failures switch to the neutral background and
     // say so. Only the displayed style changes: the select and the share links keep the
     // visitor's choice, and picking a basemap again retries.
     const KEYED_BASEMAPS = ['light', 'muted'];
@@ -8829,7 +8965,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let basemapFellBack = false;
     map.on('error', (event) => {
       const status = event && event.error && event.error.status;
-      if (!event || event.sourceId !== 'basemap' || ![401, 403, 429].includes(status)) return;
+      if (!event || event.sourceId !== 'basemap') return;
+      // 404 is a tile that simply doesn't exist (outside coverage); not a sign of trouble.
+      if (typeof status === 'number' && ((status >= 200 && status < 400) || status === 404)) return;
       if (basemapFellBack || !KEYED_BASEMAPS.includes(basemapSelect?.value)) return;
       basemapAuthFailures += 1;
       if (basemapAuthFailures < 3) return;
@@ -8857,6 +8995,32 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         panelMain.scrollTop = prevScrollTop;
       }
     });
+    const legendCvdToggle = document.getElementById('legend-cvd-toggle');
+    let colorScaleBeforeCvd = null;
+    legendCvdToggle?.addEventListener('change', () => {
+      if (!colorScaleSelect) return;
+      if (legendCvdToggle.checked) {
+        if (colorScaleSelect.value !== 'colorblind') colorScaleBeforeCvd = colorScaleSelect.value;
+        colorScaleSelect.value = 'colorblind';
+      } else {
+        colorScaleSelect.value = colorScaleBeforeCvd || CONFIG.defaultColorScale;
+      }
+      colorScaleSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+    const textSizeSelect = document.getElementById('text-size-select');
+    if (textSizeSelect) {
+      const current = document.documentElement.style.fontSize.replace('%', '') || '100';
+      textSizeSelect.value = current;
+      textSizeSelect.addEventListener('change', () => {
+        const size = textSizeSelect.value;
+        document.documentElement.style.fontSize = size === '100' ? '' : size + '%';
+        try {
+          if (size === '100') localStorage.removeItem('radinfra-text-size');
+          else localStorage.setItem('radinfra-text-size', size);
+        } catch (e) {}
+        notifyMapResize();
+      });
+    }
     colorScaleSelect?.addEventListener('change', () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       updateLegendBar(colorScaleSelect.value, currentMapMetric);
@@ -8892,6 +9056,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionSearchResults.hidden = true;
       regionSearchResults.style.maxHeight = '';
       regionSearchResults.replaceChildren();
+      regionSearchInput?.setAttribute('aria-expanded', 'false');
     }
     function updateSearchResultsPosition() {
       if (!regionSearchResults || regionSearchResults.hidden || !regionSearchInput) return;
@@ -8937,12 +9102,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         none.textContent = 'Keine Treffer – Gemeinde, Landkreis oder Bundesland eingeben.';
         regionSearchResults.appendChild(none);
         regionSearchResults.hidden = false;
+        regionSearchInput?.setAttribute('aria-expanded', 'true');
+        setSearchStatus('Keine Treffer');
         updateSearchResultsPosition();
         return;
       }
+      setSearchStatus(matches.length === 1 ? '1 Treffer' : matches.length + ' Treffer');
       for (const m of matches) {
         const li = document.createElement('li');
         li.tabIndex = 0;
+        li.setAttribute('role', 'option');
         li.append(m.name + ' ');
         const level = document.createElement('span');
         level.className = 'region-search-result-level';
@@ -8967,7 +9136,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         regionSearchResults.appendChild(li);
       }
       regionSearchResults.hidden = false;
+      regionSearchInput?.setAttribute('aria-expanded', 'true');
       updateSearchResultsPosition();
+    }
+    function setSearchStatus(text) {
+      const status = document.getElementById('region-search-status');
+      if (status) status.textContent = text;
     }
     // "Where am I": the position is matched against the geometries already in the page, so it
     // never leaves the device. Only offered where the browser has a geolocation API at all.
@@ -8988,7 +9162,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const nearbyLandkreise = new Set();
       for (const f of allFeatures) {
         if (String(f.properties?.level ?? '') !== '6' || !f.geometry) continue;
-        const [w, s, e, n] = turf.bbox(f);
+        const [w, s, e, n] = RegionNav.featureBbox(f);
         if (lng >= w - margin && lng <= e + margin && lat >= s - margin && lat <= n + margin) {
           nearbyLandkreise.add(f.properties.id);
         }
@@ -9039,7 +9213,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       // Focus inside the tap itself, otherwise iOS won't raise the keyboard.
       regionSearchInput.focus({ preventScroll: true });
       regionSearchInput.select?.();
-      regionSearchInput.scrollIntoView({ block: 'start', behavior: 'smooth' });
+      // Scroll the whole block (label + input) and let its scroll-margin clear the sticky sheet
+      // header; scrolling the input to the very top put it underneath that header.
+      (document.getElementById('region-search-block') || regionSearchInput).scrollIntoView({
+        block: 'start',
+        behavior: 'smooth',
+      });
     });
     if (regionSearchInput) {
       regionSearchInput.addEventListener('input', () => {
@@ -9286,7 +9465,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       neighborsBuildStarted = true;
       setLoadStatus('Nachbarn werden berechnet…');
-      const worker = new Worker('./neighborsBuild.worker.js', { type: 'module' });
+      const worker = new Worker('./neighborsBuild.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
       const finish = () => {
         worker.onmessage = null;
         worker.onerror = null;
@@ -9354,7 +9533,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         void loadPrecomputedNeighborsOnMain();
         return;
       }
-      const worker = new Worker('./neighbors.worker.js', { type: 'module' });
+      const worker = new Worker('./neighbors.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
       const finish = () => {
         worker.onmessage = null;
         worker.onerror = null;
@@ -9398,7 +9577,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           reject(new Error('Web Worker nicht verfügbar'));
           return;
         }
-        const worker = new Worker('./statsMsgpack.worker.js', { type: 'module' });
+        const worker = new Worker('./statsMsgpack.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
         let settled = false;
         const finish = (fn) => {
           if (settled) return;

@@ -60,7 +60,7 @@ export function stationAreasPageHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Nächste Station</title>
-  <link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet" />
+  <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <style>
     :root {
       --bg: #ffffff;
@@ -155,6 +155,16 @@ export function stationAreasPageHtml({
     .band-legend { display: grid; grid-template-columns: 14px 1fr; gap: 3px 6px; align-items: center; font-size: 12px; margin: 0 0 8px; }
     .band-legend i { width: 14px; height: 10px; border-radius: 2px; }
     [hidden] { display: none !important; }
+    #panel > summary h1 { display: inline; font-size: inherit; margin: 0; }
+    .page-nav { font-size: 13px; }
+    .page-nav a { color: var(--accent); }
+    /* Finger-sized controls on touch screens. */
+    @media (pointer: coarse) {
+      label { min-height: 44px; }
+      input[type='checkbox'] { width: 20px; height: 20px; }
+      .seg span { padding: 10px 14px; font-size: 14px; }
+      .page-nav a { display: inline-block; padding: 10px 0; }
+    }
     @media (max-width: 600px) {
       #panel { top: auto; bottom: 28px; left: 16px; right: 16px; width: auto; max-height: 50vh; }
     }
@@ -163,8 +173,9 @@ export function stationAreasPageHtml({
 <body>
   <div id="map"></div>
   <details id="panel" open>
-    <summary>Nächste Station</summary>
+    <summary><h1>Nächste Station</h1></summary>
     <div class="body">
+      <p class="page-nav"><a href="./index.html">&larr; Zur Karte</a> · <a href="./methodik.html">Methodik</a></p>
       <fieldset id="ways" class="seg" hidden>
         <legend>Unterwegs</legend>
         <label><input type="radio" name="mit" value="luftlinie" checked><span>Luftlinie</span></label>
@@ -188,8 +199,8 @@ export function stationAreasPageHtml({
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Einwohner: Zensus 2022<span id="timetable-credit" hidden>; Fahrplan: DELFI e.V. / gtfs.de (CC BY 4.0)</span>.</p>
     </div>
   </details>
-  <script src="https://cdn.jsdelivr.net/npm/d3-delaunay@6.0.4/dist/d3-delaunay.min.js"></script>
-  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="./vendor/d3-delaunay-6.0.4/d3-delaunay.min.js"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
   <script>
   (async function () {
     const CATEGORY_LABELS = ${JSON.stringify(CATEGORY_LABELS)};
