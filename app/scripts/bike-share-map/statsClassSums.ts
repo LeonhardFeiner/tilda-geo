@@ -136,6 +136,20 @@ export function formatStatKm(value: number, maxFractionDigits = STAT_KM_MAX_DECI
   return value.toLocaleString('de-DE', { maximumFractionDigits: maxFractionDigits })
 }
 
+/**
+ * A missing length, as people will quote it. Lengths are counted per direction
+ * (aggregate_lengths.sql): on a two-way road one bidirectional path, or a lane on each side,
+ * is twice its road length. "22 km fehlen" read as road km would be double the truth, so the
+ * road length is said alongside.
+ */
+export function formatGapKm(km: number) {
+  const roadKm = km / 2
+  return (
+    `${formatStatKm(km, STAT_KM_BIKE_UI_DECIMALS)} km je Fahrtrichtung ` +
+    `(etwa ${formatStatKm(roadKm, roadKm < 10 ? 1 : 0)} km Straße)`
+  )
+}
+
 export function formatStatPct(
   value: number,
   maxFractionDigits = STAT_PCT_MAX_DECIMALS,

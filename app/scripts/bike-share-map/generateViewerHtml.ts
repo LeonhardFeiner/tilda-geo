@@ -3908,7 +3908,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       fill.className = 'ranking-bar-fill';
 
       if (val != null) {
-        fill.style.background = colorForMetricValue(val, minPct, maxPct, colorScaleSelect.value, metric);
+        fill.style.background = colorForMetricValue(
+          val,
+          minPct,
+          maxPct,
+          colorScaleSelect.value,
+          metric,
+          f.properties?.modelBandPct,
+        );
         if (isDiverging) {
           const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
           const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
@@ -4013,11 +4020,22 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return lerpColor(scale.mid, scale.high, (t - 0.5) * 2);
     }
 
-    function colorForMetricValue(val, minVal, maxVal, scaleId, metric) {
+    /**
+     * A model gap as the map colours it: rescaled to the view's band, so a region judged against a
+     * wider band of its own (a kreisfreie Stadt among Landkreise) is light exactly when its card
+     * says "im typischen Streubereich".
+     */
+    function modelGapForColor(gap, bandPct) {
+      return typeof bandPct === 'number' && bandPct > 0 ? (gap * lastModelBandPct) / bandPct : gap;
+    }
+
+    function colorForMetricValue(val, minVal, maxVal, scaleId, metric, modelBandPct) {
       if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '#cfd8dc';
       metric = metric || currentMapMetric || 'bikeShare';
       const isColorblind = scaleId === 'colorblind';
-      if (metric === 'modelGap') return modelGapColorAt(val, minVal, maxVal, isColorblind);
+      if (metric === 'modelGap') {
+        return modelGapColorAt(modelGapForColor(val, modelBandPct), minVal, maxVal, isColorblind);
+      }
       if (metric === 'commuters') {
         const low = isColorblind ? '#e69f00' : '#c62828';
         const mid = '#f5f5f5';
@@ -4565,7 +4583,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         fill.className = 'ps-ranking-bar-fill';
 
         if (val != null) {
-          fill.style.background = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
+          fill.style.background = colorForMetricValue(
+            val,
+            minVal,
+            maxVal,
+            colorScaleSelect.value,
+            metric,
+            f.properties?.modelBandPct,
+          );
           if (isDiverging) {
             const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
             const w = 50 * RankingDisplay.barFractionFromZero(Math.abs(val), bound);
@@ -4844,8 +4869,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       note.className = 'ra-note';
       const notes = [];
       notes.push(
-        'Zuständigkeit aus der Straßennummer abgeleitet; Ortsdurchfahrten größerer Städte ' +
-          'liegen oft bei der Stadt.',
+        'Straßenlängen je Fahrtrichtung. Zuständigkeit aus der Straßennummer abgeleitet; ' +
+          'Ortsdurchfahrten größerer Städte liegen oft bei der Stadt.',
       );
       // Both sides unfiltered: the per-road split doesn't know about custom counting.
       const independent = TildaStats.independentBikeKm(p.bikelane_length_by_road);
@@ -4915,7 +4940,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         regionDetailGap.className = 'region-detail-gap';
         return;
       }
-      const kmBike = (km) => TildaStats.formatStatKm(km, TildaStats.STAT_KM_BIKE_UI_DECIMALS);
       const viewLabel = viewComparisonLabel();
       if (g.behind) {
         regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
@@ -4926,7 +4950,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             ' (Median ' +
             formatUiPct(g.medianPct) +
             ' %) fehlen rund ',
-          kmBike(g.medianGapKm) + ' km',
+          TildaStats.formatGapKm(g.medianGapKm),
           ' Radinfrastruktur.',
         );
         if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
@@ -5143,8 +5167,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
-      const diffKmRounded = Math.abs(Math.round(m.diffKm));
-      const diffKmStr = deNumber(diffKmRounded, 0) + ' km';
+      const diffKmStr = TildaStats.formatGapKm(Math.abs(m.diffKm));
       const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %-Punkte';
 
       if (m.isWithin1Se) {
@@ -6281,7 +6304,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         TildaStats.formatStatKm(p.bikelaneSumKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
         ' km Radinfrastruktur bei ' +
         TildaStats.formatStatKm(p.roadSumKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
-        ' km Straße' +
+        ' km Straße (je Fahrtrichtung gezählt)' +
         (CONFIG.dataDateLabel ? ' · Stand ' + CONFIG.dataDateLabel : '');
       regionDetailMeta.replaceChildren(pctEl, pctLabel, rankEl, kmEl);
       const mainRoads = mainRoadBreakdownFor(p);
@@ -7324,7 +7347,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ctx.fillRect(barX, y + 22, barW, 16);
 
         if (val != null) {
-          ctx.fillStyle = colorForMetricValue(val, minVal, maxVal, colorScaleSelect.value, metric);
+          ctx.fillStyle = colorForMetricValue(
+            val,
+            minVal,
+            maxVal,
+            colorScaleSelect.value,
+            metric,
+            f.properties?.modelBandPct,
+          );
           if (isDiverging) {
             const midX = barX + barW / 2;
             const bound = val >= 0 ? rankingBarBounds.max : -rankingBarBounds.min;
@@ -8096,9 +8126,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           msg += '.';
           if (behind) {
             msg +=
-              ' Bis ins Mittelfeld fehlen rund ' +
-              TildaStats.formatStatKm(g.medianGapKm, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
-              ' km.';
+              ' Bis ins Mittelfeld fehlen rund ' + TildaStats.formatGapKm(g.medianGapKm) + '.';
           }
           const model = demographicPeerSummary(p)?.roleModel;
           if (model) {
@@ -8542,7 +8570,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           Math.max(Math.abs(minVal), Math.abs(maxVal)),
           isColorblind,
         );
-        const clamped = ['max', minVal, ['min', maxVal, ['coalesce', ['get', 'modelGapPct'], 0]]];
+        // Same rescaling as modelGapForColor: each region against its own band.
+        const gap = ['coalesce', ['get', 'modelGapPct'], 0];
+        const band = ['coalesce', ['get', 'modelBandPct'], lastModelBandPct];
+        const scaled = ['/', ['*', gap, lastModelBandPct], ['max', band, 0.001]];
+        const clamped = ['max', minVal, ['min', maxVal, scaled]];
         return [
           'case',
           ['==', ['get', 'modelGapPct'], null],

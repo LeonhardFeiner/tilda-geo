@@ -5,7 +5,7 @@ import {
   inPlacePhrase,
   type ViewBenchmarkStat,
 } from './rankingDisplay'
-import { formatStatKm, formatStatPctUi, STAT_KM_BIKE_UI_DECIMALS } from './statsClassSums'
+import { formatGapKm, formatStatPctUi } from './statsClassSums'
 
 /**
  * Per-region share pages: a static `r/<slug>.html` stub per Gemeinde/Landkreis/Bundesland that
@@ -191,8 +191,8 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const base = `${pct} % der Straßen in ${s.name} haben Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
   if (s.behind) {
-    const gapKm = formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)
-    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm} km.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+    const gapKm = formatGapKm(s.gapKm)
+    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm}.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
   }
   return `${base} Median: ${median} %.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
 }
@@ -318,7 +318,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const bg = s.behind ? '#3a1414' : '#0d3b2e'
   const rankLineText = `${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
   const subLineText = s.behind
-    ? `Es fehlen rund ${formatStatKm(s.gapKm, STAT_KM_BIKE_UI_DECIMALS)} km bis ins Mittelfeld (Median ${formatStatPctUi(s.medianPct)} %)`
+    ? `Es fehlen rund ${formatGapKm(s.gapKm)} bis ins Mittelfeld (Median ${formatStatPctUi(s.medianPct)} %)`
     : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
   const peer = s.peerGroup
   const peerLineText = peer

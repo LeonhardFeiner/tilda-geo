@@ -1,5 +1,6 @@
 import { describe, expect, it, test } from 'vitest'
 import {
+  formatGapKm,
   csvField,
   formatMapMetricValue,
   formatMinutes,
@@ -157,5 +158,12 @@ describe('formatters', () => {
     expect(formatMapMetricValue(648.7, 'cars')).toBe('649 Pkw')
     expect(formatMapMetricValue(6.191, 'rent')).toBe('6,19 €/m²')
     expect(formatMapMetricValue(-1200, 'commuters')).toBe('-1.200')
+  })
+})
+
+describe('formatGapKm', () => {
+  it('says the per-direction length and the road length it means', () => {
+    expect(formatGapKm(22.5)).toBe('22,5 km je Fahrtrichtung (etwa 11 km Straße)')
+    expect(formatGapKm(3)).toBe('3 km je Fahrtrichtung (etwa 1,5 km Straße)')
   })
 })
