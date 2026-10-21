@@ -15,7 +15,10 @@
 --   * on-road lanes (have _parent_highway): road key from their own `road` tag (exact);
 --     authority from the nearest road within 20 m
 --   * separate ways with _is_sidepath = assumed_no: 'independent' (not along a road)
---   * other separate ways: nearest road within 30 m, else 'independent'
+--   * other separate ways: nearest road within 30 m, else 'independent'. Where TILDA's sidepath
+--     processing named the road class the way runs along (`adjoining_road`, from is_sidepath:of or
+--     the sidepath estimation CSV), the nearest road of that class wins, so a path along a
+--     Kreisstraße doesn't snap to a closer parallel or crossing residential street.
 -- Bike ways are matched in ~100 m pieces (a long path can run along several roads); each piece
 -- is matched by its midpoint and counts in an area by its share, like any other line.
 -- Authority comes from the road number (roads.tags.name_ref): A → autobahn, B → bund,
@@ -80,6 +83,7 @@ CREATE TABLE temp_bikelanes_road_segmentized AS
   SELECT
     tags ? '_parent_highway' AS on_road,
     tags->>'road' AS own_road,
+    tags->>'adjoining_road' AS adjoining_road,
     tags->>'_is_sidepath' AS sidepath,
     tilda_measure_directions(tags) AS factor,
     (atlas_line_pieces(geom, (tags->>'length')::FLOAT, 100)).*
@@ -114,7 +118,8 @@ CREATE TABLE temp_bikelanes_road_assigned AS
         (CASE WHEN s.on_road THEN 20 ELSE 30 END)
           / cos(radians(ST_Y(ST_Transform(s.mid, 4326))))
       )
-    ORDER BY r.geom <-> s.mid
+    -- TILDA's own match first (its road class), then plain distance.
+    ORDER BY (s.adjoining_road IS NOT NULL AND r.road = s.adjoining_road) DESC, r.geom <-> s.mid
     LIMIT 1
   ) n ON true;
 -- A road can't be more than fully covered: two-way paths on both sides, or a path mapped twice,
