@@ -5,7 +5,8 @@
  */
 export const CONTEXT_METRIC_LABELS = {
   mappingDepth: 'Kartierungstiefe (OSM)',
-  busyRoadsCovered: 'Vielbefahrene Landstraßen mit Radweg',
+  busyRoadsCovered: 'Vielbefahrene Landstraßen mit Radweg (Bayern)',
+  busyFederalCovered: 'Vielbefahrene Bundesstraßen mit Radweg',
   density: 'Bevölkerungsdichte',
   rent: 'Ø Nettokaltmiete (Zensus 2022)',
   youth: 'Kinder & Jugendliche (< 18 Jahre)',

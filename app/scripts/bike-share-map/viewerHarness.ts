@@ -174,7 +174,11 @@ const MAPLIBRE_STUB = `
   window.maplibregl = new Proxy(
     { Map: function (o) { return makeMap(o); }, NavigationControl: Control, AttributionControl: Control, ScaleControl: Control,
       FullscreenControl: Control, GeolocateControl: Control,
-      Popup: function () { const p = new Proxy({}, { get: () => () => p }); return p; },
+      // Keeps the last popup's content (window.__popup) so a test can read what it says.
+      Popup: function () {
+        const p = { setLngLat: () => p, setDOMContent: (el) => { window.__popup = el; return p; }, addTo: () => p, remove: () => p };
+        return new Proxy(p, { get: (t, k) => (k in t ? t[k] : () => p) });
+      },
       LngLatBounds: function (a, b) { this.extend = () => this; this.toArray = () => [a, b]; } },
     { get(t, k) { return k in t ? t[k] : function () { return new Proxy({}, { get: () => () => ({}) }); }; } },
   );

@@ -53,6 +53,56 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'busy roads (verkehr=1) load as a layer, and clicking one explains it instead of selecting',
+    async () => {
+      page = await bootViewer(`${IN_LANDKREIS}&verkehr=1`)
+      const { window } = page
+      type StubMap = {
+        getLayer(id: string): unknown
+        queryRenderedFeatures: (p: unknown, o?: { layers?: string[] }) => unknown[]
+        fire(type: string, e: unknown): void
+      }
+      const w = window as unknown as { __map: StubMap; __popup?: HTMLElement; __fetches: string[] }
+      await page.waitFor(() => !!w.__map.getLayer('busy-roads'), 'the busy-roads layer')
+      expect(w.__fetches.some((f) => f.includes('busy-roads.geojson'))).toBe(true)
+      expect(page.q<HTMLInputElement>('#toggle-busy-roads').checked).toBe(true)
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+
+      w.__map.queryRenderedFeatures = (_p, o) =>
+        o?.layers?.[0] === 'busy-roads'
+          ? [
+              {
+                properties: {
+                  strasse: 'K PAF 9',
+                  anfang: 'St 2232',
+                  ende: 'Geisenhausen',
+                  dtv: 3158,
+                  maxspeed: 100,
+                  covered: false,
+                  coveredPct: 0,
+                  link: 'https://www.baysis.bayern.de/',
+                },
+              },
+            ]
+          : []
+      w.__map.fire('click', {
+        point: { x: 10, y: 10 },
+        lngLat: { lng: 11.6, lat: 48.5 },
+        originalEvent: { detail: 1 },
+      })
+      const text = w.__popup?.textContent ?? ''
+      expect(text).toContain('K PAF 9')
+      expect(text).toContain('3.158 Kfz pro Tag')
+      expect(text).toContain('ohne Radweg')
+      expect(text).toContain('ab 2.500 Kfz/Tag')
+      // The click went to the road, not to the region below: the card stays open.
+      expect(window.document.body.dataset.regionDetail).toBe('1')
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'a Landkreis shows the model gap summed over its Gemeinden',
     async () => {
       // Bayern by Landkreise, Landkreis Pfaffenhofen selected.

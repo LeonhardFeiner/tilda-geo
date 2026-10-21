@@ -1,4 +1,5 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
+import { UNFALLATLAS_YEAR } from './constants'
 import { CONTEXT_METRIC_LABELS as L } from './contextMetrics'
 import {
   aggregateResidualStdErrorPct,
@@ -49,6 +50,7 @@ export type DataDownloadContext = {
   commuters?: ById<{ inCommuters?: number; outCommuters?: number; jobCentrality?: number }>
   mapping?: ById<{ indexPct?: number; speedPct?: number; surfacePct?: number; litPct?: number }>
   traffic?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
+  trafficFederal?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
   /** Kreis-level regions with no Gemeinde inside: kreisfreie Städte (kreisfreieIdsOf). */
   kreisfreieIds?: Set<string>
   /** Summed predictions for Kreise, Bezirke, Gemeindeverbände (buildModelAggregates). */
@@ -108,6 +110,11 @@ export const DATA_DOWNLOAD_COLUMNS = {
     'Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße',
   vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   vielbefahren_mit_radweg_pct: 'vielbefahren_mit_radweg_km / vielbefahren_km, %',
+  bundesstr_vielbefahren_km:
+    'Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße',
+  bundesstr_vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
+  bundesstr_vielbefahren_mit_radweg_pct:
+    'bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %',
   einwohner_je_km2: `${L.density}, Einwohner je km² (Destatis Gemeindeverzeichnis)`,
   miete_eur_m2: `${L.rent}, € je m²`,
   pkw_je_1000_ew: `${L.carDensity}: Pkw je 1.000 Einwohner (Statistik FZ 3)`,
@@ -119,7 +126,7 @@ export const DATA_DOWNLOAD_COLUMNS = {
   hoehe_mittel_m: `${L.elevation}, m`,
   bahnhof_distanz_km:
     'Einwohnergewichtete mittlere Luftlinie (Zensus-100-m-Gitter) zur nächsten Bahn-, Tram- oder Fährstation, km',
-  rad_unfaelle: `${L.bikeAccidents} (Unfallatlas 2023; 0 = keine erfasst)`,
+  rad_unfaelle: `${L.bikeAccidents} (Unfallatlas ${UNFALLATLAS_YEAR}; 0 = keine erfasst)`,
   rad_unfaelle_schwer: 'davon mit Getöteten oder Schwerverletzten',
   rad_unfaelle_je_10k_ew: `${L.bikeAccidentsPer10k}`,
   einpendler: 'Sozialversicherungspflichtig Beschäftigte, Einpendler (BA)',
@@ -277,6 +284,7 @@ export function buildDataDownloadRow(
   const commuters = ctx.commuters?.[id]
   const mapping = ctx.mapping?.[id]
   const traffic = ctx.traffic?.[id]
+  const trafficFederal = ctx.trafficFederal?.[id]
 
   // Same gate as the map (generateViewerHtml): no expected value below the ranking threshold.
   const model = isModelGemeinde(p, ctx)
@@ -315,6 +323,9 @@ export function buildDataDownloadRow(
     vielbefahren_km: round(traffic?.needKm, 1),
     vielbefahren_mit_radweg_km: round(traffic?.coveredKm, 1),
     vielbefahren_mit_radweg_pct: round(traffic?.coveredPct, 1),
+    bundesstr_vielbefahren_km: round(trafficFederal?.needKm, 1),
+    bundesstr_vielbefahren_mit_radweg_km: round(trafficFederal?.coveredKm, 1),
+    bundesstr_vielbefahren_mit_radweg_pct: round(trafficFederal?.coveredPct, 1),
     einwohner_je_km2: round(density, 1),
     miete_eur_m2: round(rent, 2),
     pkw_je_1000_ew: round(cars, 1),

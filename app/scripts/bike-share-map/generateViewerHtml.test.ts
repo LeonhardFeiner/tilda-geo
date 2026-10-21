@@ -1,5 +1,6 @@
 import { Script } from 'node:vm'
 import { describe, expect, test } from 'vitest'
+import { UNFALLATLAS_YEAR } from './constants'
 import { generateViewerHtml } from './generateViewerHtml'
 
 describe('generateViewerHtml mobile zoom prevention and redirection', () => {
@@ -439,7 +440,9 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("key: 'bikeAccidents'")
     expect(html).toContain("key: 'bikeAccidentsPer10k'")
     expect(html).toContain("key: 'bikeFatalOrSevere'")
-    expect(html).toContain("header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)'")
+    expect(html).toContain(
+      `header: 'Fahrradunfälle mit Personenschaden (Unfallatlas ${UNFALLATLAS_YEAR})'`,
+    )
     expect(html).toContain("header: 'Fahrradunfälle je 10.000 Einwohner'")
     expect(html).toContain("header: 'Fahrradunfälle mit Getöteten/Schwerverletzten'")
   })

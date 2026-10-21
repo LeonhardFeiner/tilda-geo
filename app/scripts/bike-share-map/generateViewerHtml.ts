@@ -15,6 +15,7 @@ import {
   SHARE_PAGE_BASE_URL,
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
+  UNFALLATLAS_YEAR,
   VIEWER_FILES,
 } from './constants'
 import {
@@ -89,6 +90,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     commutersUrl: v(`./${VIEWER_FILES.commuters}`),
     mappingUrl: v(`./${VIEWER_FILES.mapping}`),
     trafficUrl: v(`./${VIEWER_FILES.traffic}`),
+    trafficFederalUrl: v(`./${VIEWER_FILES.trafficFederal}`),
+    busyRoadsUrl: v(`./${VIEWER_FILES.busyRoads}`),
+    historyUrl: v(`./${VIEWER_FILES.history}`),
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -498,6 +502,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       font-size: 0.75rem; font-weight: normal; margin: 0; cursor: pointer;
     }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
+    .swatch-busy { border-image: linear-gradient(to right, #c62828 50%, #2e7d32 50%) 1; }
+    .busy-road-popup { font-size: 0.85rem; line-height: 1.4; max-width: 260px; }
+    .busy-road-popup strong { display: block; margin-bottom: 2px; }
+    .busy-road-popup p { margin: 2px 0; }
+    .busy-road-popup .brp-status--missing { color: #b71c1c; font-weight: 600; }
+    .busy-road-popup .brp-status--covered { color: #1b5e20; font-weight: 600; }
     .ranking { padding-top: 0; }
     .ranking-hint { font-weight: normal; font-size: 0.75rem; color: #475569; }
     .ranking-list {
@@ -690,6 +700,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     .region-detail-rank { display: block; margin-top: 2px; font-weight: 600; color: #333; }
     .region-detail-km { display: block; font-size: 0.75rem; }
     .region-detail-main-road { display: block; margin-top: 4px; font-size: 0.8125rem; color: #333; }
+    .region-detail-history { display: block; margin-top: 4px; font-size: 0.8125rem; color: #333; }
     .region-detail-main-road strong { font-size: 1rem; color: #111; }
     .region-detail-authority { margin: 0 0 10px; font-size: 0.75rem; color: #333; }
     .region-detail-authority[hidden] { display: none !important; }
@@ -1715,6 +1726,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             <span class="swatch" id="road-swatch"></span>
             Straßen
           </label>
+          <label title="Außerortsabschnitte über der ERA-Schwelle (Zählung 2021) – Bayern: Bundes-, Staats- und Kreisstraßen; übrige Länder: Bundesstraßen. Rot ohne, grün mit Radweg. Linie anklicken für Details.">
+            <input type="checkbox" id="toggle-busy-roads" />
+            <span class="swatch swatch-busy"></span>
+            Viel befahren
+          </label>
         </div>
       </div>
     </details>
@@ -1886,6 +1902,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let commutersIndex = null;
     let mappingIndex = null;
     let trafficIndex = null;
+    let trafficFederalIndex = null;
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
@@ -1931,6 +1948,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
         loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
+        loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
@@ -1958,6 +1976,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const basemapHint = document.getElementById('basemap-hint');
     const toggleBikelanes = document.getElementById('toggle-bikelanes');
     const toggleRoads = document.getElementById('toggle-roads');
+    const toggleBusyRoads = document.getElementById('toggle-busy-roads');
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
 
@@ -2360,6 +2379,59 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       dynamicBaselines: null,
       rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
     };
+
+    // ---- Change over time (history.json, snapshotHistory.ts): standard counting only ----
+    let historyIndex = null;
+    let historyLoad = null;
+
+    function isDefaultCountingFilter() {
+      const def = CONFIG.radinfraDefaultFilter;
+      return (
+        Object.keys(def.road).every((k) => !!lengthClassFilter.road[k] === !!def.road[k]) &&
+        Object.keys(def.bikelane).every((k) => !!lengthClassFilter.bikelane[k] === !!def.bikelane[k])
+      );
+    }
+
+    function renderRegionHistory(p) {
+      regionDetailMeta.querySelector('.region-detail-history')?.remove();
+      if (!isDefaultCountingFilter()) return;
+      if (!historyIndex) {
+        historyLoad ??= fetch(CONFIG.historyUrl)
+          .then((res) => (res.ok ? res.json() : null))
+          .then((data) => {
+            historyIndex = data;
+            const selected = selectedFeatureId && regionIndex?.byId.get(selectedFeatureId);
+            if (data && selected) renderRegionHistory(selected.properties || {});
+          })
+          .catch(() => null);
+        return;
+      }
+      const change = RankingDisplay.changeSinceFirst(historyIndex, p.id);
+      if (!change) return;
+      const line = document.createElement('span');
+      line.className = 'region-detail-history';
+      const since = new Date(change.sinceDate).toLocaleDateString('de-DE', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+      });
+      const km = change.bikeKmDelta;
+      const pp = change.pctPointsDelta;
+      line.textContent =
+        'Seit ' +
+        since +
+        ': ' +
+        (Math.abs(km) < 0.05
+          ? 'keine Veränderung'
+          : (km > 0 ? '+' : '−') +
+            TildaStats.formatStatKm(Math.abs(km), 1) +
+            ' km Radinfrastruktur je Fahrtrichtung (' +
+            (pp >= 0 ? '+' : '−') +
+            formatUiPct(Math.abs(pp)) +
+            ' Prozentpunkte)') +
+        ' – neu erfasst oder gebaut, laut OpenStreetMap.';
+      regionDetailMeta.appendChild(line);
+    }
 
     function getActiveModelSettings() {
       const isStdRoad =
@@ -2797,9 +2869,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
+        { key: 'busyFederalCovered', header: 'Vielbefahrene Bundesstraßen mit Radweg (%)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
-        { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas 2023)', numeric: 'num0' },
+        { key: 'bikeAccidents', header: 'Fahrradunfälle mit Personenschaden (Unfallatlas ${UNFALLATLAS_YEAR})', numeric: 'num0' },
         { key: 'bikeAccidentsPer10k', header: 'Fahrradunfälle je 10.000 Einwohner', numeric: 'num1' },
         { key: 'bikeFatalOrSevere', header: 'Fahrradunfälle mit Getöteten/Schwerverletzten', numeric: 'num0' },
         { key: 'netCommuters', header: 'Pendlersaldo (BA 2025)', numeric: 'num0' },
@@ -3047,7 +3120,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             'Durchschnittliche Nettokaltmiete in Euro je m² Wohnfläche (Quelle: Zensus 2022).';
         } else if (metric === 'accidents') {
           metricDef.textContent =
-            'Fahrradunfälle mit Personenschaden je 10.000 Einwohner (Quelle: Destatis Unfallatlas 2023).';
+            'Fahrradunfälle mit Personenschaden je 10.000 Einwohner (Quelle: Destatis Unfallatlas ${UNFALLATLAS_YEAR}).';
         } else if (metric === 'commuters') {
           metricDef.innerHTML =
             'Differenz Einpendler minus Auspendler. ' +
@@ -5476,6 +5549,29 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           },
         },
         {
+          // Germany, Bundesstraßen only (fetchTrafficVolumes.ts): comparable across Länder.
+          key: 'busyFederalCovered',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.busyFederalCovered,
+          note: 'außerorts über ERA-Schwelle, Zählung 2021',
+          source: trafficFederalIndex,
+          get: (id) => {
+            const v = trafficFederalIndex?.byId[id]?.coveredPct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v, id) => {
+            const t = trafficFederalIndex?.byId[id];
+            if (!t) return deNumber(v, 0) + ' %';
+            return (
+              deNumber(v, 0) +
+              ' % (' +
+              deNumber(t.coveredKm, 1) +
+              ' von ' +
+              deNumber(t.needKm, 1) +
+              ' km)'
+            );
+          },
+        },
+        {
           key: 'density',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.density,
           source: densityIndex,
@@ -5571,7 +5667,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         {
           key: 'bikeAccidents',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidents,
-          note: 'Unfallatlas 2023',
+          note: 'Unfallatlas ${UNFALLATLAS_YEAR}',
           source: accidentsIndex,
           get: (id) => {
             const v = accidentsIndex?.byId[id]?.bikeAccidents;
@@ -6316,6 +6412,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur');
         regionDetailMeta.appendChild(line);
       }
+      renderRegionHistory(p);
       renderRegionAuthority(p, mainRoads);
       renderRegionPeerGap(p);
       renderRegionModelGap(p);
@@ -6682,6 +6779,22 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         // The second click of a double-click belongs to the drill-down below; handled as a
         // click of its own it would deselect the region the first one just selected.
         if (e.originalEvent && e.originalEvent.detail >= 2) return;
+        // A busy-road line under the pointer (a few px of slack: the lines are thin) opens its
+        // details instead of selecting the region below it.
+        if (toggleBusyRoads?.checked && map.getLayer('busy-roads')) {
+          const pad = 6;
+          const road = map.queryRenderedFeatures(
+            [
+              [e.point.x - pad, e.point.y - pad],
+              [e.point.x + pad, e.point.y + pad],
+            ],
+            { layers: ['busy-roads'] },
+          )[0];
+          if (road) {
+            showBusyRoadPopup(road.properties || {}, e.lngLat);
+            return;
+          }
+        }
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
         const f = hits[0];
         if (f?.properties?.id) selectRegionById(f.properties.id, f);
@@ -7839,6 +7952,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       else params.delete('radwege');
       if (toggleRoads.checked) params.set('strassen', '1');
       else params.delete('strassen');
+      if (toggleBusyRoads?.checked) params.set('verkehr', '1');
+      else params.delete('verkehr');
       if (!rankingDetails.open) params.set('ranking', '0');
       else params.delete('ranking');
       if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
@@ -8314,6 +8429,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       } else if (live) {
         toggleRoads.checked = false;
       }
+      if (toggleBusyRoads) {
+        const verkehr = params.get('verkehr');
+        if (verkehr != null && verkehr !== '') toggleBusyRoads.checked = parseBoolParam(verkehr, false);
+        else if (live) toggleBusyRoads.checked = false;
+      }
 
       const ranking = params.get('ranking');
       if (ranking != null && ranking !== '') {
@@ -8473,7 +8593,123 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       updateOverlayLineHighlightLayers();
     }
 
+    // ---- Busy rural roads (Bavaria): BAYSIS count above the ERA threshold, with/without path ----
+    let busyRoadsLoad = null;
+    let busyRoadPopup = null;
+
+    function busyRoadColors() {
+      return colorScaleSelect.value === 'colorblind'
+        ? { covered: '#2166ac', missing: '#e66101' }
+        : { covered: '#2e7d32', missing: '#c62828' };
+    }
+
+    /** Downloaded once; the layers are re-added after a basemap switch resets the style. */
+    function ensureBusyRoadsLayer() {
+      busyRoadsLoad ??= fetch(CONFIG.busyRoadsUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null);
+      return busyRoadsLoad.then((data) => {
+        if (!data) {
+          busyRoadsLoad = null;
+          return false;
+        }
+        if (map.getLayer('busy-roads')) return true;
+        if (!map.getSource('busy-roads')) map.addSource('busy-roads', { type: 'geojson', data });
+        const layout = { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' };
+        map.addLayer({
+          id: 'busy-roads-casing',
+          type: 'line',
+          source: 'busy-roads',
+          layout,
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': ['interpolate', ['linear'], ['zoom'], 7, 3, 12, 8],
+          },
+        });
+        map.addLayer({
+          id: 'busy-roads',
+          type: 'line',
+          source: 'busy-roads',
+          layout,
+          paint: { 'line-width': ['interpolate', ['linear'], ['zoom'], 7, 1.6, 12, 5] },
+        });
+        return true;
+      });
+    }
+
+    function updateBusyRoadsLayer() {
+      if (!toggleBusyRoads) return;
+      if (!toggleBusyRoads.checked) {
+        setLayerVisibility('busy-roads', false);
+        setLayerVisibility('busy-roads-casing', false);
+        busyRoadPopup?.remove();
+        return;
+      }
+      ensureBusyRoadsLayer().then((ok) => {
+        if (!ok || !toggleBusyRoads.checked) return;
+        const c = busyRoadColors();
+        map.setPaintProperty('busy-roads', 'line-color', ['case', ['get', 'covered'], c.covered, c.missing]);
+        setLayerVisibility('busy-roads-casing', true);
+        setLayerVisibility('busy-roads', true);
+      });
+    }
+
+    function showBusyRoadPopup(props, lngLat) {
+      if (typeof maplibregl === 'undefined' || typeof maplibregl.Popup !== 'function') return;
+      const el = document.createElement('div');
+      el.className = 'busy-road-popup';
+      const line = (text, className) => {
+        const p = document.createElement('p');
+        if (className) p.className = className;
+        p.textContent = text;
+        el.appendChild(p);
+      };
+      const title = document.createElement('strong');
+      title.textContent = String(props.strasse || 'Straße');
+      el.appendChild(title);
+      if (props.anfang || props.ende) line((props.anfang || '…') + ' → ' + (props.ende || '…'));
+      const speed = Number(props.maxspeed);
+      const threshold = speed > 0 && speed <= 70 ? 4000 : 2500;
+      line(
+        deNumber(Number(props.dtv), 0) +
+          ' Kfz pro Tag (Zählung 2021)' +
+          (speed > 0 ? ' · Tempo ' + speed : ''),
+      );
+      const covered = props.covered === true || props.covered === 'true';
+      line(
+        covered ? 'Hier mit Radweg' : 'Hier ohne Radweg',
+        covered ? 'brp-status--covered' : 'brp-status--missing',
+      );
+      line('Radweg auf ' + deNumber(Number(props.coveredPct), 0) + ' % des Zählabschnitts.');
+      line(
+        'Nach ERA 2010 ist ein Radweg ab ' +
+          deNumber(threshold, 0) +
+          ' Kfz/Tag (' +
+          (threshold === 4000 ? '70' : '100') +
+          ' km/h) sinnvoll.',
+      );
+      if (props.quelle === 'BASt') {
+        line('Abschnitt aus der BASt-Zählung genähert (Zählstelle und Länge).');
+      }
+      if (props.link) {
+        const a = document.createElement('a');
+        a.href = String(props.link);
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';
+        a.textContent = props.quelle === 'BASt' ? 'Zählung 2021 bei der BASt' : 'Zählstelle bei BAYSIS';
+        const p = document.createElement('p');
+        p.appendChild(a);
+        el.appendChild(p);
+      }
+      busyRoadPopup?.remove();
+      busyRoadPopup = new maplibregl.Popup({ maxWidth: '280px' })
+        .setLngLat(lngLat)
+        .setDOMContent(el)
+        .addTo(map);
+    }
+
     function updateOverlayVisibility() {
+      updateBusyRoadsLayer();
       setLayerVisibility('bikelanes-casing', toggleBikelanes.checked);
       setLayerVisibility('bikelanes-lines', toggleBikelanes.checked);
       setLayerVisibility('roads-lines-major', toggleRoads.checked);
@@ -9038,6 +9274,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     }
     colorScaleSelect?.addEventListener('change', () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
+      updateBusyRoadsLayer();
       updateLegendBar(colorScaleSelect.value, currentMapMetric);
       updateColorScaleHint();
       syncOverlayColorInputsFromScale(colorScaleSelect.value);
@@ -9337,6 +9574,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     rankingDetails?.addEventListener('toggle', () => scheduleUrlSync());
     toggleBikelanes?.addEventListener('change', updateOverlayVisibility);
     toggleRoads?.addEventListener('change', updateOverlayVisibility);
+    toggleBusyRoads?.addEventListener('change', () => {
+      updateBusyRoadsLayer();
+      scheduleUrlSync();
+    });
     overlayBikelaneColorInput?.addEventListener('input', applyOverlayLineColors);
     overlayRoadColorInput?.addEventListener('input', applyOverlayLineColors);
     for (const input of [

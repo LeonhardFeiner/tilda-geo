@@ -3,8 +3,8 @@
  * Fetches and aggregates Destatis Unfallatlas (Statistische Ämter des Bundes und der Länder)
  * traffic accident data with personal injuries, specifically focusing on bicycle accidents.
  *
- * Source: Destatis / Statistische Ämter des Bundes und der Länder – Unfallatlas 2023
- * URL: https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/Unfallorte2023_EPSG25832_CSV.zip
+ * Source: Destatis / Statistische Ämter des Bundes und der Länder – Unfallatlas (year: UNFALLATLAS_YEAR)
+ * URL: https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/Unfallorte<year>_EPSG25832_CSV.zip
  *
  * Attributes per municipality (Gemeinde, level 8) and district (Landkreis, level 6):
  *   - totalAccidents: Personal injury accidents total
@@ -20,11 +20,12 @@
 import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { UNFALLATLAS_YEAR } from './constants'
 import { downloadCachePath, writeDataset } from './fetchCommon'
 
-export const UNFALLATLAS_2023_ZIP_URL =
-  'https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/Unfallorte2023_EPSG25832_CSV.zip'
-const CACHE_ZIP_PATH = downloadCachePath('Unfallorte2023_EPSG25832_CSV.zip')
+const ZIP_NAME = `Unfallorte${UNFALLATLAS_YEAR}_EPSG25832_CSV.zip`
+export const UNFALLATLAS_ZIP_URL = `https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/${ZIP_NAME}`
+const CACHE_ZIP_PATH = downloadCachePath(ZIP_NAME)
 
 export type AccidentMetrics = {
   /** Residents the rate is based on (Destatis); lets the viewer skip tiny denominators. */
@@ -129,8 +130,10 @@ export async function fetchUnfallatlasZip(): Promise<Buffer> {
     return readFileSync(CACHE_ZIP_PATH)
   }
 
-  process.stdout.write(`Downloading Destatis Unfallatlas 2023 from ${UNFALLATLAS_2023_ZIP_URL} …\n`)
-  const res = await fetch(UNFALLATLAS_2023_ZIP_URL)
+  process.stdout.write(
+    `Downloading Destatis Unfallatlas ${UNFALLATLAS_YEAR} from ${UNFALLATLAS_ZIP_URL} …\n`,
+  )
+  const res = await fetch(UNFALLATLAS_ZIP_URL)
   if (!res.ok) {
     throw new Error(`Failed to download Unfallatlas: ${res.status} ${res.statusText}`)
   }
@@ -139,8 +142,16 @@ export async function fetchUnfallatlasZip(): Promise<Buffer> {
   return buf
 }
 
+/** The accident CSV inside the archive; its name changes between releases (…_LinRef, …_LR_BasisDLM). */
+export function accidentCsvEntry(entries: string[]) {
+  return entries.find((e) => /^csv\/Unfallorte.*\.csv$/i.test(e)) ?? null
+}
+
 export function extractCsvFromZip(zipPath: string): string {
-  const proc = spawnSync('unzip', ['-p', zipPath, 'csv/Unfallorte2023_LinRef.csv'], {
+  const list = spawnSync('unzip', ['-Z1', zipPath])
+  const entry = accidentCsvEntry(list.stdout?.toString('utf8').split(/\r?\n/) ?? [])
+  if (!entry) throw new Error(`No Unfallorte*.csv in ${zipPath}`)
+  const proc = spawnSync('unzip', ['-p', zipPath, entry], {
     maxBuffer: 100 * 1024 * 1024,
   })
   if (proc.status !== 0 || !proc.stdout) {
@@ -288,7 +299,12 @@ if (import.meta.main) {
   mkdirSync(outDir, { recursive: true })
   writeDataset(
     outPath,
-    { source: 'Statistische Ämter des Bundes und der Länder – Unfallatlas 2023', byCode, byId },
+    {
+      source: `Statistische Ämter des Bundes und der Länder – Unfallatlas ${UNFALLATLAS_YEAR}`,
+      year: UNFALLATLAS_YEAR,
+      byCode,
+      byId,
+    },
     { minCount: 9000 },
   )
   process.stdout.write(

@@ -1,3 +1,4 @@
+import { UNFALLATLAS_YEAR } from './constants'
 import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
 import { POPULATION_BANDS, URBANIZATION_LABELS, type UrbanizationCode } from './demographicPeers'
 import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
@@ -140,7 +141,7 @@ ${li(Object.entries(DATA_DOWNLOAD_COLUMNS).map(([key, text]) => `<code>${key}</c
 <p><strong>Quellen &amp; Lizenzen:</strong></p>
 ${li([
   `Längen, Grenzen: © OpenStreetMap-Mitwirkende, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a> – die CSV ist damit eine Datenbank unter ODbL.`,
-  `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas 2023), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
+  `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas ${UNFALLATLAS_YEAR}), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
   `Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.`,
@@ -248,7 +249,15 @@ ${li([
 
   ${peerSection}
 
-  <h2>Vielbefahrene Landstraßen (Bayern)</h2>
+  <h2>Veränderung über die Zeit</h2>
+  <p>Mit jeder Datenaktualisierung wird ein Stand aller Gebiete gespeichert. Sobald ein Stand
+  vorliegt, der mindestens zwei Wochen älter ist, zeigt die Detailkarte, wie viel Radinfrastruktur
+  seitdem hinzugekommen ist – „neu erfasst oder gebaut“, denn OpenStreetMap unterscheidet nicht
+  zwischen einem neuen Radweg und einem, der erst jetzt eingetragen wurde. Verglichen werden nur
+  Stände, die nach denselben Regeln gezählt wurden; ändert sich die Zählweise, beginnt die Reihe
+  neu. Die Angabe gilt für den Standard-Zählfilter.</p>
+
+  <h2>Vielbefahrene Landstraßen</h2>
   <p>Ob eine Landstraße einen eigenen Radweg braucht, hängt nach den <strong>Empfehlungen für
   Radverkehrsanlagen (ERA 2010)</strong> von Verkehrsmenge und Tempo ab. Für regionale Landstraßen
   (Kategorie LS&nbsp;III) gilt ein fahrbahnbegleitender Radweg als <em>sinnvoll</em> ab einem
@@ -261,6 +270,14 @@ ${li([
   Grundlage ist die Straßenverkehrszählung 2021. Das Tempo stammt aus OpenStreetMap, sonst gilt der
   Regelwert 100&nbsp;km/h. Diese Kilometer sind <strong>Straßenkilometer</strong>, nicht je
   Fahrtrichtung gezählt.</p>
+  <p><strong>Bundesstraßen in ganz Deutschland:</strong> Damit Gebiete in allen Ländern vergleichbar
+  sind, gibt es denselben Wert zusätzlich nur für Bundesstraßen – in Bayern aus den BAYSIS-Abschnitten,
+  in den übrigen Ländern aus den <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Ergebnissen
+  der Bundesanstalt für Straßenwesen</a>. Die BASt nennt je Abschnitt nur die Zählstelle und die
+  Länge; der Abschnitt wird daher genähert als die OpenStreetMap-Wege derselben Bundesstraße im Umkreis
+  der halben Länge um die Zählstelle. Die Kilometer stammen von der BASt, OpenStreetMap liefert nur
+  den Anteil mit Radweg. An Kurven und Kreuzungen kann der genäherte Abschnitt vom echten abweichen.
+  Die Karte zeigt beide Quellen; ein Klick auf eine Linie nennt die Quelle.</p>
   <p><strong>Einschränkungen:</strong> Ortsdurchfahrten (hier gelten andere Regeln) und
   Gemeindestraßen sind nicht enthalten, da für sie keine landesweite Zählung vorliegt. Die
   Straßenkategorie (LS&nbsp;II–IV) ist in den Daten nicht angegeben; die Schwelle wird auf alle

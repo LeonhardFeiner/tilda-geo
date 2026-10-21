@@ -15,11 +15,11 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
+import { KBA_FZ3_YEAR } from './constants'
 import { downloadCachePath, writeDataset } from './fetchCommon'
 
-export const KBA_FZ3_URL =
-  'https://www.kba.de/SharedDocs/Downloads/DE/Statistik/Fahrzeuge/FZ3/fz3_2024.xlsx?__blob=publicationFile'
-const CACHE_XLSX_PATH = downloadCachePath('fz3_2024.xlsx')
+export const KBA_FZ3_URL = `https://www.kba.de/SharedDocs/Downloads/DE/Statistik/Fahrzeuge/FZ3/fz3_${KBA_FZ3_YEAR}.xlsx?__blob=publicationFile`
+const CACHE_XLSX_PATH = downloadCachePath(`fz3_${KBA_FZ3_YEAR}.xlsx`)
 
 export type CarDensityMetrics = {
   cars: number
@@ -257,7 +257,12 @@ if (import.meta.main) {
   mkdirSync(outDir, { recursive: true })
   writeDataset(
     outPath,
-    { source: 'Kraftfahrt-Bundesamt (KBA) Reihe FZ 3', byCode, byId },
+    {
+      source: `Kraftfahrt-Bundesamt (KBA) Reihe FZ 3, Stand 1. Januar ${KBA_FZ3_YEAR}`,
+      year: KBA_FZ3_YEAR,
+      byCode,
+      byId,
+    },
     { minCount: 10_000 },
   )
   process.stdout.write(

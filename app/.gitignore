@@ -60,6 +60,8 @@ test-results/
 scripts/bike-share-map/routing/.venv/
 scripts/bike-share-map/routing/cache/
 scripts/bike-share-map/cache/
+# Mapping worklists (exportMappingWorklist.ts) are per-Gemeinde working files, not published.
+scripts/bike-share-map/output/worklists/
 # Optional full GeoJSON export (`export-stats-geojson -- --geojson`, 49 MB) for local analysis;
 # the build reads stats.msgpack.
 scripts/bike-share-map/output/stats.geojson

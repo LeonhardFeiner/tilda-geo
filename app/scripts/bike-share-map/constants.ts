@@ -85,6 +85,9 @@ export const VIEWER_FILES = {
   commuters: 'gemeinde-commuters.json',
   mapping: 'gemeinde-mapping.json',
   traffic: 'gemeinde-traffic.json',
+  trafficFederal: 'gemeinde-traffic-federal.json',
+  busyRoads: 'busy-roads.geojson',
+  history: 'history.json',
 } as const
 
 /**
@@ -104,8 +107,19 @@ export const VIEWER_PASS_THROUGH_DATASETS = [
   { key: 'commuters', source: 'commuters.json', label: 'BA commuter statistics' },
   { key: 'mapping', source: 'mapping-completeness.json', label: 'OSM mapping completeness' },
   { key: 'traffic', source: 'traffic-volumes.json', label: 'BAYSIS traffic volumes (Bayern)' },
+  {
+    key: 'trafficFederal',
+    source: 'traffic-federal.json',
+    label: 'Traffic volumes on Bundesstraßen (Germany)',
+  },
 ] as const satisfies ReadonlyArray<{
   key: keyof typeof VIEWER_FILES
   source: string
   label: string
 }>
+
+/** Year of the Destatis Unfallatlas release used (fetchAccidents.ts); labels read it from here. */
+export const UNFALLATLAS_YEAR = 2025
+
+/** KBA FZ 3 release (stock on 1 January of that year) used by fetchCarDensity.ts. */
+export const KBA_FZ3_YEAR = 2026

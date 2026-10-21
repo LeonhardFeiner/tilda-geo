@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { parseUnfallatlasCsv } from './fetchAccidents'
+import { accidentCsvEntry, parseUnfallatlasCsv } from './fetchAccidents'
 
 describe('parseUnfallatlasCsv', () => {
   test('parses Unfallatlas CSV header and aggregates accidents by AGS', () => {
@@ -41,5 +41,17 @@ describe('parseUnfallatlasCsv', () => {
   test('returns empty map for invalid or empty input', () => {
     expect(parseUnfallatlasCsv('').size).toBe(0)
     expect(parseUnfallatlasCsv('invalid;csv').size).toBe(0)
+  })
+})
+
+describe('accidentCsvEntry', () => {
+  test('finds the CSV whatever the release calls it', () => {
+    expect(accidentCsvEntry(['csv/schema.ini', 'csv/Unfallorte2023_LinRef.csv'])).toBe(
+      'csv/Unfallorte2023_LinRef.csv',
+    )
+    expect(accidentCsvEntry(['csv/schema.ini', 'csv/Unfallorte_2025_LR_BasisDLM.csv'])).toBe(
+      'csv/Unfallorte_2025_LR_BasisDLM.csv',
+    )
+    expect(accidentCsvEntry(['csv/schema.ini'])).toBeNull()
   })
 })

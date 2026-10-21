@@ -43,6 +43,7 @@ import { generateViewerHtml } from './generateViewerHtml'
 import { methodologyPageHtml } from './methodologyPage'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
+import { mergeHistory, type Snapshot, snapshotFromFeatures } from './snapshotHistory'
 import { type StationAccessFiles, stationAreasPageHtml } from './stationAreasPage'
 import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
 
@@ -127,6 +128,8 @@ if (!hasNeighborsMsgpack) {
   )
 }
 symlinkOutputFile(manifestPath, join(viewerDir, VIEWER_FILES.manifest))
+// Map lines of the busy rural roads (fetchTrafficVolumes.ts), loaded only when switched on.
+symlinkOutputFile(join(outputRoot, VIEWER_FILES.busyRoads), join(viewerDir, VIEWER_FILES.busyRoads))
 // stats.geojson (49 MB) is a local analysis file only; the page reads the msgpack packs.
 rmSync(join(viewerDir, 'stats.geojson'), { force: true })
 
@@ -245,6 +248,7 @@ if (geoFeatures.length) {
     commuters: readById(VIEWER_FILES.commuters),
     mapping: readById(VIEWER_FILES.mapping),
     traffic: readById(VIEWER_FILES.traffic),
+    trafficFederal: readById(VIEWER_FILES.trafficFederal),
   }
   const osmDataFrom = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom
@@ -265,6 +269,32 @@ if (geoFeatures.length) {
     rowCount: rows.length,
   }
   process.stdout.write(`Data download: ${rows.length} regions → ${dataDir}/${fileName}\n`)
+}
+
+// output/history/<OSM date>.json: one snapshot per data release, kept in git (Pages keeps no old
+// versions); merged into history.json for the card's "since <date>" line. See snapshotHistory.ts.
+if (geoFeatures.length) {
+  const osmDataFrom = existsSync(manifestPath)
+    ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom
+    : undefined
+  const historyDir = join(outputRoot, 'history')
+  mkdirSync(historyDir, { recursive: true })
+  const day = osmDataFrom?.slice(0, 10)
+  if (day && /^\d{4}-\d{2}-\d{2}$/.test(day)) {
+    const snapshotPath = join(historyDir, `${day}.json`)
+    if (!existsSync(snapshotPath)) {
+      writeFileSync(snapshotPath, JSON.stringify(snapshotFromFeatures(geoFeatures, osmDataFrom!)))
+      process.stdout.write(`History: new snapshot ${snapshotPath} — commit it\n`)
+    }
+  }
+  const snapshots = readdirSync(historyDir)
+    .filter((name) => name.endsWith('.json'))
+    .map((name) => JSON.parse(readFileSync(join(historyDir, name), 'utf8')) as Snapshot)
+  const history = mergeHistory(snapshots)
+  writeFileSync(join(viewerDir, VIEWER_FILES.history), JSON.stringify(history))
+  process.stdout.write(
+    `History: ${history.dates.length} comparable snapshot(s) → ${viewerDir}/${VIEWER_FILES.history}\n`,
+  )
 }
 
 const dataDateLabel = readDataDateLabel(outputRoot)

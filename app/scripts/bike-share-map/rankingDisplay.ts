@@ -682,3 +682,6 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     r2: c.r2,
   }
 }
+
+// The viewer reads the history through this bundle (rankingDisplay.js).
+export { changeSinceFirst, MIN_HISTORY_DAYS } from './snapshotHistory'

@@ -25,6 +25,10 @@ and `output/viewer/vendor/`, which the build regenerates.
 
 ## Refreshing the data
 
+`refresh-data.sh` runs all of the steps below in order (`--skip-processing` if the DB is already
+current, `--with-routing` to also refresh stations and travel times). It never commits; its header
+has a cron line for a weekly run. The individual steps:
+
 Order matters: every context dataset is joined to the region ids and Regionalschlüssel of the
 current export, so run the export first.
 

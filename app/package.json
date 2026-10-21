@@ -43,6 +43,7 @@
     "bike-share-map:calmed-roads": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchCalmedRoads.ts",
     "bike-share-map:accidents": "bun ./scripts/bike-share-map/fetchAccidents.ts",
     "bike-share-map:commuters": "bun ./scripts/bike-share-map/fetchCommuters.ts",
+    "bike-share-map:mapping-worklist": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/exportMappingWorklist.ts",
     "bike-share-map:traffic-volumes": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchTrafficVolumes.ts",
     "bike-share-map:mapping-completeness": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/fetchMappingCompleteness.ts",
     "bike-share-map:populate-context": "bun --bun --env-file=../.env --env-file=../.env.local ./scripts/bike-share-map/populateRegionContextMetrics.ts",
