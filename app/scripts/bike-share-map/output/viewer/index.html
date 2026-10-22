@@ -18,8 +18,8 @@
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack?v=20261022072336" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072336" as="script" />
+  <link rel="preload" href="./stats-core.msgpack?v=20261022072306" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072306" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -1670,7 +1670,7 @@
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <details class="region-detail-more" id="region-detail-more">
-      <summary>Mehr Zahlen: Erwartungswert, Zuständigkeiten, Umfeld mit Diagrammen, Aufschlüsselung</summary>
+      <summary id="region-detail-more-summary">Mehr Zahlen: Umfeld mit Diagrammen, Aufschlüsselung</summary>
       <div class="region-detail-gap region-detail-gap--model" id="region-detail-model-gap" hidden></div>
       <div class="region-detail-authority" id="region-detail-authority" hidden></div>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
@@ -1738,15 +1738,15 @@
       <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js?v=20261022072336"></script>
-  <script src="./regionNavigation.js?v=20261022072336"></script>
-  <script src="./statsMsgpack.js?v=20261022072336"></script>
-  <script src="./neighborView.js?v=20261022072336"></script>
-  <script src="./regionSearch.js?v=20261022072336"></script>
-  <script src="./rankingDisplay.js?v=20261022072336"></script>
-  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072336"></script>
+  <script src="./statsClassSums.js?v=20261022072306"></script>
+  <script src="./regionNavigation.js?v=20261022072306"></script>
+  <script src="./statsMsgpack.js?v=20261022072306"></script>
+  <script src="./neighborView.js?v=20261022072306"></script>
+  <script src="./regionSearch.js?v=20261022072306"></script>
+  <script src="./rankingDisplay.js?v=20261022072306"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072306"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-22T07:23:36.701Z","dataDateLabel":"16.10.2026","assetVersion":"20261022072336","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022072336","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022072336","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022072336","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022072336","neighborsUrl":"./neighbors.json?v=20261022072336","peersUrl":"./gemeinde-peers.json?v=20261022072336","densityUrl":"./gemeinde-density.json?v=20261022072336","transitUrl":"./gemeinde-transit.json?v=20261022072336","terrainUrl":"./gemeinde-terrain.json?v=20261022072336","zensusUrl":"./gemeinde-zensus.json?v=20261022072336","carsUrl":"./gemeinde-cars.json?v=20261022072336","calmedUrl":"./gemeinde-calmed.json?v=20261022072336","accidentsUrl":"./gemeinde-accidents.json?v=20261022072336","commutersUrl":"./gemeinde-commuters.json?v=20261022072336","mappingUrl":"./gemeinde-mapping.json?v=20261022072336","trafficUrl":"./gemeinde-traffic.json?v=20261022072336","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022072336","busyRoadsUrl":"./busy-roads.geojson?v=20261022072336","historyUrl":"./history.json?v=20261022072336","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-22T07:23:06.950Z","dataDateLabel":"16.10.2026","assetVersion":"20261022072306","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022072306","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022072306","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022072306","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022072306","neighborsUrl":"./neighbors.json?v=20261022072306","peersUrl":"./gemeinde-peers.json?v=20261022072306","densityUrl":"./gemeinde-density.json?v=20261022072306","transitUrl":"./gemeinde-transit.json?v=20261022072306","terrainUrl":"./gemeinde-terrain.json?v=20261022072306","zensusUrl":"./gemeinde-zensus.json?v=20261022072306","carsUrl":"./gemeinde-cars.json?v=20261022072306","calmedUrl":"./gemeinde-calmed.json?v=20261022072306","accidentsUrl":"./gemeinde-accidents.json?v=20261022072306","commutersUrl":"./gemeinde-commuters.json?v=20261022072306","mappingUrl":"./gemeinde-mapping.json?v=20261022072306","trafficUrl":"./gemeinde-traffic.json?v=20261022072306","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022072306","busyRoadsUrl":"./busy-roads.geojson?v=20261022072306","historyUrl":"./history.json?v=20261022072306","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -2737,6 +2737,26 @@
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
     const regionDetailAuthority = document.getElementById('region-detail-authority');
+    const regionDetailMoreSummary = document.getElementById('region-detail-more-summary');
+    /** Set on a fresh selection or a switch to the model map: open the fold once the model gap shows. */
+    let openMoreForModelGap = false;
+    /** The fold's title names only what this region has; the parts render (and hide) on their own. */
+    function syncRegionDetailMore() {
+      const parts = [];
+      if (!regionDetailModelGap.hidden) parts.push('Erwartungswert');
+      if (!regionDetailAuthority.hidden) parts.push('Zuständigkeiten');
+      if (!regionDetailExtra.hidden) parts.push('Umfeld mit Diagrammen');
+      parts.push('Aufschlüsselung');
+      regionDetailMoreSummary.textContent = 'Mehr Zahlen: ' + parts.join(', ');
+      if (openMoreForModelGap && !regionDetailModelGap.hidden && currentMapMetric === 'modelGap') {
+        openMoreForModelGap = false;
+        regionDetailMore.open = true;
+      }
+    }
+    const regionDetailMoreObserver = new MutationObserver(syncRegionDetailMore);
+    for (const part of [regionDetailModelGap, regionDetailAuthority, regionDetailExtra]) {
+      regionDetailMoreObserver.observe(part, { attributes: true, attributeFilter: ['hidden'] });
+    }
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
     // Anchor marking the card's home spot (floating card, desktop) so it can be moved back.
@@ -7061,6 +7081,7 @@
       const prevCardScrollTop = !freshSelection && !regionDetailEl.hidden ? regionDetailEl.scrollTop : null;
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
+      if (freshSelection) openMoreForModelGap = currentMapMetric === 'modelGap';
       if (detailId) setSelectedFeatureId(detailId, feature);
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
@@ -7116,6 +7137,7 @@
       renderRegionGap(p);
       renderRegionQuality(p);
       renderRegionExtra(p);
+      syncRegionDetailMore();
       regionDetailBody.replaceChildren();
       regionDetailActions.replaceChildren();
       const filter = readLengthClassFilterFromUi();
@@ -9932,12 +9954,14 @@
     mapMetricSelect?.addEventListener('change', async () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       currentMapMetric = mapMetricSelect.value;
+      openMoreForModelGap = currentMapMetric === 'modelGap';
       if (currentMapMetric !== 'bikeShare') {
         setLoadStatus('Lade Modelldaten …');
         await ensureRegionExtraIndexes();
         setLoadStatus('');
       }
       await applyCurrentView();
+      if (!regionDetailEl.hidden) syncRegionDetailMore();
       if (panelMain) {
         panelMain.scrollTop = prevScrollTop;
       }

@@ -1790,7 +1790,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <details class="region-detail-more" id="region-detail-more">
-      <summary>Mehr Zahlen: Erwartungswert, Zuständigkeiten, Umfeld mit Diagrammen, Aufschlüsselung</summary>
+      <summary id="region-detail-more-summary">Mehr Zahlen: Umfeld mit Diagrammen, Aufschlüsselung</summary>
       <div class="region-detail-gap region-detail-gap--model" id="region-detail-model-gap" hidden></div>
       <div class="region-detail-authority" id="region-detail-authority" hidden></div>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
@@ -2198,6 +2198,26 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const regionDetailBody = document.getElementById('region-detail-body');
     const regionDetailActions = document.getElementById('region-detail-actions');
     const regionDetailAuthority = document.getElementById('region-detail-authority');
+    const regionDetailMoreSummary = document.getElementById('region-detail-more-summary');
+    /** Set on a fresh selection or a switch to the model map: open the fold once the model gap shows. */
+    let openMoreForModelGap = false;
+    /** The fold's title names only what this region has; the parts render (and hide) on their own. */
+    function syncRegionDetailMore() {
+      const parts = [];
+      if (!regionDetailModelGap.hidden) parts.push('Erwartungswert');
+      if (!regionDetailAuthority.hidden) parts.push('Zuständigkeiten');
+      if (!regionDetailExtra.hidden) parts.push('Umfeld mit Diagrammen');
+      parts.push('Aufschlüsselung');
+      regionDetailMoreSummary.textContent = 'Mehr Zahlen: ' + parts.join(', ');
+      if (openMoreForModelGap && !regionDetailModelGap.hidden && currentMapMetric === 'modelGap') {
+        openMoreForModelGap = false;
+        regionDetailMore.open = true;
+      }
+    }
+    const regionDetailMoreObserver = new MutationObserver(syncRegionDetailMore);
+    for (const part of [regionDetailModelGap, regionDetailAuthority, regionDetailExtra]) {
+      regionDetailMoreObserver.observe(part, { attributes: true, attributeFilter: ['hidden'] });
+    }
     const regionDetailClose = document.getElementById('region-detail-close');
     const regionDetailMount = document.getElementById('region-detail-mount');
     // Anchor marking the card's home spot (floating card, desktop) so it can be moved back.
@@ -6522,6 +6542,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const prevCardScrollTop = !freshSelection && !regionDetailEl.hidden ? regionDetailEl.scrollTop : null;
       const p = feature.properties || {};
       const detailId = String(p.id ?? '');
+      if (freshSelection) openMoreForModelGap = currentMapMetric === 'modelGap';
       if (detailId) setSelectedFeatureId(detailId, feature);
       regionDetailTitle.textContent = p.name || p.id || 'Gebiet';
       const rankInfo = rankByFeatureId.get(p.id);
@@ -6577,6 +6598,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       renderRegionGap(p);
       renderRegionQuality(p);
       renderRegionExtra(p);
+      syncRegionDetailMore();
       regionDetailBody.replaceChildren();
       regionDetailActions.replaceChildren();
       const filter = readLengthClassFilterFromUi();
@@ -9393,12 +9415,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     mapMetricSelect?.addEventListener('change', async () => {
       const prevScrollTop = panelMain ? panelMain.scrollTop : 0;
       currentMapMetric = mapMetricSelect.value;
+      openMoreForModelGap = currentMapMetric === 'modelGap';
       if (currentMapMetric !== 'bikeShare') {
         setLoadStatus('Lade Modelldaten …');
         await ensureRegionExtraIndexes();
         setLoadStatus('');
       }
       await applyCurrentView();
+      if (!regionDetailEl.hidden) syncRegionDetailMore();
       if (panelMain) {
         panelMain.scrollTop = prevScrollTop;
       }

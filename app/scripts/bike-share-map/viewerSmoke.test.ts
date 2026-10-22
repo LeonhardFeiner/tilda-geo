@@ -125,6 +125,38 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'the "Mehr Zahlen" title names only what the region has; the model map opens it',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      const summary = () => page!.q('#region-detail-more-summary').textContent ?? ''
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      await page.waitFor(() => summary().includes('Erwartungswert'), 'the model gap in the title')
+      expect((page.q('#region-detail-more') as HTMLDetailsElement).open).toBe(false)
+      page.close()
+
+      // Bayern itself has no model value (the Land fixed effects make it zero by construction).
+      page = await bootViewer('?darstellung=bundeslaender&region=relation/2145268')
+      await page.waitFor(
+        () => page!.window.document.body.dataset.regionDetail === '1',
+        'the Land card',
+      )
+      expect(summary()).toMatch(/^Mehr Zahlen: .*Aufschlüsselung$/)
+      expect(summary()).not.toContain('Erwartungswert')
+      page.close()
+
+      page = await bootViewer(IN_LANDKREIS + '&metrik=modelGap')
+      await page.waitFor(
+        () => (page!.q('#region-detail-more') as HTMLDetailsElement).open,
+        'the fold opened for the model map',
+      )
+      expect(page.q('#region-detail-model-gap').hidden).toBe(false)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'clicking a street row highlights that street type, in both breakdowns',
     async () => {
       page = await bootViewer(IN_LANDKREIS)
