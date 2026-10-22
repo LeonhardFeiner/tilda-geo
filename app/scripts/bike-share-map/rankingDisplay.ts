@@ -303,6 +303,7 @@ export type StructuralModelParams = {
   rent?: number | null
   carsPer1000?: number | null
   livingStreetSharePct?: number | null
+  busyFederalSharePct?: number | null
   bundeslandId?: string | null
   modelType?: StructuralModelType
   dynamicBaselines?: StructuralModelDynamicBaselines | null
@@ -323,6 +324,7 @@ export type StructuralModelConfig = {
     rent: number
     carsPer1000: number
     livingStreetSharePct: number
+    busyFederalSharePct: number
   }
   betas: {
     roadSlope: number
@@ -332,6 +334,7 @@ export type StructuralModelConfig = {
     rent: number
     carsPer1000: number
     livingStreetSharePct: number
+    busyFederalSharePct: number
   }
   bundeslandBaselines: Record<string, number>
   r2: {
@@ -389,6 +392,7 @@ const DELTA_KEYS = [
   'deltaRent',
   'deltaCars',
   'deltaLiving',
+  'deltaBusy',
 ] as const
 const INPUT_KEYS = [
   'roadSlope',
@@ -398,6 +402,7 @@ const INPUT_KEYS = [
   'rent',
   'carsPer1000',
   'livingStreetSharePct',
+  'busyFederalSharePct',
 ] as const
 
 /**
@@ -523,6 +528,8 @@ export type StructuralModelIndexes = {
   zensus?: ById<{ rentPerM2?: number }>
   cars?: ById<{ carsPer1000?: number }>
   calmed?: ById<{ livingStreetSharePct?: number }>
+  /** fetchTrafficVolumes.ts: busy open-road Bundesstraßen as % of the road network. */
+  trafficFederal?: ById<{ sharePct?: number }>
 }
 
 /**
@@ -540,6 +547,7 @@ export function structuralModelInputs(id: string, ix: StructuralModelIndexes) {
     rent: num(ix.zensus?.[id]?.rentPerM2),
     carsPer1000: num(ix.cars?.[id]?.carsPer1000),
     livingStreetSharePct: num(ix.calmed?.[id]?.livingStreetSharePct),
+    busyFederalSharePct: num(ix.trafficFederal?.[id]?.sharePct),
   }
 }
 
@@ -554,12 +562,13 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     rent = null,
     carsPer1000 = null,
     livingStreetSharePct = null,
+    busyFederalSharePct = null,
     bundeslandId = null,
     modelType = 'standard',
     dynamicBaselines = null,
   } = params
   if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
-  // The fit only used Gemeinden with all seven inputs. Filling a missing one with its mean would
+  // The fit only used Gemeinden with all eight inputs. Filling a missing one with its mean would
   // predict outside that domain, so such a Gemeinde gets no expected value at all.
   if (
     roadSlope == null ||
@@ -568,7 +577,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     stDistKm == null ||
     rent == null ||
     carsPer1000 == null ||
-    livingStreetSharePct == null
+    livingStreetSharePct == null ||
+    busyFederalSharePct == null
   ) {
     return null
   }
@@ -621,6 +631,12 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
         scaleFactor *
         (livingStreetSharePct - c.means.livingStreetSharePct)
       : 0
+  const deltaBusy =
+    busyFederalSharePct != null
+      ? c.betas.busyFederalSharePct *
+        scaleFactor *
+        (busyFederalSharePct - c.means.busyFederalSharePct)
+      : 0
 
   const rawExpectedPct =
     baselinePct +
@@ -630,7 +646,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     deltaTransit +
     deltaRent +
     deltaCars +
-    deltaLiving
+    deltaLiving +
+    deltaBusy
   // A linear model can go below 0 (steep, remote, cheap villages) or above 100. The share can't,
   // so it is clamped — and flagged, because the gap is then only a lower bound.
   const expectedPct = Math.max(0, Math.min(100, rawExpectedPct))
@@ -656,6 +673,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     deltaRent: rent != null ? deltaRent : null,
     deltaCars: carsPer1000 != null ? deltaCars : null,
     deltaLiving: livingStreetSharePct != null ? deltaLiving : null,
+    deltaBusy: busyFederalSharePct != null ? deltaBusy : null,
     expectedPct,
     clamped,
     expectedKm,
@@ -678,6 +696,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
       rent,
       carsPer1000,
       livingStreetSharePct,
+      busyFederalSharePct,
     },
     r2: c.r2,
   }

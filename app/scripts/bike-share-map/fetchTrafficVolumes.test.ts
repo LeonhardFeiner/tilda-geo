@@ -4,6 +4,7 @@ import {
   eraDtvThreshold,
   parseBastRows,
   sectionNeedsBikePath,
+  withRoadShares,
 } from './fetchTrafficVolumes'
 
 describe('eraDtvThreshold', () => {
@@ -80,5 +81,41 @@ describe('aggregateTrafficRegions', () => {
       coveredPct: 25,
       byClass: { B: { needKm: 10, coveredKm: 5 }, K: { needKm: 10, coveredKm: 0 } },
     })
+  })
+
+  test('leaves the class split out where every section is a Bundesstraße anyway', () => {
+    const byId = aggregateTrafficRegions(
+      [{ region: 'r', klasse: 'B', need_km: 4, covered_km: 1 }],
+      {
+        withClasses: false,
+      },
+    )
+    expect(byId.r).toEqual({ needKm: 4, coveredKm: 1, coveredPct: 25 })
+  })
+})
+
+describe('withRoadShares', () => {
+  const regions = [
+    { id: 'busy', roadKm: 80, bundeslandId: 'bl' },
+    { id: 'quiet', roadKm: 50, bundeslandId: 'bl' },
+    { id: 'roadless', roadKm: 0, bundeslandId: 'bl' },
+  ]
+  const byId = withRoadShares(
+    { busy: { needKm: 4, coveredKm: 1, coveredPct: 25 }, elsewhere: { needKm: 9, coveredKm: 0 } },
+    regions,
+  )
+
+  test('gives the busy km as a share of the road network', () => {
+    expect(byId.busy).toEqual({ needKm: 4, coveredKm: 1, coveredPct: 25, sharePct: 5 })
+  })
+
+  test('writes 0 km / 0 % for a region without a busy road, with no covered share', () => {
+    expect(byId.quiet).toEqual({ needKm: 0, coveredKm: 0, sharePct: 0 })
+    expect(byId.quiet!.coveredPct).toBeUndefined()
+  })
+
+  test('has no share without roads and skips regions outside the area', () => {
+    expect(byId.roadless).toEqual({ needKm: 0, coveredKm: 0, sharePct: undefined })
+    expect(byId.elsewhere).toBeUndefined()
   })
 })

@@ -49,8 +49,13 @@ export type DataDownloadContext = {
   }>
   commuters?: ById<{ inCommuters?: number; outCommuters?: number; jobCentrality?: number }>
   mapping?: ById<{ indexPct?: number; speedPct?: number; surfacePct?: number; litPct?: number }>
-  traffic?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
-  trafficFederal?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number }>
+  traffic?: ById<{ needKm?: number; coveredKm?: number; coveredPct?: number; sharePct?: number }>
+  trafficFederal?: ById<{
+    needKm?: number
+    coveredKm?: number
+    coveredPct?: number
+    sharePct?: number
+  }>
   /** Kreis-level regions with no Gemeinde inside: kreisfreie Städte (kreisfreieIdsOf). */
   kreisfreieIds?: Set<string>
   /** Summed predictions for Kreise, Bezirke, Gemeindeverbände (buildModelAggregates). */
@@ -108,10 +113,13 @@ export const DATA_DOWNLOAD_COLUMNS = {
   hauptstr_gemeinde_pct: 'dito, Baulastträger Gemeinde',
   vielbefahren_km:
     'Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße',
+  vielbefahren_anteil_pct: 'vielbefahren_km / strassen_km (Standard-Zählfilter), %; 0 = keine',
   vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   vielbefahren_mit_radweg_pct: 'vielbefahren_mit_radweg_km / vielbefahren_km, %',
   bundesstr_vielbefahren_km:
-    'Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße',
+    'Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße; 0 = keine',
+  bundesstr_vielbefahren_anteil_pct:
+    'bundesstr_vielbefahren_km / strassen_km (Standard-Zählfilter), %; geht ins Modell ein',
   bundesstr_vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   bundesstr_vielbefahren_mit_radweg_pct:
     'bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %',
@@ -321,9 +329,11 @@ export function buildDataDownloadRow(
     hauptstr_kreis_pct: mainPct('kreis'),
     hauptstr_gemeinde_pct: mainPct('gemeinde'),
     vielbefahren_km: round(traffic?.needKm, 1),
+    vielbefahren_anteil_pct: round(traffic?.sharePct, 2),
     vielbefahren_mit_radweg_km: round(traffic?.coveredKm, 1),
     vielbefahren_mit_radweg_pct: round(traffic?.coveredPct, 1),
     bundesstr_vielbefahren_km: round(trafficFederal?.needKm, 1),
+    bundesstr_vielbefahren_anteil_pct: round(trafficFederal?.sharePct, 2),
     bundesstr_vielbefahren_mit_radweg_km: round(trafficFederal?.coveredKm, 1),
     bundesstr_vielbefahren_mit_radweg_pct: round(trafficFederal?.coveredPct, 1),
     einwohner_je_km2: round(density, 1),

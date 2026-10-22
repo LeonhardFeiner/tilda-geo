@@ -248,6 +248,7 @@ describe('computeStructuralModelPrediction', () => {
       rent: 6,
       carsPer1000: 650,
       livingStreetSharePct: 2,
+      busyFederalSharePct: 1,
     }
     expect(computeStructuralModelPrediction(full)).not.toBeNull()
     expect(computeStructuralModelPrediction({ ...full, rent: null })).toBeNull()
@@ -264,6 +265,7 @@ describe('computeStructuralModelPrediction', () => {
       rent: 3,
       carsPer1000: 900,
       livingStreetSharePct: 0,
+      busyFederalSharePct: 1,
     })
     expect(res?.expectedPct).toBe(0)
     expect(res?.clamped).toBe(true)
@@ -280,6 +282,7 @@ describe('computeStructuralModelPrediction', () => {
     rent: c.means.rent,
     carsPer1000: c.means.carsPer1000,
     livingStreetSharePct: c.means.livingStreetSharePct,
+    busyFederalSharePct: c.means.busyFederalSharePct,
   })
   const NDS = 'relation/62771'
   const HESSEN = 'relation/62650'
@@ -372,6 +375,7 @@ describe('computeStructuralModelPrediction', () => {
       rent: STD.means.rent,
       carsPer1000: STD.means.carsPer1000,
       livingStreetSharePct: STD.means.livingStreetSharePct,
+      busyFederalSharePct: STD.means.busyFederalSharePct,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
@@ -390,6 +394,7 @@ describe('computeStructuralModelPrediction', () => {
       rent: 9.0,
       carsPer1000: STD.means.carsPer1000,
       livingStreetSharePct: STD.means.livingStreetSharePct,
+      busyFederalSharePct: STD.means.busyFederalSharePct,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
@@ -491,6 +496,7 @@ describe('aggregateStructuralPredictions', () => {
       rent,
       carsPer1000: 650,
       livingStreetSharePct: 2,
+      busyFederalSharePct: 1,
       bundeslandId: 'relation/2145268',
     })!
 
@@ -510,7 +516,8 @@ describe('aggregateStructuralPredictions', () => {
       agg.deltaTransit +
       agg.deltaRent +
       agg.deltaCars +
-      agg.deltaLiving
+      agg.deltaLiving +
+      agg.deltaBusy
     expect(sum).toBeCloseTo(agg.expectedPct, 6)
     expect(agg.inputs.rent).toBeCloseTo((6 * 100 + 9 * 300) / 400)
     expect(agg.gemeindeCount).toBe(2)

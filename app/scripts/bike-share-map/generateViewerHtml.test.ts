@@ -408,10 +408,21 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)'")
   })
 
-  test('includes the BAYSIS busy-road coverage in context and CSV columns', () => {
+  test('includes the busy-road km, share and coverage in context and CSV columns', () => {
     expect(html).toContain('"trafficUrl":"./gemeinde-traffic.json?v=20261011000000"')
-    expect(html).toContain("key: 'busyRoadsCovered'")
+    expect(html).toContain('"trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261011000000"')
+    // Km and share rows come in pairs per dataset; the covered share is its own row.
+    expect(html).toContain("busyRoadMetrics('busyRoads', () => trafficIndex,")
+    expect(html).toContain("busyRoadMetrics('busyFederal', () => trafficFederalIndex,")
+    for (const key of ['busyRoadsCovered', 'busyFederalCovered']) {
+      expect(html).toContain(`key: '${key}'`)
+      expect(html).toContain(`label: RankingDisplay.CONTEXT_METRIC_LABELS.${key},`)
+    }
+    for (const key of ['busyRoadsKm', 'busyRoadsShare', 'busyFederalKm', 'busyFederalShare']) {
+      expect(html).toContain(`{ key: '${key}', header: 'Vielbefahrene `)
+    }
     expect(html).toContain("header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)'")
+    expect(html).toContain("header: 'Vielbefahrene Bundesstraßen Anteil am Netz (%)'")
   })
 
   test('includes the OSM mapping completeness in context and CSV columns', () => {

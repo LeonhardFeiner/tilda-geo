@@ -44,6 +44,13 @@ const calmed = (
     byId: Record<string, { calmedSharePct?: number; livingStreetSharePct?: number }>
   }
 ).byId
+// Busy open-road Bundesstraßen as % of the road network — nationwide from the same census, so
+// comparable across Länder (the all-classes figure exists only for Bavaria). 0 where none.
+const trafficFederal = (
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.trafficFederal), 'utf8')) as {
+    byId: Record<string, { sharePct?: number }>
+  }
+).byId
 
 // Map Bundesland ID to Land name
 const landNames: Record<string, string> = {
@@ -78,6 +85,7 @@ type Sample = {
   rent: number
   carsPer1000: number
   livingStreetSharePct: number
+  busyFederalSharePct: number
 }
 
 const varNames = [
@@ -88,6 +96,7 @@ const varNames = [
   'rent',
   'carsPer1000',
   'livingStreetSharePct',
+  'busyFederalSharePct',
 ] as const
 
 // Kreisfreie Städte are municipalities, but OSM maps them only as a Kreis (level 6) with no
@@ -139,6 +148,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     const z = zensus[id]
     const c = cars[id]
     const cl = calmed[id]
+    const tf = trafficFederal[id]
     const blId = String(p.bundesland_id || '')
 
     if (
@@ -154,6 +164,8 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
       typeof c.carsPer1000 === 'number' &&
       cl &&
       typeof cl.livingStreetSharePct === 'number' &&
+      tf &&
+      typeof tf.sharePct === 'number' &&
       blId &&
       landNames[blId]
     ) {
@@ -170,6 +182,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
         rent: z.rentPerM2,
         carsPer1000: c.carsPer1000,
         livingStreetSharePct: cl.livingStreetSharePct,
+        busyFederalSharePct: tf.sharePct,
       })
     }
   }

@@ -1924,7 +1924,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         renderRegionModelGap(props);
       }
     }
-    // The six inputs of the structural model: the card shows the expected value right away.
+    // The inputs of the structural model: the card shows the expected value right away.
     let modelIndexesPromise = null;
     function ensureModelIndexes() {
       if (modelIndexesPromise) return modelIndexesPromise;
@@ -1935,6 +1935,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         loadIndex(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
         loadIndex(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         loadIndex(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
+        loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return modelIndexesPromise;
     }
@@ -1948,7 +1949,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
         loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
-        loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
@@ -2545,6 +2545,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           zensus: zensusIndex?.byId,
           cars: carsIndex?.byId,
           calmed: calmedIndex?.byId,
+          trafficFederal: trafficFederalIndex?.byId,
         }),
         bundeslandId: String(p.bundesland_id || ''),
         modelType: ms.modelType,
@@ -2860,7 +2861,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
+        { key: 'busyRoadsKm', header: 'Vielbefahrene Landstraßen (km, Bayern)', numeric: 'km' },
+        { key: 'busyRoadsShare', header: 'Vielbefahrene Landstraßen Anteil am Netz (%, Bayern)', numeric: 'pct' },
         { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
+        { key: 'busyFederalKm', header: 'Vielbefahrene Bundesstraßen (km)', numeric: 'km' },
+        { key: 'busyFederalShare', header: 'Vielbefahrene Bundesstraßen Anteil am Netz (%)', numeric: 'pct' },
         { key: 'busyFederalCovered', header: 'Vielbefahrene Bundesstraßen mit Radweg (%)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
@@ -5228,7 +5233,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ' km) · ' +
         (aggregated
           ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte und Spielstraßen');
+          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -5371,6 +5376,15 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         );
       }
 
+      if (m.deltaBusy != null) {
+        addRow(
+          'Vielbefahrene Bundesstraßen',
+          m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes' : null,
+          m.deltaBusy,
+          m.deltaBusy >= 0.05 ? 'hebt Erwartung' : m.deltaBusy <= -0.05 ? 'senkt Erwartung' : 'neutral',
+        );
+      }
+
       addRow(
         'Siedlungsdichte',
         m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null,
@@ -5483,6 +5497,33 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     // ==== Context metrics ("Mehr Zahlen") and scatter plots ====
 
+    /** Km and share-of-network rows of one busy-road dataset (prefix busyRoads | busyFederal). */
+    function busyRoadMetrics(prefix, index, scopeNote) {
+      const entry = (id) => index()?.byId[id];
+      const num = (v) => (typeof v === 'number' ? v : null);
+      return [
+        {
+          key: prefix + 'Km',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Km'],
+          note: 'außerorts über ERA-Schwelle, Zählung 2021; ' + scopeNote,
+          get source() { return index(); },
+          get: (id) => num(entry(id)?.needKm),
+          format: (v) => deNumber(v, 1) + ' km',
+        },
+        {
+          key: prefix + 'Share',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Share'],
+          note: prefix === 'busyFederal' ? 'geht ins Modell ein' : 'Anteil am Straßennetz',
+          get source() { return index(); },
+          get: (id) => num(entry(id)?.sharePct),
+          format: (v, id) => {
+            const km = entry(id)?.needKm;
+            return deNumber(v, 1) + ' % des Netzes' + (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '');
+          },
+        },
+      ];
+    }
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -5516,9 +5557,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             );
           },
         },
+        // Busy rural roads (fetchTrafficVolumes.ts): open-road sections whose 2021 count is above
+        // the ERA 2010 threshold for a bike path — their km, their share of the road network and
+        // how much of them has a path. Every region of the source's area has an entry (0 km where
+        // none is busy); the covered share exists only where there is something to cover.
+        ...busyRoadMetrics('busyRoads', () => trafficIndex, 'Bundes-, Staats- und Kreisstraßen, Bayern'),
+        ...busyRoadMetrics('busyFederal', () => trafficFederalIndex, 'bundesweit'),
         {
-          // Bavaria only (fetchTrafficVolumes.ts): open-road B/St/K sections whose 2021 count is
-          // above the ERA 2010 threshold for a bike path, and how much of that has one.
+          // Bavaria only: B, St and K.
           key: 'busyRoadsCovered',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.busyRoadsCovered,
           note: 'über ERA-Schwelle, Zählung 2021',
@@ -5541,7 +5587,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           },
         },
         {
-          // Germany, Bundesstraßen only (fetchTrafficVolumes.ts): comparable across Länder.
+          // Germany, Bundesstraßen only: comparable across Länder.
           key: 'busyFederalCovered',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.busyFederalCovered,
           note: 'außerorts über ERA-Schwelle, Zählung 2021',

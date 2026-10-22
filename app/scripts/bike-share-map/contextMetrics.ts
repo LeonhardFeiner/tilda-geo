@@ -5,7 +5,11 @@
  */
 export const CONTEXT_METRIC_LABELS = {
   mappingDepth: 'Kartierungstiefe (OSM)',
+  busyRoadsKm: 'Vielbefahrene Landstraßen (Bayern)',
+  busyRoadsShare: 'Vielbefahrene Landstraßen, Anteil am Netz (Bayern)',
   busyRoadsCovered: 'Vielbefahrene Landstraßen mit Radweg (Bayern)',
+  busyFederalKm: 'Vielbefahrene Bundesstraßen',
+  busyFederalShare: 'Vielbefahrene Bundesstraßen, Anteil am Netz',
   busyFederalCovered: 'Vielbefahrene Bundesstraßen mit Radweg',
   density: 'Bevölkerungsdichte',
   rent: 'Ø Nettokaltmiete (Zensus 2022)',

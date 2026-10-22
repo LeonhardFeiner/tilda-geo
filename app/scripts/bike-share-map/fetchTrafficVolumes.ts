@@ -28,18 +28,26 @@
  * infrastructure (see COVERING_CATEGORIES) lies within ~20 m. BAYSIS geometry is the official
  * road network, a few metres off OSM at most.
  *
+ * Per region, the busy km are also given as a share of its road network (`sharePct`, default
+ * counting filter, from output/stats.msgpack), and every region of the source's area gets an
+ * entry — a Gemeinde without a busy road has 0 km and 0 %, not "no data". That share is a
+ * structural model input (fitExtendedModel.ts) and a context metric with a scatter plot.
+ *
  * Needs local Postgres with the processing run behind the current stats (bikelanes, roads,
- * aggregated_lengths). Output: output/traffic-volumes.json (Bavaria, all classes, per region),
- * output/traffic-federal.json (Germany, Bundesstraßen, per region), output/busy-roads.geojson
- * (map lines) and output/traffic-sections-bayern.json (BAYSIS sections, no geometry).
+ * aggregated_lengths) and output/stats.msgpack from the same run. Output:
+ * output/traffic-volumes.json (Bavaria, all classes, per region), output/traffic-federal.json
+ * (Germany, Bundesstraßen, per region), output/busy-roads.geojson (map lines) and
+ * output/traffic-sections-bayern.json (BAYSIS sections, no geometry).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
+import { decode } from '@msgpack/msgpack'
 import { Client } from 'pg'
 import { read, utils } from 'xlsx'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
 import { BAYERN_ID } from './constants'
 import { downloadCachePath, writeDataset } from './fetchCommon'
+import * as TildaStats from './statsClassSums'
 
 const BAST_XLSX_URL =
   'https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/2021/Bundesstrassen-2021.xlsx?__blob=publicationFile&v=1'
@@ -356,10 +364,15 @@ async function regionSums(client: Client, needIds: number[]) {
 }
 
 export type TrafficRegion = {
+  /** Road km above the ERA threshold (busy, open road, B/St/K). */
   needKm: number
   coveredKm: number
-  coveredPct: number
-  byClass: Partial<Record<NeedRoadClass, { needKm: number; coveredKm: number }>>
+  /** Share of needKm with a path; absent where there is no busy road (nothing to cover). */
+  coveredPct?: number
+  /** Only where the classes differ (Bavaria; the Bundesstraßen result is all B). */
+  byClass?: Partial<Record<NeedRoadClass, { needKm: number; coveredKm: number }>>
+  /** needKm as % of the region's road network (default counting filter); absent without roads. */
+  sharePct?: number
 }
 
 const r1 = (v: number) => Number(v.toFixed(1))
@@ -367,17 +380,21 @@ const r1 = (v: number) => Number(v.toFixed(1))
 /** Per region: km above the threshold and km with a path, in total and per road class. */
 export function aggregateTrafficRegions(
   rows: Array<{ region: string; klasse: string; need_km: number; covered_km: number }>,
+  { withClasses = true } = {},
 ) {
   const byId: Record<string, TrafficRegion> = {}
   for (const row of rows) {
-    const entry = (byId[row.region] ??= { needKm: 0, coveredKm: 0, coveredPct: 0, byClass: {} })
+    const entry = (byId[row.region] ??= { needKm: 0, coveredKm: 0, coveredPct: 0 })
     const need = Number(row.need_km)
     const covered = Number(row.covered_km)
     entry.needKm += need
     entry.coveredKm += covered
-    const cls = (entry.byClass[row.klasse as NeedRoadClass] ??= { needKm: 0, coveredKm: 0 })
-    cls.needKm = r1(cls.needKm + need)
-    cls.coveredKm = r1(cls.coveredKm + covered)
+    if (withClasses) {
+      entry.byClass ??= {}
+      const cls = (entry.byClass[row.klasse as NeedRoadClass] ??= { needKm: 0, coveredKm: 0 })
+      cls.needKm = r1(cls.needKm + need)
+      cls.coveredKm = r1(cls.coveredKm + covered)
+    }
   }
   for (const entry of Object.values(byId)) {
     entry.coveredPct = entry.needKm > 0 ? r1((entry.coveredKm / entry.needKm) * 100) : 0
@@ -385,6 +402,47 @@ export function aggregateTrafficRegions(
     entry.coveredKm = r1(entry.coveredKm)
   }
   return byId
+}
+
+export type RegionRoad = { id: string; roadKm: number; bundeslandId: string | null }
+
+/**
+ * The result for every region of the source's area: the busy km as a share of the region's road
+ * network, and a 0 km / 0 % entry where no counted section is busy. Regions outside the area
+ * (`regions` is already the area) and regions missing from the export are not written.
+ */
+export function withRoadShares(byId: Record<string, TrafficRegion>, regions: RegionRoad[]) {
+  const out: Record<string, TrafficRegion> = {}
+  for (const { id, roadKm } of regions) {
+    const entry = byId[id]
+    const needKm = entry?.needKm ?? 0
+    const sharePct = roadKm > 0 ? Number(((needKm / roadKm) * 100).toFixed(2)) : undefined
+    out[id] = entry ? { ...entry, sharePct } : { needKm: 0, coveredKm: 0, sharePct }
+  }
+  return out
+}
+
+/** Every exported region with its road km under the default counting filter. */
+function readRegionRoads(): RegionRoad[] {
+  const stats = decode(readFileSync(join(import.meta.dir, 'output', 'stats.msgpack'))) as {
+    features: Array<{ properties?: Record<string, unknown> }>
+  }
+  return stats.features.flatMap((f) => {
+    const p = f.properties ?? {}
+    if (!p.id) return []
+    const { roadKm } = TildaStats.computeFilteredLengths(
+      p.road_length,
+      p.bikelane_length,
+      TildaStats.RADINFRA_DEFAULT_FILTER,
+    )
+    return [
+      {
+        id: String(p.id),
+        roadKm: roadKm / 1000,
+        bundeslandId: p.bundesland_id ? String(p.bundesland_id) : null,
+      },
+    ]
+  })
 }
 
 if (import.meta.main) {
@@ -441,8 +499,18 @@ if (import.meta.main) {
     await client.end()
   }
 
-  const byId = aggregateTrafficRegions(regions.filter((row) => row.bavaria))
-  const federalById = aggregateTrafficRegions(regions.filter((row) => row.klasse === 'B'))
+  const regionRoads = readRegionRoads()
+  const byId = withRoadShares(
+    aggregateTrafficRegions(regions.filter((row) => row.bavaria)),
+    regionRoads.filter((r) => r.bundeslandId === BAYERN_ID || r.id === BAYERN_ID),
+  )
+  const federalById = withRoadShares(
+    aggregateTrafficRegions(
+      regions.filter((row) => row.klasse === 'B'),
+      { withClasses: false },
+    ),
+    regionRoads,
+  )
 
   const meta = {
     source: 'Straßenverkehrszählung 2021, BAYSIS (© Bayerische Straßenbauverwaltung, CC BY 4.0)',
@@ -526,16 +594,19 @@ if (import.meta.main) {
   )
   const needKm = need.reduce((a, s) => a + Number(s.km), 0)
   const coveredKm = need.reduce((a, s) => a + Number(s.covered_km), 0)
+  const withBusy = (b: Record<string, TrafficRegion>) =>
+    Object.values(b).filter((e) => e.needKm > 0).length
   process.stdout.write(
     `Bavaria: ${need.length} sections above the ERA threshold, ${needKm.toFixed(0)} km, ` +
       `${((coveredKm / needKm) * 100).toFixed(1)} % with bike infrastructure; ` +
-      `${Object.keys(byId).length} regions → output/traffic-volumes.json\n`,
+      `${withBusy(byId)} of ${Object.keys(byId).length} regions have one → output/traffic-volumes.json\n`,
   )
   const de = Object.entries(federalById).find(([id]) => id === 'relation/51477')?.[1]
   if (de) {
     process.stdout.write(
-      `Germany, Bundesstraßen: ${de.needKm} km above the threshold, ${de.coveredPct} % with ` +
-        `bike infrastructure; ${Object.keys(federalById).length} regions → output/traffic-federal.json\n`,
+      `Germany, Bundesstraßen: ${de.needKm} km above the threshold (${de.sharePct} % of the ` +
+        `road network), ${de.coveredPct} % with bike infrastructure; ${withBusy(federalById)} of ` +
+        `${Object.keys(federalById).length} regions have one → output/traffic-federal.json\n`,
     )
   }
 }
