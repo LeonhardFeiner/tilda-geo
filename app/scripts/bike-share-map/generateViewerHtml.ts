@@ -5637,8 +5637,12 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
 
     // ==== Context metrics ("Mehr Zahlen") and scatter plots ====
 
-    /** Km and share-of-network rows of one busy-road dataset (prefix busyRoads | busyFederal). */
-    function busyRoadMetrics(prefix, index, scopeNote) {
+    /**
+     * Km and share-of-network rows of one busy-road dataset (prefix busyRoads | busyFederal).
+     * areaName names the Land a dataset is limited to, so its comparison group is not called
+     * "in Deutschland".
+     */
+    function busyRoadMetrics(prefix, index, scopeNote, areaName = null) {
       const entry = (id) => index()?.byId[id];
       const num = (v) => (typeof v === 'number' ? v : null);
       return [
@@ -5646,6 +5650,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           key: prefix + 'Km',
           label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Km'],
           note: 'außerorts über ERA-Schwelle, Zählung 2021; ' + scopeNote,
+          areaName,
           get source() { return index(); },
           get: (id) => num(entry(id)?.needKm),
           format: (v) => deNumber(v, 1) + ' km',
@@ -5654,6 +5659,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           key: prefix + 'Share',
           label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Share'],
           note: prefix === 'busyFederal' ? 'geht ins Modell ein' : 'Anteil am Straßennetz',
+          areaName,
           get source() { return index(); },
           get: (id) => num(entry(id)?.sharePct),
           format: (v, id) => {
@@ -5701,13 +5707,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         // the ERA 2010 threshold for a bike path — their km, their share of the road network and
         // how much of them has a path. Every region of the source's area has an entry (0 km where
         // none is busy); the covered share exists only where there is something to cover.
-        ...busyRoadMetrics('busyRoads', () => trafficIndex, 'Bundes-, Staats- und Kreisstraßen, Bayern'),
+        ...busyRoadMetrics('busyRoads', () => trafficIndex, 'Bundes-, Staats- und Kreisstraßen, Bayern', 'Bayern'),
         ...busyRoadMetrics('busyFederal', () => trafficFederalIndex, 'bundesweit'),
         {
           // Bavaria only: B, St and K.
           key: 'busyRoadsCovered',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.busyRoadsCovered,
           note: 'über ERA-Schwelle, Zählung 2021',
+          areaName: 'Bayern',
           source: trafficIndex,
           get: (id) => {
             const v = trafficIndex?.byId[id]?.coveredPct;
@@ -6230,13 +6237,18 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           bandEl.textContent = band;
           valueEl.appendChild(bandEl);
           const median = RankingDisplay.medianOfSorted(reference);
+          // A dataset limited to one Land compares within that Land, whatever the scope says.
+          const group =
+            metric.areaName && scope.type === 'country'
+              ? (noun.gen || noun.nom) + ' ' + RankingDisplay.inPlacePhrase(metric.areaName)
+              : scope.group;
           row.title =
             'Höher als ' +
             Math.round(pct * 100) +
             ' % der ' +
             deNumber(reference.length, 0) +
             ' ' +
-            scope.group +
+            group +
             ' (Median: ' +
             metric.format(median, null) +
             ')';
