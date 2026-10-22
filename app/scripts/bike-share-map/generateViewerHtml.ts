@@ -408,8 +408,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     #counting-reset[hidden] { display: none !important; }
     #counting-reset:hover { background: #f2f6fb; }
     .counting-group { border-top: 1px solid #eee; }
-    .counting-group > summary {
-      cursor: pointer; padding: 6px 0; font-size: 0.75rem; font-weight: 600; color: #333;
+    .counting-group-heading {
+      margin: 0; padding: 6px 0; font-size: 0.75rem; font-weight: 600; color: #333;
     }
     .counting-count { font-weight: 400; color: #475569; margin-left: 4px; }
     .counting-group--changed .counting-count { color: #8a4b00; font-weight: 600; }
@@ -1598,14 +1598,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
         </p>
         <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen. Haken setzen oder entfernen:</p>
-        <details class="counting-group" id="road-class-group">
-          <summary>Straßen <span class="counting-count" id="road-class-count"></span></summary>
+        <div class="counting-group" id="road-class-group">
+          <p class="counting-group-heading">Straßen <span class="counting-count" id="road-class-count"></span></p>
           <div class="class-filters" id="road-class-filters"></div>
-        </details>
-        <details class="counting-group" id="bikelane-class-group">
-          <summary>Radinfrastruktur <span class="counting-count" id="bikelane-class-count"></span></summary>
+        </div>
+        <div class="counting-group" id="bikelane-class-group">
+          <p class="counting-group-heading">Radinfrastruktur <span class="counting-count" id="bikelane-class-count"></span></p>
           <div class="class-filters" id="bikelane-class-filters"></div>
-        </details>
+        </div>
       </div>
       <div class="settings-group" id="color-options-details">
         <h2 class="settings-heading">Karte</h2>
@@ -1788,11 +1788,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <div id="region-detail-actions"></div>
     <p class="region-detail-gap" id="region-detail-gap" hidden></p>
     <p class="region-detail-gap region-detail-gap--peer" id="region-detail-peer-gap" hidden></p>
-    <div class="region-detail-gap region-detail-gap--model" id="region-detail-model-gap" hidden></div>
-    <div class="region-detail-authority" id="region-detail-authority" hidden></div>
     <p class="region-detail-quality" id="region-detail-quality" hidden></p>
     <details class="region-detail-more" id="region-detail-more">
-      <summary>Mehr Zahlen: Umfeld mit Diagrammen, Aufschlüsselung</summary>
+      <summary>Mehr Zahlen: Erwartungswert, Zuständigkeiten, Umfeld mit Diagrammen, Aufschlüsselung</summary>
+      <div class="region-detail-gap region-detail-gap--model" id="region-detail-model-gap" hidden></div>
+      <div class="region-detail-authority" id="region-detail-authority" hidden></div>
       <div class="region-detail-extra" id="region-detail-extra" hidden></div>
       <div id="region-detail-body"></div>
     </details>
@@ -2330,14 +2330,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const count = document.getElementById(kind + '-class-count');
         if (count) count.textContent = '(' + on + ' von ' + options.length + ')';
         document.getElementById(kind + '-class-group')?.classList.toggle('counting-group--changed', changed);
-      }
-    }
-
-    /** A count that arrives through the URL deviates somewhere: show where, rather than hide it. */
-    function openChangedCountingGroups() {
-      for (const kind of ['road', 'bikelane']) {
-        const group = document.getElementById(kind + '-class-group');
-        if (group?.classList.contains('counting-group--changed')) group.open = true;
       }
     }
 
@@ -7937,7 +7929,6 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       }
       lengthClassFilter = filter;
       applyLengthClassFilterToUi(lengthClassFilter);
-      openChangedCountingGroups();
       return true;
     }
 
