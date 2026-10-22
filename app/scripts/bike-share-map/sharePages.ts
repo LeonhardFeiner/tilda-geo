@@ -36,6 +36,8 @@ export type ShareRegionSummary = ShareRegionInput & {
   bikeSharePct: number
   groupKind: ShareGroupKind
   groupName: string
+  /** Landkreise ranked with kreisfreie Städte, or Länder with the Stadtstaaten. */
+  mixedGroup?: boolean
   rank: number
   total: number
   medianPct: number
@@ -52,6 +54,9 @@ export type ShareRegionSummary = ShareRegionInput & {
    */
   peerGroup?: DemographicPeerSummary
 }
+
+/** Berlin, Hamburg, Bremen. */
+const CITY_STATE_IDS = new Set(['relation/62422', 'relation/62782', 'relation/62718'])
 
 /** A stub without at least this many peers has nothing to compare against — skip it. */
 const MIN_STUB_GROUP = 2
@@ -105,6 +110,12 @@ export function buildShareRegionSummaries(
     else groups.set(key, [r])
   }
 
+  // A Kreis without a Gemeinde inside is a kreisfreie Stadt (OSM maps those only at level 6).
+  const kreiseWithGemeinden = new Set(
+    regions.filter((r) => r.level === '8' && r.landkreisId).map((r) => r.landkreisId),
+  )
+  const isKreisfrei = (r: ShareRegionInput) => r.level === '6' && !kreiseWithGemeinden.has(r.id)
+
   const out = new Map<string, ShareRegionSummary>()
   for (const group of groups.values()) {
     if (group.length < MIN_STUB_GROUP) continue
@@ -122,6 +133,12 @@ export function buildShareRegionSummaries(
       .sort((a, b) => b.bikeSharePct - a.bikeSharePct)
     const rankById = new Map(ranked.map((r, i) => [r.id, i + 1]))
     const groupName = groupDisplayName(kind, first, nameById)
+    const kreisfreiCount = group.filter(isKreisfrei).length
+    const mixedGroup =
+      (kind === 'landkreise_in_bundesland' &&
+        kreisfreiCount > 0 &&
+        kreisfreiCount < group.length) ||
+      (kind === 'bundeslaender_in_deutschland' && group.some((r) => CITY_STATE_IDS.has(r.id)))
 
     for (const r of ranked) {
       const rank = rankById.get(r.id)
@@ -131,6 +148,7 @@ export function buildShareRegionSummaries(
         ...r,
         groupKind: kind,
         groupName,
+        mixedGroup,
         rank,
         total: ranked.length,
         medianPct: bench.medianPct,
@@ -150,15 +168,21 @@ export function shareRankPhrase(s: Pick<ShareRegionSummary, 'rank' | 'total'>) {
   return `Platz ${s.rank} von ${s.total}`
 }
 
-export function groupLocationPhrase(s: Pick<ShareRegionSummary, 'groupKind' | 'groupName'>) {
+export function groupLocationPhrase(
+  s: Pick<ShareRegionSummary, 'groupKind' | 'groupName' | 'mixedGroup'>,
+) {
   if (s.groupKind === 'gemeinden_in_landkreis') {
     // The OSM relation name usually already says what it is ("Landkreis X", "Rhein-Sieg-Kreis",
     // "Region Hannover") — don't say it twice. A bare name ("Bautzen") gets "Landkreis".
     const phrase = inPlacePhrase(s.groupName)
     return phrase === `in ${s.groupName.trim()}` ? `im Landkreis ${s.groupName}` : phrase
   }
-  if (s.groupKind === 'landkreise_in_bundesland') return inPlacePhrase(s.groupName)
-  return 'in Deutschland'
+  // Landkreise are ranked together with kreisfreie Städte, Länder with the Stadtstaaten.
+  if (s.groupKind === 'landkreise_in_bundesland') {
+    const place = inPlacePhrase(s.groupName)
+    return s.mixedGroup ? `unter Landkreisen und kreisfreien Städten ${place}` : place
+  }
+  return s.mixedGroup ? 'unter den Ländern einschließlich der Stadtstaaten' : 'in Deutschland'
 }
 
 export function shareHeadline(s: ShareRegionSummary) {
@@ -188,7 +212,7 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
     typeof s.mainRoadPct === 'number'
       ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} %.`
       : ''
-  const base = `${pct} % der Straßen in ${s.name} haben Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
+  const base = `In ${s.name} kommen auf 100 km Straße ${pct} km Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
   if (s.behind) {
     const gapKm = formatGapKm(s.gapKm)

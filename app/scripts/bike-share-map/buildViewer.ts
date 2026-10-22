@@ -40,6 +40,7 @@ import {
 } from './dataDownload'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
+import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
@@ -163,6 +164,7 @@ let nationalSharePct: number | null = null
 }
 
 let peerGemeindeCount = 0
+let peerKreisCount = 0
 const demographicsPath = join(outputRoot, 'gemeinde-demographics.json')
 if (existsSync(demographicsPath) && geoFeatures.length) {
   try {
@@ -186,10 +188,12 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
         : null,
     )
 
-    peerGemeindeCount = Object.keys(peers.byId).length
+    const peerGroupKeys = Object.values(peers.byId)
+    peerKreisCount = peerGroupKeys.filter((key) => key.startsWith('lk:')).length
+    peerGemeindeCount = peerGroupKeys.length - peerKreisCount
     writeFileSync(join(viewerDir, VIEWER_FILES.peers), JSON.stringify(peers))
     process.stdout.write(
-      `Peer groups: ${peerGemeindeCount} regions in ${Object.keys(peers.groups).length} buckets → ${viewerDir}/${VIEWER_FILES.peers}\n`,
+      `Peer groups: ${peerGemeindeCount} Gemeinden + ${peerKreisCount} Kreise in ${Object.keys(peers.groups).length} buckets → ${viewerDir}/${VIEWER_FILES.peers}\n`,
     )
     writeFileSync(join(viewerDir, VIEWER_FILES.density), JSON.stringify({ byId: densityById }))
     process.stdout.write(
@@ -305,6 +309,7 @@ writeFileSync(
     dataDownload,
     nationalSharePct,
     peerGemeindeCount,
+    peerKreisCount,
     projectLead: PROJECT_LEAD,
     sourceRepoUrl: VIEWER_SOURCE_REPO_URL,
     viewerHref: './index.html',
@@ -312,6 +317,13 @@ writeFileSync(
   'utf8',
 )
 process.stdout.write(`Methodology: ${viewerDir}/methodik.html\n`)
+
+writeFileSync(
+  join(viewerDir, 'impressum.html'),
+  legalPageHtml({ projectLead: PROJECT_LEAD, viewerHref: './index.html' }),
+  'utf8',
+)
+process.stdout.write(`Impressum: ${viewerDir}/impressum.html\n`)
 
 // Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations);
 // the foot/bike/car views additionally output/station-access/ (routing/station_access.py).

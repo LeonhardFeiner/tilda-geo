@@ -366,11 +366,14 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
   console.log(`Weighted Residual Std Error: ${weightedRse.toFixed(2)} %p`)
   console.log(`Baseline Bike Share %: ${weightedMeanY.toFixed(2)} %`)
 
-  // City states (Berlin, Hamburg, Bremen)
+  // City states (Berlin, Hamburg, Bremen) without fitted Gemeinden fall back to their own share.
+  // Bremen has two (Bremen, Bremerhaven), so it keeps its fitted baseline: overriding it with the
+  // state share shifts both cities' expectations far above their actual values.
   const cityStateBaselines: Record<string, number> = {}
   for (const f of stats.features) {
     const p = f.properties || {}
     const id = String(p.id ?? '')
+    if (lands.includes(id)) continue
     if (id === 'relation/62422' || id === 'relation/62782' || id === 'relation/62718') {
       const { roadKm: roadM, bikeKm: bikeM } = TildaStats.computeFilteredLengths(
         p.road_length,

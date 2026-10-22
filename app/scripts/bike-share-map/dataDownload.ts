@@ -97,7 +97,7 @@ export const DATA_DOWNLOAD_COLUMNS = {
   radinfra_anteil_pct: 'radinfra_km / strassen_km in %',
   radinfra_unklar_km: 'Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km',
   datenlage:
-    'gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra',
+    'gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra. Bewertet nur, wie eindeutig die erfasste Radinfrastruktur getaggt ist, nicht ob sie vollständig erfasst ist (dafür: kartierungstiefe_pct)',
   kartierungstiefe_pct:
     'Mittel der drei folgenden Anteile: wie vollständig das Straßennetz in OSM attributiert ist (ohne Zufahrts- / Service-Wege und Autobahnen), %',
   kartiert_tempo_pct:

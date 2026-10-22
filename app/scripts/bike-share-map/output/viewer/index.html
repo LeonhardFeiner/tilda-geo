@@ -18,8 +18,8 @@
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack?v=20261022073549" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022073549" as="script" />
+  <link rel="preload" href="./stats-core.msgpack?v=20261022140809" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022140809" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -28,7 +28,7 @@
   <title>Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?</title>
   <meta
     name="description"
-    content="Wie viel Prozent der Straßen haben Radinfrastruktur? Vergleich der Gemeinden und Landkreise auf Basis von OpenStreetMap-Daten."
+    content="Wie viel Radinfrastruktur gibt es im Verhältnis zum Straßennetz? Vergleich der Gemeinden und Landkreise auf Basis von OpenStreetMap-Daten."
   />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Radinfra-Vergleich" />
@@ -36,7 +36,7 @@
   <meta property="og:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     property="og:description"
-    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+    content="Radinfrastruktur im Verhältnis zum Straßennetz je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
   <meta property="og:image" content="https://leonhardfeiner.github.io/tilda-geo/r/og-default.png" />
   <meta property="og:image:width" content="1200" />
@@ -45,7 +45,7 @@
   <meta name="twitter:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     name="twitter:description"
-    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+    content="Radinfrastruktur im Verhältnis zum Straßennetz je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
   <meta name="twitter:image" content="https://leonhardfeiner.github.io/tilda-geo/r/og-default.png" />
   <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
@@ -681,7 +681,7 @@
       display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--peer::before {
-      content: var(--peer-gap-label, 'Ähnlich große Gemeinden bundesweit'); display: block;
+      content: var(--peer-gap-label, 'Gemeinden mit ähnlichem Profil bundesweit'); display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -1396,7 +1396,7 @@
   </button>
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
-    <div class="cml-title">Radinfra-Anteil</div>
+    <div class="cml-title">Radinfra je km Straße</div>
     <div class="cml-def" id="cml-def">km Radinfra ÷ km Straße</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
@@ -1412,7 +1412,7 @@
     <div class="panel-body">
     <div id="region-detail-mount"></div>
     <p class="site-tagline">
-      Anteil der Straßen mit Radinfrastruktur – je Gemeinde, Landkreis und Bundesland,
+      Radinfrastruktur im Verhältnis zum Straßennetz (km je 100&nbsp;km Straße) – je Gemeinde, Landkreis und Bundesland,
       berechnet aus OpenStreetMap-Daten. <a href="./methodik.html">Wie wird gerechnet?</a>
     </p>
     <p id="load-status" role="status" aria-live="polite">Lade Gebietsdaten…</p>
@@ -1450,7 +1450,7 @@
         <select id="darstellung-select"></select>
         <label for="map-metric-select">Färben nach</label>
         <select id="map-metric-select">
-          <option value="bikeShare">Radinfrastruktur-Anteil</option>
+          <option value="bikeShare">Radinfra je km Straße</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
           <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
@@ -1574,7 +1574,7 @@
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
-          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
+          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra je km Straße)</span>
           <p class="metric-definition" id="metric-definition">
             Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
             <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
@@ -1646,11 +1646,16 @@
         <div class="ranking-scroll" id="ranking-scroll">
           <ol class="ranking-list" id="ranking-list" aria-label="Rangliste der Gebiete"></ol>
         </div>
+        <p class="ranking-hint" id="ranking-quality-key" hidden>
+          ⚠ = Wert unsicher: Radwege in OpenStreetMap unklar getaggt oder kaum erfasst.
+          <a href="./methodik.html">Mehr dazu</a>
+        </p>
     </details>
     </div>
     <p class="footer">
       OSM-Daten vom 16.10.2026 · Erstellt am 22.10.2026 ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
+      <a href="./impressum.html">Impressum &amp; Datenschutz</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="https://github.com/LeonhardFeiner/tilda-geo" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -1738,15 +1743,15 @@
       <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js?v=20261022073549"></script>
-  <script src="./regionNavigation.js?v=20261022073549"></script>
-  <script src="./statsMsgpack.js?v=20261022073549"></script>
-  <script src="./neighborView.js?v=20261022073549"></script>
-  <script src="./regionSearch.js?v=20261022073549"></script>
-  <script src="./rankingDisplay.js?v=20261022073549"></script>
-  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022073549"></script>
+  <script src="./statsClassSums.js?v=20261022140809"></script>
+  <script src="./regionNavigation.js?v=20261022140809"></script>
+  <script src="./statsMsgpack.js?v=20261022140809"></script>
+  <script src="./neighborView.js?v=20261022140809"></script>
+  <script src="./regionSearch.js?v=20261022140809"></script>
+  <script src="./rankingDisplay.js?v=20261022140809"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022140809"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-22T07:35:49.205Z","dataDateLabel":"16.10.2026","assetVersion":"20261022073549","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022073549","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022073549","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022073549","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022073549","neighborsUrl":"./neighbors.json?v=20261022073549","peersUrl":"./gemeinde-peers.json?v=20261022073549","densityUrl":"./gemeinde-density.json?v=20261022073549","transitUrl":"./gemeinde-transit.json?v=20261022073549","terrainUrl":"./gemeinde-terrain.json?v=20261022073549","zensusUrl":"./gemeinde-zensus.json?v=20261022073549","carsUrl":"./gemeinde-cars.json?v=20261022073549","calmedUrl":"./gemeinde-calmed.json?v=20261022073549","accidentsUrl":"./gemeinde-accidents.json?v=20261022073549","commutersUrl":"./gemeinde-commuters.json?v=20261022073549","mappingUrl":"./gemeinde-mapping.json?v=20261022073549","trafficUrl":"./gemeinde-traffic.json?v=20261022073549","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022073549","busyRoadsUrl":"./busy-roads.geojson?v=20261022073549","historyUrl":"./history.json?v=20261022073549","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-22T14:08:09.546Z","dataDateLabel":"16.10.2026","assetVersion":"20261022140809","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022140809","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022140809","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022140809","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022140809","neighborsUrl":"./neighbors.json?v=20261022140809","peersUrl":"./gemeinde-peers.json?v=20261022140809","densityUrl":"./gemeinde-density.json?v=20261022140809","transitUrl":"./gemeinde-transit.json?v=20261022140809","terrainUrl":"./gemeinde-terrain.json?v=20261022140809","zensusUrl":"./gemeinde-zensus.json?v=20261022140809","carsUrl":"./gemeinde-cars.json?v=20261022140809","calmedUrl":"./gemeinde-calmed.json?v=20261022140809","accidentsUrl":"./gemeinde-accidents.json?v=20261022140809","commutersUrl":"./gemeinde-commuters.json?v=20261022140809","mappingUrl":"./gemeinde-mapping.json?v=20261022140809","trafficUrl":"./gemeinde-traffic.json?v=20261022140809","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022140809","busyRoadsUrl":"./busy-roads.geojson?v=20261022140809","historyUrl":"./history.json?v=20261022140809","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahnen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -3044,24 +3049,9 @@
         if (roadKm > 0) nationalPct = (bikeKm / roadKm) * 100;
       }
 
+      // Land baselines are fitted intercepts, not the Länder's own shares: they are scaled
+      // like the coefficients (computeStructuralPrediction does that when none are passed).
       const landBaselines = {};
-      for (const f of allFeatures) {
-        const lvl = String(f.properties?.level ?? '');
-        const fid = String(f.properties?.id ?? '');
-        if (
-          lvl === '4' ||
-          fid === 'relation/62422' ||
-          fid === 'relation/62782' ||
-          fid === 'relation/62718'
-        ) {
-          const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-            f.properties?.road_length,
-            f.properties?.bikelane_length,
-            lengthClassFilter,
-          );
-          if (roadKm > 0) landBaselines[fid] = (bikeKm / roadKm) * 100;
-        }
-      }
 
       const chosenModelType =
         !lengthClassFilter.road.residential_like &&
@@ -3654,7 +3644,7 @@
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
-        else cmlTitle.textContent = 'Radinfra-Anteil';
+        else cmlTitle.textContent = 'Radinfra je km Straße';
       }
       const cmlDef = document.getElementById('cml-def');
       if (cmlDef) cmlDef.hidden = metric !== 'bikeShare';
@@ -3665,7 +3655,7 @@
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
-        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
+        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra je km Straße)';
       }
 
       if (metricDef) {
@@ -3803,7 +3793,7 @@
         return;
       }
       el.textContent =
-        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % der Straßen mit Radinfrastruktur';
+        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % Radinfrastruktur im Verhältnis zum Straßennetz';
       el.hidden = false;
     }
 
@@ -4586,6 +4576,8 @@
               : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
           flag.setAttribute('aria-label', flag.title);
           pctEl.prepend(flag);
+          const qualityKey = document.getElementById('ranking-quality-key');
+          if (qualityKey) qualityKey.hidden = false;
         }
       }
       list.appendChild(li);
@@ -5121,9 +5113,39 @@
       return regionIndex.byId.get(scopeId)?.properties?.name || null;
     }
 
-    function viewComparisonLabel() {
+    function viewPlaceLabel() {
+      // The neighbour view ranks a hand-picked set, not the scope it sits in.
+      if (isNeighborView()) {
+        const focusName = regionIndex?.byId.get(neighborFocus.focusId)?.properties?.name;
+        return focusName ? 'unter ' + focusName + ' und Nachbargebieten' : 'unter den Nachbargebieten';
+      }
       const name = currentViewScopeName();
       return name ? RankingDisplay.inPlacePhrase(name) : 'in dieser Ansicht';
+    }
+
+    /** Berlin, Hamburg, Bremen. */
+    const CITY_STATE_IDS = new Set(['relation/62422', 'relation/62782', 'relation/62718']);
+
+    /** Says so when a ranking mixes Landkreise with kreisfreie Städte, or Länder with Stadtstaaten. */
+    function mixedGroupPrefix() {
+      if (isNeighborView()) return '';
+      const props = lastRankingSorted.map((f) => f.properties).filter(Boolean);
+      const levels = new Set(props.map((p) => String(p.level ?? '')));
+      if (levels.size !== 1) return '';
+      if (levels.has('6')) {
+        const kreisfrei = props.filter((p) => regionIndex?.kreisfreieIds?.has(p.id)).length;
+        return kreisfrei > 0 && kreisfrei < props.length
+          ? 'unter Landkreisen und kreisfreien Städten '
+          : '';
+      }
+      if (levels.has('4') && props.some((p) => CITY_STATE_IDS.has(String(p.id)))) {
+        return 'unter den Ländern einschließlich der Stadtstaaten ';
+      }
+      return '';
+    }
+
+    function viewComparisonLabel() {
+      return mixedGroupPrefix() + viewPlaceLabel();
     }
 
     function viewBenchmark() {
@@ -5286,7 +5308,7 @@
       const metricQualifier = metric !== 'bikeShare' ? ' (' + rankingMetricRankLabel(metric) + ')' : '';
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + metricQualifier + ' ' + viewComparisonLabel()
-        : withMetric.length + ' Gebiete ' + viewComparisonLabel();
+        : withMetric.length + ' Gebiete ' + viewPlaceLabel();
       const modeHint =
         rankingMode === 'topflop' && withMetric.length > (topN ?? DEFAULT_RANKING_TOP_N) * 2
           ? ' (Top & Flop je ' + (topN ?? DEFAULT_RANKING_TOP_N) + ')'
@@ -5824,7 +5846,7 @@
       const isCounty = String(p.level) === '6';
       regionDetailPeerGap.style.setProperty(
         '--peer-gap-label',
-        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Ähnlich große Gemeinden bundesweit'",
+        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Gemeinden mit ähnlichem Profil bundesweit'",
       );
       regionDetailPeerGap.appendChild(
         document.createTextNode(
@@ -5909,10 +5931,10 @@
         formatUiPct(m.expectedPct) +
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
-        ' km) · ' +
+        ' km je Fahrtrichtung) · ' +
         (aggregated
           ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
+          : 'aus Bundesland, Gelände, Dichte, Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -6743,7 +6765,7 @@
           regionDetailExtra.appendChild(caption);
           const hint = document.createElement('p');
           hint.className = 'ctx-hint';
-          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra-Anteil aller Vergleichsgebiete';
+          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra je km Straße aller Vergleichsgebiete';
           regionDetailExtra.appendChild(hint);
         }
         const row = document.createElement('div');
@@ -6894,7 +6916,7 @@
       strong.textContent = metric.label;
       title.append(
         strong,
-        ' und Radinfra-Anteil · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
+        ' und Radinfra je km Straße · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
       );
       const chart = document.createElement('div');
       chart.className = 'ctx-plot-chart';
@@ -6973,7 +6995,7 @@
           metric.label + (xUnit ? ' (' + xUnit + ')' : ''),
         ),
       );
-      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra-Anteil'));
+      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra je km Straße'));
 
       let selected = null;
       // Scale dot opacity inversely with point density so dense areas don't collapse into a
@@ -7120,7 +7142,7 @@
       pctEl.textContent = pct;
       const pctLabel = document.createElement('span');
       pctLabel.className = 'region-detail-pct-label';
-      pctLabel.textContent = ' der Straßen mit Radinfrastruktur';
+      pctLabel.textContent = ' Radinfrastruktur im Verhältnis zum Straßennetz';
       const rankEl = document.createElement('span');
       rankEl.className = 'region-detail-rank';
       rankEl.textContent = rankLine;
@@ -7613,6 +7635,8 @@
         ')';
 
       list.replaceChildren();
+      const qualityKey = document.getElementById('ranking-quality-key');
+      if (qualityKey) qualityKey.hidden = true;
       for (const row of rankingDisplayRows(withMetric)) {
         if (row.type === 'divider') {
           const gap = document.createElement('li');
@@ -8964,7 +8988,7 @@
             ': ' +
             (behind ? 'nur ' : '') +
             formatUiPct(p.bikeSharePct) +
-            ' % der Straßen mit Radinfrastruktur';
+            ' % Radinfrastruktur im Verhältnis zum Straßennetz';
           if (rankInfo) {
             msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
           }
@@ -8989,7 +9013,7 @@
         return 'So steht „' + name + '“ beim Radwegausbau da:';
       }
       const label = regionIndex ? viewLabelForCurrentMode() : 'diesem Gebiet';
-      return 'Radinfra-Vergleich – „' + label + '“: Wie viel Prozent der Straßen haben Radwege?';
+      return 'Radinfra-Vergleich – „' + label + '“: Wie viel Radinfrastruktur gibt es im Verhältnis zum Straßennetz?';
     }
 
     function shareTitleText() {
@@ -10347,7 +10371,7 @@
         const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
         const shareText =
           (p.name || 'Gebiet') +
-          (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
+          (pctText ? ': ' + pctText + ' Radinfrastruktur im Verhältnis zum Straßennetz.' : '') +
           '\n' +
           url;
         if (typeof navigator.share === 'function') {

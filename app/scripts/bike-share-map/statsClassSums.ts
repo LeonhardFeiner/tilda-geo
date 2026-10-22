@@ -10,7 +10,7 @@ export const ROAD_CLASS_ORDER = [
 export type RoadClass = (typeof ROAD_CLASS_ORDER)[number]
 
 export const ROAD_CLASS_LABELS: Record<RoadClass, string> = {
-  motorway_like: 'Autobahn & Kraftfahrstraßen',
+  motorway_like: 'Autobahnen',
   primary_like: 'Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)',
   secondary_like: 'Sonstige Straßen und Zufahrten',
   residential_like: 'Wohn- und Erschließungsstraßen',
@@ -146,7 +146,7 @@ export function formatGapKm(km: number) {
   const roadKm = km / 2
   return (
     `${formatStatKm(km, STAT_KM_BIKE_UI_DECIMALS)} km je Fahrtrichtung ` +
-    `(etwa ${formatStatKm(roadKm, roadKm < 10 ? 1 : 0)} km Straße)`
+    `(z. B. ${formatStatKm(roadKm, roadKm < 10 ? 1 : 0)} km Straße mit Radweg auf beiden Seiten)`
   )
 }
 

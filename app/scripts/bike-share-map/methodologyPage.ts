@@ -1,6 +1,11 @@
 import { UNFALLATLAS_YEAR } from './constants'
 import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
-import { POPULATION_BANDS, URBANIZATION_LABELS, type UrbanizationCode } from './demographicPeers'
+import {
+  LANDKREIS_PEER_LABELS,
+  POPULATION_BANDS,
+  URBANIZATION_LABELS,
+  type UrbanizationCode,
+} from './demographicPeers'
 import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
@@ -11,6 +16,7 @@ export type MethodologyPageInput = {
   nationalSharePct: number | null
   /** How many Gemeinden carry a demographic-peer comparison (0 = feature disabled this build). */
   peerGemeindeCount: number
+  peerKreisCount: number
   projectLead: string
   sourceRepoUrl: string
   /** Link back to the interactive map (relative). */
@@ -70,8 +76,8 @@ function li(items: string[]): string {
 
 function roadClassList(): string {
   return li([
-    `<strong>${ROAD_CLASS_LABELS.motorway_like}</strong> – Autobahnen, Kraftfahrstraßen und ihre Zu-/Abfahrten`,
-    `<strong>${ROAD_CLASS_LABELS.primary_like}</strong> – Bundes-, Land- und Kreisstraßen sowie wichtige innerörtliche Straßen (OSM <code>primary</code>–<code>tertiary</code>)`,
+    `<strong>${ROAD_CLASS_LABELS.motorway_like}</strong> – Autobahnen und ihre Zu-/Abfahrten (OSM <code>motorway</code>)`,
+    `<strong>${ROAD_CLASS_LABELS.primary_like}</strong> – Bundes-, Land- und Kreisstraßen sowie wichtige innerörtliche Straßen, einschließlich autobahnähnlich ausgebauter Bundesstraßen (OSM <code>trunk</code>–<code>tertiary</code>)`,
     `<strong>${ROAD_CLASS_LABELS.secondary_like}</strong> – nicht klassifizierte und Erschließungswege (OSM <code>unclassified</code>, <code>service</code>)`,
     `<strong>${ROAD_CLASS_LABELS.residential_like}</strong> – Wohn-, Spiel- und Fahrradstraßen, Fußgängerzonen mit Kfz-Verkehr`,
   ])
@@ -107,7 +113,7 @@ export function methodologyPageHtml(input: MethodologyPageInput): string {
         })
 
   const nationalBlock = national
-    ? `<p class="lead">Bundesweit haben rund <strong>${national}&nbsp;%</strong> der Straßen (nach Länge) eine straßenbegleitende Radinfrastruktur – Stand der OpenStreetMap-Daten: ${input.dataDateLabel}.</p>`
+    ? `<p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>${national}&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: ${input.dataDateLabel}.</p>`
     : ''
 
   const peerSection =
@@ -119,7 +125,11 @@ Größenklasse und Verstädterung</em> verglichen:</p>
 ${peerBandList()}
 <p>Grundlage ist das <a href="${DESTATIS_URL}">Gemeindeverzeichnis des Statistischen Bundesamts</a>
 (vierteljährlich). Der Vergleich erscheint für ${input.peerGemeindeCount.toLocaleString('de-DE')}
-Gemeinden; sehr kleine Vergleichsgruppen (unter vier) werden nicht gezeigt. Auf den geteilten
+Gemeinden; sehr kleine Vergleichsgruppen (unter vier) werden nicht gezeigt.</p>
+<p>Landkreise und kreisfreie Städte (${input.peerKreisCount.toLocaleString('de-DE')}) werden ebenso
+bundesweit in Gruppen verglichen: ${Object.values(LANDKREIS_PEER_LABELS).join(', ')}. Grundlage sind
+Einwohnerzahl und Fläche aus demselben Gemeindeverzeichnis.</p>
+<p>Auf den geteilten
 Vorschau-Seiten wird der Standard-Zählfilter verwendet, in der interaktiven Karte der gerade
 eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
       : ''
@@ -142,7 +152,9 @@ ${li(Object.entries(DATA_DOWNLOAD_COLUMNS).map(([key, text]) => `<code>${key}</c
 ${li([
   `Längen, Grenzen: © OpenStreetMap-Mitwirkende, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a> – die CSV ist damit eine Datenbank unter ODbL.`,
   `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas ${UNFALLATLAS_YEAR}), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
+  `Bevölkerungsverteilung: Zensus 2022, Gitterzellen 100&nbsp;m, © Statistische Ämter des Bundes und der Länder, <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
+  `Verkehrsmengen Bundesstraßen (bundesweit): Straßenverkehrszählung 2021, Quelle: Bundesanstalt für Straßenwesen (BASt).`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
   `Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.`,
   `Geländehöhe und -neigung: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).`,
@@ -196,10 +208,11 @@ ${li([
   ${nationalBlock}
 
   <h2>Was zeigt die Karte?</h2>
-  <p>Für jede Verwaltungseinheit den <strong>Anteil der Straßen (nach Länge in km), an denen eine
-  Radinfrastruktur verläuft</strong> – also die Kilometer Radinfrastruktur geteilt durch die
-  Kilometer Straße. Ein Wert von 20&nbsp;% heißt: entlang von einem Fünftel des Straßennetzes
-  gibt es Radwege, Schutzstreifen, Fahrradstraßen o.&nbsp;Ä.</p>
+  <p>Für jede Verwaltungseinheit das Verhältnis <strong>Kilometer Radinfrastruktur je Kilometer
+  Straße</strong>, in Prozent. Ein Wert von 20&nbsp;% heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
+  Radwege, Schutzstreifen, Fahrradstraßen o.&nbsp;Ä. Mitgezählt werden auch eigenständige Radwege
+  abseits von Straßen; der Wert ist daher kein reiner Anteil der Straßen mit Radweg, sondern ein
+  Maß dafür, wie viel Radinfrastruktur es im Verhältnis zum Straßennetz gibt.</p>
   <p>Der Anteil misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
   den Zählfilter lassen sich einzelne Kategorien (z.&nbsp;B. nur baulich getrennte Radwege) ein-
   und ausschließen.</p>
@@ -210,6 +223,9 @@ ${li([
     `<strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.`,
     `<strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="${DESTATIS_URL}">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.`,
     `<strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.`,
+    `<strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.`,
+    `<strong>Miete, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle).`,
+    `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit.`,
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}
 
@@ -347,7 +363,7 @@ ${li([
         <td class="num">${beta(STD_MODEL.betas.logDens)} / Dekade</td>
       </tr>
       <tr>
-        <td><strong>Nähe zu Bahn &amp; Tram</strong></td>
+        <td><strong>Entfernung zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
         <td class="num">${beta(STD_MODEL.betas.stDist)} / km</td>
       </tr>
@@ -379,7 +395,7 @@ ${li([
   <div class="caveat">
   ${li([
     `<strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein. Als Hinweis zeigt die Detailkarte die <em>Kartierungstiefe</em>: den Anteil der Straßenlänge (ohne Zufahrts-/Service-Wege und Autobahnen), für den Tempolimit, Belag und Beleuchtung erfasst sind – Merkmale, die wie Radwege vor Ort erhoben werden, aber nichts darüber sagen, ob es einen Radweg gibt. Ist sie im Vergleich gering, kann auch Radinfrastruktur fehlen. Auf dem Land ist sie von Natur aus etwas niedriger (unbeleuchtete Landstraßen, Tempo 100 ohne Schild), daher am besten mit ähnlichen Gemeinden vergleichen.`,
-    `<strong>Unklar getaggte Radwege:</strong> Manche Wege sind in OpenStreetMap als Radinfrastruktur erkennbar, aber so getaggt, dass sich nicht sagen lässt, um welche Art es sich handelt („Klärung nötig“). Sie zählen im Radinfra.de-Standard mit. Die Karte zeigt je Gebiet, wie groß dieser Anteil ist (Datenlage <em>gut</em> unter 15&nbsp;%, <em>mittel</em> bis 40&nbsp;%, <em>unsicher</em> darüber) und nennt bei <em>mittel</em> und <em>unsicher</em> den Anteil ohne diese Wege. Der wahre Wert liegt dann dazwischen.`,
+    `<strong>Unklar getaggte Radwege:</strong> Manche Wege sind in OpenStreetMap als Radinfrastruktur erkennbar, aber so getaggt, dass sich nicht sagen lässt, um welche Art es sich handelt („Klärung nötig“). Sie zählen im Radinfra.de-Standard mit. Die Karte zeigt je Gebiet, wie groß dieser Anteil ist (Datenlage <em>gut</em> unter 15&nbsp;%, <em>mittel</em> bis 40&nbsp;%, <em>unsicher</em> darüber) und nennt bei <em>mittel</em> und <em>unsicher</em> den Anteil ohne diese Wege. Der wahre Wert liegt dann dazwischen. „Gut“ heißt dabei nur, dass die erfassten Wege eindeutig getaggt sind – nicht, dass alle Radwege erfasst sind; dafür steht die Kartierungstiefe.`,
     `<strong>Kaum Radinfrastruktur erfasst:</strong> Bei einem Straßennetz ab 20&nbsp;km mit weniger als 0,5&nbsp;km erfasster Radinfrastruktur lässt sich nicht unterscheiden, ob es keine gibt oder ob sie in OpenStreetMap fehlt. Solche Gebiete sind als „kaum erfasst“ markiert.`,
     `<strong>Kleines Straßennetz:</strong> Bei Gemeinden mit sehr wenig erfasstem Straßennetz ist der Prozentwert instabil (wenige Kilometer verschieben ihn stark). Gebiete mit weniger als 5&nbsp;km erfasster Straße bekommen deshalb keinen Rang und fließen weder in die Farbskala noch in Median und Spitzenwert der Vergleiche ein; auf der Karte und in der Detailkarte sind sie weiterhin zu sehen.`,
     `<strong>Momentaufnahme:</strong> Die Karte zeigt den Stand eines Datenabzugs, keine Live-Daten. Neu eingetragene Radwege erscheinen erst mit der nächsten Aktualisierung.`,
@@ -399,7 +415,8 @@ ${li([
   <footer>
     Radinfra-Vergleich · Daten © OpenStreetMap-Mitwirkende (ODbL) ·
     Aufbereitung auf Basis von <a href="${input.sourceRepoUrl}">tilda-geo</a> ·
-    erstellt von ${input.projectLead}
+    erstellt von ${input.projectLead} ·
+    <a href="./impressum.html">Impressum &amp; Datenschutz</a>
   </footer>
 </main>
 </body>

@@ -148,7 +148,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <title>Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?</title>
   <meta
     name="description"
-    content="Wie viel Prozent der Straßen haben Radinfrastruktur? Vergleich der Gemeinden und Landkreise auf Basis von OpenStreetMap-Daten."
+    content="Wie viel Radinfrastruktur gibt es im Verhältnis zum Straßennetz? Vergleich der Gemeinden und Landkreise auf Basis von OpenStreetMap-Daten."
   />
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Radinfra-Vergleich" />
@@ -156,7 +156,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <meta property="og:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     property="og:description"
-    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+    content="Radinfrastruktur im Verhältnis zum Straßennetz je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
   <meta property="og:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
   <meta property="og:image:width" content="1200" />
@@ -165,7 +165,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   <meta name="twitter:title" content="Radinfra-Vergleich – wie viel Radweg hat deine Gemeinde?" />
   <meta
     name="twitter:description"
-    content="Anteil der Straßen mit Radinfrastruktur je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
+    content="Radinfrastruktur im Verhältnis zum Straßennetz je Gemeinde und Landkreis – auf Basis von OpenStreetMap."
   />
   <meta name="twitter:image" content="${new URL('r/og-default.png', SHARE_PAGE_BASE_URL).href}" />
   <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
@@ -801,7 +801,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--peer::before {
-      content: var(--peer-gap-label, 'Ähnlich große Gemeinden bundesweit'); display: block;
+      content: var(--peer-gap-label, 'Gemeinden mit ähnlichem Profil bundesweit'); display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -1516,7 +1516,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   </button>
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
-    <div class="cml-title">Radinfra-Anteil</div>
+    <div class="cml-title">Radinfra je km Straße</div>
     <div class="cml-def" id="cml-def">km Radinfra ÷ km Straße</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
@@ -1532,7 +1532,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     <div class="panel-body">
     <div id="region-detail-mount"></div>
     <p class="site-tagline">
-      Anteil der Straßen mit Radinfrastruktur – je Gemeinde, Landkreis und Bundesland,
+      Radinfrastruktur im Verhältnis zum Straßennetz (km je 100&nbsp;km Straße) – je Gemeinde, Landkreis und Bundesland,
       berechnet aus OpenStreetMap-Daten. <a href="./methodik.html">Wie wird gerechnet?</a>
     </p>
     <p id="load-status" role="status" aria-live="polite">Lade Gebietsdaten…</p>
@@ -1570,7 +1570,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <select id="darstellung-select"></select>
         <label for="map-metric-select">Färben nach</label>
         <select id="map-metric-select">
-          <option value="bikeShare">Radinfrastruktur-Anteil</option>
+          <option value="bikeShare">Radinfra je km Straße</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
           <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
           <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
@@ -1694,7 +1694,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
-          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra-Anteil)</span>
+          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra je km Straße)</span>
           <p class="metric-definition" id="metric-definition">
             Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
             <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
@@ -1766,11 +1766,16 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         <div class="ranking-scroll" id="ranking-scroll">
           <ol class="ranking-list" id="ranking-list" aria-label="Rangliste der Gebiete"></ol>
         </div>
+        <p class="ranking-hint" id="ranking-quality-key" hidden>
+          ⚠ = Wert unsicher: Radwege in OpenStreetMap unklar getaggt oder kaum erfasst.
+          <a href="./methodik.html">Mehr dazu</a>
+        </p>
     </details>
     </div>
     <p class="footer">
       ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
+      <a href="./impressum.html">Impressum &amp; Datenschutz</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
       (<a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">ODbL</a>) ·
       basierend auf dem <a href="${VIEWER_SOURCE_REPO_URL}" target="_blank" rel="noopener noreferrer">Fork von tilda-geo</a> ·
@@ -2505,24 +2510,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         if (roadKm > 0) nationalPct = (bikeKm / roadKm) * 100;
       }
 
+      // Land baselines are fitted intercepts, not the Länder's own shares: they are scaled
+      // like the coefficients (computeStructuralPrediction does that when none are passed).
       const landBaselines = {};
-      for (const f of allFeatures) {
-        const lvl = String(f.properties?.level ?? '');
-        const fid = String(f.properties?.id ?? '');
-        if (
-          lvl === '4' ||
-          fid === 'relation/62422' ||
-          fid === 'relation/62782' ||
-          fid === 'relation/62718'
-        ) {
-          const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-            f.properties?.road_length,
-            f.properties?.bikelane_length,
-            lengthClassFilter,
-          );
-          if (roadKm > 0) landBaselines[fid] = (bikeKm / roadKm) * 100;
-        }
-      }
 
       const chosenModelType =
         !lengthClassFilter.road.residential_like &&
@@ -3115,7 +3105,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
-        else cmlTitle.textContent = 'Radinfra-Anteil';
+        else cmlTitle.textContent = 'Radinfra je km Straße';
       }
       const cmlDef = document.getElementById('cml-def');
       if (cmlDef) cmlDef.hidden = metric !== 'bikeShare';
@@ -3126,7 +3116,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
-        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra-Anteil)';
+        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra je km Straße)';
       }
 
       if (metricDef) {
@@ -3264,7 +3254,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return;
       }
       el.textContent =
-        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % der Straßen mit Radinfrastruktur';
+        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % Radinfrastruktur im Verhältnis zum Straßennetz';
       el.hidden = false;
     }
 
@@ -4047,6 +4037,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
               : 'Kaum Radinfrastruktur erfasst – fehlt sie, oder gibt es sie nicht?';
           flag.setAttribute('aria-label', flag.title);
           pctEl.prepend(flag);
+          const qualityKey = document.getElementById('ranking-quality-key');
+          if (qualityKey) qualityKey.hidden = false;
         }
       }
       list.appendChild(li);
@@ -4582,9 +4574,39 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       return regionIndex.byId.get(scopeId)?.properties?.name || null;
     }
 
-    function viewComparisonLabel() {
+    function viewPlaceLabel() {
+      // The neighbour view ranks a hand-picked set, not the scope it sits in.
+      if (isNeighborView()) {
+        const focusName = regionIndex?.byId.get(neighborFocus.focusId)?.properties?.name;
+        return focusName ? 'unter ' + focusName + ' und Nachbargebieten' : 'unter den Nachbargebieten';
+      }
       const name = currentViewScopeName();
       return name ? RankingDisplay.inPlacePhrase(name) : 'in dieser Ansicht';
+    }
+
+    /** Berlin, Hamburg, Bremen. */
+    const CITY_STATE_IDS = new Set(['relation/62422', 'relation/62782', 'relation/62718']);
+
+    /** Says so when a ranking mixes Landkreise with kreisfreie Städte, or Länder with Stadtstaaten. */
+    function mixedGroupPrefix() {
+      if (isNeighborView()) return '';
+      const props = lastRankingSorted.map((f) => f.properties).filter(Boolean);
+      const levels = new Set(props.map((p) => String(p.level ?? '')));
+      if (levels.size !== 1) return '';
+      if (levels.has('6')) {
+        const kreisfrei = props.filter((p) => regionIndex?.kreisfreieIds?.has(p.id)).length;
+        return kreisfrei > 0 && kreisfrei < props.length
+          ? 'unter Landkreisen und kreisfreien Städten '
+          : '';
+      }
+      if (levels.has('4') && props.some((p) => CITY_STATE_IDS.has(String(p.id)))) {
+        return 'unter den Ländern einschließlich der Stadtstaaten ';
+      }
+      return '';
+    }
+
+    function viewComparisonLabel() {
+      return mixedGroupPrefix() + viewPlaceLabel();
     }
 
     function viewBenchmark() {
@@ -4747,7 +4769,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const metricQualifier = metric !== 'bikeShare' ? ' (' + rankingMetricRankLabel(metric) + ')' : '';
       const rankText = rankInfo
         ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + metricQualifier + ' ' + viewComparisonLabel()
-        : withMetric.length + ' Gebiete ' + viewComparisonLabel();
+        : withMetric.length + ' Gebiete ' + viewPlaceLabel();
       const modeHint =
         rankingMode === 'topflop' && withMetric.length > (topN ?? DEFAULT_RANKING_TOP_N) * 2
           ? ' (Top & Flop je ' + (topN ?? DEFAULT_RANKING_TOP_N) + ')'
@@ -5285,7 +5307,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const isCounty = String(p.level) === '6';
       regionDetailPeerGap.style.setProperty(
         '--peer-gap-label',
-        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Ähnlich große Gemeinden bundesweit'",
+        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Gemeinden mit ähnlichem Profil bundesweit'",
       );
       regionDetailPeerGap.appendChild(
         document.createTextNode(
@@ -5370,10 +5392,10 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         formatUiPct(m.expectedPct) +
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
-        ' km) · ' +
+        ' km je Fahrtrichtung) · ' +
         (aggregated
           ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
+          : 'aus Bundesland, Gelände, Dichte, Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -6204,7 +6226,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           regionDetailExtra.appendChild(caption);
           const hint = document.createElement('p');
           hint.className = 'ctx-hint';
-          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra-Anteil aller Vergleichsgebiete';
+          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra je km Straße aller Vergleichsgebiete';
           regionDetailExtra.appendChild(hint);
         }
         const row = document.createElement('div');
@@ -6355,7 +6377,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       strong.textContent = metric.label;
       title.append(
         strong,
-        ' und Radinfra-Anteil · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
+        ' und Radinfra je km Straße · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
       );
       const chart = document.createElement('div');
       chart.className = 'ctx-plot-chart';
@@ -6434,7 +6456,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           metric.label + (xUnit ? ' (' + xUnit + ')' : ''),
         ),
       );
-      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra-Anteil'));
+      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra je km Straße'));
 
       let selected = null;
       // Scale dot opacity inversely with point density so dense areas don't collapse into a
@@ -6581,7 +6603,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       pctEl.textContent = pct;
       const pctLabel = document.createElement('span');
       pctLabel.className = 'region-detail-pct-label';
-      pctLabel.textContent = ' der Straßen mit Radinfrastruktur';
+      pctLabel.textContent = ' Radinfrastruktur im Verhältnis zum Straßennetz';
       const rankEl = document.createElement('span');
       rankEl.className = 'region-detail-rank';
       rankEl.textContent = rankLine;
@@ -7074,6 +7096,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ')';
 
       list.replaceChildren();
+      const qualityKey = document.getElementById('ranking-quality-key');
+      if (qualityKey) qualityKey.hidden = true;
       for (const row of rankingDisplayRows(withMetric)) {
         if (row.type === 'divider') {
           const gap = document.createElement('li');
@@ -8425,7 +8449,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
             ': ' +
             (behind ? 'nur ' : '') +
             formatUiPct(p.bikeSharePct) +
-            ' % der Straßen mit Radinfrastruktur';
+            ' % Radinfrastruktur im Verhältnis zum Straßennetz';
           if (rankInfo) {
             msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
           }
@@ -8450,7 +8474,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         return 'So steht „' + name + '“ beim Radwegausbau da:';
       }
       const label = regionIndex ? viewLabelForCurrentMode() : 'diesem Gebiet';
-      return 'Radinfra-Vergleich – „' + label + '“: Wie viel Prozent der Straßen haben Radwege?';
+      return 'Radinfra-Vergleich – „' + label + '“: Wie viel Radinfrastruktur gibt es im Verhältnis zum Straßennetz?';
     }
 
     function shareTitleText() {
@@ -9808,7 +9832,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
         const shareText =
           (p.name || 'Gebiet') +
-          (pctText ? ': ' + pctText + ' der Straßen mit Radinfrastruktur.' : '') +
+          (pctText ? ': ' + pctText + ' Radinfrastruktur im Verhältnis zum Straßennetz.' : '') +
           '\\n' +
           url;
         if (typeof navigator.share === 'function') {

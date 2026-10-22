@@ -98,6 +98,37 @@ describe('buildShareRegionSummaries', () => {
     expect(summaries.has('relation/9')).toBe(false)
     expect(summaries.get('relation/396557')?.total).toBe(4)
   })
+
+  test('flags a Kreis group as mixed only when it holds Landkreise and kreisfreie Städte', () => {
+    const kreis = (id: string, name: string): ShareRegionInput => ({
+      id,
+      name,
+      level: '6',
+      roadSumKm: 100,
+      bikelaneSumKm: 10,
+      bikeSharePct: 10,
+      landkreisId: '',
+      bundeslandId: 'relation/2145268',
+    })
+    // relation/62371 holds the Gemeinden above, so it is a Landkreis; relation/62428 is kreisfrei.
+    const landkreis = kreis('relation/62371', 'Pfaffenhofen an der Ilm')
+    const mixed = buildShareRegionSummaries(
+      [...regions, landkreis, kreis('relation/62428', 'München')],
+      lkNames,
+    )
+    expect(mixed.get('relation/62371')?.mixedGroup).toBe(true)
+
+    const withGemeinde = buildShareRegionSummaries(
+      [
+        ...regions,
+        landkreis,
+        kreis('relation/1', 'Anderer Kreis'),
+        { ...gemeinde('relation/2', 'Dorf', 10, 1), landkreisId: 'relation/1' },
+      ],
+      lkNames,
+    )
+    expect(withGemeinde.get('relation/62371')?.mixedGroup).toBe(false)
+  })
 })
 
 describe('shareRankPhrase / groupLocationPhrase', () => {
@@ -117,6 +148,23 @@ describe('shareRankPhrase / groupLocationPhrase', () => {
     expect(
       groupLocationPhrase({ groupKind: 'bundeslaender_in_deutschland', groupName: 'Deutschland' }),
     ).toBe('in Deutschland')
+  })
+
+  test('says when Landkreise share a ranking with kreisfreie Städte, Länder with Stadtstaaten', () => {
+    expect(
+      groupLocationPhrase({
+        groupKind: 'landkreise_in_bundesland',
+        groupName: 'Bayern',
+        mixedGroup: true,
+      }),
+    ).toBe('unter Landkreisen und kreisfreien Städten in Bayern')
+    expect(
+      groupLocationPhrase({
+        groupKind: 'bundeslaender_in_deutschland',
+        groupName: 'Deutschland',
+        mixedGroup: true,
+      }),
+    ).toBe('unter den Ländern einschließlich der Stadtstaaten')
   })
 
   test('does not double "Landkreis" when the OSM relation name already carries it', () => {
@@ -156,7 +204,7 @@ describe('shareHeadline / shareDescription', () => {
 
   test('description states the km gap for a behind region', () => {
     const text = shareDescription(sk, '12.09.2026')
-    expect(text).toContain('1,6 %')
+    expect(text).toContain('kommen auf 100 km Straße 1,6 km Radinfrastruktur')
     expect(text).toContain('fehlen rund')
     expect(text).toContain('km')
     expect(text).toContain('12.09.2026')
