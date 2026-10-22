@@ -1968,8 +1968,17 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let overlayLineHighlightTimer = null;
     let overlayLineHighlightBlinkTimer = null;
     let overlayHighlightBlinkOn = false;
+    let overlayHighlightClipTimer = null;
+    let overlayHighlightClipBorderIndex = null;
     const OVERLAY_HIGHLIGHT_PULSE_MS = 3200;
     const OVERLAY_HIGHLIGHT_BLINK_MS = 350;
+    const OVERLAY_HIGHLIGHT_CLIP_DEBOUNCE_MS = 120;
+    const OVERLAY_HIGHLIGHT_LAYER_SUFFIXES = [
+      '-highlight-casing',
+      '-highlight-lines',
+      '-highlight-clipped-casing',
+      '-highlight-clipped-lines',
+    ];
 
     ${viewerRegionNavScript()}
     const basemapSelect = document.getElementById('basemap-select');
@@ -4278,29 +4287,104 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     const isRoadHighlightKind = (kind) => kind === 'road-class' || kind === 'road-tag';
 
     /**
-     * Exactly the lines a clicked row stands for, inside the selected region. Not narrowed to
-     * the counting filter: a "nicht gewertet" row should still show where those lines are.
+     * Exactly the lines a clicked row stands for. Not narrowed to the counting filter: a
+     * "nicht gewertet" row should still show where those lines are.
+     */
+    function overlayHighlightTypeFilter(kind, id) {
+      if (kind === 'road-class') {
+        return TildaStats.maplibrePropertyInFilter('road', TildaStats.highwayTagsForRoadClass(id));
+      }
+      if (kind === 'road-tag') return TildaStats.maplibrePropertyInFilter('road', [id]);
+      if (kind === 'bikelane-class') return TildaStats.maplibreBikelaneOverlayFilterForClass(id);
+      return TildaStats.maplibreBikelaneOverlayFilterForTag(id);
+    }
+
+    /**
+     * The type filter, inside the selected region. MapLibre's 'within' only passes lines that lie
+     * entirely inside; lines crossing the border count with their inside share (aggregate_lengths
+     * .sql) and are drawn from the clipped GeoJSON layers instead (refreshOverlayHighlightClipped).
      */
     function overlayHighlightFilter(kind, id) {
-      let typeFilter;
-      if (kind === 'road-class') {
-        typeFilter = TildaStats.maplibrePropertyInFilter('road', TildaStats.highwayTagsForRoadClass(id));
-      } else if (kind === 'road-tag') {
-        typeFilter = TildaStats.maplibrePropertyInFilter('road', [id]);
-      } else if (kind === 'bikelane-class') {
-        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForClass(id);
-      } else {
-        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForTag(id);
-      }
       const geometry = selectedRegionGeometry();
-      const filters = [typeFilter];
+      const filters = [overlayHighlightTypeFilter(kind, id)];
       if (geometry) filters.push(['within', geometry]);
       return TildaStats.combineMaplibreFilters(...filters);
+    }
+
+    function overlayHighlightPrefix() {
+      return isRoadHighlightKind(overlayLineHighlight?.kind) ? 'roads' : 'bikelanes';
+    }
+
+    /**
+     * Cut the border-crossing lines of the pulsed type to the region and show the inside parts.
+     * Reads the loaded tiles, so it runs again as tiles arrive and after the map moves.
+     */
+    function refreshOverlayHighlightClipped() {
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = null;
+      if (!overlayLineHighlight) return;
+      const prefix = overlayHighlightPrefix();
+      const source = map.getSource(prefix + '-highlight-clipped');
+      if (!source) return;
+      const geometry = selectedRegionGeometry();
+      if (!geometry) {
+        source.setData(TildaStats.EMPTY_FEATURE_COLLECTION);
+        return;
+      }
+      if (!overlayHighlightClipBorderIndex || overlayHighlightClipBorderIndex.geometry !== geometry) {
+        overlayHighlightClipBorderIndex = {
+          geometry,
+          index: new TildaStats.RegionBorderIndex(geometry),
+        };
+      }
+      const { kind, id } = overlayLineHighlight;
+      const raw = map.querySourceFeatures(prefix, {
+        sourceLayer: prefix,
+        filter: overlayHighlightTypeFilter(kind, id),
+      });
+      const lines = raw.map((feature) => {
+        // Tile coordinates: on the feature itself (MapLibre 5+) or on its vector tile feature (4.x).
+        const tile = feature._z != null ? feature : feature._vectorTileFeature;
+        const tileBounds =
+          tile && tile._z != null ? TildaStats.tileBoundsLonLat(tile._z, tile._x, tile._y) : null;
+        return { geometry: feature.geometry, properties: null, tileBounds };
+      });
+      source.setData(
+        TildaStats.clipCrossingLinesToRegion(lines, geometry, overlayHighlightClipBorderIndex.index),
+      );
+    }
+
+    function scheduleOverlayHighlightClipped() {
+      if (!overlayLineHighlight) return;
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = setTimeout(refreshOverlayHighlightClipped, OVERLAY_HIGHLIGHT_CLIP_DEBOUNCE_MS);
+    }
+
+    function onOverlayHighlightSourceData(e) {
+      if (!overlayLineHighlight || e.sourceId !== overlayHighlightPrefix() || !e.tile) return;
+      scheduleOverlayHighlightClipped();
+    }
+
+    function bindOverlayHighlightClipEvents() {
+      map.on('sourcedata', onOverlayHighlightSourceData);
+      map.on('moveend', scheduleOverlayHighlightClipped);
+    }
+
+    function unbindOverlayHighlightClipEvents() {
+      map.off('sourcedata', onOverlayHighlightSourceData);
+      map.off('moveend', scheduleOverlayHighlightClipped);
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = null;
+      for (const prefix of ['bikelanes', 'roads']) {
+        const source = map.getSource(prefix + '-highlight-clipped');
+        if (source) source.setData(TildaStats.EMPTY_FEATURE_COLLECTION);
+      }
     }
 
     function clearOverlayLineHighlight() {
       overlayLineHighlight = null;
       overlayHighlightBlinkOn = false;
+      unbindOverlayHighlightClipEvents();
       if (overlayLineHighlightTimer) clearTimeout(overlayLineHighlightTimer);
       if (overlayLineHighlightBlinkTimer) clearInterval(overlayLineHighlightBlinkTimer);
       overlayLineHighlightTimer = null;
@@ -4318,8 +4402,9 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       ]) {
         if (!map.getLayer(prefix + '-highlight-lines')) continue;
         const visible = active ? 'visible' : 'none';
-        map.setLayoutProperty(prefix + '-highlight-casing', 'visibility', visible);
-        map.setLayoutProperty(prefix + '-highlight-lines', 'visibility', visible);
+        for (const suffix of OVERLAY_HIGHLIGHT_LAYER_SUFFIXES) {
+          if (map.getLayer(prefix + suffix)) map.setLayoutProperty(prefix + suffix, 'visibility', visible);
+        }
       }
       if (!overlayLineHighlight) return;
       const prefix = isRoad ? 'roads' : 'bikelanes';
@@ -4328,6 +4413,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       const filter = overlayHighlightFilter(kind, id);
       map.setFilter(prefix + '-highlight-casing', filter);
       map.setFilter(prefix + '-highlight-lines', filter);
+      const hasClipped = !!map.getLayer(prefix + '-highlight-clipped-lines');
       const lineColor = isRoad ? overlayRoadColorInput.value : overlayBikelaneColorInput.value;
       const casingColor = '#ffffff';
       const lineWidth = overlayHighlightBlinkOn
@@ -4337,12 +4423,14 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         ? ['interpolate', ['linear'], ['zoom'], 10, 5, 14, 8]
         : ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5];
       const lineOpacity = overlayHighlightBlinkOn ? 1 : 0.45;
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-color', lineColor);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-color', casingColor);
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-width', lineWidth);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-width', casingWidth);
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-opacity', lineOpacity);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-opacity', lineOpacity);
+      for (const infix of hasClipped ? ['-highlight', '-highlight-clipped'] : ['-highlight']) {
+        map.setPaintProperty(prefix + infix + '-lines', 'line-color', lineColor);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-color', casingColor);
+        map.setPaintProperty(prefix + infix + '-lines', 'line-width', lineWidth);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-width', casingWidth);
+        map.setPaintProperty(prefix + infix + '-lines', 'line-opacity', lineOpacity);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-opacity', lineOpacity);
+      }
       map.triggerRepaint();
     }
 
@@ -4379,6 +4467,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           'line-opacity': bikeOpacity,
         },
       });
+      ensureClippedHighlightLayers('bikelanes', overlayBikelaneColorInput.value);
     }
 
     /** Same pulse layers for streets; road tiles are drawn thin, so the highlight carries them. */
@@ -4400,6 +4489,35 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           paint: { 'line-color': color, 'line-width': width, 'line-opacity': 1 },
         });
       }
+      ensureClippedHighlightLayers('roads', overlayRoadColorInput.value);
+    }
+
+    /**
+     * The border-crossing lines of a pulse, cut to the region (refreshOverlayHighlightClipped),
+     * drawn like the tile pulse layers above them.
+     */
+    function ensureClippedHighlightLayers(prefix, lineColor) {
+      const sourceId = prefix + '-highlight-clipped';
+      if (map.getSource(sourceId)) return;
+      map.addSource(sourceId, { type: 'geojson', data: TildaStats.EMPTY_FEATURE_COLLECTION });
+      const layerMinZoom = CONFIG.overlayMinZoomLimits.min;
+      // Casing below both line layers, so the pieces join the tile-drawn lines without a white seam.
+      for (const [suffix, color, width, beforeId] of [
+        ['-casing', '#ffffff', ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5], prefix + '-highlight-lines'],
+        ['-lines', lineColor, ['interpolate', ['linear'], ['zoom'], 10, 2.4, 14, 4], undefined],
+      ]) {
+        map.addLayer(
+          {
+            id: sourceId + suffix,
+            type: 'line',
+            source: sourceId,
+            minzoom: layerMinZoom,
+            layout: { visibility: 'none' },
+            paint: { 'line-color': color, 'line-width': width, 'line-opacity': 1 },
+          },
+          beforeId,
+        );
+      }
     }
 
     function pulseOverlayLineHighlight(kind, id) {
@@ -4412,6 +4530,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       ensureRoadHighlightLayers();
       syncOverlayHighlightRowStyles();
       updateOverlayLineHighlightLayers();
+      bindOverlayHighlightClipEvents();
+      refreshOverlayHighlightClipped();
       overlayHighlightBlinkOn = true;
       let blinkTicks = 0;
       overlayLineHighlightBlinkTimer = setInterval(() => {

@@ -641,6 +641,13 @@ export function combineMaplibreFilters(...filters: unknown[]) {
 }
 
 export {
+  clipCrossingLinesToRegion,
+  EMPTY_FEATURE_COLLECTION,
+  RegionBorderIndex,
+  tileBoundsLonLat,
+} from './overlayHighlightClip'
+
+export {
   computeChoroplethScaleRange,
   DEFAULT_IQR_MULTIPLIER,
   DEFAULT_MIN_ROAD_KM_FOR_SCALE,

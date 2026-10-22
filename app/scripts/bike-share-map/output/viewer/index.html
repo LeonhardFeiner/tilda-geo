@@ -18,8 +18,8 @@
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./stats-core.msgpack?v=20261022062934" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022062934" as="script" />
+  <link rel="preload" href="./stats-core.msgpack?v=20261022072336" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072336" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -1738,15 +1738,15 @@
       <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js?v=20261022062934"></script>
-  <script src="./regionNavigation.js?v=20261022062934"></script>
-  <script src="./statsMsgpack.js?v=20261022062934"></script>
-  <script src="./neighborView.js?v=20261022062934"></script>
-  <script src="./regionSearch.js?v=20261022062934"></script>
-  <script src="./rankingDisplay.js?v=20261022062934"></script>
-  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022062934"></script>
+  <script src="./statsClassSums.js?v=20261022072336"></script>
+  <script src="./regionNavigation.js?v=20261022072336"></script>
+  <script src="./statsMsgpack.js?v=20261022072336"></script>
+  <script src="./neighborView.js?v=20261022072336"></script>
+  <script src="./regionSearch.js?v=20261022072336"></script>
+  <script src="./rankingDisplay.js?v=20261022072336"></script>
+  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=20261022072336"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-10-22T06:29:34.277Z","dataDateLabel":"16.10.2026","assetVersion":"20261022062934","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022062934","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022062934","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022062934","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022062934","neighborsUrl":"./neighbors.json?v=20261022062934","peersUrl":"./gemeinde-peers.json?v=20261022062934","densityUrl":"./gemeinde-density.json?v=20261022062934","transitUrl":"./gemeinde-transit.json?v=20261022062934","terrainUrl":"./gemeinde-terrain.json?v=20261022062934","zensusUrl":"./gemeinde-zensus.json?v=20261022062934","carsUrl":"./gemeinde-cars.json?v=20261022062934","calmedUrl":"./gemeinde-calmed.json?v=20261022062934","accidentsUrl":"./gemeinde-accidents.json?v=20261022062934","commutersUrl":"./gemeinde-commuters.json?v=20261022062934","mappingUrl":"./gemeinde-mapping.json?v=20261022062934","trafficUrl":"./gemeinde-traffic.json?v=20261022062934","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022062934","busyRoadsUrl":"./busy-roads.geojson?v=20261022062934","historyUrl":"./history.json?v=20261022062934","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-10-22T07:23:36.701Z","dataDateLabel":"16.10.2026","assetVersion":"20261022072336","basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=20261022072336","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=20261022072336","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=20261022072336","neighborsMsgpackUrl":"./neighbors.msgpack?v=20261022072336","neighborsUrl":"./neighbors.json?v=20261022072336","peersUrl":"./gemeinde-peers.json?v=20261022072336","densityUrl":"./gemeinde-density.json?v=20261022072336","transitUrl":"./gemeinde-transit.json?v=20261022072336","terrainUrl":"./gemeinde-terrain.json?v=20261022072336","zensusUrl":"./gemeinde-zensus.json?v=20261022072336","carsUrl":"./gemeinde-cars.json?v=20261022072336","calmedUrl":"./gemeinde-calmed.json?v=20261022072336","accidentsUrl":"./gemeinde-accidents.json?v=20261022072336","commutersUrl":"./gemeinde-commuters.json?v=20261022072336","mappingUrl":"./gemeinde-mapping.json?v=20261022072336","trafficUrl":"./gemeinde-traffic.json?v=20261022072336","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=20261022072336","busyRoadsUrl":"./busy-roads.geojson?v=20261022072336","historyUrl":"./history.json?v=20261022072336","colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahn & Kraftfahrstraßen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -1804,7 +1804,7 @@
         renderRegionModelGap(props);
       }
     }
-    // The six inputs of the structural model: the card shows the expected value right away.
+    // The inputs of the structural model: the card shows the expected value right away.
     let modelIndexesPromise = null;
     function ensureModelIndexes() {
       if (modelIndexesPromise) return modelIndexesPromise;
@@ -1815,6 +1815,7 @@
         loadIndex(CONFIG.zensusUrl, (data) => { zensusIndex = data; }),
         loadIndex(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         loadIndex(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
+        loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return modelIndexesPromise;
     }
@@ -1828,7 +1829,6 @@
         loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
         loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
-        loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
@@ -1848,8 +1848,17 @@
     let overlayLineHighlightTimer = null;
     let overlayLineHighlightBlinkTimer = null;
     let overlayHighlightBlinkOn = false;
+    let overlayHighlightClipTimer = null;
+    let overlayHighlightClipBorderIndex = null;
     const OVERLAY_HIGHLIGHT_PULSE_MS = 3200;
     const OVERLAY_HIGHLIGHT_BLINK_MS = 350;
+    const OVERLAY_HIGHLIGHT_CLIP_DEBOUNCE_MS = 120;
+    const OVERLAY_HIGHLIGHT_LAYER_SUFFIXES = [
+      '-highlight-casing',
+      '-highlight-lines',
+      '-highlight-clipped-casing',
+      '-highlight-clipped-lines',
+    ];
 
     
     let regionIndex = null;
@@ -3084,6 +3093,7 @@
           zensus: zensusIndex?.byId,
           cars: carsIndex?.byId,
           calmed: calmedIndex?.byId,
+          trafficFederal: trafficFederalIndex?.byId,
         }),
         bundeslandId: String(p.bundesland_id || ''),
         modelType: ms.modelType,
@@ -3399,7 +3409,11 @@
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
         { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
+        { key: 'busyRoadsKm', header: 'Vielbefahrene Landstraßen (km, Bayern)', numeric: 'km' },
+        { key: 'busyRoadsShare', header: 'Vielbefahrene Landstraßen Anteil am Netz (%, Bayern)', numeric: 'pct' },
         { key: 'busyRoadsCovered', header: 'Vielbefahrene Landstraßen mit Radweg (%, Bayern)', numeric: 'pct' },
+        { key: 'busyFederalKm', header: 'Vielbefahrene Bundesstraßen (km)', numeric: 'km' },
+        { key: 'busyFederalShare', header: 'Vielbefahrene Bundesstraßen Anteil am Netz (%)', numeric: 'pct' },
         { key: 'busyFederalCovered', header: 'Vielbefahrene Bundesstraßen mit Radweg (%)', numeric: 'pct' },
         { key: 'calmedShare', header: 'Wohn- & Tempo-30-Netz Anteil (%)', numeric: 'pct' },
         { key: 'livingShare', header: 'Verkehrsberuhigt & Fahrradstraßen Anteil (%)', numeric: 'pct' },
@@ -4812,29 +4826,104 @@
     const isRoadHighlightKind = (kind) => kind === 'road-class' || kind === 'road-tag';
 
     /**
-     * Exactly the lines a clicked row stands for, inside the selected region. Not narrowed to
-     * the counting filter: a "nicht gewertet" row should still show where those lines are.
+     * Exactly the lines a clicked row stands for. Not narrowed to the counting filter: a
+     * "nicht gewertet" row should still show where those lines are.
+     */
+    function overlayHighlightTypeFilter(kind, id) {
+      if (kind === 'road-class') {
+        return TildaStats.maplibrePropertyInFilter('road', TildaStats.highwayTagsForRoadClass(id));
+      }
+      if (kind === 'road-tag') return TildaStats.maplibrePropertyInFilter('road', [id]);
+      if (kind === 'bikelane-class') return TildaStats.maplibreBikelaneOverlayFilterForClass(id);
+      return TildaStats.maplibreBikelaneOverlayFilterForTag(id);
+    }
+
+    /**
+     * The type filter, inside the selected region. MapLibre's 'within' only passes lines that lie
+     * entirely inside; lines crossing the border count with their inside share (aggregate_lengths
+     * .sql) and are drawn from the clipped GeoJSON layers instead (refreshOverlayHighlightClipped).
      */
     function overlayHighlightFilter(kind, id) {
-      let typeFilter;
-      if (kind === 'road-class') {
-        typeFilter = TildaStats.maplibrePropertyInFilter('road', TildaStats.highwayTagsForRoadClass(id));
-      } else if (kind === 'road-tag') {
-        typeFilter = TildaStats.maplibrePropertyInFilter('road', [id]);
-      } else if (kind === 'bikelane-class') {
-        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForClass(id);
-      } else {
-        typeFilter = TildaStats.maplibreBikelaneOverlayFilterForTag(id);
-      }
       const geometry = selectedRegionGeometry();
-      const filters = [typeFilter];
+      const filters = [overlayHighlightTypeFilter(kind, id)];
       if (geometry) filters.push(['within', geometry]);
       return TildaStats.combineMaplibreFilters(...filters);
+    }
+
+    function overlayHighlightPrefix() {
+      return isRoadHighlightKind(overlayLineHighlight?.kind) ? 'roads' : 'bikelanes';
+    }
+
+    /**
+     * Cut the border-crossing lines of the pulsed type to the region and show the inside parts.
+     * Reads the loaded tiles, so it runs again as tiles arrive and after the map moves.
+     */
+    function refreshOverlayHighlightClipped() {
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = null;
+      if (!overlayLineHighlight) return;
+      const prefix = overlayHighlightPrefix();
+      const source = map.getSource(prefix + '-highlight-clipped');
+      if (!source) return;
+      const geometry = selectedRegionGeometry();
+      if (!geometry) {
+        source.setData(TildaStats.EMPTY_FEATURE_COLLECTION);
+        return;
+      }
+      if (!overlayHighlightClipBorderIndex || overlayHighlightClipBorderIndex.geometry !== geometry) {
+        overlayHighlightClipBorderIndex = {
+          geometry,
+          index: new TildaStats.RegionBorderIndex(geometry),
+        };
+      }
+      const { kind, id } = overlayLineHighlight;
+      const raw = map.querySourceFeatures(prefix, {
+        sourceLayer: prefix,
+        filter: overlayHighlightTypeFilter(kind, id),
+      });
+      const lines = raw.map((feature) => {
+        // Tile coordinates: on the feature itself (MapLibre 5+) or on its vector tile feature (4.x).
+        const tile = feature._z != null ? feature : feature._vectorTileFeature;
+        const tileBounds =
+          tile && tile._z != null ? TildaStats.tileBoundsLonLat(tile._z, tile._x, tile._y) : null;
+        return { geometry: feature.geometry, properties: null, tileBounds };
+      });
+      source.setData(
+        TildaStats.clipCrossingLinesToRegion(lines, geometry, overlayHighlightClipBorderIndex.index),
+      );
+    }
+
+    function scheduleOverlayHighlightClipped() {
+      if (!overlayLineHighlight) return;
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = setTimeout(refreshOverlayHighlightClipped, OVERLAY_HIGHLIGHT_CLIP_DEBOUNCE_MS);
+    }
+
+    function onOverlayHighlightSourceData(e) {
+      if (!overlayLineHighlight || e.sourceId !== overlayHighlightPrefix() || !e.tile) return;
+      scheduleOverlayHighlightClipped();
+    }
+
+    function bindOverlayHighlightClipEvents() {
+      map.on('sourcedata', onOverlayHighlightSourceData);
+      map.on('moveend', scheduleOverlayHighlightClipped);
+    }
+
+    function unbindOverlayHighlightClipEvents() {
+      map.off('sourcedata', onOverlayHighlightSourceData);
+      map.off('moveend', scheduleOverlayHighlightClipped);
+      if (overlayHighlightClipTimer) clearTimeout(overlayHighlightClipTimer);
+      overlayHighlightClipTimer = null;
+      for (const prefix of ['bikelanes', 'roads']) {
+        const source = map.getSource(prefix + '-highlight-clipped');
+        if (source) source.setData(TildaStats.EMPTY_FEATURE_COLLECTION);
+      }
     }
 
     function clearOverlayLineHighlight() {
       overlayLineHighlight = null;
       overlayHighlightBlinkOn = false;
+      unbindOverlayHighlightClipEvents();
       if (overlayLineHighlightTimer) clearTimeout(overlayLineHighlightTimer);
       if (overlayLineHighlightBlinkTimer) clearInterval(overlayLineHighlightBlinkTimer);
       overlayLineHighlightTimer = null;
@@ -4852,8 +4941,9 @@
       ]) {
         if (!map.getLayer(prefix + '-highlight-lines')) continue;
         const visible = active ? 'visible' : 'none';
-        map.setLayoutProperty(prefix + '-highlight-casing', 'visibility', visible);
-        map.setLayoutProperty(prefix + '-highlight-lines', 'visibility', visible);
+        for (const suffix of OVERLAY_HIGHLIGHT_LAYER_SUFFIXES) {
+          if (map.getLayer(prefix + suffix)) map.setLayoutProperty(prefix + suffix, 'visibility', visible);
+        }
       }
       if (!overlayLineHighlight) return;
       const prefix = isRoad ? 'roads' : 'bikelanes';
@@ -4862,6 +4952,7 @@
       const filter = overlayHighlightFilter(kind, id);
       map.setFilter(prefix + '-highlight-casing', filter);
       map.setFilter(prefix + '-highlight-lines', filter);
+      const hasClipped = !!map.getLayer(prefix + '-highlight-clipped-lines');
       const lineColor = isRoad ? overlayRoadColorInput.value : overlayBikelaneColorInput.value;
       const casingColor = '#ffffff';
       const lineWidth = overlayHighlightBlinkOn
@@ -4871,12 +4962,14 @@
         ? ['interpolate', ['linear'], ['zoom'], 10, 5, 14, 8]
         : ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5];
       const lineOpacity = overlayHighlightBlinkOn ? 1 : 0.45;
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-color', lineColor);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-color', casingColor);
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-width', lineWidth);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-width', casingWidth);
-      map.setPaintProperty(prefix + '-highlight-lines', 'line-opacity', lineOpacity);
-      map.setPaintProperty(prefix + '-highlight-casing', 'line-opacity', lineOpacity);
+      for (const infix of hasClipped ? ['-highlight', '-highlight-clipped'] : ['-highlight']) {
+        map.setPaintProperty(prefix + infix + '-lines', 'line-color', lineColor);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-color', casingColor);
+        map.setPaintProperty(prefix + infix + '-lines', 'line-width', lineWidth);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-width', casingWidth);
+        map.setPaintProperty(prefix + infix + '-lines', 'line-opacity', lineOpacity);
+        map.setPaintProperty(prefix + infix + '-casing', 'line-opacity', lineOpacity);
+      }
       map.triggerRepaint();
     }
 
@@ -4913,6 +5006,7 @@
           'line-opacity': bikeOpacity,
         },
       });
+      ensureClippedHighlightLayers('bikelanes', overlayBikelaneColorInput.value);
     }
 
     /** Same pulse layers for streets; road tiles are drawn thin, so the highlight carries them. */
@@ -4934,6 +5028,35 @@
           paint: { 'line-color': color, 'line-width': width, 'line-opacity': 1 },
         });
       }
+      ensureClippedHighlightLayers('roads', overlayRoadColorInput.value);
+    }
+
+    /**
+     * The border-crossing lines of a pulse, cut to the region (refreshOverlayHighlightClipped),
+     * drawn like the tile pulse layers above them.
+     */
+    function ensureClippedHighlightLayers(prefix, lineColor) {
+      const sourceId = prefix + '-highlight-clipped';
+      if (map.getSource(sourceId)) return;
+      map.addSource(sourceId, { type: 'geojson', data: TildaStats.EMPTY_FEATURE_COLLECTION });
+      const layerMinZoom = CONFIG.overlayMinZoomLimits.min;
+      // Casing below both line layers, so the pieces join the tile-drawn lines without a white seam.
+      for (const [suffix, color, width, beforeId] of [
+        ['-casing', '#ffffff', ['interpolate', ['linear'], ['zoom'], 10, 4, 14, 6.5], prefix + '-highlight-lines'],
+        ['-lines', lineColor, ['interpolate', ['linear'], ['zoom'], 10, 2.4, 14, 4], undefined],
+      ]) {
+        map.addLayer(
+          {
+            id: sourceId + suffix,
+            type: 'line',
+            source: sourceId,
+            minzoom: layerMinZoom,
+            layout: { visibility: 'none' },
+            paint: { 'line-color': color, 'line-width': width, 'line-opacity': 1 },
+          },
+          beforeId,
+        );
+      }
     }
 
     function pulseOverlayLineHighlight(kind, id) {
@@ -4946,6 +5069,8 @@
       ensureRoadHighlightLayers();
       syncOverlayHighlightRowStyles();
       updateOverlayLineHighlightLayers();
+      bindOverlayHighlightClipEvents();
+      refreshOverlayHighlightClipped();
       overlayHighlightBlinkOn = true;
       let blinkTicks = 0;
       overlayLineHighlightBlinkTimer = setInterval(() => {
@@ -5767,7 +5892,7 @@
         ' km) · ' +
         (aggregated
           ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte und Spielstraßen');
+          : 'aus Bundesland, Gelände, Dichte, Bahnnähe, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
       regionDetailModelGap.appendChild(headline);
 
       const statusText = document.createElement('span');
@@ -5910,6 +6035,15 @@
         );
       }
 
+      if (m.deltaBusy != null) {
+        addRow(
+          'Vielbefahrene Bundesstraßen',
+          m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes' : null,
+          m.deltaBusy,
+          m.deltaBusy >= 0.05 ? 'hebt Erwartung' : m.deltaBusy <= -0.05 ? 'senkt Erwartung' : 'neutral',
+        );
+      }
+
       addRow(
         'Siedlungsdichte',
         m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null,
@@ -6022,6 +6156,33 @@
 
     // ==== Context metrics ("Mehr Zahlen") and scatter plots ====
 
+    /** Km and share-of-network rows of one busy-road dataset (prefix busyRoads | busyFederal). */
+    function busyRoadMetrics(prefix, index, scopeNote) {
+      const entry = (id) => index()?.byId[id];
+      const num = (v) => (typeof v === 'number' ? v : null);
+      return [
+        {
+          key: prefix + 'Km',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Km'],
+          note: 'außerorts über ERA-Schwelle, Zählung 2021; ' + scopeNote,
+          get source() { return index(); },
+          get: (id) => num(entry(id)?.needKm),
+          format: (v) => deNumber(v, 1) + ' km',
+        },
+        {
+          key: prefix + 'Share',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Share'],
+          note: prefix === 'busyFederal' ? 'geht ins Modell ein' : 'Anteil am Straßennetz',
+          get source() { return index(); },
+          get: (id) => num(entry(id)?.sharePct),
+          format: (v, id) => {
+            const km = entry(id)?.needKm;
+            return deNumber(v, 1) + ' % des Netzes' + (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '');
+          },
+        },
+      ];
+    }
+
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
@@ -6055,9 +6216,14 @@
             );
           },
         },
+        // Busy rural roads (fetchTrafficVolumes.ts): open-road sections whose 2021 count is above
+        // the ERA 2010 threshold for a bike path — their km, their share of the road network and
+        // how much of them has a path. Every region of the source's area has an entry (0 km where
+        // none is busy); the covered share exists only where there is something to cover.
+        ...busyRoadMetrics('busyRoads', () => trafficIndex, 'Bundes-, Staats- und Kreisstraßen, Bayern'),
+        ...busyRoadMetrics('busyFederal', () => trafficFederalIndex, 'bundesweit'),
         {
-          // Bavaria only (fetchTrafficVolumes.ts): open-road B/St/K sections whose 2021 count is
-          // above the ERA 2010 threshold for a bike path, and how much of that has one.
+          // Bavaria only: B, St and K.
           key: 'busyRoadsCovered',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.busyRoadsCovered,
           note: 'über ERA-Schwelle, Zählung 2021',
@@ -6080,7 +6246,7 @@
           },
         },
         {
-          // Germany, Bundesstraßen only (fetchTrafficVolumes.ts): comparable across Länder.
+          // Germany, Bundesstraßen only: comparable across Länder.
           key: 'busyFederalCovered',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.busyFederalCovered,
           note: 'außerorts über ERA-Schwelle, Zählung 2021',

@@ -102,7 +102,7 @@ const MAPLIBRE_STUB = `
       loaded() { return true; },
       areTilesLoaded() { return true; },
       getSource(id) { return sources.get(id); },
-      addSource(id, s) { sources.set(id, { ...s, setData() {} }); },
+      addSource(id, s) { sources.set(id, { ...s, setData(d) { this.data = d; } }); },
       removeSource(id) { sources.delete(id); },
       getLayer(id) { return layers.get(id); },
       addLayer(l) { layers.set(l.id, l); },

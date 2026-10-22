@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from 'vitest'
+import { pointInRegion } from './overlayHighlightClip'
 import { bootViewer, type ViewerPage } from './viewerHarness'
 
 /**
@@ -152,6 +153,109 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       byTag!.click()
       expect(byTag!.dataset.highlightKind).toBe('road-tag')
       expect(byTag!.classList.contains('region-detail-row-active')).toBe(true)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'the street pulse also shows the inside part of streets that cross the region border',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      type Fc = {
+        type: 'FeatureCollection'
+        features: { geometry: { coordinates: number[][][] } }[]
+      }
+      type StubMap = {
+        getLayer(id: string): unknown
+        getSource(id: string): { data: Fc } | undefined
+        querySourceFeatures: (source: string, params: unknown) => unknown[]
+        fire(type: string, event?: object): void
+      }
+      const map = (window as unknown as { __map: StubMap }).__map
+      // The selected Gemeinde's polygon, as the page drew it for the selection outline.
+      const region = map.getSource('regions-selected')!.data.features[0]!.geometry as unknown as {
+        type: string
+        coordinates: number[][][] | number[][][][]
+      }
+      const ring = (
+        region.type === 'Polygon' ? region.coordinates[0] : region.coordinates[0]![0]
+      ) as number[][]
+      const lons = ring.map((p) => p[0]!)
+      const lats = ring.map((p) => p[1]!)
+      const bbox = [Math.min(...lons), Math.min(...lats), Math.max(...lons), Math.max(...lats)]
+      const rings = (
+        region.type === 'Polygon'
+          ? region.coordinates
+          : (region.coordinates as number[][][][]).flat()
+      ) as [number, number][][]
+      let inside: [number, number] | null = null
+      for (let i = 1; i < 40 && !inside; i++) {
+        for (let j = 1; j < 40 && !inside; j++) {
+          const p: [number, number] = [
+            bbox[0]! + ((bbox[2]! - bbox[0]!) * i) / 40,
+            bbox[1]! + ((bbox[3]! - bbox[1]!) * j) / 40,
+          ]
+          if (pointInRegion(p, rings)) inside = p
+        }
+      }
+      expect(inside).not.toBeNull()
+      // A street from inside the Gemeinde to well beyond its bbox: counted with its inside share,
+      // and MapLibre's `within` would drop it entirely.
+      // The z10 tile the inside point lies in: the pieces are cut back to its bounds.
+      const z = 10
+      const tileX = Math.floor(((inside![0] + 180) / 360) * 2 ** z)
+      const latRad = (inside![1] * Math.PI) / 180
+      const tileY = Math.floor(
+        ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * 2 ** z,
+      )
+      const queries: unknown[] = []
+      map.querySourceFeatures = (source, params) => {
+        queries.push([source, params])
+        return [
+          {
+            geometry: { type: 'LineString', coordinates: [inside, [bbox[2]! + 0.5, inside![1]]] },
+            properties: { road: 'residential' },
+            _vectorTileFeature: { _z: z, _x: tileX, _y: tileY },
+          },
+        ]
+      }
+
+      const rows = page
+        .qAll('#region-detail-body .region-detail-section')
+        .find((sec) => sec.querySelector('h4')?.textContent === 'Straßen nach Klasse')!
+        .querySelectorAll<HTMLElement>('li.region-detail-row-clickable')
+      rows[0]!.click()
+      expect(queries).toHaveLength(1)
+      expect((queries[0] as [string, { sourceLayer: string; filter: unknown }])[0]).toBe('roads')
+      expect(
+        (queries[0] as [string, { sourceLayer: string; filter: unknown }])[1].sourceLayer,
+      ).toBe('roads')
+      expect(map.getLayer('roads-highlight-clipped-lines')).toBeDefined()
+      const clipped = map.getSource('roads-highlight-clipped')!
+      expect(clipped.data.features).toHaveLength(1)
+      for (const piece of clipped.data.features[0]!.geometry.coordinates) {
+        expect(piece.length).toBeGreaterThanOrEqual(2)
+        for (const [lon, lat] of piece as [number, number][]) {
+          // Every drawn point lies in the region's bbox (the far end at bbox[2] + 0.5 is gone).
+          expect(lon).toBeLessThanOrEqual(bbox[2]! + 1e-9)
+          expect(lat).toBeLessThanOrEqual(bbox[3]! + 1e-9)
+          expect(lat).toBeGreaterThanOrEqual(bbox[1]! - 1e-9)
+        }
+      }
+
+      // Tiles arriving or a pan during the pulse re-read the tiles (debounced).
+      map.fire('moveend')
+      await page.waitFor(() => queries.length === 2, 'a second tile read after moveend')
+      map.fire('sourcedata', { sourceId: 'bikelanes', tile: {} })
+      map.fire('sourcedata', { sourceId: 'roads', tile: {} })
+      await page.waitFor(() => queries.length === 3, 'a tile read after roads tiles loaded')
+
+      // When the pulse ends the clipped pieces go away too.
+      await page.waitFor(() => clipped.data.features.length === 0, 'the pulse to end', 10_000)
+      expect(rows[0]!.classList.contains('region-detail-row-active')).toBe(false)
       expect(page.errors).toEqual([])
     },
     TIMEOUT,
