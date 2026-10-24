@@ -42,7 +42,7 @@
   <h1>Methodik &amp; Datenquellen</h1>
   <p class="sub">Was die Zahlen sagen – und was nicht.</p>
 
-  <p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>12,2&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: 16.10.2026.</p>
+  <p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>12,2&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: 20.10.2026.</p>
 
   <h2>Was zeigt die Karte?</h2>
   <p>Für jede Verwaltungseinheit das Verhältnis <strong>Kilometer Radinfrastruktur je Kilometer
@@ -55,7 +55,7 @@
   und ausschließen.</p>
 
   <h2>Datenquellen</h2>
-  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 16.10.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.</li><li><strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.</li><li><strong>Miete, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle).</li><li><strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (2025), Statistik der Bundesagentur für Arbeit.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
+  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 20.10.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.</li><li><strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.</li><li><strong>Miete, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle).</li><li><strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (2025), Statistik der Bundesagentur für Arbeit.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
 
   <h2>Wie werden Straßen gezählt?</h2>
   <p>Aus den OSM-Straßentypen (<code>highway=*</code>) werden vier Gruppen gebildet:</p>
@@ -163,7 +163,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
     <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.500</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = 61,2&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 60,6&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±5,78&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.417</code>, <strong>R² = 66,6&nbsp;%</strong>, <strong>R²_cv = 66,0&nbsp;%</strong>, Basiswert <strong>41,4&nbsp;%</strong>, <strong>SE = ±24,1&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.417</code>, <strong>R² = 66,6&nbsp;%</strong>, <strong>R²_cv = 66,0&nbsp;%</strong>, Basiswert <strong>41,4&nbsp;%</strong>, <strong>SE = ±24,0&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle acht Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
     <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
@@ -191,7 +191,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
         <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,4954 / %</td>
+        <td class="num">−0,4956 / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
@@ -201,17 +201,17 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Siedlungsdichte (log10)</strong></td>
         <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
-        <td class="num">+6,7761 / Dekade</td>
+        <td class="num">+6,7785 / Dekade</td>
       </tr>
       <tr>
         <td><strong>Entfernung zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
-        <td class="num">+0,0413 / km</td>
+        <td class="num">+0,0400 / km</td>
       </tr>
       <tr>
         <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
-        <td class="num">+1,1409 / (€/m²)</td>
+        <td class="num">+1,1390 / (€/m²)</td>
       </tr>
       <tr>
         <td><strong>Pkw-Dichte</strong></td>
@@ -221,12 +221,12 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
         <td>Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz in %. Fahrradstraßen und Fußgängerzonen zählen nicht dazu, weil sie schon im Radinfra-Anteil stecken.</td>
-        <td class="num">+0,3304 / %-Punkt</td>
+        <td class="num">+0,3317 / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
         <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
-        <td class="num">+0,2389 / %-Punkt</td>
+        <td class="num">+0,2379 / %-Punkt</td>
       </tr>
     </tbody>
   </table>
@@ -238,9 +238,9 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   </div>
 
   <h2>Daten herunterladen</h2>
-<p><a href="./daten/radinfra-regionen-2026-10-16.csv" download><strong>Alle Gebiete als CSV</strong></a>
+<p><a href="./daten/radinfra-regionen-2026-10-20.csv" download><strong>Alle Gebiete als CSV</strong></a>
 (22.997 Zeilen, Stand der OpenStreetMap-Daten:
-16.10.2026) · <a href="./daten/radinfra-regionen-2026-10-16-excel.csv" download>Variante für Excel</a>.
+20.10.2026) · <a href="./daten/radinfra-regionen-2026-10-20-excel.csv" download>Variante für Excel</a>.
 Eine Zeile je Verwaltungseinheit vom Bund bis zum Stadtbezirk, gerechnet
 mit dem Standard-Zählfilter – dieselben Werte wie in der Karte mit Standard-Einstellungen.
 Komma-getrennt, Dezimalpunkt, UTF-8; die Excel-Variante ist mit Semikolon und Dezimalkomma
