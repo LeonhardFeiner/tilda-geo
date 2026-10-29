@@ -7,6 +7,30 @@ export const TILDA_ROADS_TILES = 'https://tiles.tilda-geo.de/atlas_generalized_r
 
 export const DEFAULT_STATS_API_URL = 'https://tilda-geo.de/api/stats'
 
+/**
+ * Classes of the traffic-count map layer (Kfz/24h, Straßenverkehrszählung 2021), lowest first;
+ * `min` is inclusive. 2,500 and 4,000 are not both edges: the ERA threshold depends on the speed,
+ * which the popup states per section. Sequential light-to-dark, readable with colour-vision
+ * deficiency without a separate palette.
+ */
+export const TRAFFIC_COUNT_CLASSES = [
+  { min: 0, label: 'unter 1.000', color: '#fed976' },
+  { min: 1000, label: '1.000–2.500', color: '#fd8d3c' },
+  { min: 2500, label: '2.500–5.000', color: '#e31a1c' },
+  { min: 5000, label: '5.000–10.000', color: '#a50f15' },
+  { min: 10000, label: 'über 10.000', color: '#4a1486' },
+] as const
+
+export const TRAFFIC_UNCOUNTED_COLOR = '#6b7280'
+
+/** A BAYSIS counting point's page: append the Zählstellennummer. */
+export const BAYSIS_ZAEHLSTELLE_URL_PREFIX =
+  'https://www.baysis.bayern.de/internet/verdat/svz/zaehlstelle/index.html?jahr=2021&zaehlstellennummer='
+
+/** BASt page of the 2021 count results (no per-section pages). */
+export const BAST_SVZ_PAGE =
+  'https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html'
+
 export const PROJECT_LEAD = 'Leonhard Feiner'
 
 export const VIEWER_SOURCE_REPO_URL = 'https://github.com/LeonhardFeiner/tilda-geo'
@@ -99,6 +123,7 @@ export const VIEWER_FILES = {
   regiostar: 'gemeinde-regiostar.json',
   atlas: 'gemeinde-atlas.json',
   busyRoads: 'busy-roads.geojson',
+  trafficCounts: 'traffic-counts.geojson',
   history: 'history.json',
 } as const
 

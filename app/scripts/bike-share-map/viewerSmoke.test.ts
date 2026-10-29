@@ -135,6 +135,59 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'traffic counts (zaehlung=1) show the legend, and a click explains a counted or uncounted road',
+    async () => {
+      page = await bootViewer(`${IN_LANDKREIS}&zaehlung=1`)
+      const { window } = page
+      type StubMap = {
+        getLayer(id: string): unknown
+        queryRenderedFeatures: (p: unknown, o?: { layers?: string[] }) => unknown[]
+        fire(type: string, e: unknown): void
+      }
+      const w = window as unknown as { __map: StubMap; __popup?: HTMLElement; __fetches: string[] }
+      await page.waitFor(() => !!w.__map.getLayer('traffic-counts'), 'the traffic-counts layer')
+      expect(w.__map.getLayer('traffic-uncounted')).toBeTruthy()
+      expect(w.__fetches.some((f) => f.includes('traffic-counts.geojson'))).toBe(true)
+      expect(page.q<HTMLInputElement>('#toggle-traffic-counts').checked).toBe(true)
+      expect(page.q<HTMLElement>('#traffic-count-legend').hidden).toBe(false)
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+
+      const clickWith = (properties: Record<string, unknown>) => {
+        w.__map.queryRenderedFeatures = (_p, o) =>
+          o?.layers?.includes('traffic-counts') ? [{ properties }] : []
+        w.__map.fire('click', {
+          point: { x: 10, y: 10 },
+          lngLat: { lng: 11.6, lat: 48.5 },
+          originalEvent: { detail: 1 },
+        })
+        return w.__popup?.textContent ?? ''
+      }
+      const counted = clickWith({
+        kind: 'count',
+        strasse: 'K PAF 6',
+        anfang: 'Hettenshausen (B 13)',
+        ende: 'Ldkrs.Grze.FS',
+        dtv: 2344,
+        sv: 114,
+        fsod: 'FS',
+        maxspeed: 100,
+        needsBikePath: false,
+        coveredPct: 0,
+        quelle: 'BAYSIS',
+      })
+      expect(counted).toContain('2.344 Kfz pro Tag, davon 114 Schwerverkehr')
+      expect(counted).toContain('Außerorts')
+      expect(counted).toContain('Unter der ERA-Schwelle')
+      const uncounted = clickWith({ kind: 'uncounted', strasse: 'PAF 25', km: 5.3 })
+      expect(uncounted).toContain('PAF 25')
+      expect(uncounted).toContain('Nicht in der Straßenverkehrszählung 2021')
+      expect(window.document.body.dataset.regionDetail).toBe('1')
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'a Landkreis shows the model gap summed over its Gemeinden',
     async () => {
       // Bayern by Landkreise, Landkreis Pfaffenhofen selected.

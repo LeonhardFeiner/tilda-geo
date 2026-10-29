@@ -40,6 +40,7 @@ export type ViewerUrlOptions = {
   bikelanes: boolean | null
   roads: boolean | null
   busyRoads: boolean | null
+  trafficCounts: boolean | null
   rankingOpen: boolean | null
   rankingMode: RankingMode | null
   metric: MapMetric | null
@@ -113,6 +114,7 @@ export function readViewerUrlOptions(
     bikelanes: parseBoolParam(params.get('radwege'), null),
     roads: parseBoolParam(params.get('strassen'), null),
     busyRoads: parseBoolParam(params.get('verkehr'), null),
+    trafficCounts: parseBoolParam(params.get('zaehlung'), null),
     rankingOpen: parseBoolParam(params.get('ranking'), null),
     rankingMode: rankingMode === 'all' || rankingMode === 'topflop' ? rankingMode : null,
     metric:
@@ -161,6 +163,7 @@ export type ViewerOptionState = {
   bikelanes: boolean
   roads: boolean
   busyRoads: boolean
+  trafficCounts: boolean
   rankingOpen: boolean
   rankingMode: RankingMode
   metric: MapMetric
@@ -196,6 +199,10 @@ export function writeViewerUrlOptions(
   put('radwege', state.bikelanes !== defaults.bikelanes ? (state.bikelanes ? '1' : '0') : null)
   put('strassen', state.roads !== defaults.roads ? (state.roads ? '1' : '0') : null)
   put('verkehr', state.busyRoads !== defaults.busyRoads ? (state.busyRoads ? '1' : '0') : null)
+  put(
+    'zaehlung',
+    state.trafficCounts !== defaults.trafficCounts ? (state.trafficCounts ? '1' : '0') : null,
+  )
   put(
     'ranking',
     state.rankingOpen !== defaults.rankingOpen ? (state.rankingOpen ? '1' : '0') : null,

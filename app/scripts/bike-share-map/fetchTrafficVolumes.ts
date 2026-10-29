@@ -33,10 +33,17 @@
  * entry — a Gemeinde without a busy road has 0 km and 0 %, not "no data". That share is a
  * structural model input (fitExtendedModel.ts) and a context metric with a scatter plot.
  *
+ * Count map: every counted section except Autobahnen, whatever its volume, plus — Bavaria only,
+ * where Staats- and Kreisstraßen are counted at all — the numbered roads that have no count. An
+ * OSM way with a road number ("PAF 25", "St 2045", "B 13") counts as uncounted when no BAYSIS
+ * section of the same number lies near its midpoint. Outside Bavaria only Bundesstraßen are
+ * counted, so there is no comparable "uncounted" set.
+ *
  * Needs local Postgres with the processing run behind the current stats (bikelanes, roads,
  * aggregated_lengths) and output/stats.msgpack from the same run. Output:
  * output/traffic-volumes.json (Bavaria, all classes, per region), output/traffic-federal.json
- * (Germany, Bundesstraßen, per region), output/busy-roads.geojson (map lines) and
+ * (Germany, Bundesstraßen, per region), output/busy-roads.geojson (map lines),
+ * output/traffic-counts.geojson (all counted sections + uncounted numbered roads in Bavaria) and
  * output/traffic-sections-bayern.json (BAYSIS sections, no geometry).
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
@@ -45,14 +52,12 @@ import { decode } from '@msgpack/msgpack'
 import { Client } from 'pg'
 import { read, utils } from 'xlsx'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
-import { BAYERN_ID } from './constants'
+import { BAST_SVZ_PAGE, BAYERN_ID } from './constants'
 import { downloadCachePath, writeDataset } from './fetchCommon'
 import * as TildaStats from './statsClassSums'
 
 const BAST_XLSX_URL =
   'https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/2021/Bundesstrassen-2021.xlsx?__blob=publicationFile&v=1'
-const BAST_SVZ_PAGE =
-  'https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html'
 /** BASt "Land" number of Bavaria (1–16); Bavaria comes from BAYSIS instead. */
 const BAST_LAND_BAYERN = 9
 /** BASt section ids start here, so they never clash with BAYSIS OBJECTIDs. */
@@ -112,12 +117,36 @@ export function sectionNeedsBikePath(s: {
   )
 }
 
+/**
+ * A road number as a comparable key: BAYSIS writes Kreisstraßen as "K PAF 25", OSM as "PAF 25";
+ * case and spaces differ too ("B 16A" / "B 16a"). sqlRoadNumberKey builds the same key for OSM refs.
+ */
+export function roadNumberKey(strasse: string) {
+  return strasse.trim().replace(/^K\s+/, '').replace(/\s+/g, '').toLowerCase()
+}
+
+const sqlRoadNumberKey = (expr: string) => `lower(regexp_replace(trim(${expr}), '\\s+', '', 'g'))`
+
+/**
+ * OSM refs of the numbered roads BAYSIS counts: Bundes- ("B 13"), Staats- ("St 2045") and
+ * Kreisstraßen (district code + number, "PAF 25"). Autobahnen are excluded by road class, not by
+ * pattern: the Kreisstraßen of Augsburg and Aschaffenburg are "A 12" too.
+ */
+export const COUNTED_REF_PATTERN = '^(B|St|[A-ZÄÖÜ]{1,3}) [0-9]+[A-Za-z]?$'
+
+/** Whether one part of an OSM ref ("St 2045;PAF 25" has two) is such a road number. */
+export function isCountedRoadRef(ref: string) {
+  return new RegExp(COUNTED_REF_PATTERN).test(ref.trim())
+}
+
 export type BastSection = {
   id: number
   strasse: string
   anfang: string | null
   ende: string | null
   dtv: number
+  /** Heavy vehicles per day (DTVSV); null where BASt gives none. */
+  sv: number | null
   /** Open-road length of the section in metres (BASt LängeFS). */
   lengthM: number
   /** Counting point, ETRS89 / UTM 32N. */
@@ -144,6 +173,7 @@ export function parseBastRows(rows: Array<Record<string, unknown>>): BastSection
         anfang: row.Anfang == null ? null : String(row.Anfang),
         ende: row.Ende == null ? null : String(row.Ende),
         dtv,
+        sv: row.DTVSV == null || row.DTVSV === '' || !(num(row.DTVSV) >= 0) ? null : num(row.DTVSV),
         lengthM: lengthKm * 1000,
         x,
         y,
@@ -157,21 +187,22 @@ async function loadFederalSections(client: Client, sections: BastSection[]) {
   await client.query(
     `
     WITH b AS (
-      SELECT id, strasse, anfang, ende, dtv, length_m,
+      SELECT id, strasse, anfang, ende, dtv, sv, length_m,
         ST_Transform(ST_SetSRID(ST_MakePoint(x, y), 25832), 3857) AS pt
       FROM UNNEST($1::int[], $2::text[], $3::text[], $4::text[], $5::float8[], $6::float8[],
-        $7::float8[], $8::float8[]) AS t(id, strasse, anfang, ende, dtv, length_m, x, y)
+        $7::float8[], $8::float8[], $10::float8[]) AS t(id, strasse, anfang, ende, dtv, length_m, x, y, sv)
     ),
     near AS (
       SELECT b.*, (b.length_m / 2) / cos(radians(ST_Y(ST_Transform(b.pt, 4326)))) AS radius
       FROM b
     )
-    INSERT INTO svz (id, strasse, klasse, anfang, ende, dtv, fsod, link, target_m, geom)
-    SELECT n.id, n.strasse, 'B', n.anfang, n.ende, n.dtv, 'FS', $9, n.length_m,
+    INSERT INTO svz (id, strasse, klasse, anfang, ende, dtv, sv, fsod, link, target_m, ref_key, geom)
+    SELECT n.id, n.strasse, 'B', n.anfang, n.ende, n.dtv, n.sv, 'FS', $9, n.length_m,
+      ${sqlRoadNumberKey('n.strasse')},
       ST_Multi(ST_CollectionExtract(ST_Intersection(ST_Collect(r.geom), ST_Buffer(n.pt, n.radius)), 2))
     FROM near n
     JOIN public.roads r ON r.tags ->> 'name_ref' = n.strasse AND ST_DWithin(r.geom, n.pt, n.radius)
-    GROUP BY n.id, n.strasse, n.anfang, n.ende, n.dtv, n.length_m, n.pt, n.radius
+    GROUP BY n.id, n.strasse, n.anfang, n.ende, n.dtv, n.sv, n.length_m, n.pt, n.radius
     `,
     [
       sections.map((s) => s.id),
@@ -183,6 +214,7 @@ async function loadFederalSections(client: Client, sections: BastSection[]) {
       sections.map((s) => s.x),
       sections.map((s) => s.y),
       BAST_SVZ_PAGE,
+      sections.map((s) => s.sv),
     ],
   )
   await client.query(`DELETE FROM svz WHERE geom IS NULL OR ST_IsEmpty(geom)`)
@@ -197,19 +229,23 @@ async function loadSections(client: Client, features: WfsFeature[]) {
   const col = (key: string) => features.map((f) => f.properties[key] ?? null)
   await client.query(`
     CREATE TEMP TABLE svz (
-      id int, strasse text, klasse text, anfang text, ende text, dtv float, fsod text, link text,
+      id int, strasse text, klasse text, anfang text, ende text, dtv float, sv float, fsod text,
+      link text, zaehlstelle text,
       -- Official length where the geometry is only an approximation (BASt); null = use geometry.
       target_m float,
+      -- roadNumberKey(strasse), to match OSM refs.
+      ref_key text,
       geom geometry(MultiLineString, 3857)
     )
   `)
   await client.query(
     `
-    INSERT INTO svz (id, strasse, klasse, anfang, ende, dtv, fsod, link, geom)
-    SELECT id, strasse, klasse, anfang, ende, dtv, fsod, link,
+    INSERT INTO svz (id, strasse, klasse, anfang, ende, dtv, sv, fsod, link, zaehlstelle, ref_key, geom)
+    SELECT id, strasse, klasse, anfang, ende, dtv, NULLIF(sv, -1), fsod, link, zaehlstelle, ref_key,
       ST_Multi(ST_Transform(ST_SetSRID(ST_GeomFromGeoJSON(g), 4326), 3857))
     FROM UNNEST($1::int[], $2::text[], $3::text[], $4::text[], $5::text[], $6::float8[],
-      $7::text[], $8::text[], $9::text[]) AS t(id, strasse, klasse, anfang, ende, dtv, fsod, link, g)
+      $7::text[], $8::text[], $9::text[], $10::float8[], $11::text[], $12::text[])
+      AS t(id, strasse, klasse, anfang, ende, dtv, fsod, link, g, sv, ref_key, zaehlstelle)
     `,
     [
       col('OBJECTID'),
@@ -221,6 +257,9 @@ async function loadSections(client: Client, features: WfsFeature[]) {
       col('FSOD'),
       col('Link'),
       features.map((f) => JSON.stringify(f.geometry)),
+      col('DTV_SV'),
+      features.map((f) => roadNumberKey(String(f.properties['Straße'] ?? ''))),
+      col('Zählstelle').map((v) => (v == null ? null : String(v))),
     ],
   )
 }
@@ -303,6 +342,94 @@ async function needLines(client: Client, needIds: number[]) {
   return rows
 }
 
+/**
+ * Count map geometry, kept small for a page download (~15k sections): simplified to ~30 m and
+ * written with 4 decimals (~10 m), well below what the line width shows at regional zoom.
+ */
+const COUNT_MAP_SIMPLIFY = 30
+const COUNT_MAP_DECIMALS = 4
+
+/** Count map lines: each counted section except Autobahnen as one simplified line. */
+async function countLines(client: Client) {
+  const { rows } = await client.query<{ id: number; g: string }>(`
+    SELECT id,
+      ST_AsGeoJSON(
+        ST_Transform(ST_SimplifyPreserveTopology(geom, ${COUNT_MAP_SIMPLIFY}), 4326),
+        ${COUNT_MAP_DECIMALS}
+      ) AS g
+    FROM svz
+    WHERE klasse <> 'A'
+  `)
+  return rows
+}
+
+/**
+ * Numbered roads in Bavaria (B, St, K) without a BAYSIS count: OSM ways whose ref (any part of
+ * "St 2045;PAF 25") matches COUNTED_REF_PATTERN, whose midpoint has no section of the same number
+ * within ~60 m, and that do not run along one section under another number either (points at 20,
+ * 50 and 80 % of the way within ~25 m of the same section) — roads renumbered since the 2021
+ * count, e.g. a former Bundesstraße now a Staatsstraße, were counted. Merged per road number and
+ * simplified like the count lines.
+ */
+async function uncountedRoads(client: Client) {
+  await client.query(`CREATE INDEX ON svz USING gist (geom)`)
+  await client.query(
+    `
+    CREATE TEMP TABLE bayern_parts AS
+    SELECT ST_Subdivide(ST_MakeValid(geom), 255) AS g FROM public.aggregated_lengths WHERE id = $1
+  `,
+    [BAYERN_ID],
+  )
+  await client.query(`CREATE INDEX ON bayern_parts USING gist (g)`)
+  const { rows } = await client.query<{ ref: string; km: number; g: string }>(
+    `
+    WITH ways AS (
+      SELECT r.geom, ref,
+        ST_LineInterpolatePoint(r.geom, 0.5) AS mid,
+        ST_LineInterpolatePoint(r.geom, 0.2) AS p20,
+        ST_LineInterpolatePoint(r.geom, 0.8) AS p80,
+        1 / cos(radians(ST_Y(ST_Transform(ST_LineInterpolatePoint(r.geom, 0.5), 4326)))) AS m
+      FROM public.roads r
+      CROSS JOIN LATERAL regexp_split_to_table(r.tags ->> 'name_ref', ';') AS ref
+      WHERE r.tags ? 'name_ref'
+        AND r.tags ->> 'road' NOT IN ('motorway', 'motorway_link')
+        AND trim(ref) ~ $1
+    ),
+    bavarian AS (
+      SELECT w.* FROM ways w
+      WHERE EXISTS (SELECT 1 FROM bayern_parts b WHERE ST_Intersects(b.g, w.mid))
+    ),
+    uncounted AS (
+      SELECT trim(b.ref) AS ref, b.geom FROM bavarian b
+      WHERE NOT EXISTS (
+        SELECT 1 FROM svz s
+        WHERE s.ref_key = ${sqlRoadNumberKey('b.ref')} AND ST_DWithin(s.geom, b.mid, 60 * b.m)
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM svz s
+        WHERE s.klasse <> 'A'
+          AND ST_DWithin(s.geom, b.mid, 25 * b.m)
+          AND ST_DWithin(s.geom, b.p20, 25 * b.m)
+          AND ST_DWithin(s.geom, b.p80, 25 * b.m)
+      )
+    )
+    SELECT ref,
+      SUM(ST_Length(ST_Transform(geom, 4326)::geography)) / 1000 AS km,
+      ST_AsGeoJSON(
+        ST_Transform(
+          ST_SimplifyPreserveTopology(ST_LineMerge(ST_Collect(geom)), ${COUNT_MAP_SIMPLIFY}),
+          4326
+        ),
+        ${COUNT_MAP_DECIMALS}
+      ) AS g
+    FROM uncounted
+    GROUP BY ref
+    `,
+    [COUNTED_REF_PATTERN],
+  )
+  return rows
+}
+
 type SectionRow = {
   id: number
   strasse: string
@@ -310,8 +437,10 @@ type SectionRow = {
   anfang: string | null
   ende: string | null
   dtv: number
+  sv: number | null
   fsod: string
   link: string | null
+  zaehlstelle: string | null
   km: number
   covered_km: number
   maxspeed: number | null
@@ -319,13 +448,13 @@ type SectionRow = {
 
 async function sectionResults(client: Client) {
   const { rows } = await client.query<SectionRow>(`
-    SELECT s.id, s.strasse, s.klasse, s.anfang, s.ende, s.dtv, s.fsod, s.link,
+    SELECT s.id, s.strasse, s.klasse, s.anfang, s.ende, s.dtv, s.sv, s.fsod, s.link, s.zaehlstelle,
       SUM(e.w) / 1000 AS km,
       COALESCE(SUM(e.w) FILTER (WHERE e.covered), 0) / 1000 AS covered_km,
       -- The speed most of the section's length carries (null where none is tagged).
       mode() WITHIN GROUP (ORDER BY e.maxspeed) AS maxspeed
     FROM svz s JOIN pts_eval e ON e.id = s.id
-    GROUP BY s.id, s.strasse, s.klasse, s.anfang, s.ende, s.dtv, s.fsod, s.link
+    GROUP BY s.id, s.strasse, s.klasse, s.anfang, s.ende, s.dtv, s.sv, s.fsod, s.link, s.zaehlstelle
   `)
   return rows
 }
@@ -481,6 +610,8 @@ if (import.meta.main) {
   let sections: SectionRow[]
   let regions: Awaited<ReturnType<typeof regionSums>>
   let lines: Awaited<ReturnType<typeof needLines>>
+  let counted: Awaited<ReturnType<typeof countLines>>
+  let uncounted: Awaited<ReturnType<typeof uncountedRoads>>
   try {
     await client.query('SET statement_timeout = 0')
     await loadSections(client, features)
@@ -499,6 +630,8 @@ if (import.meta.main) {
       .map((s) => s.id)
     regions = await regionSums(client, needIds)
     lines = await needLines(client, needIds)
+    counted = await countLines(client)
+    uncounted = await uncountedRoads(client)
   } finally {
     await client.end()
   }
@@ -564,6 +697,53 @@ if (import.meta.main) {
     }),
   )
   writeFileSync(
+    join(outDir, 'traffic-counts.geojson'),
+    JSON.stringify({
+      type: 'FeatureCollection',
+      ...meta,
+      source:
+        'Straßenverkehrszählung 2021: BAYSIS (Bayern, CC BY 4.0) und BASt (übrige Länder, Bundesstraßen)',
+      features: [
+        ...counted.flatMap((l) => {
+          const s = sectionById.get(l.id)
+          if (!s) return []
+          return [
+            {
+              type: 'Feature',
+              geometry: JSON.parse(l.g),
+              properties: {
+                kind: 'count',
+                id: s.id,
+                strasse: s.strasse,
+                anfang: s.anfang,
+                ende: s.ende,
+                dtv: Math.round(s.dtv),
+                sv: s.sv == null ? null : Math.round(s.sv),
+                fsod: s.fsod,
+                maxspeed: s.maxspeed,
+                needsBikePath: sectionNeedsBikePath({
+                  klasse: s.klasse,
+                  fsod: s.fsod,
+                  dtv: s.dtv,
+                  maxspeedKmh: s.maxspeed,
+                }),
+                coveredPct: s.km > 0 ? Math.round((Number(s.covered_km) / Number(s.km)) * 100) : 0,
+                // The page builds the BAYSIS link from the counting point; BASt has one page.
+                zaehlstelle: s.zaehlstelle,
+                quelle: s.id >= BAST_ID_OFFSET ? 'BASt' : 'BAYSIS',
+              },
+            },
+          ]
+        }),
+        ...uncounted.map((u) => ({
+          type: 'Feature',
+          geometry: JSON.parse(u.g),
+          properties: { kind: 'uncounted', strasse: u.ref, km: Number(Number(u.km).toFixed(1)) },
+        })),
+      ],
+    }),
+  )
+  writeFileSync(
     join(outDir, 'traffic-sections-bayern.json'),
     JSON.stringify({
       ...meta,
@@ -604,6 +784,11 @@ if (import.meta.main) {
     `Bavaria: ${need.length} sections above the ERA threshold, ${needKm.toFixed(0)} km, ` +
       `${((coveredKm / needKm) * 100).toFixed(1)} % with bike infrastructure; ` +
       `${withBusy(byId)} of ${Object.keys(byId).length} regions have one → output/traffic-volumes.json\n`,
+  )
+  const uncountedKm = uncounted.reduce((a, u) => a + Number(u.km), 0)
+  process.stdout.write(
+    `Count map: ${counted.length} counted sections; in Bavaria ${uncounted.length} numbered roads ` +
+      `with ${uncountedKm.toFixed(0)} km without a count → output/traffic-counts.geojson\n`,
   )
   const de = Object.entries(federalById).find(([id]) => id === 'relation/51477')?.[1]
   if (de) {

@@ -11,6 +11,10 @@ import {
   OVERLAY_LINE_MIN_ZOOM_LIMITS,
   OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS,
   TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
+  TRAFFIC_COUNT_CLASSES,
+  TRAFFIC_UNCOUNTED_COLOR,
+  BAYSIS_ZAEHLSTELLE_URL_PREFIX,
+  BAST_SVZ_PAGE,
   PROJECT_LEAD,
   VIEWER_SOURCE_REPO_URL,
   SHARE_PAGE_BASE_URL,
@@ -149,6 +153,11 @@ export function generateViewerHtml(
     regiostarUrl: v(`./${VIEWER_FILES.regiostar}`),
     atlasUrl: v(`./${VIEWER_FILES.atlas}`),
     busyRoadsUrl: v(`./${VIEWER_FILES.busyRoads}`),
+    trafficCountsUrl: v(`./${VIEWER_FILES.trafficCounts}`),
+    trafficCountClasses: TRAFFIC_COUNT_CLASSES,
+    trafficUncountedColor: TRAFFIC_UNCOUNTED_COLOR,
+    baysisZaehlstelleUrlPrefix: BAYSIS_ZAEHLSTELLE_URL_PREFIX,
+    bastSvzPage: BAST_SVZ_PAGE,
     historyUrl: v(`./${VIEWER_FILES.history}`),
     detourPageUrl: `./${DETOUR_PAGE_STEM}.html`,
     detourLandkreise: detourLandkreisIds,
@@ -599,6 +608,15 @@ export function generateViewerHtml(
     }
     .swatch { display: inline-block; width: 24px; height: 0; border-top: 3px solid; flex-shrink: 0; }
     .swatch-busy { border-image: linear-gradient(to right, #c62828 50%, #2e7d32 50%) 1; }
+    .swatch-counts { border-image: linear-gradient(to right, ${TRAFFIC_COUNT_CLASSES.map((c) => c.color).join(', ')}) 1; }
+    .traffic-count-legend {
+      display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center;
+      margin-top: 6px; font-size: 0.7rem; color: #444;
+    }
+    .traffic-count-legend[hidden] { display: none; }
+    .traffic-count-legend span { display: inline-flex; align-items: center; gap: 4px; }
+    .traffic-count-legend .swatch { width: 16px; }
+    .swatch-uncounted { border-top-style: dashed; }
     .busy-road-popup { font-size: 0.85rem; line-height: 1.4; max-width: 260px; }
     .busy-road-popup strong { display: block; margin-bottom: 2px; }
     .busy-road-popup p { margin: 2px 0; }
@@ -1900,6 +1918,16 @@ export function generateViewerHtml(
             <span class="swatch swatch-busy"></span>
             Viel befahren
           </label>
+          <label title="Kfz pro Tag je Zählabschnitt (Straßenverkehrszählung 2021) – Bayern: Bundes-, Staats- und Kreisstraßen; übrige Länder: Bundesstraßen. Grau gestrichelt: Straßen mit Straßennummer ohne Zählung (nur Bayern). Linie anklicken für Details.">
+            <input type="checkbox" id="toggle-traffic-counts" />
+            <span class="swatch swatch-counts"></span>
+            Verkehrsmenge
+          </label>
+        </div>
+        <div class="traffic-count-legend" id="traffic-count-legend" hidden>
+          <span>Kfz/Tag 2021:</span>
+          ${TRAFFIC_COUNT_CLASSES.map((c) => `<span><span class="swatch" style="border-top-color: ${c.color}"></span>${c.label}</span>`).join('\n          ')}
+          <span><span class="swatch swatch-uncounted" style="border-top-color: ${TRAFFIC_UNCOUNTED_COLOR}"></span>nicht gezählt (Bayern)</span>
         </div>
       </div>
     </details>
@@ -2366,6 +2394,8 @@ export function generateViewerHtml(
     const toggleBikelanes = document.getElementById('toggle-bikelanes');
     const toggleRoads = document.getElementById('toggle-roads');
     const toggleBusyRoads = document.getElementById('toggle-busy-roads');
+    const toggleTrafficCounts = document.getElementById('toggle-traffic-counts');
+    const trafficCountLegend = document.getElementById('traffic-count-legend');
     const loadError = document.getElementById('load-error');
     const loadStatus = document.getElementById('load-status');
 
@@ -7882,6 +7912,20 @@ export function generateViewerHtml(
             return;
           }
         }
+        if (toggleTrafficCounts?.checked && map.getLayer('traffic-counts')) {
+          const pad = 6;
+          const road = map.queryRenderedFeatures(
+            [
+              [e.point.x - pad, e.point.y - pad],
+              [e.point.x + pad, e.point.y + pad],
+            ],
+            { layers: TRAFFIC_COUNT_LAYERS },
+          )[0];
+          if (road) {
+            showTrafficCountPopup(road.properties || {}, e.lngLat);
+            return;
+          }
+        }
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
         const f = hits[0];
         const id = f?.properties?.id;
@@ -9199,6 +9243,7 @@ export function generateViewerHtml(
           bikelanes: toggleBikelanes.checked,
           roads: toggleRoads.checked,
           busyRoads: !!toggleBusyRoads?.checked,
+          trafficCounts: !!toggleTrafficCounts?.checked,
           rankingOpen: rankingDetails.open,
           rankingMode,
           metric: currentMapMetric,
@@ -9217,6 +9262,7 @@ export function generateViewerHtml(
           bikelanes: true,
           roads: false,
           busyRoads: false,
+          trafficCounts: false,
           rankingOpen: true,
           rankingMode: 'topflop',
           metric: 'bikeShare',
@@ -9672,6 +9718,10 @@ export function generateViewerHtml(
         if (o.busyRoads != null) toggleBusyRoads.checked = o.busyRoads;
         else if (live) toggleBusyRoads.checked = false;
       }
+      if (toggleTrafficCounts) {
+        if (o.trafficCounts != null) toggleTrafficCounts.checked = o.trafficCounts;
+        else if (live) toggleTrafficCounts.checked = false;
+      }
 
       rankingDetails.open = o.rankingOpen ?? true;
       if (o.rankingMode) {
@@ -9887,8 +9937,170 @@ export function generateViewerHtml(
         .addTo(map);
     }
 
+    // ---- Traffic counts: every counted section by Kfz/Tag, plus uncounted numbered roads ----
+    let trafficCountsLoad = null;
+    let trafficCountPopup = null;
+
+    const TRAFFIC_COUNT_LAYERS = ['traffic-counts', 'traffic-uncounted'];
+
+    /** Line colour by DTV class (the legend's classes). */
+    function trafficCountColorExpression() {
+      const classes = CONFIG.trafficCountClasses;
+      const step = ['step', ['to-number', ['get', 'dtv'], 0], classes[0].color];
+      for (const c of classes.slice(1)) step.push(c.min, c.color);
+      return step;
+    }
+
+    /** Downloaded once; like the busy roads, re-added after a basemap switch resets the style. */
+    function ensureTrafficCountsLayer() {
+      trafficCountsLoad ??= fetch(CONFIG.trafficCountsUrl)
+        .then((res) => (res.ok ? res.json() : null))
+        .catch(() => null);
+      return trafficCountsLoad.then((data) => {
+        if (!data) {
+          trafficCountsLoad = null;
+          return false;
+        }
+        if (map.getLayer('traffic-counts')) return true;
+        if (!map.getSource('traffic-counts')) map.addSource('traffic-counts', { type: 'geojson', data });
+        const layout = { 'line-cap': 'round', 'line-join': 'round', visibility: 'none' };
+        // Below the busy roads when both are on: those mark the subset that needs a path.
+        const before = map.getLayer('busy-roads-casing') ? 'busy-roads-casing' : undefined;
+        map.addLayer(
+          {
+            id: 'traffic-counts-casing',
+            type: 'line',
+            source: 'traffic-counts',
+            filter: ['==', ['get', 'kind'], 'count'],
+            layout,
+            paint: {
+              'line-color': '#ffffff',
+              'line-width': ['interpolate', ['linear'], ['zoom'], 7, 2.6, 12, 7],
+            },
+          },
+          before,
+        );
+        map.addLayer(
+          {
+            id: 'traffic-counts',
+            type: 'line',
+            source: 'traffic-counts',
+            filter: ['==', ['get', 'kind'], 'count'],
+            layout,
+            paint: {
+              'line-color': trafficCountColorExpression(),
+              'line-width': ['interpolate', ['linear'], ['zoom'], 7, 1.4, 12, 4.5],
+            },
+          },
+          before,
+        );
+        map.addLayer(
+          {
+            id: 'traffic-uncounted',
+            type: 'line',
+            source: 'traffic-counts',
+            filter: ['==', ['get', 'kind'], 'uncounted'],
+            layout: { ...layout, 'line-cap': 'butt' },
+            paint: {
+              'line-color': CONFIG.trafficUncountedColor,
+              'line-width': ['interpolate', ['linear'], ['zoom'], 7, 1.2, 12, 3.5],
+              'line-dasharray': [2, 1.5],
+            },
+          },
+          before,
+        );
+        return true;
+      });
+    }
+
+    function updateTrafficCountsLayer() {
+      if (!toggleTrafficCounts) return;
+      if (trafficCountLegend) trafficCountLegend.hidden = !toggleTrafficCounts.checked;
+      if (!toggleTrafficCounts.checked) {
+        for (const id of ['traffic-counts-casing', ...TRAFFIC_COUNT_LAYERS]) setLayerVisibility(id, false);
+        trafficCountPopup?.remove();
+        return;
+      }
+      ensureTrafficCountsLayer().then((ok) => {
+        if (!ok || !toggleTrafficCounts.checked) return;
+        for (const id of ['traffic-counts-casing', ...TRAFFIC_COUNT_LAYERS]) setLayerVisibility(id, true);
+      });
+    }
+
+    function showTrafficCountPopup(props, lngLat) {
+      if (typeof maplibregl === 'undefined' || typeof maplibregl.Popup !== 'function') return;
+      const el = document.createElement('div');
+      el.className = 'busy-road-popup';
+      const line = (text, className) => {
+        const p = document.createElement('p');
+        if (className) p.className = className;
+        p.textContent = text;
+        el.appendChild(p);
+      };
+      const title = document.createElement('strong');
+      title.textContent = String(props.strasse || 'Straße');
+      el.appendChild(title);
+      if (props.kind === 'uncounted') {
+        line('Nicht in der Straßenverkehrszählung 2021 – die Verkehrsmenge ist hier nicht bekannt.');
+        line(
+          'Die bayerische Straßenbauverwaltung zählt Bundes-, Staats- und einen Teil der ' +
+            'Kreisstraßen, nicht aber Straßen in Baulast größerer Städte. Städte und Landkreise ' +
+            'können eigene Zählungen haben.',
+        );
+      } else {
+        if (props.anfang || props.ende) line((props.anfang || '…') + ' → ' + (props.ende || '…'));
+        const sv = Number(props.sv);
+        line(
+          deNumber(Number(props.dtv), 0) +
+            ' Kfz pro Tag' +
+            (props.sv != null && props.sv !== '' && sv >= 0 ? ', davon ' + deNumber(sv, 0) + ' Schwerverkehr' : '') +
+            ' (Zählung 2021)',
+        );
+        const speed = Number(props.maxspeed);
+        line((props.fsod === 'OD' ? 'Ortsdurchfahrt' : 'Außerorts') + (speed > 0 ? ' · Tempo ' + speed : ''));
+        line('Radweg auf ' + deNumber(Number(props.coveredPct), 0) + ' % des Zählabschnitts.');
+        if (props.fsod !== 'OD') {
+          const threshold = speed > 0 && speed <= 70 ? 4000 : 2500;
+          const above = props.needsBikePath === true || props.needsBikePath === 'true';
+          line(
+            (above ? 'Über' : 'Unter') +
+              ' der ERA-Schwelle: Radweg ab ' +
+              deNumber(threshold, 0) +
+              ' Kfz/Tag (' +
+              (threshold === 4000 ? '70' : '100') +
+              ' km/h) sinnvoll.',
+          );
+        }
+        if (props.quelle === 'BASt') {
+          line('Abschnitt aus der BASt-Zählung genähert (Zählstelle und Länge).');
+        }
+        const href =
+          props.quelle === 'BASt'
+            ? CONFIG.bastSvzPage
+            : props.zaehlstelle
+              ? CONFIG.baysisZaehlstelleUrlPrefix + encodeURIComponent(String(props.zaehlstelle))
+              : null;
+        if (href) {
+          const a = document.createElement('a');
+          a.href = href;
+          a.target = '_blank';
+          a.rel = 'noopener noreferrer';
+          a.textContent = props.quelle === 'BASt' ? 'Zählung 2021 bei der BASt' : 'Zählstelle bei BAYSIS';
+          const p = document.createElement('p');
+          p.appendChild(a);
+          el.appendChild(p);
+        }
+      }
+      trafficCountPopup?.remove();
+      trafficCountPopup = new maplibregl.Popup({ maxWidth: '280px' })
+        .setLngLat(lngLat)
+        .setDOMContent(el)
+        .addTo(map);
+    }
+
     function updateOverlayVisibility() {
       updateBusyRoadsLayer();
+      updateTrafficCountsLayer();
       setLayerVisibility('bikelanes-casing', toggleBikelanes.checked);
       setLayerVisibility('bikelanes-lines', toggleBikelanes.checked);
       setLayerVisibility('roads-lines-major', toggleRoads.checked);
@@ -10902,6 +11114,10 @@ export function generateViewerHtml(
     toggleRoads?.addEventListener('change', updateOverlayVisibility);
     toggleBusyRoads?.addEventListener('change', () => {
       updateBusyRoadsLayer();
+      scheduleUrlSync();
+    });
+    toggleTrafficCounts?.addEventListener('change', () => {
+      updateTrafficCountsLayer();
       scheduleUrlSync();
     });
     overlayBikelaneColorInput?.addEventListener('input', applyOverlayLineColors);

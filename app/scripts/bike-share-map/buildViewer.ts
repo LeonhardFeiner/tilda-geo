@@ -202,6 +202,11 @@ if (
     process.stderr.write(`${VIEWER_FILES.busyRoads} stamp skipped: ${err}\n`)
   }
 }
+// All counted sections and the uncounted numbered roads (same script), also loaded on demand.
+symlinkOutputFile(
+  join(outputRoot, VIEWER_FILES.trafficCounts),
+  join(viewerDir, VIEWER_FILES.trafficCounts),
+)
 // stats.geojson (49 MB) is a local analysis file only; the page reads the msgpack packs.
 rmSync(join(viewerDir, 'stats.geojson'), { force: true })
 
@@ -686,5 +691,7 @@ process.stdout.write(
 process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
 process.stdout.write(`  radwege          1 | 0\n`)
 process.stdout.write(`  strassen         1 | 0\n`)
+process.stdout.write(`  verkehr          1 | 0 (busy rural roads above the ERA threshold)\n`)
+process.stdout.write(`  zaehlung         1 | 0 (traffic counts 2021, uncounted numbered roads in Bavaria)\n`)
 process.stdout.write(`  ranking          1 | 0\n`)
 process.stdout.write(`  colors           traffic (default) | green | colorblind\n`)

@@ -447,6 +447,18 @@ ${siteIconHeadLinks()}
   Straßenkategorie (LS&nbsp;II–IV) ist in den Daten nicht angegeben; die Schwelle wird auf alle
   gezählten Bundes-, Staats- und Kreisstraßen angewandt. Ein parallel verlaufender Weg in bis zu
   20&nbsp;m Abstand zählt als vorhanden, auch wenn er nicht durchgehend nutzbar ist.</p>
+  <p><strong>Ebene „Verkehrsmenge“:</strong> Auf Wunsch zeigt die Karte alle gezählten Abschnitte
+  (außer Autobahnen) unabhängig von der Schwelle, eingefärbt nach Kfz pro Tag – auch
+  Ortsdurchfahrten und Abschnitte knapp unter der Schwelle. In Bayern sind zusätzlich grau
+  gestrichelt die Straßen mit Straßennummer (Bundes-, Staats- und Kreisstraßen laut OpenStreetMap)
+  markiert, für die es keine Zählung 2021 gibt: Ein OpenStreetMap-Weg gilt als nicht gezählt, wenn
+  im Umkreis von etwa 60&nbsp;m um seine Mitte kein Zählabschnitt mit derselben Straßennummer liegt.
+  Ein Weg, der auf ganzer Länge neben einem Zählabschnitt mit anderer Nummer liegt, gilt als
+  gezählt (Straßen, die seit 2021 umgestuft wurden). Die bayerische Straßenbauverwaltung zählt nicht
+  alle Kreisstraßen und nicht die Straßen in Baulast größerer Städte; dort ist die Verkehrsmenge in
+  diesen Daten unbekannt, nicht gering. Städte und Landkreise können eigene Zählungen haben. Außerhalb Bayerns liegen nur Zählungen für Bundesstraßen vor, deshalb fehlt dort diese
+  Markierung. Gezählt wurde 2021, als der Verkehr wegen der Corona-Pandemie teils geringer war als
+  üblich.</p>
 
   <h2 id="modell">Strukturelles Erwartungswert-Modell</h2>
   <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Wert (km je 100 km Straße) zusammen:
