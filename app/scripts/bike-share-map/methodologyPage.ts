@@ -7,6 +7,7 @@ import {
   type UrbanizationCode,
 } from './demographicPeers'
 import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
+import { siteIconHeadLinks } from './siteIcon'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
 export type MethodologyPageInput = {
@@ -167,6 +168,7 @@ ${li([
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Methodik &amp; Datenquellen – Radinfra-Vergleich</title>
+${siteIconHeadLinks()}
 <meta name="description" content="Wie der Radinfra-Vergleich rechnet: Datenquellen, Zählweise und die Grenzen der Aussagekraft." />
 <meta name="robots" content="index,follow" />
 <style>

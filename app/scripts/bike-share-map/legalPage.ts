@@ -1,3 +1,5 @@
+import { siteIconHeadLinks } from './siteIcon'
+
 export type LegalPageInput = {
   projectLead: string
   viewerHref: string
@@ -20,6 +22,7 @@ export function legalPageHtml(input: LegalPageInput): string {
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Impressum &amp; Datenschutz – Radinfra-Vergleich</title>
+${siteIconHeadLinks()}
 <meta name="robots" content="noindex,follow" />
 <style>
   :root { color-scheme: light; }

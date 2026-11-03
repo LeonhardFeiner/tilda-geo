@@ -5,6 +5,7 @@ import {
   inPlacePhrase,
   type ViewBenchmarkStat,
 } from './rankingDisplay'
+import { siteIconHeadLinks } from './siteIcon'
 import { formatGapKm, formatStatPctUi } from './statsClassSums'
 
 /**
@@ -289,6 +290,7 @@ export function shareStubHtml(s: ShareRegionSummary, opts: ShareStubOptions) {
 <title>${headline}</title>
 <meta name="description" content="${description}" />
 <link rel="canonical" href="${canonical}" />
+${siteIconHeadLinks(opts.baseUrl)}
 <meta property="og:type" content="website" />
 <meta property="og:title" content="${headline}" />
 <meta property="og:description" content="${description}" />

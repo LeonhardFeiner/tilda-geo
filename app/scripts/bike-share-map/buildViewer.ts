@@ -44,6 +44,7 @@ import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
+import { writeSiteIcons } from './siteIcon'
 import { mergeHistory, type Snapshot, snapshotFromFeatures } from './snapshotHistory'
 import { type StationAccessFiles, stationAreasPageHtml } from './stationAreasPage'
 import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSums'
@@ -138,6 +139,9 @@ rmSync(join(viewerDir, 'stats.geojson'), { force: true })
 // (the inline script throws on `new maplibregl.Map` before any error UI exists).
 rmSync(join(viewerDir, 'vendor'), { recursive: true, force: true })
 cpSync(join(scriptDir, 'vendor'), join(viewerDir, 'vendor'), { recursive: true })
+
+// Favicon + touch icon (siteIcon.ts); every page's head links them relative to the viewer root.
+await writeSiteIcons(viewerDir)
 
 // gemeinde-peers.json: {region id → demographic-peer bucket key} + {key → label}, for the
 // region card's "compared to similar Gemeinden nationwide" line. The ranking is computed

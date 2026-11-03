@@ -25,6 +25,7 @@ import {
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
 } from './statsClassSums'
+import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
 
 // Bottom-sheet ("phone") layout: narrow screens, short ones (a phone held sideways is wide but
@@ -132,7 +133,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       if (size === '115' || size === '130') document.documentElement.style.fontSize = size + '%';
     } catch (e) {}
   </script>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚲</text></svg>" />
+  ${siteIconHeadLinks()}
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
        browser only discovers it once the inline controller script runs, after every script tag
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
@@ -1001,6 +1002,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
       line-height: 1.3; min-width: 0;
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
+    .site-logo { height: 1.15em; width: auto; vertical-align: -0.22em; margin-right: 7px; }
     .site-tagline {
       margin: 0 0 10px; font-size: 0.75rem; line-height: 1.45; color: #555;
     }
@@ -1526,7 +1528,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
   </div>
   <details class="panel" id="panel-main" open>
     <summary>
-      <h1 class="site-title">Radinfra-Vergleich</h1>
+      <h1 class="site-title">${siteLogoInlineSvg('site-logo')}Radinfra-Vergleich</h1>
       <span class="panel-summary-preview" id="panel-summary-preview"></span>
     </summary>
     <div class="panel-body">

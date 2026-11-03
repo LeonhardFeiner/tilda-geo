@@ -18,6 +18,7 @@ Everything here runs from `app/` (`bun run bike-share-map:<script>`).
 | `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                    |
 | `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).            |
 | `vendor/`                                      | MapLibre and d3-delaunay, served from our own origin.                                       |
+| `siteIcon.ts`                                  | Favicon / touch icon / header logo (BFS chevrons into a bike); `icon.svg` written by build.  |
 | `constants.ts`                                 | `VIEWER_FILES` (output file names) and `VIEWER_PASS_THROUGH_DATASETS`.                      |
 
 `output/` is committed except `output/stats.geojson`, `output/viewer/r/`, `output/viewer/daten/`

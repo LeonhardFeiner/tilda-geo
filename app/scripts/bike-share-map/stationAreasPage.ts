@@ -1,4 +1,5 @@
 import { buildBasemapStyleJson } from './basemaps'
+import { siteIconHeadLinks } from './siteIcon'
 
 /** Network modes and what routing/station_access.py wrote for each ('straight' only has km). */
 export type StationAccessFiles = Partial<
@@ -60,6 +61,7 @@ export function stationAreasPageHtml({
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex, nofollow" />
   <title>Nächste Station</title>
+  ${siteIconHeadLinks()}
   <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <style>
     :root {
