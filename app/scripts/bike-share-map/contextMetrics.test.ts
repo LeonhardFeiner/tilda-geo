@@ -11,5 +11,15 @@ describe('context metric labels', () => {
       true,
     )
     expect(DATA_DOWNLOAD_COLUMNS.miete_eur_m2.startsWith(CONTEXT_METRIC_LABELS.rent)).toBe(true)
+    expect(DATA_DOWNLOAD_COLUMNS.ab_67_pct.startsWith(CONTEXT_METRIC_LABELS.senior)).toBe(true)
+    expect(
+      DATA_DOWNLOAD_COLUMNS.eigentuemerquote_pct.startsWith(CONTEXT_METRIC_LABELS.ownerOccupier),
+    ).toBe(true)
+    expect(
+      DATA_DOWNLOAD_COLUMNS.neubau_ab_2000_pct.startsWith(CONTEXT_METRIC_LABELS.newBuild),
+    ).toBe(true)
+    expect(
+      DATA_DOWNLOAD_COLUMNS.raumtyp_regiostar7.startsWith(CONTEXT_METRIC_LABELS.regioStar),
+    ).toBe(true)
   })
 })

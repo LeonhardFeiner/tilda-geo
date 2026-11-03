@@ -152,9 +152,10 @@ ${li(Object.entries(DATA_DOWNLOAD_COLUMNS).map(([key, text]) => `<code>${key}</c
 <p><strong>Quellen &amp; Lizenzen:</strong></p>
 ${li([
   `Längen, Grenzen: © OpenStreetMap-Mitwirkende, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a> – die CSV ist damit eine Datenbank unter ODbL.`,
-  `Bevölkerungsdichte, Miete, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas ${UNFALLATLAS_YEAR}), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
+  `Bevölkerungsdichte, Miete, Alter, Eigentümerquote, Baualter, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas ${UNFALLATLAS_YEAR}), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Bevölkerungsverteilung: Zensus 2022, Gitterzellen 100&nbsp;m, © Statistische Ämter des Bundes und der Länder, <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
+  `Raumtyp: Regionalstatistische Raumtypologie (RegioStaR), © Bundesministerium für Verkehr (BMDV), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Verkehrsmengen Bundesstraßen (bundesweit): Straßenverkehrszählung 2021, Quelle: Bundesanstalt für Straßenwesen (BASt).`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
   `Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.`,
@@ -226,7 +227,8 @@ ${siteIconHeadLinks()}
     `<strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="${DESTATIS_URL}">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.`,
     `<strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.`,
     `<strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.`,
-    `<strong>Miete, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle).`,
+    `<strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.`,
+    `<strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.`,
     `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit.`,
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}

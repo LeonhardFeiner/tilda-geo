@@ -41,6 +41,24 @@ describe('parseZensusHousingRows', () => {
     })
   })
 
+  test('parses owner-occupier rate and the share of dwellings built since 2000', () => {
+    const years = Array.from(
+      { length: 10 },
+      (_, i) => `BAUJAHR_10JA__${String(i + 1).padStart(2, '0')}`,
+    )
+    const rows = [
+      ['_RS', 'ETQ', ...years],
+      // 700 before 2000, 300 since ('–' = 0, quoted = secrecy-adjusted count).
+      ['091860000000', 44.29, 100, 100, 100, 100, 100, 100, 100, '200', '–', 100],
+      // A suppressed decade leaves the share undefined rather than biased.
+      ['08425', 60, 1, 1, 1, 1, 1, 1, 1, 1, null, 1],
+    ]
+    const map = parseZensusHousingRows(rows)
+    expect(map.get('091860000000')).toMatchObject({ ownerOccupierPct: 44.3, newBuildSharePct: 30 })
+    expect(map.get('08425')?.ownerOccupierPct).toBe(60)
+    expect(map.get('08425')?.newBuildSharePct).toBeUndefined()
+  })
+
   test('handles missing or malformed columns gracefully', () => {
     const rows = [['OTHER_COL'], ['value']]
     const map = parseZensusHousingRows(rows)

@@ -4,6 +4,9 @@
  *   1. Regionaltabelle Gebäude und Wohnungen (sheet CSV-Wohnungen):
  *      - QMMIETE: Average net cold rent per square meter (€/m²) — prime proxy for land and housing value.
  *      - LEQ: Residential vacancy rate (Leerstandsquote in %).
+ *      - ETQ: Owner-occupier rate (Eigentümerquote in %).
+ *      - BAUJAHR_10JA__08..10 / __01..10: share of dwellings in buildings built 2000 or later —
+ *        where much of the housing stock is recent, so are many of its streets.
  *   2. Regionaltabelle Demografie (sheet CSV-Demografie):
  *      - Youth share under 18 years (%) from Alter_infr__01 to Alter_infr__05.
  *      - Senior share 67+ years (%) from Alter_infr__10 and Alter_infr__11.
@@ -29,6 +32,8 @@ const CACHE_DEMO_XLSX = downloadCachePath('Regionaltabelle_Demografie.xlsx')
 export type ZensusHousingDemographics = {
   rentPerM2?: number
   vacancyRatePct?: number
+  ownerOccupierPct?: number
+  newBuildSharePct?: number
   youthSharePct?: number
   seniorSharePct?: number
 }
@@ -42,6 +47,20 @@ function parseNumber(val: unknown) {
   }
   return undefined
 }
+
+/** A Zensus count cell: '–' is a true zero, a quoted number is a secrecy-adjusted count. */
+function parseCount(val: unknown) {
+  if (typeof val === 'string' && /^[–-]$/.test(val.trim())) return 0
+  return parseNumber(val)
+}
+
+/** Dwellings by construction decade, __01 (before 1919) … __10 (2016 and later). */
+const BUILD_YEAR_COLUMNS = Array.from(
+  { length: 10 },
+  (_, i) => `BAUJAHR_10JA__${String(i + 1).padStart(2, '0')}`,
+)
+/** __08 2000–2009, __09 2010–2015, __10 2016 and later. */
+const BUILT_SINCE_2000_COLUMNS = new Set(BUILD_YEAR_COLUMNS.slice(7))
 
 export function normalizeRs(raw: unknown) {
   if (raw == null) return ''
@@ -58,16 +77,25 @@ export function normalizeRs(raw: unknown) {
   return s
 }
 
+export type ZensusHousingRow = Pick<
+  ZensusHousingDemographics,
+  'rentPerM2' | 'vacancyRatePct' | 'ownerOccupierPct' | 'newBuildSharePct'
+>
+
 export function parseZensusHousingRows(rows: unknown[][]) {
-  const result = new Map<string, { rentPerM2?: number; vacancyRatePct?: number }>()
+  const result = new Map<string, ZensusHousingRow>()
   if (!rows || rows.length < 2) return result
 
   const headers = rows[0] as string[]
   const rsIdx = headers.indexOf('_RS')
   const rentIdx = headers.indexOf('QMMIETE')
   const leqIdx = headers.indexOf('LEQ')
+  const etqIdx = headers.indexOf('ETQ')
+  const yearIdx = BUILD_YEAR_COLUMNS.map((c) => headers.indexOf(c))
 
   if (rsIdx === -1) return result
+
+  const round1 = (v: number | undefined) => (v !== undefined ? Math.round(v * 10) / 10 : undefined)
 
   for (let i = 1; i < rows.length; i++) {
     const row = rows[i]
@@ -77,11 +105,28 @@ export function parseZensusHousingRows(rows: unknown[][]) {
 
     const rent = rentIdx !== -1 ? parseNumber(row[rentIdx]) : undefined
     const leq = leqIdx !== -1 ? parseNumber(row[leqIdx]) : undefined
+    const etq = etqIdx !== -1 ? parseNumber(row[etqIdx]) : undefined
 
-    if (rent !== undefined || leq !== undefined) {
+    let total = 0
+    let recent = 0
+    let complete = !yearIdx.includes(-1)
+    for (const [k, idx] of yearIdx.entries()) {
+      const v = idx !== -1 ? parseCount(row[idx]) : undefined
+      if (v === undefined) {
+        complete = false
+        break
+      }
+      total += v
+      if (BUILT_SINCE_2000_COLUMNS.has(BUILD_YEAR_COLUMNS[k]!)) recent += v
+    }
+    const newBuild = complete && total > 0 ? (recent / total) * 100 : undefined
+
+    if (rent !== undefined || leq !== undefined || etq !== undefined || newBuild !== undefined) {
       result.set(rs, {
         rentPerM2: rent !== undefined ? Math.round(rent * 100) / 100 : undefined,
-        vacancyRatePct: leq !== undefined ? Math.round(leq * 10) / 10 : undefined,
+        vacancyRatePct: round1(leq),
+        ownerOccupierPct: round1(etq),
+        newBuildSharePct: round1(newBuild),
       })
     }
   }
@@ -198,6 +243,8 @@ if (import.meta.main) {
     byRs[rs] = {
       rentPerM2: h?.rentPerM2,
       vacancyRatePct: h?.vacancyRatePct,
+      ownerOccupierPct: h?.ownerOccupierPct,
+      newBuildSharePct: h?.newBuildSharePct,
       youthSharePct: d?.youthSharePct,
       seniorSharePct: d?.seniorSharePct,
     }

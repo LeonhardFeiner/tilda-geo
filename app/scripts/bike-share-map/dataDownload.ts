@@ -39,7 +39,12 @@ export type DataDownloadContext = {
   density?: ById<number>
   terrain?: ById<{ road?: number; elevationMean?: number }>
   transit?: ById<{ avgDistanceToStationM?: number }>
-  zensus?: ById<{ rentPerM2?: number }>
+  zensus?: ById<{
+    rentPerM2?: number
+    seniorSharePct?: number
+    ownerOccupierPct?: number
+    newBuildSharePct?: number
+  }>
   cars?: ById<{ carsPer1000?: number }>
   calmed?: ById<{ calmedSharePct?: number; livingSharePct?: number; livingStreetSharePct?: number }>
   accidents?: ById<{
@@ -56,6 +61,7 @@ export type DataDownloadContext = {
     coveredPct?: number
     sharePct?: number
   }>
+  regiostar?: ById<{ r7?: number }>
   /** Kreis-level regions with no Gemeinde inside: kreisfreie Städte (kreisfreieIdsOf). */
   kreisfreieIds?: Set<string>
   /** Summed predictions for Kreise, Bezirke, Gemeindeverbände (buildModelAggregates). */
@@ -125,6 +131,10 @@ export const DATA_DOWNLOAD_COLUMNS = {
     'bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %',
   einwohner_je_km2: `${L.density}, Einwohner je km² (Destatis Gemeindeverzeichnis)`,
   miete_eur_m2: `${L.rent}, € je m²`,
+  ab_67_pct: `${L.senior}: Anteil an der Bevölkerung (Zensus 2022), %`,
+  eigentuemerquote_pct: `${L.ownerOccupier}: vom Eigentümer bewohnte Wohnungen, %`,
+  neubau_ab_2000_pct: `${L.newBuild}: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später (Zensus 2022), %`,
+  raumtyp_regiostar7: `${L.regioStar} (BMDV/BBSR, Gebietsstand 2020): 71 Metropole, 72 Regiopole/Großstadt, 73 Mittelstadt/städtischer Raum, 74 kleinstädtisch/dörflich (alle Stadtregion); 75 zentrale Stadt, 76 städtischer Raum, 77 kleinstädtisch/dörflich (alle ländliche Region). Nur Gemeinden und kreisfreie Städte`,
   pkw_je_1000_ew: `${L.carDensity}: Pkw je 1.000 Einwohner (Statistik FZ 3)`,
   verkehrsberuhigt_pct: `${L.calmedShare}: Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %`,
   spielstrassen_pct:
@@ -285,7 +295,8 @@ export function buildDataDownloadRow(
   const density = ctx.density?.[id]
   const terrain = ctx.terrain?.[id]
   const stationM = ctx.transit?.[id]?.avgDistanceToStationM
-  const rent = ctx.zensus?.[id]?.rentPerM2
+  const zensus = ctx.zensus?.[id]
+  const rent = zensus?.rentPerM2
   const cars = ctx.cars?.[id]?.carsPer1000
   const calmed = ctx.calmed?.[id]
   const accidents = ctx.accidents?.[id]
@@ -338,6 +349,10 @@ export function buildDataDownloadRow(
     bundesstr_vielbefahren_mit_radweg_pct: round(trafficFederal?.coveredPct, 1),
     einwohner_je_km2: round(density, 1),
     miete_eur_m2: round(rent, 2),
+    ab_67_pct: round(zensus?.seniorSharePct, 1),
+    eigentuemerquote_pct: round(zensus?.ownerOccupierPct, 1),
+    neubau_ab_2000_pct: round(zensus?.newBuildSharePct, 1),
+    raumtyp_regiostar7: ctx.regiostar?.[id]?.r7 ?? null,
     pkw_je_1000_ew: round(cars, 1),
     verkehrsberuhigt_pct: round(calmed?.calmedSharePct, 1),
     spielstrassen_pct: round(calmed?.livingStreetSharePct, 1),

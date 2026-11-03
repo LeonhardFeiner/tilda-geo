@@ -157,6 +157,39 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'Mehr Zahlen lists age, ownership and building age with bars, and the RegioStaR type without',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      const more = page.q('#region-detail-more') as HTMLDetailsElement
+      more.open = true
+      more.dispatchEvent(new window.Event('toggle'))
+      const rowOf = (label: string) =>
+        page!
+          .qAll('#region-detail-extra .ctx-row')
+          .find((row) => row.querySelector('.ctx-label')?.textContent?.startsWith(label))
+      await page.waitFor(() => !!rowOf('Raumtyp'), 'the RegioStaR row')
+
+      const type = rowOf('Raumtyp')!
+      // Schweitenkirchen: a village in the Munich region (RegioStaR 74).
+      expect(type.querySelector('.ctx-value')?.textContent).toBe(
+        'Stadtregion – Kleinstädtischer, dörflicher Raum',
+      )
+      expect(type.querySelector('.ctx-track')).toBeNull()
+      expect(type.classList.contains('ctx-row--plot')).toBe(false)
+      for (const label of ['Ältere', 'Eigentümerquote', 'Wohnungen in Neubauten']) {
+        const row = rowOf(label)
+        expect(row, label).toBeDefined()
+        expect(row!.querySelector('.ctx-value')?.textContent).toMatch(/^\d+,\d %/)
+        expect(row!.querySelector('.ctx-track'), label).not.toBeNull()
+      }
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'clicking a street row highlights that street type, in both breakdowns',
     async () => {
       page = await bootViewer(IN_LANDKREIS)

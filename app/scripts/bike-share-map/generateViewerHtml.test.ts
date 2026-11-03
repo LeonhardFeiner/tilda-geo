@@ -391,6 +391,17 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain("header: 'Ø Nettokaltmiete (€/m², Zensus 2022)'")
   })
 
+  test('includes senior share, owner-occupier rate, new-build share and RegioStaR type', () => {
+    for (const key of ['senior', 'ownerOccupier', 'newBuild', 'regioStar']) {
+      expect(html).toContain(`key: '${key}'`)
+      expect(html).toContain(`label: RankingDisplay.CONTEXT_METRIC_LABELS.${key},`)
+    }
+    expect(html).toContain('"regiostarUrl":"./gemeinde-regiostar.json?v=')
+    // A type has no percentile: the card shows it without bar and scatter plot.
+    expect(html).toMatch(/key: 'regioStar',[^}]*noBar: true/)
+    expect(html).toContain('RankingDisplay.REGIOSTAR7_LABELS[v]')
+  })
+
   test('includes KBA car density metric in context and CSV columns', () => {
     expect(html).toContain('"carsUrl":"./gemeinde-cars.json?v=20261011000000"')
     expect(html).toContain("key: 'carDensity'")

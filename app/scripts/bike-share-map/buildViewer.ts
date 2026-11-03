@@ -257,6 +257,7 @@ if (geoFeatures.length) {
     mapping: readById(VIEWER_FILES.mapping),
     traffic: readById(VIEWER_FILES.traffic),
     trafficFederal: readById(VIEWER_FILES.trafficFederal),
+    regiostar: readById(VIEWER_FILES.regiostar),
   }
   const osmDataFrom = existsSync(manifestPath)
     ? (JSON.parse(readFileSync(manifestPath, 'utf8')) as { osmDataFrom?: string }).osmDataFrom

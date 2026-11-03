@@ -14,7 +14,11 @@ export const CONTEXT_METRIC_LABELS = {
   density: 'Bevölkerungsdichte',
   rent: 'Ø Nettokaltmiete (Zensus 2022)',
   youth: 'Kinder & Jugendliche (< 18 Jahre)',
+  senior: 'Ältere (ab 67 Jahre)',
   vacancy: 'Wohnungsleerstand',
+  ownerOccupier: 'Eigentümerquote (Zensus 2022)',
+  newBuild: 'Wohnungen in Neubauten (ab 2000)',
+  regioStar: 'Raumtyp (RegioStaR 7)',
   carDensity: 'Pkw-Dichte (KBA)',
   calmedShare: 'Wohn- & Tempo-30-Netz',
   livingShare: 'Spielstraßen, Fahrradstraßen & Fußgängerzonen',
@@ -33,5 +37,19 @@ export const CONTEXT_METRIC_LABELS = {
   roadSlope: 'Straßensteigung (Ø)',
   roadSteep: 'Steilste Straßenabschnitte',
 } as const
+
+/**
+ * RegioStaR 7 codes (fetchRegioStar.ts): BMVI/BBSR codeplan wording. Ordered from the most to the
+ * least urban, so the code works as an ordinal scale.
+ */
+export const REGIOSTAR7_LABELS: Record<number, string> = {
+  71: 'Stadtregion – Metropole',
+  72: 'Stadtregion – Regiopole und Großstadt',
+  73: 'Stadtregion – Mittelstadt, städtischer Raum',
+  74: 'Stadtregion – Kleinstädtischer, dörflicher Raum',
+  75: 'Ländliche Region – Zentrale Stadt',
+  76: 'Ländliche Region – Städtischer Raum',
+  77: 'Ländliche Region – Kleinstädtischer, dörflicher Raum',
+}
 
 export type ContextMetricKey = keyof typeof CONTEXT_METRIC_LABELS

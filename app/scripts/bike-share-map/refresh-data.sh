@@ -58,7 +58,7 @@ run bun run bike-share-map:export-stats-geojson -- --geojson
 
 # Context datasets. Network ones re-read their cached downloads; the DB ones re-join to the export.
 for script in calmed-roads mapping-completeness traffic-volumes highway-distance terrain-flatness \
-  gemeinde-demographics zensus-housing car-density accidents commuters; do
+  gemeinde-demographics zensus-housing car-density accidents commuters regiostar; do
   run bun run "bike-share-map:$script"
 done
 if [ "$WITH_ROUTING" = 1 ]; then

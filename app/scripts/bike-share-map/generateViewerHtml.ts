@@ -92,6 +92,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     mappingUrl: v(`./${VIEWER_FILES.mapping}`),
     trafficUrl: v(`./${VIEWER_FILES.traffic}`),
     trafficFederalUrl: v(`./${VIEWER_FILES.trafficFederal}`),
+    regiostarUrl: v(`./${VIEWER_FILES.regiostar}`),
     busyRoadsUrl: v(`./${VIEWER_FILES.busyRoads}`),
     historyUrl: v(`./${VIEWER_FILES.history}`),
     colorScales: COLOR_SCALES,
@@ -1907,6 +1908,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     let calmedIndex = null;
     let accidentsIndex = null;
     let commutersIndex = null;
+    let regiostarIndex = null;
     let mappingIndex = null;
     let trafficIndex = null;
     let trafficFederalIndex = null;
@@ -1956,6 +1958,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
         loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
+        loadIndex(CONFIG.regiostarUrl, (data) => { regiostarIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
@@ -2879,7 +2882,11 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
         { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
+        { key: 'senior', header: 'Ältere ab 67 (%, Zensus 2022)', numeric: 'num1' },
         { key: 'vacancy', header: 'Wohnungsleerstand (%)', numeric: 'num1' },
+        { key: 'ownerOccupier', header: 'Eigentümerquote (%, Zensus 2022)', numeric: 'num1' },
+        { key: 'newBuild', header: 'Wohnungen in Gebäuden ab Baujahr 2000 (%, Zensus 2022)', numeric: 'num1' },
+        { key: 'regioStar', header: 'Raumtyp RegioStaR 7 (71 Metropole … 77 ländlich-dörflich)', numeric: false },
         { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'busyRoadsKm', header: 'Vielbefahrene Landstraßen (km, Bayern)', numeric: 'km' },
@@ -4966,7 +4973,7 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
         const plots = el('div', 'ps-plots');
         for (const metric of contextMetrics()) {
           const value = metric.get(p.id);
-          if (value == null || !Number.isFinite(value) || !plotScope) continue;
+          if (value == null || !Number.isFinite(value) || !plotScope || metric.noBar) continue;
           const plot = buildMetricPlot(metric, level, plotScope);
           if (!plot) continue;
           renderMetricPlot(plot.chart, metric, plot.entries, p.id, PRINT_PLOT_WIDTH_PX, PRINT_PLOT_HEIGHT_PX);
@@ -5788,6 +5795,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           format: (v) => deNumber(Math.round(v), 0) + ' Einw./km²',
         },
         {
+          // A type, not a quantity: no percentile bar and no scatter plot. BMDV/BBSR, Gebietsstand
+          // 2020 (fetchRegioStar.ts); Gemeinden and kreisfreie Städte only.
+          key: 'regioStar',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.regioStar,
+          note: 'Lage und Funktion, BMDV',
+          noBar: true,
+          source: regiostarIndex,
+          get: (id) => {
+            const v = regiostarIndex?.byId[id]?.r7;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => RankingDisplay.REGIOSTAR7_LABELS[v] || String(v),
+        },
+        {
           key: 'rent',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.rent,
           note: 'Wohn- & Bodenwert',
@@ -5810,11 +5831,43 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           format: (v) => deNumber(v, 1) + ' %',
         },
         {
+          key: 'senior',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.senior,
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.seniorSharePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
           key: 'vacancy',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.vacancy,
           source: zensusIndex,
           get: (id) => {
             const v = zensusIndex?.byId[id]?.vacancyRatePct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'ownerOccupier',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.ownerOccupier,
+          note: 'vom Eigentümer bewohnte Wohnungen',
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.ownerOccupierPct;
+            return typeof v === 'number' ? v : null;
+          },
+          format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'newBuild',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.newBuild,
+          note: 'Baujahr 2000 oder später, Zensus 2022',
+          source: zensusIndex,
+          get: (id) => {
+            const v = zensusIndex?.byId[id]?.newBuildSharePct;
             return typeof v === 'number' ? v : null;
           },
           format: (v) => deNumber(v, 1) + ' %',
