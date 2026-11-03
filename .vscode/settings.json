@@ -73,5 +73,37 @@
   // From Tanstack Start Scaffolding Recommendations:
   "search.exclude": { "**/routeTree.gen.ts": true },
   "files.watcherExclude": { "**/routeTree.gen.ts": true },
-  "files.readonlyInclude": { "**/routeTree.gen.ts": true }
+  "files.readonlyInclude": {
+    "**/routeTree.gen.ts": true
+  },
+  "workbench.colorCustomizations": {
+    "activityBar.activeBackground": "#fcf88d",
+    "activityBar.activeBorder": "#15202b",
+    "activityBar.background": "#fcf88d",
+    "activityBar.foreground": "#15202b",
+    "activityBar.inactiveForeground": "#15202b99",
+    "activityBarBadge.background": "#05bab4",
+    "activityBarBadge.foreground": "#15202b",
+    "activityBarTop.activeBackground": "#fcf88d",
+    "activityBarTop.activeBorder": "#15202b",
+    "activityBarTop.background": "#fcf88d",
+    "activityBarTop.foreground": "#15202b",
+    "activityBarTop.inactiveForeground": "#15202b99",
+    "commandCenter.border": "#15202b99",
+    "commandCenter.foreground": "#15202b",
+    "sash.hoverBorder": "#fcf88d",
+    "statusBar.background": "#fbf55b",
+    "statusBar.debuggingBackground": "#fbf55b",
+    "statusBar.debuggingForeground": "#15202b",
+    "statusBar.foreground": "#15202b",
+    "statusBar.inactiveBackground": "#fbf55b",
+    "statusBarItem.hoverBackground": "#faf229",
+    "statusBarItem.remoteBackground": "#05bbb4",
+    "statusBarItem.remoteForeground": "#15202b",
+    "titleBar.activeBackground": "#fbf55b",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#fbf55b99",
+    "titleBar.inactiveForeground": "#15202b99"
+  },
+  "peacock.remoteColor": "#fbf55b"
 }
