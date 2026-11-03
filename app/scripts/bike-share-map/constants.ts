@@ -64,6 +64,14 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
 export const STATION_AREAS_PAGE_STEM = 'naechste-station'
 
 /**
+ * Unlisted detour map (detourPage.ts): safe bike route vs. fastest car road between the places
+ * of a Landkreis. Linked only from the region card of Gemeinden whose Landkreis has a graph in
+ * output/detour/ (fetchDetourGraph.ts).
+ */
+export const DETOUR_PAGE_STEM = 'umweg'
+export const DETOUR_DIR = 'detour'
+
+/**
  * File names inside output/viewer/ that the build writes and the page fetches. One place, so the
  * build, the page (generateViewerHtml CONFIG), the CSV and the model fit can't drift apart.
  */

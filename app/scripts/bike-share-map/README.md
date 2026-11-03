@@ -17,8 +17,9 @@ Everything here runs from `app/` (`bun run bike-share-map:<script>`).
 | `fetch*.ts`, `populateRegionContextMetrics.ts` | Context datasets, each written to `output/<name>.json` through `fetchCommon.writeDataset`.  |
 | `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                    |
 | `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).            |
+| `fetchDetourGraph.ts`, `detour*.ts`            | Detour map `umweg.html`: per-Landkreis routing graph, browser routing, page (see below).    |
 | `vendor/`                                      | MapLibre and d3-delaunay, served from our own origin.                                       |
-| `siteIcon.ts`                                  | Favicon / touch icon / header logo (BFS chevrons into a bike); `icon.svg` written by build.  |
+| `siteIcon.ts`                                  | Favicon, touch icon, header logo (BFS/SPD/Grüne chevrons + bike); `icon.svg` by build.      |
 | `constants.ts`                                 | `VIEWER_FILES` (output file names) and `VIEWER_PASS_THROUGH_DATASETS`.                      |
 
 `output/` is committed except `output/stats.geojson`, `output/viewer/r/`, `output/viewer/daten/`
@@ -42,8 +43,8 @@ current export, so run the export first.
 3. **Context datasets** — re-run what is affected. Each refuses to overwrite its file with a
    result more than 20 % smaller (set `BIKE_SHARE_ALLOW_SHRINK=1` if a drop is real).
 
-   | Needs the DB                                                                                                                                           | Needs only the network (cached in `cache/`)                                        |
-   | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------- |
+   | Needs the DB                                                                                                                                           | Needs only the network (cached in `cache/`)                                                     |
+   | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
    | `calmed-roads`, `mapping-completeness`, `transit-stop-counts`, `terrain-flatness`, `highway-distance`, `traffic-volumes`, `stations`, `station-access` | `gemeinde-demographics`, `zensus-housing`, `car-density`, `accidents`, `commuters`, `regiostar` |
 
    Then `bun run bike-share-map:populate-context` (needs the DB) for kreisfreie Städte, Kreise and
@@ -61,3 +62,23 @@ current export, so run the export first.
 parses every inline script and `viewerSmoke.test.ts` boots the real page in jsdom
 (`viewerHarness.ts`). The smoke test loads the _built_ bundles in `output/viewer/`, so rebuild
 after changing a bundled module.
+
+## Detour map (`umweg.html`)
+
+Pick a place in a Landkreis and compare, for every other place, the fastest car road with a bike
+route that avoids traffic (extra km, climb, minutes; a slider sets how much traffic is avoided).
+Routing runs in the browser on one graph per Landkreis (`output/detour/<id>.msgpack`, ~1.4 MB
+gzipped for Pfaffenhofen, committed); `output/detour/index.json` lists the Landkreise, and the
+region card of their Gemeinden links to the page. Method on `methodik.html#umweg`.
+
+```sh
+# once per OSM extract: all place nodes (~1 min, needs routing/cache/germany-latest.osm.pbf)
+scripts/bike-share-map/routing/.venv/bin/python scripts/bike-share-map/routing/extract_places.py
+# per Landkreis (local DB, ~5 s; terrain tiles are cached in cache/terrarium/)
+bun run bike-share-map:detour-graph -- --landkreis relation/62371
+bun run bike-share-map:viewer
+```
+
+The stress model and cost formula live in `detourRouting.ts` (tested in `detourRouting.test.ts`);
+after changing it, rebuild the viewer before running `detourPage.test.ts` — the page test loads
+the built `detourRouting.js`.

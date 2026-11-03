@@ -74,6 +74,15 @@ if [ "$WITH_ROUTING" = 1 ]; then
   run scripts/bike-share-map/routing/.venv/bin/python scripts/bike-share-map/routing/station_departures.py \
     "$(date -d 'next tuesday' +%Y%m%d)"
 fi
+# Detour map: rebuild the graph of every Landkreis that already has one.
+if [ -f "$REPO/app/scripts/bike-share-map/output/detour/index.json" ]; then
+  [ -f "$REPO/app/scripts/bike-share-map/routing/cache/germany-latest.osm.pbf" ] &&
+    run scripts/bike-share-map/routing/.venv/bin/python scripts/bike-share-map/routing/extract_places.py
+  for lk in $(python3 -c "import json,sys;print(' '.join(l['id'] for l in json.load(open(sys.argv[1]))['landkreise']))" \
+    "$REPO/app/scripts/bike-share-map/output/detour/index.json"); do
+    run bun run bike-share-map:detour-graph -- --landkreis "$lk"
+  done
+fi
 run bun run bike-share-map:populate-context
 
 run bun run bike-share-map:viewer

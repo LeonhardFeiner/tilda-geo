@@ -1,9 +1,9 @@
 /**
- * Site icon and header logo: the BFS chevrons running into a bike. Both share one geometry —
- * two wheels three radii apart, a frame with no saddle or handlebar (they turn to noise below
- * 32 px), and two chevrons whose tips cross the rear wheel the way the chevrons cross the
- * letters in the BFS logo. A mask cuts a gap into the wheel around the chevrons so the overlap
- * reads as deliberate at any size.
+ * Site icon and header logo: the chevrons from the BFS/SPD/Grüne list logo running into a bike.
+ * Both share one geometry — two wheels three radii apart, a frame with no saddle or handlebar
+ * (they turn to noise below 32 px), and two chevrons whose tips cross the rear wheel the way the
+ * chevrons cross the letters in the BFS/SPD/Grüne logo. A mask cuts a gap into the wheel around
+ * the chevrons so the overlap reads as deliberate at any size.
  *
  * `SITE_LOGO_SVG` is the full mark in the brand colours on a transparent background, for the
  * panel header. `SITE_ICON_SVG` is the favicon / touch icon: the same chevrons running into a

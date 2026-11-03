@@ -44,3 +44,13 @@ for the current `stations.json` — rerun it after `bun run bike-share-map:stati
 ```sh
 scripts/bike-share-map/routing/.venv/bin/python scripts/bike-share-map/routing/station_departures.py
 ```
+
+## Place nodes for the detour map
+
+`extract_places.py` writes every named OSM `place` node (city … hamlet) of the extract to
+`cache/places-de.json` (~1 min, ~120k nodes). `fetchDetourGraph.ts` picks the ones inside a
+Landkreis; see "Detour map" in `../README.md`.
+
+```sh
+scripts/bike-share-map/routing/.venv/bin/python scripts/bike-share-map/routing/extract_places.py
+```

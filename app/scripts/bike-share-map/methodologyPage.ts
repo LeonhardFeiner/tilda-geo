@@ -6,6 +6,7 @@ import {
   URBANIZATION_LABELS,
   type UrbanizationCode,
 } from './demographicPeers'
+import { CLOSE_FROM_SAFETY, CLOSED_STRESS, STRESS_WEIGHT } from './detourRouting'
 import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
@@ -159,7 +160,7 @@ ${li([
   `Verkehrsmengen Bundesstraßen (bundesweit): Straßenverkehrszählung 2021, Quelle: Bundesanstalt für Straßenwesen (BASt).`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
   `Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.`,
-  `Geländehöhe und -neigung: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).`,
+  `Geländehöhe und -neigung, Höhenmeter der Umweg-Karte: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).`,
 ])}`
     : ''
 
@@ -394,6 +395,37 @@ ${siteIconHeadLinks()}
     </tbody>
   </table>
   </div>
+
+  <h2 id="umweg">Umwege per Rad</h2>
+  <p>Die Umweg-Karte (aus der Detailkarte einer Gemeinde verlinkt, sofern für ihren Landkreis
+  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises die schnellste Autostrecke mit
+  einer Radroute zu allen anderen Orten: wie viele Kilometer, Höhenmeter bergauf und Minuten die
+  Radroute mehr oder weniger braucht. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
+  (<code>place=town/village/hamlet</code>) eingetragenen Ortspunkte, jeweils an den nächsten Punkt
+  des Rad- bzw. Straßennetzes angebunden (höchstens 400&nbsp;m entfernt).</p>
+  <p><strong>Radnetz:</strong> alle Wege, die TILDA als für Räder befahrbar einstuft, mit ihrer
+  Radinfrastruktur-Kategorie. Angenommen werden etwa 18&nbsp;km/h, langsamer auf Feldwegen und
+  unbefestigtem Belag, Schieben auf Gehwegen ohne Freigabe und gegen Einbahnstraßen. Jeder Abschnitt
+  bekommt eine Belastung zwischen 0 und 1: 0 auf Radwegen, gemeinsamen Geh- und Radwegen,
+  Fahrradstraßen, verkehrsberuhigten Bereichen und Wegen ohne Autoverkehr; im Mischverkehr steigt sie
+  mit dem Tempolimit (30&nbsp;km/h: 0,1; 50&nbsp;km/h: 0,35; 70&nbsp;km/h: 0,7; ab 100&nbsp;km/h: 1).
+  Ohne erfasstes Tempolimit gilt auf Landstraßen 100&nbsp;km/h. Gemeindeverbindungsstraßen
+  (<code>highway=unclassified</code>) sind meist wenig befahren und zählen mit 60&nbsp;% dieses Werts. Schutz- und Radfahrstreifen senken die
+  Belastung auf 60–80&nbsp;% des Mischverkehrs.</p>
+  <p><strong>Regler:</strong> Die Route minimiert Fahrzeit × (1 + Regler × ${STRESS_WEIGHT} × Belastung).
+  Ganz links ist das die schnellste erlaubte Radroute; weiter rechts lohnen sich Umwege über ruhigere
+  Wege. Ab ${Math.round(CLOSE_FROM_SAFETY * 100)}&nbsp;% werden Abschnitte ab Belastung
+  ${String(CLOSED_STRESS).replace('.', ',')} (Mischverkehr ab etwa 70&nbsp;km/h) gar nicht genutzt; ein Ort, der nur
+  über solche Straßen erreichbar ist, gilt dann als nicht erreichbar.</p>
+  <p><strong>Auto:</strong> Tempolimit (sonst typischer Wert je Straßenart) mit Abschlag für Kreuzungen
+  und Kurven, Einbahnstraßen, keine Feld- und Waldwege. Kein Verkehr, keine Ampeln.</p>
+  <p><strong>Höhenmeter:</strong> Summe der Anstiege entlang der Route, aus den Mapzen/AWS Terrain
+  Tiles (etwa 13&nbsp;m Auflösung) alle 25&nbsp;m abgetastet und leicht geglättet. Die Höhenmeter werden
+  berichtet, aber bei der Routenwahl nicht vermieden. „Mehr Höhenmeter“ vergleicht mit dem Anstieg
+  der Autostrecke. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
+  <p><strong>Einschränkungen:</strong> Ein Ortspunkt ist nicht jede Adresse des Orts; bei großen Orten
+  kann die Strecke zum Ortsrand deutlich kürzer sein. Wege außerhalb des Landkreises werden bis etwa
+  4&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
 
   <h2>Grenzen der Aussagekraft</h2>
   <div class="caveat">

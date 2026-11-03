@@ -197,7 +197,31 @@ type BootOptions = {
 }
 
 export async function bootViewer(query = '', options: BootOptions = {}): Promise<ViewerPage> {
-  const html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026')
+  const detourIndex = join(viewerDir, '..', 'detour', 'index.json')
+  const detourIds = existsSync(detourIndex)
+    ? (
+        JSON.parse(readFileSync(detourIndex, 'utf8')) as { landkreise: Array<{ id: string }> }
+      ).landkreise.map((l) => l.id)
+    : []
+  const html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026', detourIds)
+  return bootPage(html, BUNDLES, query, {
+    ...options,
+    ready: (page) =>
+      page.qAll('#ranking-list li').length > 2 ||
+      Boolean(page.window.document.getElementById('load-error')?.textContent),
+  })
+}
+
+/**
+ * Boots any generated page of the viewer folder (index.html, umweg.html, …) the same way: the
+ * given bundles (built files in output/viewer) first, then the page's largest inline script.
+ */
+export async function bootPage(
+  html: string,
+  bundles: readonly string[],
+  query = '',
+  options: BootOptions & { ready?: (page: ViewerPage) => boolean } = {},
+): Promise<ViewerPage> {
   const errors: string[] = []
 
   const virtualConsole = new VirtualConsole()
@@ -293,7 +317,7 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
 
   // --- run the page the way a browser would --------------------------------------------------
   window.eval(MAPLIBRE_STUB)
-  for (const bundle of BUNDLES) window.eval(readFileSync(join(viewerDir, bundle), 'utf8'))
+  for (const bundle of bundles) window.eval(readFileSync(join(viewerDir, bundle), 'utf8'))
   const inlineScripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1] ?? '')
   const controller = inlineScripts.sort((a, b) => b.length - a.length)[0]
   if (!controller)
@@ -329,13 +353,8 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
     },
   }
 
-  await page.waitFor(
-    () =>
-      page.qAll('#ranking-list li').length > 2 ||
-      errors.length > 0 ||
-      Boolean(page.window.document.getElementById('load-error')?.textContent),
-    'the ranking list to fill',
-    60_000,
-  )
+  const ready = options.ready
+  if (ready)
+    await page.waitFor(() => ready(page) || errors.length > 0, 'the page to be ready', 60_000)
   return page
 }

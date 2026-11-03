@@ -23,6 +23,8 @@ import {
 import {
   GEMEINDE_GEOMETRY_DIR,
   PROJECT_LEAD,
+  DETOUR_DIR,
+  DETOUR_PAGE_STEM,
   STATION_AREAS_PAGE_STEM,
   VIEWER_SOURCE_REPO_URL,
 } from './constants'
@@ -38,6 +40,8 @@ import {
   dataDownloadFileName,
   excelDataDownloadFileName,
 } from './dataDownload'
+import { detourPageHtml } from './detourPage'
+import type { DetourIndexEntry } from './fetchDetourGraph'
 import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { legalPageHtml } from './legalPage'
@@ -221,7 +225,9 @@ for (const dataset of VIEWER_PASS_THROUGH_DATASETS) {
   const target = VIEWER_FILES[dataset.key]
   if (!existsSync(sourcePath)) continue
   try {
-    const data = JSON.parse(await Bun.file(sourcePath).text()) as { byId?: Record<string, unknown> }
+    const data = JSON.parse(await Bun.file(sourcePath).text()) as {
+      byId?: Record<string, unknown>
+    }
     writeFileSync(join(viewerDir, target), JSON.stringify({ byId: data.byId ?? {} }))
     process.stdout.write(
       `${dataset.label}: ${Object.keys(data.byId ?? {}).length} regions → ${viewerDir}/${target}\n`,
@@ -389,8 +395,35 @@ if (existsSync(stationsPath)) {
   process.stdout.write(`Nearest-station map: ${viewerDir}/${STATION_AREAS_PAGE_STEM}.html\n`)
 }
 
+// Unlisted detour map: needs output/detour/index.json + one graph per Landkreis
+// (bun run bike-share-map:detour-graph -- --landkreis relation/…).
+const detourIndexPath = join(outputRoot, DETOUR_DIR, 'index.json')
+const detourLandkreise: DetourIndexEntry[] = existsSync(detourIndexPath)
+  ? (JSON.parse(readFileSync(detourIndexPath, 'utf8')) as { landkreise: DetourIndexEntry[] })
+      .landkreise
+  : []
+if (detourLandkreise.length) {
+  symlinkOutputFile(join(outputRoot, DETOUR_DIR), join(viewerDir, DETOUR_DIR))
+  writeFileSync(
+    join(viewerDir, `${DETOUR_PAGE_STEM}.html`),
+    detourPageHtml({
+      landkreise: detourLandkreise,
+      dataBaseHref: `./${DETOUR_DIR}/`,
+      routingScriptHref: './detourRouting.js',
+      dataDateLabel,
+      methodikHref: './methodik.html',
+      viewerHref: './index.html',
+    }),
+    'utf8',
+  )
+  process.stdout.write(
+    `Detour map: ${viewerDir}/${DETOUR_PAGE_STEM}.html (${detourLandkreise.map((l) => l.name).join(', ')})\n`,
+  )
+}
+
 const bundleTargets = [
   { entry: 'statsClassSums.bundle.ts', name: 'statsClassSums.js' },
+  { entry: 'detourRouting.bundle.ts', name: 'detourRouting.js' },
   { entry: 'regionNavigation.bundle.ts', name: 'regionNavigation.js' },
   { entry: 'neighborView.bundle.ts', name: 'neighborView.js' },
   { entry: 'regionSearch.bundle.ts', name: 'regionSearch.js' },
@@ -428,7 +461,11 @@ for (const workerEntry of ['neighbors.worker.ts', 'neighborsBuild.worker.ts'] as
 
 writeFileSync(
   join(viewerDir, 'index.html'),
-  generateViewerHtml(new Date().toISOString(), dataDateLabel),
+  generateViewerHtml(
+    new Date().toISOString(),
+    dataDateLabel,
+    detourLandkreise.map((l) => l.id),
+  ),
   'utf8',
 )
 

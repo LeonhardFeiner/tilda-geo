@@ -7,6 +7,7 @@ import {
   DEFAULT_OVERLAY_ROAD_MIN_ZOOM_FULL,
   DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR,
   DEFAULT_ROAD_OVERLAY_COLOR,
+  DETOUR_PAGE_STEM,
   OVERLAY_LINE_MIN_ZOOM_LIMITS,
   OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS,
   TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
@@ -18,6 +19,7 @@ import {
   UNFALLATLAS_YEAR,
   VIEWER_FILES,
 } from './constants'
+import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
@@ -25,7 +27,6 @@ import {
   ROAD_CLASS_LABELS,
   ROAD_CLASS_ORDER,
 } from './statsClassSums'
-import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
 
 // Bottom-sheet ("phone") layout: narrow screens, short ones (a phone held sideways is wide but
@@ -39,7 +40,12 @@ const DESKTOP_MEDIA =
   '(min-width: 769px) and (min-height: 501px) and (pointer: fine), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: none)'
 
-export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
+export function generateViewerHtml(
+  generatedAt: string,
+  dataDateLabel = '',
+  /** Landkreise with a detour-map graph (output/detour/index.json); their Gemeinden link to it. */
+  detourLandkreisIds: readonly string[] = [],
+) {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
   )
@@ -95,6 +101,8 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
     regiostarUrl: v(`./${VIEWER_FILES.regiostar}`),
     busyRoadsUrl: v(`./${VIEWER_FILES.busyRoads}`),
     historyUrl: v(`./${VIEWER_FILES.history}`),
+    detourPageUrl: `./${DETOUR_PAGE_STEM}.html`,
+    detourLandkreise: detourLandkreisIds,
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -6749,6 +6757,20 @@ export function generateViewerHtml(generatedAt: string, dataDateLabel = '') {
           else neighborButton.disabled = false;
         });
         links.appendChild(neighborButton);
+      }
+      // Detour map: only for Landkreise that have a routing graph.
+      const detourLandkreis =
+        String(p.level) === '8' ? String(p.landkreis_id ?? '') : String(p.level) === '6' ? String(p.id) : '';
+      if (detourLandkreis && CONFIG.detourLandkreise.includes(detourLandkreis)) {
+        const detour = document.createElement('a');
+        detour.className = 'region-detail-osm-edit';
+        detour.id = 'region-detail-detour';
+        detour.href =
+          CONFIG.detourPageUrl + '?lk=' + encodeURIComponent(detourLandkreis) +
+          (String(p.level) === '8' ? '&gemeinde=' + encodeURIComponent(p.id) : '');
+        detour.textContent = 'Umwege per Rad zu den Nachbarorten';
+        detour.title = 'Wie viel länger eine verkehrsarme Radroute als die schnellste Autostrecke ist';
+        links.appendChild(detour);
       }
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');

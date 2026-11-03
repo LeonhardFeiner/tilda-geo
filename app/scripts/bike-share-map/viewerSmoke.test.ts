@@ -524,4 +524,27 @@ describe('viewer smoke test (page from source, jsdom)', () => {
     },
     TIMEOUT,
   )
+
+  test(
+    'a Gemeinde in a Landkreis with a routing graph links to the detour map; others do not',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      const link = p.q<HTMLAnchorElement>('#region-detail-detour')
+      expect(link.getAttribute('href')).toBe(
+        `./umweg.html?lk=relation%2F62371&gemeinde=${encodeURIComponent(SCHWEITENKIRCHEN)}`,
+      )
+      p.close()
+      // Landkreis Freising (no graph): no link.
+      page = await bootViewer(
+        '?gebiet=relation/2145268&untergebiet=lk:relation/62633&darstellung=gemeinden&region=relation/30015',
+      )
+      const q = page
+      await q.waitFor(() => !q.q('#region-detail').hidden, 'the region card')
+      expect(q.window.document.getElementById('region-detail-detour')).toBeNull()
+      expect(q.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
 })
