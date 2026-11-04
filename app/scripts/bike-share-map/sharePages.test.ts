@@ -238,6 +238,47 @@ describe('shareHeadline / shareDescription', () => {
   test('description omits the peer sentence when there is no demographics match', () => {
     expect(shareDescription(sk, '12.09.2026')).not.toContain('vergleichbaren Gemeinden')
   })
+
+  test('good or unassessable data quality changes nothing', () => {
+    const good = {
+      ...sk,
+      quality: { level: 'good' as const, unclearKm: 0.2, bikeKm: 5.2, unclearShare: 0.04 },
+    }
+    expect(shareHeadline(good)).toBe(shareHeadline(sk))
+    expect(shareDescription(good, '12.09.2026')).toBe(shareDescription(sk, '12.09.2026'))
+    expect(shareDescription({ ...sk, quality: null }, '12.09.2026')).not.toContain('Datenlage')
+  })
+
+  test('unclear tagging drops "nur" and adds the viewer-worded caveat, keeping the gap', () => {
+    const poor = {
+      ...sk,
+      quality: { level: 'poor' as const, unclearKm: 2.3, bikeKm: 5.2, unclearShare: 0.442 },
+    }
+    expect(shareHeadline(poor)).toBe(
+      'Schweitenkirchen: 1,6 % Radinfra – letzter Platz im Landkreis Pfaffenhofen an der Ilm',
+    )
+    const text = shareDescription(poor, '12.09.2026')
+    expect(text).toContain('fehlen rund')
+    expect(text).toContain(
+      'Datenlage unsicher: 44 % der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig getaggt.',
+    )
+    expect(text).toMatch(/getaggt\. Daten: OpenStreetMap, Stand 12\.09\.2026\.$/)
+    const mixed = {
+      ...sk,
+      quality: { level: 'mixed' as const, unclearKm: 1, bikeKm: 5.2, unclearShare: 0.19 },
+    }
+    expect(shareDescription(mixed, '12.09.2026')).toContain('Datenlage mittel: 19 %')
+  })
+
+  test('"kaum erfasst" suppresses the km gap and says the infra may just be unmapped', () => {
+    const sparse = { ...sk, quality: { level: 'sparse' as const, bikeKm: 0.3, roadKm: 316.9 } }
+    expect(shareHeadline(sparse)).not.toContain('nur')
+    const text = shareDescription(sparse, '12.09.2026')
+    expect(text).not.toContain('fehlen rund')
+    expect(text).toContain('Median:')
+    expect(text).toContain('Datenlage: kaum Radinfrastruktur erfasst')
+    expect(text).toContain('in OpenStreetMap noch fehlt')
+  })
 })
 
 describe('slugForId / shareRedirectParams', () => {
@@ -328,6 +369,27 @@ describe('shareStubHtml / shareOgSvg', () => {
     const svg = shareOgSvg(withPeer)
     expect(svg).toContain('Vergleichbare Gemeinden bundesweit')
     expect(svg).toContain('Platz 340 von 412')
+  })
+
+  test('og image carries a data-quality line only for shaky data', () => {
+    expect(shareOgSvg(sk)).not.toContain('Datenlage')
+    const good = {
+      ...sk,
+      quality: { level: 'good' as const, unclearKm: 0.2, bikeKm: 5.2, unclearShare: 0.04 },
+    }
+    expect(shareOgSvg(good)).not.toContain('Datenlage')
+    const poor = {
+      ...sk,
+      quality: { level: 'poor' as const, unclearKm: 2.3, bikeKm: 5.2, unclearShare: 0.442 },
+    }
+    const poorSvg = shareOgSvg(poor)
+    expect(poorSvg).toContain('Datenlage unsicher (OSM)')
+    expect(poorSvg).toContain('Es fehlen rund')
+    const sparse = { ...sk, quality: { level: 'sparse' as const, bikeKm: 0.3, roadKm: 316.9 } }
+    const sparseSvg = shareOgSvg(sparse)
+    expect(sparseSvg).toContain('Datenlage unsicher (OSM): kaum Radinfrastruktur erfasst')
+    expect(sparseSvg).not.toContain('Es fehlen rund')
+    expect(sparseSvg).toContain('Median dieser Auswahl')
   })
 
   test('shrinks the name font size instead of letting a long name run off the card', () => {

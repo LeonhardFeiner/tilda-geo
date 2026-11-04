@@ -30,6 +30,7 @@ import {
 } from './sharePages'
 import {
   RADINFRA_DEFAULT_FILTER,
+  assessBikeDataQuality,
   computeFilteredLengths,
   mainRoadBreakdown,
 } from './statsClassSums'
@@ -100,6 +101,8 @@ function shareRegionInputFromFeature(f: StatsFeature): ShareRegionInput | null {
     landkreisId: p.landkreis_id ? String(p.landkreis_id) : undefined,
     mainRoadPct:
       mainRoadBreakdown(p.road_length_by_authority, p.bikelane_length_by_road)?.pct ?? null,
+    // Same inputs as the viewer's "Datenlage" note (renderRegionQuality in generateViewerHtml.ts).
+    quality: assessBikeDataQuality(p.road_length, p.bikelane_length),
   }
 }
 

@@ -6,7 +6,7 @@ import {
   type ViewBenchmarkStat,
 } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
-import { formatGapKm, formatStatPctUi } from './statsClassSums'
+import { type BikeDataQuality, formatGapKm, formatStatPctUi } from './statsClassSums'
 
 /**
  * Per-region share pages: a static `r/<slug>.html` stub per Gemeinde/Landkreis/Bundesland that
@@ -26,6 +26,12 @@ export type ShareRegionInput = {
   landkreisId?: string
   /** Share of main roads with bike infra along them (per-road aggregation); absent on old data. */
   mainRoadPct?: number | null
+  /**
+   * OSM data quality as the viewer's "Datenlage" note assesses it (assessBikeDataQuality);
+   * null/undefined when there is too little bike infra to judge. Anything but `good` softens
+   * the headline and adds a caveat to the description and the OG card.
+   */
+  quality?: BikeDataQuality | null
 }
 
 export type ShareGroupKind =
@@ -186,9 +192,34 @@ export function groupLocationPhrase(
   return s.mixedGroup ? 'unter den Ländern einschließlich der Stadtstaaten' : 'in Deutschland'
 }
 
+/** `good` and "not assessable" need no caveat; everything else does. */
+export function shareQualityUncertain(s: Pick<ShareRegionSummary, 'quality'>) {
+  return !!s.quality && s.quality.level !== 'good'
+}
+
+/** The viewer shows no gap for "kaum erfasst": the km may simply be missing from OSM. */
+function gapIsMeaningful(s: Pick<ShareRegionSummary, 'behind' | 'quality'>) {
+  return s.behind && s.quality?.level !== 'sparse'
+}
+
+/**
+ * The caveat sentence of the description, worded like the viewer's "Datenlage" note; empty for
+ * good data.
+ */
+export function shareQualitySentence(s: Pick<ShareRegionSummary, 'quality'>) {
+  const q = s.quality
+  if (!q || q.level === 'good') return ''
+  if (q.level === 'sparse') {
+    return ' Datenlage: kaum Radinfrastruktur erfasst – das kann heißen, dass es kaum welche gibt, oder dass sie in OpenStreetMap noch fehlt.'
+  }
+  const label = q.level === 'mixed' ? 'mittel' : 'unsicher'
+  return ` Datenlage ${label}: ${Math.round(q.unclearShare * 100)} % der erfassten Radinfrastruktur sind in OpenStreetMap nicht eindeutig getaggt.`
+}
+
 export function shareHeadline(s: ShareRegionSummary) {
   const pct = formatStatPctUi(s.bikeSharePct)
-  const prefix = s.behind ? 'nur ' : ''
+  // "nur" judges; with shaky data the number is reported, not judged.
+  const prefix = s.behind && !shareQualityUncertain(s) ? 'nur ' : ''
   return `${s.name}: ${prefix}${pct} % Radinfra – ${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
 }
 
@@ -215,11 +246,13 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
       : ''
   const base = `In ${s.name} kommen auf 100 km Straße ${pct} km Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
-  if (s.behind) {
+  const qualitySentence = shareQualitySentence(s)
+  const tail = `${peerSentence}${qualitySentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+  if (gapIsMeaningful(s)) {
     const gapKm = formatGapKm(s.gapKm)
-    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm}.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm}.${tail}`
   }
-  return `${base} Median: ${median} %.${peerSentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
+  return `${base} Median: ${median} %.${tail}`
 }
 
 export function slugForId(id: string) {
@@ -343,7 +376,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const accent = s.behind ? '#ff6b5b' : '#7ee787'
   const bg = s.behind ? '#3a1414' : '#0d3b2e'
   const rankLineText = `${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
-  const subLineText = s.behind
+  const subLineText = gapIsMeaningful(s)
     ? `Es fehlen rund ${formatGapKm(s.gapKm)} bis ins Mittelfeld (Median ${formatStatPctUi(s.medianPct)} %)`
     : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
   const peer = s.peerGroup
@@ -362,6 +395,14 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const peerLine = peerLineText
     ? `<text x="60" y="512" font-family="Arial, sans-serif" font-size="${peerSize}" fill="#9fc7ba">${escapeHtml(peerLineText)}</text>`
     : ''
+  const qualityLineText = shareQualityUncertain(s)
+    ? s.quality?.level === 'sparse'
+      ? 'Datenlage unsicher (OSM): kaum Radinfrastruktur erfasst'
+      : 'Datenlage unsicher (OSM): nicht eindeutig getaggte Radwege'
+    : ''
+  const qualityLine = qualityLineText
+    ? `<text x="60" y="550" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="#f2c56b">${escapeHtml(qualityLineText)}</text>`
+    : ''
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${bg}" />
   <text x="60" y="110" font-family="Arial, sans-serif" font-size="${nameSize}" font-weight="700" fill="#ffffff">${name}</text>
@@ -374,6 +415,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   <text x="60" y="410" font-family="Arial, sans-serif" font-size="${rankSize}" font-weight="600" fill="#ffffff">${rankLine}</text>
   <text x="60" y="458" font-family="Arial, sans-serif" font-size="${subSize}" fill="#cfe8dd">${subLine}</text>
   ${peerLine}
+  ${qualityLine}
   <text x="60" y="580" font-family="Arial, sans-serif" font-size="21" fill="#8fb9ab">Radinfra-Vergleich · Daten: OpenStreetMap</text>
 </svg>`
 }

@@ -11,6 +11,7 @@ import {
   type StructuralModelPrediction,
   structuralModelInputs,
 } from './rankingDisplay'
+import { COUNTING_VERSION } from './snapshotHistory'
 import {
   assessBikeDataQuality,
   computeFilteredLengths,
@@ -173,6 +174,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
     '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte kräftige Farbe), sonst 0',
   modell_begrenzt:
     '1, wenn das lineare Modell rechnerisch unter 0 % lag und die Erwartung auf 0 % gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0',
+  zaehlversion:
+    'Zählversion der Längenmessung (siehe Methodik „Version und Zitierweise“); OSM-Datenstand = Datum im Dateinamen',
   hinweise:
     'Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt, das Straßennetz ist sehr klein)',
 } as const
@@ -394,6 +397,7 @@ export function buildDataDownloadRow(
     modell_abweichung_pp: round(model?.diffPct, 2),
     modell_ausserhalb_1se: model ? (model.isWithin1Se ? 0 : 1) : null,
     modell_begrenzt: model ? (model.clamped ? 1 : 0) : null,
+    zaehlversion: COUNTING_VERSION,
     hinweise: roadKm > 0 && bikeKm > roadKm ? 'anteil_ueber_100' : null,
   }
 }

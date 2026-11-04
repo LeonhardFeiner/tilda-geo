@@ -1,4 +1,6 @@
-import { UNFALLATLAS_YEAR } from './constants'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { SHARE_PAGE_BASE_URL, UNFALLATLAS_YEAR } from './constants'
 import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
 import {
   LANDKREIS_PEER_LABELS,
@@ -9,6 +11,7 @@ import {
 import { CLOSE_FROM_SAFETY, CLOSED_STRESS, STRESS_WEIGHT } from './detourRouting'
 import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
+import { COUNTING_VERSION } from './snapshotHistory'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
 export type MethodologyPageInput = {
@@ -25,7 +28,70 @@ export type MethodologyPageInput = {
   viewerHref: string
   /** The per-region CSV written by buildViewer, or null when the build had no stats. */
   dataDownload?: { href: string; excelHref: string; rowCount: number } | null
+  /** ISO day the expectation model was fitted; defaults to the header of the generated config. */
+  modelFitDate?: string | null
+  /** Public URL of the viewer, for the citation line. */
+  siteUrl?: string
 }
+
+/**
+ * fitExtendedModel.ts stamps "Fitted on YYYY-MM-DD" into the header of the generated config; the
+ * config itself carries no date field. Null when the file cannot be read.
+ */
+export function readModelFitDate(): string | null {
+  try {
+    const src = readFileSync(
+      fileURLToPath(new URL('./structuralModelConfigs.generated.ts', import.meta.url)),
+      'utf8',
+    )
+    return /Fitted on (\d{4}-\d{2}-\d{2})/.exec(src)?.[1] ?? null
+  } catch {
+    return null
+  }
+}
+
+const DE_MONTHS = [
+  'Januar',
+  'Februar',
+  'März',
+  'April',
+  'Mai',
+  'Juni',
+  'Juli',
+  'August',
+  'September',
+  'Oktober',
+  'November',
+  'Dezember',
+]
+
+/** "2026-11-03" → "03.11.2026"; anything else is passed through. */
+export function formatIsoDateDe(iso: string | null | undefined) {
+  const m = iso && /^(\d{4})-(\d{2})-(\d{2})/.exec(iso)
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : (iso ?? null)
+}
+
+/** "share-2026-10" → "Oktober 2026" (the month a counting version was introduced). */
+export function countingVersionMonth(version: string) {
+  const m = /(\d{4})-(\d{2})$/.exec(version)
+  const month = m ? DE_MONTHS[Number(m[2]) - 1] : undefined
+  return m && month ? `${month} ${m[1]}` : version
+}
+
+/**
+ * What each counting version denotes, newest first. A new entry whenever COUNTING_VERSION in
+ * snapshotHistory.ts is bumped; the version string names the month it was introduced.
+ */
+export const COUNTING_VERSION_CHANGES: ReadonlyArray<{ version: string; text: string }> = [
+  {
+    version: 'share-2026-10',
+    text:
+      'Längen werden an Gemeinde- und Kreisgrenzen anteilig aufgeteilt (ein Weg zählt in jedem Gebiet ' +
+      'mit dem Teil seiner Länge, der dort liegt) und nicht mehr auf ganze Kilometer gerundet. ' +
+      'Zählschema wie radinfra.de, aber für alle Verwaltungsebenen. Zeitvergleiche werden nur ' +
+      'zwischen Datenständen derselben Zählversion gezeigt.',
+  },
+]
 
 const OSM_TAGGING_URL = 'https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur'
 const TILDA_URL = 'https://tilda-geo.de'
@@ -128,6 +194,11 @@ export function methodologyPageHtml(input: MethodologyPageInput): string {
           maximumFractionDigits: 1,
         })
 
+  const modelFitDateLabel = formatIsoDateDe(
+    input.modelFitDate === undefined ? readModelFitDate() : input.modelFitDate,
+  )
+  const siteUrl = input.siteUrl ?? SHARE_PAGE_BASE_URL
+
   const nationalBlock = national
     ? `<p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>${national}&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: ${input.dataDateLabel}.</p>`
     : ''
@@ -198,6 +269,7 @@ ${siteIconHeadLinks()}
   h1 { font-size: 1.7rem; line-height: 1.25; margin: 0 0 4px; }
   .sub { color: #5c6560; margin: 0 0 24px; }
   h2 { font-size: 1.2rem; margin: 34px 0 8px; border-top: 1px solid #e2e4e0; padding-top: 22px; }
+  h3 { font-size: 1.02rem; margin: 18px 0 6px; }
   p { margin: 0 0 12px; }
   ul { margin: 0 0 14px; padding-left: 1.3em; }
   li { margin: 3px 0; }
@@ -246,7 +318,7 @@ ${siteIconHeadLinks()}
     `<strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.`,
     `<strong>Gemeindefinanzen, Bevölkerungsentwicklung, Pendeln, Erreichbarkeit:</strong> <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> des Bundes – Steuereinnahmekraft je Einwohner (2024), Bevölkerungsentwicklung 2019–2024, mittlere Pendeldistanz und Anteil der Einwohner an Haltestellen mit mindestens 20 Abfahrten am Tag (beide je Gemeindeverband) sowie Pkw-Fahrzeiten zur nächsten Grundschule, weiterführenden Schule und zum Supermarkt (Thünen-Erreichbarkeitsmodell). Kreise und Länder: einwohnergewichtetes Mittel ihrer Gemeinden.`,
     `<strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.`,
-    `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit.`,
+    `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit. Radunfälle mit Personenschaden werden je 10.000 Einwohner angegeben; das ist kein Risikomaß, weil das Radverkehrsaufkommen unbekannt ist – wo mehr Rad gefahren wird, gibt es bei gleichem Risiko mehr Unfälle.`,
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}
 
@@ -265,7 +337,10 @@ ${siteIconHeadLinks()}
   Straßenlänge – auch selbstständige Wege abseits von Straßen (z.&nbsp;B. durch Felder oder Parks)
   zählen mit. Längen werden je Fahrtrichtung gezählt: Eine Straße mit Gegenverkehr zählt doppelt,
   ebenso ein Zweirichtungsradweg; ein Radfahrstreifen auf jeder Seite zählt je Seite einfach.
-  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%.
+  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%; zwei
+  Zweirichtungsradwege, einer auf jeder Seite, entsprechen 200&nbsp;%. Werte über 100&nbsp;% kommen
+  deshalb vor, vor allem bei sehr kleinen Straßennetzen; in der CSV sind sie mit
+  <code>hinweise=anteil_ueber_100</code> gekennzeichnet.
   Ein Weg, der über eine Gemeinde- oder Kreisgrenze führt, zählt auf jeder Seite mit dem Teil seiner
   Länge, der dort liegt.</p>
 
@@ -330,7 +405,8 @@ ${siteIconHeadLinks()}
   Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen hat andere Voraussetzungen als eine flache
   Küstengemeinde in Schleswig-Holstein. Damit Gemeinden unter ähnlichen Bedingungen vergleichbar
   werden, schätzt ein <strong>multivariates Regressionsmodell</strong> für jede Gemeinde einen
-  statistischen Erwartungswert. Es beschreibt Zusammenhänge, keine Ursachen.</p>
+  statistischen Erwartungswert. Es beschreibt Zusammenhänge, keine Ursachen. Die Miete kann selbst
+  Folge guter Radinfrastruktur sein; ihr Beitrag ist deshalb kein ursächlicher Faktor.</p>
 
   <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
   Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
@@ -463,6 +539,24 @@ ${siteIconHeadLinks()}
   </div>
 
   ${downloadSection}
+
+  <h2 id="version">Version und Zitierweise</h2>
+  <p>Die Zahlen hängen von drei Ständen ab, die sich unabhängig voneinander ändern:</p>
+  ${li([
+    `<strong>Zählversion:</strong> <code>${COUNTING_VERSION}</code> – wie Längen gemessen werden (siehe Änderungen unten).`,
+    `<strong>OpenStreetMap-Daten:</strong> Stand ${input.dataDateLabel}.`,
+    `<strong>Erwartungswert-Modell:</strong> ${modelFitDateLabel ? `geschätzt am ${modelFitDateLabel}` : 'Schätzdatum unbekannt'} an den damals aktuellen Daten.`,
+  ])}
+  <p>Vorgeschlagene Zitierweise:</p>
+  <p><code>Radinfra-Vergleich, Zählversion ${COUNTING_VERSION}, OSM-Daten vom ${input.dataDateLabel}${modelFitDateLabel ? `, Modell vom ${modelFitDateLabel}` : ''}, ${siteUrl}, abgerufen am [Datum].</code></p>
+  <p>Die Seite zeigt immer nur den aktuellen Stand; ältere Stände werden nicht vorgehalten. Wer Werte
+  zitiert, speichert sich die CSV (Spalte <code>zaehlversion</code>) und notiert das Abrufdatum.</p>
+  <h3>Änderungen</h3>
+  ${li(
+    COUNTING_VERSION_CHANGES.map(
+      (c) => `<code>${c.version}</code> (${countingVersionMonth(c.version)}): ${c.text}`,
+    ),
+  )}
 
   <h2>Fehler gefunden? Mitmachen.</h2>
   <p>Wenn ein Radweg fehlt oder eine Straße falsch erfasst ist, lässt sich das direkt in
