@@ -45,7 +45,7 @@ current export, so run the export first.
 
    | Needs the DB                                                                                                                                           | Needs only the network (cached in `cache/`)                                                     |
    | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
-   | `calmed-roads`, `mapping-completeness`, `transit-stop-counts`, `terrain-flatness`, `highway-distance`, `traffic-volumes`, `stations`, `station-access` | `gemeinde-demographics`, `zensus-housing`, `car-density`, `accidents`, `commuters`, `regiostar` |
+   | `calmed-roads`, `mapping-completeness`, `transit-stop-counts`, `terrain-flatness`, `highway-distance`, `traffic-volumes`, `stations`, `station-access` | `gemeinde-demographics`, `zensus-housing`, `car-density`, `accidents`, `commuters`, `regiostar`, `deutschlandatlas` |
 
    Then `bun run bike-share-map:populate-context` (needs the DB) for kreisfreie Städte, Kreise and
    Länder. After `stations`, also rerun `routing/station_departures.py`.

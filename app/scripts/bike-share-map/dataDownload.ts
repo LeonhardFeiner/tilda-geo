@@ -62,6 +62,15 @@ export type DataDownloadContext = {
     sharePct?: number
   }>
   regiostar?: ById<{ r7?: number }>
+  atlas?: ById<{
+    taxPerCapita?: number
+    popGrowthPct?: number
+    commuteKm?: number
+    transitPct?: number
+    primarySchoolMin?: number
+    secondarySchoolMin?: number
+    supermarketMin?: number
+  }>
   /** Kreis-level regions with no Gemeinde inside: kreisfreie Städte (kreisfreieIdsOf). */
   kreisfreieIds?: Set<string>
   /** Summed predictions for Kreise, Bezirke, Gemeindeverbände (buildModelAggregates). */
@@ -135,6 +144,13 @@ export const DATA_DOWNLOAD_COLUMNS = {
   eigentuemerquote_pct: `${L.ownerOccupier}: vom Eigentümer bewohnte Wohnungen, %`,
   neubau_ab_2000_pct: `${L.newBuild}: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später (Zensus 2022), %`,
   raumtyp_regiostar7: `${L.regioStar} (BMDV/BBSR, Gebietsstand 2020): 71 Metropole, 72 Regiopole/Großstadt, 73 Mittelstadt/städtischer Raum, 74 kleinstädtisch/dörflich (alle Stadtregion); 75 zentrale Stadt, 76 städtischer Raum, 77 kleinstädtisch/dörflich (alle ländliche Region). Nur Gemeinden und kreisfreie Städte`,
+  steuereinnahmekraft_eur_je_ew: `${L.taxPerCapita} 2024, € (Realsteuervergleich, via Deutschlandatlas); Kreise und Länder: einwohnergewichtet`,
+  bevoelkerung_entwicklung_pct_jahr: `${L.popGrowth}: mittlere Veränderung der Einwohnerzahl 2019–2024, % pro Jahr (Deutschlandatlas)`,
+  pendeldistanz_km: `${L.commuteKm} der sozialversicherungspflichtig Beschäftigten am Wohnort 2024, km; Wert des Gemeindeverbands (Deutschlandatlas)`,
+  haltestelle_gut_bedient_pct: `${L.transitServed}: Anteil der Einwohner höchstens 600 m (Bahnhof 1.200 m) von einer Haltestelle mit ≥ 20 Abfahrten am Tag, %; Wert des Gemeindeverbands (Deutschlandatlas)`,
+  grundschule_pkw_min: `${L.primarySchool}: mittlere Pkw-Fahrzeit zur nächsten Grundschule, min (Thünen-Erreichbarkeitsmodell, via Deutschlandatlas)`,
+  sek1_schule_pkw_min: `${L.secondarySchool}: mittlere Pkw-Fahrzeit zur nächsten Schule mit Sekundarstufe I, min (dito)`,
+  supermarkt_pkw_min: `${L.supermarket}: mittlere Pkw-Fahrzeit zum nächsten Supermarkt oder Discounter, min (dito)`,
   pkw_je_1000_ew: `${L.carDensity}: Pkw je 1.000 Einwohner (Statistik FZ 3)`,
   verkehrsberuhigt_pct: `${L.calmedShare}: Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %`,
   spielstrassen_pct:
@@ -296,6 +312,7 @@ export function buildDataDownloadRow(
   const terrain = ctx.terrain?.[id]
   const stationM = ctx.transit?.[id]?.avgDistanceToStationM
   const zensus = ctx.zensus?.[id]
+  const atlas = ctx.atlas?.[id]
   const rent = zensus?.rentPerM2
   const cars = ctx.cars?.[id]?.carsPer1000
   const calmed = ctx.calmed?.[id]
@@ -353,6 +370,13 @@ export function buildDataDownloadRow(
     eigentuemerquote_pct: round(zensus?.ownerOccupierPct, 1),
     neubau_ab_2000_pct: round(zensus?.newBuildSharePct, 1),
     raumtyp_regiostar7: ctx.regiostar?.[id]?.r7 ?? null,
+    steuereinnahmekraft_eur_je_ew: round(atlas?.taxPerCapita, 0),
+    bevoelkerung_entwicklung_pct_jahr: round(atlas?.popGrowthPct, 2),
+    pendeldistanz_km: round(atlas?.commuteKm, 1),
+    haltestelle_gut_bedient_pct: round(atlas?.transitPct, 1),
+    grundschule_pkw_min: round(atlas?.primarySchoolMin, 1),
+    sek1_schule_pkw_min: round(atlas?.secondarySchoolMin, 1),
+    supermarkt_pkw_min: round(atlas?.supermarketMin, 1),
     pkw_je_1000_ew: round(cars, 1),
     verkehrsberuhigt_pct: round(calmed?.calmedSharePct, 1),
     spielstrassen_pct: round(calmed?.livingStreetSharePct, 1),

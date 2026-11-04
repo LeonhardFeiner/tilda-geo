@@ -9,7 +9,7 @@ import {
   dataDownloadFileName,
 } from './dataDownload'
 
-/** Every model input, for each id: the model only predicts with all eight present. */
+/** Every model input, for each id: the model only predicts with all nine present. */
 function fullModelCtx(ids: string[], density = 300): DataDownloadContext {
   const each = <T>(v: T) => Object.fromEntries(ids.map((id) => [id, v]))
   return {
@@ -20,6 +20,7 @@ function fullModelCtx(ids: string[], density = 300): DataDownloadContext {
     cars: each({ carsPer1000: 640 }),
     calmed: each({ livingStreetSharePct: 2 }),
     trafficFederal: each({ needKm: 0, coveredKm: 0, sharePct: 0 }),
+    regiostar: each({ r7: 77 }),
   }
 }
 
@@ -67,6 +68,7 @@ describe('buildDataDownloadRow', () => {
     cars: { 'relation/1': { carsPer1000: 640 } },
     calmed: { 'relation/1': { livingStreetSharePct: 2 } },
     trafficFederal: { 'relation/1': { needKm: 1.2, coveredKm: 0, sharePct: 1.5 } },
+    regiostar: { 'relation/1': { r7: 74 } },
   }
 
   it('leaves the model expectation empty while an input is missing', () => {

@@ -7,7 +7,7 @@ import {
   type UrbanizationCode,
 } from './demographicPeers'
 import { CLOSE_FROM_SAFETY, CLOSED_STRESS, STRESS_WEIGHT } from './detourRouting'
-import { STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
+import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 
@@ -36,6 +36,20 @@ const DESTATIS_URL =
 const DEGURBA_URL = 'https://ec.europa.eu/eurostat/de/web/degree-of-urbanisation'
 
 const STD_MODEL = STRUCTURAL_MODEL_CONFIGS.standard
+
+/** RegioStaR dummies of the standard model, in words: "Metropole, Regiopole/Großstadt +5,96 …". */
+function regioStarBetaList() {
+  const names: Record<keyof typeof REGIOSTAR_DUMMIES, string> = {
+    regio7172: 'Metropole, Regiopole und Großstadt',
+    regio73: 'Stadtregion, Mittelstadt und städtischer Raum',
+    regio74: 'Stadtregion, kleinstädtisch, dörflich',
+    regio75: 'ländliche Region, zentrale Stadt',
+    regio76: 'ländliche Region, städtischer Raum',
+  }
+  return (Object.keys(names) as Array<keyof typeof names>)
+    .map((k) => `${names[k]} ${beta(STD_MODEL.betas[k])}&nbsp;%-Punkte`)
+    .join(', ')
+}
 const PRIMARY_MODEL = STRUCTURAL_MODEL_CONFIGS.primary
 
 /** German number, e.g. 61,9 or 10.500. */
@@ -156,6 +170,7 @@ ${li([
   `Bevölkerungsdichte, Miete, Alter, Eigentümerquote, Baualter, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas ${UNFALLATLAS_YEAR}), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Bevölkerungsverteilung: Zensus 2022, Gitterzellen 100&nbsp;m, © Statistische Ämter des Bundes und der Länder, <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.`,
+  `Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz, Haltestellen mit dichtem Takt, Fahrzeiten zu Schule und Supermarkt: <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> (BMWSB/BBSR; Daten: Statistische Ämter des Bundes und der Länder, BBSR-Raumbeobachtung, Bundesagentur für Arbeit, Thünen-Erreichbarkeitsmodell © OpenStreetMap-Mitwirkende).`,
   `Raumtyp: Regionalstatistische Raumtypologie (RegioStaR), © Bundesministerium für Verkehr (BMDV), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.`,
   `Verkehrsmengen Bundesstraßen (bundesweit): Straßenverkehrszählung 2021, Quelle: Bundesanstalt für Straßenwesen (BASt).`,
   `Pendler: Statistik der Bundesagentur für Arbeit.`,
@@ -229,6 +244,7 @@ ${siteIconHeadLinks()}
     `<strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.`,
     `<strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.`,
     `<strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.`,
+    `<strong>Gemeindefinanzen, Bevölkerungsentwicklung, Pendeln, Erreichbarkeit:</strong> <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> des Bundes – Steuereinnahmekraft je Einwohner (2024), Bevölkerungsentwicklung 2019–2024, mittlere Pendeldistanz und Anteil der Einwohner an Haltestellen mit mindestens 20 Abfahrten am Tag (beide je Gemeindeverband) sowie Pkw-Fahrzeiten zur nächsten Grundschule, weiterführenden Schule und zum Supermarkt (Thünen-Erreichbarkeitsmodell). Kreise und Länder: einwohnergewichtetes Mittel ihrer Gemeinden.`,
     `<strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.`,
     `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit.`,
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
@@ -328,13 +344,14 @@ ${siteIconHeadLinks()}
   <ul>
     <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
     <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
-    <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle acht Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
+    <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
     <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Liegt sie innerhalb des modelltypischen Streubands (±1 SE), erscheint sie in hellen Tönen, jenseits davon kräftig. Grau bedeutet: kein Wert.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
     <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
     <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
+    <li><strong>Weitere geprüfte Merkmale (Stand November 2026):</strong> Eigentümerquote, Alters- und Baualtersstruktur, Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz und Pendlerquoten, Haltestellen mit dichtem Takt sowie die Fahrzeiten zu Schule und Supermarkt verbessern die kreuzvalidierte Vorhersage jeweils um höchstens 0,6&nbsp;Prozentpunkte R², sobald der Raumtyp im Modell ist. Sie stehen deshalb nur als Vergleichszahlen in der Detailkarte und in der CSV. Jedes weitere Merkmal macht die Faktoren-Zerlegung schwerer lesbar; die Pendlerquoten fehlen zudem für rund 5&nbsp;% der Gemeinden, die dann keinen Erwartungswert mehr hätten.</li>
   </ul>
 
   <div class="table-scroll">
@@ -391,6 +408,11 @@ ${siteIconHeadLinks()}
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
         <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
         <td class="num">${beta(STD_MODEL.betas.busyFederalSharePct)} / %-Punkt</td>
+      </tr>
+      <tr>
+        <td><strong>Raumtyp (RegioStaR 7)</strong></td>
+        <td>Regionalstatistische Raumtypologie des BMDV: ordnet jede Gemeinde nach Größe und zentraler Funktion und nach der Region um sie herum ein (Stadtregion oder ländliche Region). Erfasst, was die Dichte allein nicht zeigt – etwa ob ein Ort Zentrum für sein Umland ist. Je Typ ein eigener Wert, verglichen mit „ländliche Region, kleinstädtischer, dörflicher Raum“: ${regioStarBetaList()}. Gemeinden, die seit 2020 fusioniert oder umgeschlüsselt wurden, erhalten den Typ ihrer Vorgängergemeinde.</td>
+        <td class="num">je Typ</td>
       </tr>
     </tbody>
   </table>

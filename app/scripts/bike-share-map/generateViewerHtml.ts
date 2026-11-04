@@ -99,6 +99,7 @@ export function generateViewerHtml(
     trafficUrl: v(`./${VIEWER_FILES.traffic}`),
     trafficFederalUrl: v(`./${VIEWER_FILES.trafficFederal}`),
     regiostarUrl: v(`./${VIEWER_FILES.regiostar}`),
+    atlasUrl: v(`./${VIEWER_FILES.atlas}`),
     busyRoadsUrl: v(`./${VIEWER_FILES.busyRoads}`),
     historyUrl: v(`./${VIEWER_FILES.history}`),
     detourPageUrl: `./${DETOUR_PAGE_STEM}.html`,
@@ -1917,6 +1918,7 @@ export function generateViewerHtml(
     let accidentsIndex = null;
     let commutersIndex = null;
     let regiostarIndex = null;
+    let atlasIndex = null;
     let mappingIndex = null;
     let trafficIndex = null;
     let trafficFederalIndex = null;
@@ -1953,6 +1955,7 @@ export function generateViewerHtml(
         loadIndex(CONFIG.carsUrl, (data) => { carsIndex = data; }),
         loadIndex(CONFIG.calmedUrl, (data) => { calmedIndex = data; }),
         loadIndex(CONFIG.trafficFederalUrl, (data) => { trafficFederalIndex = data; }),
+        loadIndex(CONFIG.regiostarUrl, (data) => { regiostarIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return modelIndexesPromise;
     }
@@ -1966,7 +1969,7 @@ export function generateViewerHtml(
         loadIndex(CONFIG.commutersUrl, (data) => { commutersIndex = data; }),
         loadIndex(CONFIG.mappingUrl, (data) => { mappingIndex = data; }),
         loadIndex(CONFIG.trafficUrl, (data) => { trafficIndex = data; }),
-        loadIndex(CONFIG.regiostarUrl, (data) => { regiostarIndex = data; }),
+        loadIndex(CONFIG.atlasUrl, (data) => { atlasIndex = data; }),
       ]).then(rerenderSelectedRegionContext);
       return regionExtraIndexesPromise;
     }
@@ -2578,6 +2581,7 @@ export function generateViewerHtml(
           cars: carsIndex?.byId,
           calmed: calmedIndex?.byId,
           trafficFederal: trafficFederalIndex?.byId,
+          regiostar: regiostarIndex?.byId,
         }),
         bundeslandId: String(p.bundesland_id || ''),
         modelType: ms.modelType,
@@ -2895,6 +2899,8 @@ export function generateViewerHtml(
         { key: 'ownerOccupier', header: 'Eigentümerquote (%, Zensus 2022)', numeric: 'num1' },
         { key: 'newBuild', header: 'Wohnungen in Gebäuden ab Baujahr 2000 (%, Zensus 2022)', numeric: 'num1' },
         { key: 'regioStar', header: 'Raumtyp RegioStaR 7 (71 Metropole … 77 ländlich-dörflich)', numeric: false },
+        { key: 'taxPerCapita', header: 'Steuereinnahmekraft je Einwohner 2024 (€, Deutschlandatlas)', numeric: 'num0' },
+        { key: 'popGrowth', header: 'Bevölkerungsentwicklung 2019–2024 (% pro Jahr)', numeric: 'num2' },
         { key: 'carDensity', header: 'Pkw je 1.000 Einwohner (KBA)', numeric: 'num0' },
         { key: 'mappingDepth', header: 'Kartierungstiefe OSM (%)', numeric: 'pct' },
         { key: 'busyRoadsKm', header: 'Vielbefahrene Landstraßen (km, Bayern)', numeric: 'km' },
@@ -2916,6 +2922,7 @@ export function generateViewerHtml(
         { key: 'jobCentrality', header: 'Arbeitsplatzzentralität (Arbeitsorte / Wohnorte)', numeric: 'num2' },
         { key: 'employedAtWorkplace', header: 'Sozialvers. Beschäftigte am Arbeitsort (BA 2025)', numeric: 'num0' },
         { key: 'employedAtResidence', header: 'Sozialvers. Beschäftigte am Wohnort (BA 2025)', numeric: 'num0' },
+        { key: 'commuteKm', header: 'Ø Pendeldistanz der Beschäftigten am Wohnort (km, Gemeindeverband)', numeric: 'num1' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
         { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
@@ -2923,7 +2930,11 @@ export function generateViewerHtml(
           { key: 'station_' + m.key + '_km', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
           { key: 'station_' + m.key + '_within_pct', header: 'Einwohner ' + m.csv + ' in 10 min an einer Haltestelle (%)', numeric: 'num1' },
         ]),
+        { key: 'transitServed', header: 'Einwohner im Umkreis einer Haltestelle mit ≥ 20 Abfahrten/Tag (%, Gemeindeverband)', numeric: 'num1' },
         { key: 'highwayDistance', header: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße (km, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'primarySchool', header: 'Pkw-Fahrzeit zur nächsten Grundschule (min)', numeric: 'num1' },
+        { key: 'secondarySchool', header: 'Pkw-Fahrzeit zur nächsten Schule mit Sekundarstufe I (min)', numeric: 'num1' },
+        { key: 'supermarket', header: 'Pkw-Fahrzeit zum nächsten Supermarkt (min)', numeric: 'num1' },
         { key: 'elevation', header: 'Höhenlage Ø (m)', numeric: 'num0' },
         { key: 'elevation_range', header: 'Höhenspanne (m)', numeric: 'num0' },
         { key: 'areaSlope', header: 'Geländesteigung Ø (%)', numeric: 'num1' },
@@ -5564,6 +5575,17 @@ export function generateViewerHtml(
         );
       }
 
+      if (m.deltaRegion != null) {
+        // An aggregate's input is a road-weighted mean of codes: only a single type has a name.
+        const code = m.inputs.regioStar7;
+        addRow(
+          'Raumtyp (RegioStaR)',
+          Number.isInteger(code) ? RankingDisplay.REGIOSTAR7_LABELS[code] || null : 'gemischt',
+          m.deltaRegion,
+          m.deltaRegion >= 0.05 ? 'hebt Erwartung' : m.deltaRegion <= -0.05 ? 'senkt Erwartung' : 'neutral',
+        );
+      }
+
       addRow(
         'Siedlungsdichte',
         m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null,
@@ -5712,6 +5734,12 @@ export function generateViewerHtml(
     function contextMetrics() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
+        return typeof v === 'number' ? v : null;
+      };
+      // Deutschlandatlas (fetchDeutschlandatlas.ts): Gemeinde or Verband value, Kreise and Länder
+      // population-weighted.
+      const atlas = (key) => (id) => {
+        const v = atlasIndex?.byId[id]?.[key];
         return typeof v === 'number' ? v : null;
       };
       return [
@@ -5879,6 +5907,22 @@ export function generateViewerHtml(
             return typeof v === 'number' ? v : null;
           },
           format: (v) => deNumber(v, 1) + ' %',
+        },
+        {
+          key: 'taxPerCapita',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.taxPerCapita,
+          note: 'eigene Steuern der Gemeinde, 2024',
+          source: atlasIndex,
+          get: atlas('taxPerCapita'),
+          format: (v) => deNumber(Math.round(v), 0) + ' €',
+        },
+        {
+          key: 'popGrowth',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.popGrowth,
+          note: '2019–2024',
+          source: atlasIndex,
+          get: atlas('popGrowthPct'),
+          format: (v) => (v > 0 ? '+' : '') + deNumber(v, 2) + ' % pro Jahr',
         },
         {
           key: 'carDensity',
@@ -6072,6 +6116,14 @@ export function generateViewerHtml(
           },
         },
         {
+          key: 'commuteKm',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.commuteKm,
+          note: 'Beschäftigte am Wohnort, Gemeindeverband',
+          source: atlasIndex,
+          get: atlas('commuteKm'),
+          format: (v) => deNumber(v, 1) + ' km',
+        },
+        {
           key: 'stops',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.stops,
           source: transitIndex,
@@ -6095,6 +6147,14 @@ export function generateViewerHtml(
         stationAccessMetric('foot', 'Ø zu Fuß zur nächsten Haltestelle'),
         stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
         {
+          key: 'transitServed',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.transitServed,
+          note: '≥ 20 Abfahrten am Tag, Gemeindeverband',
+          source: atlasIndex,
+          get: atlas('transitPct'),
+          format: (v) => deNumber(v, 0) + ' %',
+        },
+        {
           key: 'highwayDistance',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.highwayDistance,
           note: 'einwohnergewichtet',
@@ -6104,6 +6164,30 @@ export function generateViewerHtml(
             return typeof v === 'number' ? v / 1000 : null;
           },
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
+        },
+        {
+          key: 'primarySchool',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.primarySchool,
+          note: 'Pkw, zur nächsten',
+          source: atlasIndex,
+          get: atlas('primarySchoolMin'),
+          format: (v) => deNumber(v, 1) + ' min',
+        },
+        {
+          key: 'secondarySchool',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.secondarySchool,
+          note: 'Pkw, Sekundarstufe I',
+          source: atlasIndex,
+          get: atlas('secondarySchoolMin'),
+          format: (v) => deNumber(v, 1) + ' min',
+        },
+        {
+          key: 'supermarket',
+          label: RankingDisplay.CONTEXT_METRIC_LABELS.supermarket,
+          note: 'Pkw, zum nächsten',
+          source: atlasIndex,
+          get: atlas('supermarketMin'),
+          format: (v) => deNumber(v, 1) + ' min',
         },
         {
           key: 'elevation',

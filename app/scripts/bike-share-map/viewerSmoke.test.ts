@@ -119,6 +119,8 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       const text = page.q('#region-detail-model-gap').textContent ?? ''
       expect(text).toMatch(/Summe der Erwartungswerte von \d+ Gemeinden/)
       expect(text).toMatch(/Erwartet: \d+,\d %/)
+      // A Kreis mixes RegioStaR types: the breakdown names none.
+      expect(text).toContain('Raumtyp (RegioStaR)gemischt')
       expect(page.errors).toEqual([])
     },
     TIMEOUT,
@@ -170,6 +172,8 @@ describe('viewer smoke test (page from source, jsdom)', () => {
           .qAll('#region-detail-extra .ctx-row')
           .find((row) => row.querySelector('.ctx-label')?.textContent?.startsWith(label))
       await page.waitFor(() => !!rowOf('Raumtyp'), 'the RegioStaR row')
+      // RegioStaR comes with the model inputs; the Deutschlandatlas only with the fold.
+      await page.waitFor(() => !!rowOf('Steuereinnahmekraft'), 'the Deutschlandatlas rows')
 
       const type = rowOf('Raumtyp')!
       // Schweitenkirchen: a village in the Munich region (RegioStaR 74).
@@ -184,6 +188,17 @@ describe('viewer smoke test (page from source, jsdom)', () => {
         expect(row!.querySelector('.ctx-value')?.textContent).toMatch(/^\d+,\d %/)
         expect(row!.querySelector('.ctx-track'), label).not.toBeNull()
       }
+      // Deutschlandatlas rows (Schweitenkirchen: 2.465 €/Einw., +1,17 %/Jahr, 5 min, 27,7 km).
+      const value = (label: string) =>
+        rowOf(label)?.querySelector('.ctx-value')?.firstChild?.textContent
+      expect(value('Steuereinnahmekraft')).toBe('2.465 €')
+      expect(value('Bevölkerungsentwicklung')).toBe('+1,17 % pro Jahr')
+      expect(value('Fahrzeit zur Grundschule')).toBe('5 min')
+      expect(value('Ø Pendeldistanz')).toBe('27,7 km')
+      // The type is a model input too: its own row in the breakdown.
+      expect(page.q('#region-detail-model-gap').textContent).toContain(
+        'Raumtyp (RegioStaR)Stadtregion – Kleinstädtischer, dörflicher Raum',
+      )
       expect(page.errors).toEqual([])
     },
     TIMEOUT,

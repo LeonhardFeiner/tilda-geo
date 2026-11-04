@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { decode } from '@msgpack/msgpack'
 import { VIEWER_FILES } from './constants'
+import { REGIOSTAR_DUMMIES, regioStarDummies, type RegioStarDummy } from './rankingDisplay'
 import * as TildaStats from './statsClassSums'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
@@ -52,6 +53,13 @@ const trafficFederal = (
   }
 ).byId
 
+// RegioStaR 7 type per Gemeinde (fetchRegioStar.ts), entered as dummies (rankingDisplay.ts).
+const regiostar = (
+  JSON.parse(readFileSync(join(dir, VIEWER_FILES.regiostar), 'utf8')) as {
+    byId: Record<string, { r7?: number }>
+  }
+).byId
+
 // Map Bundesland ID to Land name
 const landNames: Record<string, string> = {
   'relation/62611': 'Baden-Württemberg',
@@ -86,7 +94,7 @@ type Sample = {
   carsPer1000: number
   livingStreetSharePct: number
   busyFederalSharePct: number
-}
+} & Record<RegioStarDummy, number>
 
 const varNames = [
   'roadSlope',
@@ -97,6 +105,7 @@ const varNames = [
   'carsPer1000',
   'livingStreetSharePct',
   'busyFederalSharePct',
+  ...(Object.keys(REGIOSTAR_DUMMIES) as RegioStarDummy[]),
 ] as const
 
 // Kreisfreie Städte are municipalities, but OSM maps them only as a Kreis (level 6) with no
@@ -149,6 +158,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     const c = cars[id]
     const cl = calmed[id]
     const tf = trafficFederal[id]
+    const r7 = regiostar[id]?.r7
     const blId = String(p.bundesland_id || '')
 
     if (
@@ -166,6 +176,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
       typeof cl.livingStreetSharePct === 'number' &&
       tf &&
       typeof tf.sharePct === 'number' &&
+      typeof r7 === 'number' &&
       blId &&
       landNames[blId]
     ) {
@@ -183,6 +194,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
         carsPer1000: c.carsPer1000,
         livingStreetSharePct: cl.livingStreetSharePct,
         busyFederalSharePct: tf.sharePct,
+        ...regioStarDummies(r7),
       })
     }
   }
@@ -396,7 +408,8 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     means: Object.fromEntries(
       Object.entries(weightedMeans).map(([key, val]) => [
         key === 'stDistKm' ? 'stDist' : key,
-        Number(val.toFixed(2)),
+        // 4 digits: dummy shares (~0.1) times large betas would carry rounding into every value.
+        Number(val.toFixed(4)),
       ]),
     ),
     betas: Object.fromEntries(

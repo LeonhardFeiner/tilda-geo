@@ -95,6 +95,7 @@ export const VIEWER_FILES = {
   traffic: 'gemeinde-traffic.json',
   trafficFederal: 'gemeinde-traffic-federal.json',
   regiostar: 'gemeinde-regiostar.json',
+  atlas: 'gemeinde-atlas.json',
   busyRoads: 'busy-roads.geojson',
   history: 'history.json',
 } as const
@@ -122,6 +123,7 @@ export const VIEWER_PASS_THROUGH_DATASETS = [
     label: 'Traffic volumes on Bundesstraßen (Germany)',
   },
   { key: 'regiostar', source: 'regiostar.json', label: 'BMDV RegioStaR spatial types' },
+  { key: 'atlas', source: 'deutschlandatlas.json', label: 'Deutschlandatlas Gemeinde indicators' },
 ] as const satisfies ReadonlyArray<{
   key: keyof typeof VIEWER_FILES
   source: string

@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import {
+  REGIOSTAR_DUMMIES,
   STRUCTURAL_MODEL_CONFIGS,
   aggregateResidualStdErrorPct,
   aggregateStructuralPredictions,
@@ -249,9 +250,11 @@ describe('computeStructuralModelPrediction', () => {
       carsPer1000: 650,
       livingStreetSharePct: 2,
       busyFederalSharePct: 1,
+      regioStar7: 77,
     }
     expect(computeStructuralModelPrediction(full)).not.toBeNull()
     expect(computeStructuralModelPrediction({ ...full, rent: null })).toBeNull()
+    expect(computeStructuralModelPrediction({ ...full, regioStar7: null })).toBeNull()
   })
 
   test('flags a prediction clamped at 0 %', () => {
@@ -266,6 +269,7 @@ describe('computeStructuralModelPrediction', () => {
       carsPer1000: 900,
       livingStreetSharePct: 0,
       busyFederalSharePct: 1,
+      regioStar7: 77,
     })
     expect(res?.expectedPct).toBe(0)
     expect(res?.clamped).toBe(true)
@@ -283,19 +287,28 @@ describe('computeStructuralModelPrediction', () => {
     carsPer1000: c.means.carsPer1000,
     livingStreetSharePct: c.means.livingStreetSharePct,
     busyFederalSharePct: c.means.busyFederalSharePct,
+    // The reference type: every dummy 0, so its shift is −Σ β·mean (typeShift).
+    regioStar7: 77,
   })
+  /** What the reference type adds to an otherwise average Gemeinde. */
+  const typeShift = (c: typeof STD = STD) =>
+    (Object.keys(REGIOSTAR_DUMMIES) as Array<keyof typeof REGIOSTAR_DUMMIES>).reduce(
+      (sum, k) => sum - c.betas[k] * c.means[k],
+      0,
+    )
   const NDS = 'relation/62771'
   const HESSEN = 'relation/62650'
 
   test('returns baseline expectation when predictors are at national means', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: STD.baselinePct,
+      bikeKm: STD.baselinePct + typeShift(),
       ...atMeans(),
     })
     expect(res).not.toBeNull()
-    expect(res!.expectedPct).toBeCloseTo(STD.baselinePct, 6)
-    expect(res!.expectedKm).toBeCloseTo(STD.baselinePct, 6)
+    expect(res!.deltaRegion).toBeCloseTo(typeShift(), 6)
+    expect(res!.expectedPct).toBeCloseTo(STD.baselinePct + typeShift(), 6)
+    expect(res!.expectedKm).toBeCloseTo(STD.baselinePct + typeShift(), 6)
     expect(res!.diffPct).toBeCloseTo(0, 6)
     expect(res!.diffKm).toBeCloseTo(0, 6)
     expect(res!.behind).toBe(false)
@@ -311,11 +324,11 @@ describe('computeStructuralModelPrediction', () => {
       const landBase = STD.bundeslandBaselines[land]!
       const res = computeStructuralModelPrediction({
         roadKm: 100,
-        bikeKm: landBase,
+        bikeKm: landBase + typeShift(),
         ...atMeans(),
         bundeslandId: land,
       })
-      expect(res!.expectedPct).toBeCloseTo(landBase, 6)
+      expect(res!.expectedPct).toBeCloseTo(landBase + typeShift(), 6)
       expect(res!.deltaLand).toBeCloseTo(landBase - STD.baselinePct, 6)
     }
     // Niedersachsen sits above, Hessen below the national mean.
@@ -326,14 +339,14 @@ describe('computeStructuralModelPrediction', () => {
   test('correctly identifies whether gap is within 1 standard error ', () => {
     const within = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: STD.baselinePct + 0.5 * STD.residualStdErrorPct, // inside the band
+      bikeKm: STD.baselinePct + typeShift() + 0.5 * STD.residualStdErrorPct, // inside the band
       ...atMeans(),
     })
     expect(within!.isWithin1Se).toBe(true)
 
     const outlierAhead = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: STD.baselinePct + 2 * STD.residualStdErrorPct, // above it
+      bikeKm: STD.baselinePct + typeShift() + 2 * STD.residualStdErrorPct, // above it
       ...atMeans(),
     })
     expect(outlierAhead!.isWithin1Se).toBe(false)
@@ -341,7 +354,7 @@ describe('computeStructuralModelPrediction', () => {
 
     const outlierBehind = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: STD.baselinePct - 1.5 * STD.residualStdErrorPct, // below it
+      bikeKm: STD.baselinePct + typeShift() - 1.5 * STD.residualStdErrorPct, // below it
       ...atMeans(),
     })
     expect(outlierBehind!.isWithin1Se).toBe(false)
@@ -376,6 +389,7 @@ describe('computeStructuralModelPrediction', () => {
       carsPer1000: STD.means.carsPer1000,
       livingStreetSharePct: STD.means.livingStreetSharePct,
       busyFederalSharePct: STD.means.busyFederalSharePct,
+      regioStar7: 77,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeLessThan(0)
@@ -395,6 +409,7 @@ describe('computeStructuralModelPrediction', () => {
       carsPer1000: STD.means.carsPer1000,
       livingStreetSharePct: STD.means.livingStreetSharePct,
       busyFederalSharePct: STD.means.busyFederalSharePct,
+      regioStar7: 75,
     })
     expect(res).not.toBeNull()
     expect(res!.deltaTopo).toBeGreaterThan(0)
@@ -408,14 +423,14 @@ describe('computeStructuralModelPrediction', () => {
   test('supports primary roads model configuration', () => {
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: PRI.baselinePct,
+      bikeKm: PRI.baselinePct + typeShift(PRI),
       ...atMeans(PRI),
       modelType: 'primary',
     })
     expect(res).not.toBeNull()
     expect(res!.modelType).toBe('primary')
     expect(res!.modelName).toBe('Hauptverkehrsstraßen')
-    expect(res!.expectedPct).toBeCloseTo(PRI.baselinePct, 6)
+    expect(res!.expectedPct).toBeCloseTo(PRI.baselinePct + typeShift(PRI), 6)
     expect(res!.residualStdErrorPct).toBe(PRI.residualStdErrorPct)
     expect(res!.r2TotalPct).toBe(PRI.r2TotalPct)
     expect(res!.r2CvPct).toBe(PRI.r2CvPct)
@@ -424,14 +439,16 @@ describe('computeStructuralModelPrediction', () => {
 
   test('dynamically scales baseline and SE for custom counting filters', () => {
     const dynamicBaselines = { nationalBaselinePct: 20.0, bundeslandBaselines: { [NDS]: 25.0 } }
+    // Every coefficient scales with the level, the type effect too.
+    const shift = (typeShift() * 20.0) / STD.baselinePct
     const res = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 20.0,
+      bikeKm: 20.0 + shift,
       ...atMeans(),
       dynamicBaselines,
     })
     expect(res!.baselinePct).toBe(20.0)
-    expect(res!.expectedPct).toBeCloseTo(20.0, 6)
+    expect(res!.expectedPct).toBeCloseTo(20.0 + shift, 6)
     expect(res!.isWithin1Se).toBe(true)
     // The band scales with the level: 20 % instead of the model's national mean.
     expect(res!.residualStdErrorPct).toBeCloseTo(
@@ -441,13 +458,22 @@ describe('computeStructuralModelPrediction', () => {
 
     const resNds = computeStructuralModelPrediction({
       roadKm: 100,
-      bikeKm: 25.0,
+      bikeKm: 25.0 + shift,
       ...atMeans(),
       bundeslandId: NDS,
       dynamicBaselines,
     })
-    expect(resNds!.expectedPct).toBeCloseTo(25.0, 6)
+    expect(resNds!.expectedPct).toBeCloseTo(25.0 + shift, 6)
     expect(resNds!.deltaLand).toBeCloseTo(5.0, 6)
+  })
+
+  test('the RegioStaR type shifts the expectation by its coefficient against type 77', () => {
+    const at = (regioStar7: number) =>
+      computeStructuralModelPrediction({ roadKm: 100, bikeKm: 10, ...atMeans(), regioStar7 })!
+    expect(at(71).expectedPct - at(77).expectedPct).toBeCloseTo(STD.betas.regio7172, 6)
+    expect(at(72).expectedPct - at(77).expectedPct).toBeCloseTo(STD.betas.regio7172, 6)
+    expect(at(75).expectedPct - at(77).expectedPct).toBeCloseTo(STD.betas.regio75, 6)
+    expect(at(75).inputs.regioStar7).toBe(75)
   })
 
   test('returns null when roadKm <= 0 or all predictors are missing', () => {
@@ -497,6 +523,7 @@ describe('aggregateStructuralPredictions', () => {
       carsPer1000: 650,
       livingStreetSharePct: 2,
       busyFederalSharePct: 1,
+      regioStar7: 74,
       bundeslandId: 'relation/2145268',
     })!
 
@@ -517,7 +544,8 @@ describe('aggregateStructuralPredictions', () => {
       agg.deltaRent +
       agg.deltaCars +
       agg.deltaLiving +
-      agg.deltaBusy
+      agg.deltaBusy +
+      agg.deltaRegion
     expect(sum).toBeCloseTo(agg.expectedPct, 6)
     expect(agg.inputs.rent).toBeCloseTo((6 * 100 + 9 * 300) / 400)
     expect(agg.gemeindeCount).toBe(2)

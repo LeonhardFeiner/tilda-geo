@@ -304,9 +304,36 @@ export type StructuralModelParams = {
   carsPer1000?: number | null
   livingStreetSharePct?: number | null
   busyFederalSharePct?: number | null
+  /** RegioStaR 7 code (71–77) of the Gemeinde, fetchRegioStar.ts. */
+  regioStar7?: number | null
   bundeslandId?: string | null
   modelType?: StructuralModelType
   dynamicBaselines?: StructuralModelDynamicBaselines | null
+}
+
+/**
+ * RegioStaR 7 enters the model as one dummy per type against "Ländliche Region – kleinstädtischer,
+ * dörflicher Raum" (77, the most common type). Metropole (71: Berlin, Hamburg, München, Köln) and
+ * Regiopole/Großstadt (72) share one dummy: four Metropolen alone would just be fitted exactly.
+ */
+export const REGIOSTAR_DUMMIES = {
+  regio7172: [71, 72],
+  regio73: [73],
+  regio74: [74],
+  regio75: [75],
+  regio76: [76],
+} as const satisfies Record<string, readonly number[]>
+export type RegioStarDummy = keyof typeof REGIOSTAR_DUMMIES
+type RegioStarDummies = Record<RegioStarDummy, number>
+
+/** 0/1 per RegioStaR dummy for a RegioStaR 7 code. */
+export function regioStarDummies(code: number): RegioStarDummies {
+  return Object.fromEntries(
+    Object.entries(REGIOSTAR_DUMMIES).map(([key, codes]) => [
+      key,
+      (codes as readonly number[]).includes(code) ? 1 : 0,
+    ]),
+  ) as RegioStarDummies
 }
 
 export type StructuralModelConfig = {
@@ -325,7 +352,7 @@ export type StructuralModelConfig = {
     carsPer1000: number
     livingStreetSharePct: number
     busyFederalSharePct: number
-  }
+  } & RegioStarDummies
   betas: {
     roadSlope: number
     elevMean: number
@@ -335,7 +362,7 @@ export type StructuralModelConfig = {
     carsPer1000: number
     livingStreetSharePct: number
     busyFederalSharePct: number
-  }
+  } & RegioStarDummies
   bundeslandBaselines: Record<string, number>
   r2: {
     totalPct: number
@@ -393,6 +420,7 @@ const DELTA_KEYS = [
   'deltaCars',
   'deltaLiving',
   'deltaBusy',
+  'deltaRegion',
 ] as const
 const INPUT_KEYS = [
   'roadSlope',
@@ -403,6 +431,7 @@ const INPUT_KEYS = [
   'carsPer1000',
   'livingStreetSharePct',
   'busyFederalSharePct',
+  'regioStar7',
 ] as const
 
 /**
@@ -530,6 +559,8 @@ export type StructuralModelIndexes = {
   calmed?: ById<{ livingStreetSharePct?: number }>
   /** fetchTrafficVolumes.ts: busy open-road Bundesstraßen as % of the road network. */
   trafficFederal?: ById<{ sharePct?: number }>
+  /** fetchRegioStar.ts: RegioStaR 7 type. */
+  regiostar?: ById<{ r7?: number }>
 }
 
 /**
@@ -548,6 +579,7 @@ export function structuralModelInputs(id: string, ix: StructuralModelIndexes) {
     carsPer1000: num(ix.cars?.[id]?.carsPer1000),
     livingStreetSharePct: num(ix.calmed?.[id]?.livingStreetSharePct),
     busyFederalSharePct: num(ix.trafficFederal?.[id]?.sharePct),
+    regioStar7: num(ix.regiostar?.[id]?.r7),
   }
 }
 
@@ -563,12 +595,13 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     carsPer1000 = null,
     livingStreetSharePct = null,
     busyFederalSharePct = null,
+    regioStar7 = null,
     bundeslandId = null,
     modelType = 'standard',
     dynamicBaselines = null,
   } = params
   if (!(roadKm > 0) || typeof bikeKm !== 'number') return null
-  // The fit only used Gemeinden with all eight inputs. Filling a missing one with its mean would
+  // The fit only used Gemeinden with all nine inputs. Filling a missing one with its mean would
   // predict outside that domain, so such a Gemeinde gets no expected value at all.
   if (
     roadSlope == null ||
@@ -578,7 +611,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     rent == null ||
     carsPer1000 == null ||
     livingStreetSharePct == null ||
-    busyFederalSharePct == null
+    busyFederalSharePct == null ||
+    regioStar7 == null
   ) {
     return null
   }
@@ -638,6 +672,13 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
         (busyFederalSharePct - c.means.busyFederalSharePct)
       : 0
 
+  // Type effect relative to the mean type mix of the fitted Gemeinden, like every other factor.
+  const dummies = regioStarDummies(regioStar7)
+  const deltaRegion = (Object.keys(REGIOSTAR_DUMMIES) as RegioStarDummy[]).reduce(
+    (sum, key) => sum + c.betas[key] * scaleFactor * (dummies[key] - c.means[key]),
+    0,
+  )
+
   const rawExpectedPct =
     baselinePct +
     deltaLand +
@@ -647,7 +688,8 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     deltaRent +
     deltaCars +
     deltaLiving +
-    deltaBusy
+    deltaBusy +
+    deltaRegion
   // A linear model can go below 0 (steep, remote, cheap villages) or above 100. The share can't,
   // so it is clamped — and flagged, because the gap is then only a lower bound.
   const expectedPct = Math.max(0, Math.min(100, rawExpectedPct))
@@ -674,6 +716,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     deltaCars: carsPer1000 != null ? deltaCars : null,
     deltaLiving: livingStreetSharePct != null ? deltaLiving : null,
     deltaBusy: busyFederalSharePct != null ? deltaBusy : null,
+    deltaRegion,
     expectedPct,
     clamped,
     expectedKm,
@@ -697,6 +740,7 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
       carsPer1000,
       livingStreetSharePct,
       busyFederalSharePct,
+      regioStar7,
     },
     r2: c.r2,
   }
