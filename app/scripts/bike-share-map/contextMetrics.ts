@@ -60,3 +60,62 @@ export const REGIOSTAR7_LABELS: Record<number, string> = {
 }
 
 export type ContextMetricKey = keyof typeof CONTEXT_METRIC_LABELS
+
+/**
+ * Headings of the card's "Mehr Zahlen" list, in display order: the card sorts its rows by these
+ * groups and starts each with its title. Every metric is in exactly one group (tested).
+ */
+export const CONTEXT_METRIC_GROUPS = [
+  { title: 'Datenlage', keys: ['mappingDepth'] },
+  {
+    title: 'Vielbefahrene Straßen',
+    keys: [
+      'busyRoadsKm',
+      'busyRoadsShare',
+      'busyFederalKm',
+      'busyFederalShare',
+      'busyRoadsCovered',
+      'busyFederalCovered',
+    ],
+  },
+  {
+    title: 'Bevölkerung & Lage',
+    keys: ['density', 'regioStar', 'popGrowth', 'youth', 'senior'],
+  },
+  { title: 'Wohnen', keys: ['rent', 'vacancy', 'ownerOccupier', 'newBuild'] },
+  {
+    title: 'Arbeit, Pendeln & Finanzen',
+    keys: [
+      'jobCentrality',
+      'netCommuters',
+      'commuterRates',
+      'employedAtWorkplace',
+      'commuteKm',
+      'taxPerCapita',
+    ],
+  },
+  {
+    title: 'Verkehr & Sicherheit',
+    keys: [
+      'carDensity',
+      'calmedShare',
+      'livingShare',
+      'bikeAccidents',
+      'bikeAccidentsPer10k',
+      'bikeFatalOrSevere',
+    ],
+  },
+  {
+    title: 'Erreichbarkeit',
+    keys: [
+      'stops',
+      'stationDistance',
+      'transitServed',
+      'highwayDistance',
+      'primarySchool',
+      'secondarySchool',
+      'supermarket',
+    ],
+  },
+  { title: 'Gelände', keys: ['elevation', 'areaSlope', 'roadSlope', 'roadSteep'] },
+] as const satisfies ReadonlyArray<{ title: string; keys: readonly ContextMetricKey[] }>

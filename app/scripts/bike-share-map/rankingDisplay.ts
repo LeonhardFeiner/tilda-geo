@@ -1,6 +1,6 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
 
-export { CONTEXT_METRIC_LABELS, REGIOSTAR7_LABELS } from './contextMetrics'
+export { CONTEXT_METRIC_GROUPS, CONTEXT_METRIC_LABELS, REGIOSTAR7_LABELS } from './contextMetrics'
 import { GENERATED_STRUCTURAL_MODEL_CONFIGS } from './structuralModelConfigs.generated'
 
 export type RankingDisplayItem = { id: string }

@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { CONTEXT_METRIC_LABELS } from './contextMetrics'
+import { CONTEXT_METRIC_GROUPS, CONTEXT_METRIC_LABELS } from './contextMetrics'
 import { DATA_DOWNLOAD_COLUMNS } from './dataDownload'
 
 describe('context metric labels', () => {
@@ -21,5 +21,13 @@ describe('context metric labels', () => {
     expect(
       DATA_DOWNLOAD_COLUMNS.raumtyp_regiostar7.startsWith(CONTEXT_METRIC_LABELS.regioStar),
     ).toBe(true)
+  })
+})
+
+describe('context metric groups', () => {
+  test('put every card metric in exactly one group', () => {
+    const grouped = CONTEXT_METRIC_GROUPS.flatMap((g) => [...g.keys])
+    expect(new Set(grouped).size).toBe(grouped.length)
+    expect([...grouped].sort()).toEqual(Object.keys(CONTEXT_METRIC_LABELS).sort())
   })
 })

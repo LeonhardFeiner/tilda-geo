@@ -195,6 +195,28 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       expect(value('Bevölkerungsentwicklung')).toBe('+1,17 % pro Jahr')
       expect(value('Fahrzeit zur Grundschule')).toBe('5 min')
       expect(value('Ø Pendeldistanz')).toBe('27,7 km')
+      // Rows come in groups, each under its heading, in the order of CONTEXT_METRIC_GROUPS.
+      const headings = page.qAll('#region-detail-extra .ctx-group').map((h) => h.textContent)
+      expect(headings).toEqual([
+        'Datenlage',
+        'Vielbefahrene Straßen',
+        'Bevölkerung & Lage',
+        'Wohnen',
+        'Arbeit, Pendeln & Finanzen',
+        'Verkehr & Sicherheit',
+        'Erreichbarkeit',
+        'Gelände',
+      ])
+      const after = (heading: string) => {
+        const h = page!
+          .qAll('#region-detail-extra .ctx-group')
+          .find((x) => x.textContent === heading)
+        return h?.nextElementSibling?.querySelector('.ctx-label')?.textContent
+      }
+      expect(after('Wohnen')).toMatch(/^Ø Nettokaltmiete/)
+      expect(after('Gelände')).toMatch(/^Höhenlage/)
+      // Within a group, the order of its keys: job centrality before the tax revenue.
+      expect(after('Arbeit, Pendeln & Finanzen')).toMatch(/^Arbeitsplatzzentralität/)
       // The type is a model input too: its own row in the breakdown.
       expect(page.q('#region-detail-model-gap').textContent).toContain(
         'Raumtyp (RegioStaR)Stadtregion – Kleinstädtischer, dörflicher Raum',

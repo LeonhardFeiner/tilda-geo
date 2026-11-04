@@ -831,6 +831,10 @@ export function generateViewerHtml(
       border: 1px solid #c8d3e0; border-radius: 4px; background: #fff; width: 100%;
     }
     .ctx-row { padding: 2px 0; cursor: help; }
+    .ctx-group {
+      margin: 10px 0 2px; padding-bottom: 2px; border-bottom: 1px solid #e2e8f0;
+      font-size: 0.7rem; font-weight: 700; color: #334155;
+    }
     .ctx-hint { margin: 0 0 4px; font-size: 0.75rem; color: #475569; }
     /* Rows that unfold a scatter: a disclosure arrow and a hover state say they open something. */
     .ctx-row--plot { cursor: pointer; margin: 0 -4px; padding: 3px 4px; border-radius: 4px; }
@@ -5731,7 +5735,21 @@ export function generateViewerHtml(
       ];
     }
 
+    /** Position and group title per metric key (CONTEXT_METRIC_GROUPS, contextMetrics.ts). */
+    const CONTEXT_GROUP_OF = new Map(
+      RankingDisplay.CONTEXT_METRIC_GROUPS.flatMap((g) => g.keys.map((k) => [k, g.title])).map(
+        ([k, title], order) => [k, { title, order }],
+      ),
+    );
+
+    /** The card's context metrics in the order of CONTEXT_METRIC_GROUPS, each tagged with its group. */
     function contextMetrics() {
+      return contextMetricsUnsorted()
+        .map((m) => ({ ...m, group: CONTEXT_GROUP_OF.get(m.key) || { order: 999, title: '' } }))
+        .sort((a, b) => a.group.order - b.group.order);
+    }
+
+    function contextMetricsUnsorted() {
       const slope = (key) => (id) => {
         const v = terrainIndex?.byId[id]?.[key];
         return typeof v === 'number' ? v : null;
@@ -6344,6 +6362,7 @@ export function generateViewerHtml(
       const scopes = contextScopesFor(p, noun);
       const scope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
       regionDetailExtra.replaceChildren();
+      let lastGroupTitle = null;
       for (const metric of contextMetrics()) {
         const value = metric.get(p.id);
         if (value == null || !Number.isFinite(value)) continue;
@@ -6376,6 +6395,14 @@ export function generateViewerHtml(
           hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra je km Straße aller Vergleichsgebiete';
           regionDetailExtra.appendChild(hint);
         }
+        // A heading before the first row of each group that has a value here.
+        if (metric.group.title && metric.group.title !== lastGroupTitle) {
+          const heading = document.createElement('p');
+          heading.className = 'ctx-group';
+          heading.textContent = metric.group.title;
+          regionDetailExtra.appendChild(heading);
+        }
+        lastGroupTitle = metric.group.title;
         const row = document.createElement('div');
         row.className = 'ctx-row';
         const head = document.createElement('div');
