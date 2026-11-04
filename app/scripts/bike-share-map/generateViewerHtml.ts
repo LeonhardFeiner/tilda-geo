@@ -20,6 +20,7 @@ import {
   VIEWER_FILES,
 } from './constants'
 import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
+import { COUNTING_VERSION } from './snapshotHistory'
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
@@ -45,6 +46,12 @@ export function generateViewerHtml(
   dataDateLabel = '',
   /** Landkreise with a detour-map graph (output/detour/index.json); their Gemeinden link to it. */
   detourLandkreisIds: readonly string[] = [],
+  /**
+   * Content hash per asset (path relative to the viewer folder, e.g. "stats-core.msgpack" or
+   * "gemeinde-geometry" for the shard folder). An asset without one falls back to the build
+   * timestamp, which invalidates it on every deploy.
+   */
+  assetVersions: Readonly<Record<string, string>> = {},
 ) {
   const basemapStyles = Object.fromEntries(
     BASEMAP_OPTIONS.map((b) => [b.id, buildBasemapStyleJson(b.id)]),
@@ -64,13 +71,22 @@ export function generateViewerHtml(
 
   // Appended to every same-origin asset URL. GitHub Pages lets browsers cache for 10 minutes, so
   // without it a page loaded just before a deploy could combine an old index.html with new data.
+  // A content hash where the build supplies one, so an unchanged file (MapLibre, a data pack)
+  // stays cached across deploys.
   const assetVersion = generatedAt.replace(/\D/g, '').slice(0, 14) || '0'
-  const v = (url: string) => `${url}?v=${assetVersion}`
+  const versionOf = (url: string) => assetVersions[url.replace(/^\.\//, '')] ?? assetVersion
+  const v = (url: string) => `${url}?v=${versionOf(url)}`
 
   const config = {
     generatedAt,
     dataDateLabel,
     assetVersion,
+    // Versions the page script needs for URLs it builds itself (shards, workers).
+    assetVersions: {
+      gemeindeGeometry: versionOf(GEMEINDE_GEOMETRY_DIR),
+      neighborsBuildWorker: versionOf('neighborsBuild.worker.js'),
+      neighborsWorker: versionOf('neighbors.worker.js'),
+    },
     basemap: DEFAULT_BASEMAP,
     basemapStyles,
     basemapOptions: BASEMAP_OPTIONS.map((b) => ({
@@ -140,8 +156,21 @@ export function generateViewerHtml(
     // first paint; page zoom stays off because pinches on the panel zoom the map instead.
     try {
       const size = localStorage.getItem('radinfra-text-size');
-      if (size === '115' || size === '130') document.documentElement.style.fontSize = size + '%';
+      if (size === '115' || size === '130' || size === '150' || size === '200') {
+        document.documentElement.style.fontSize = size + '%';
+      }
     } catch (e) {}
+    // A browser too old for the page script (a SyntaxError never reaches the script's own error
+    // handler) used to get a blank map and silence. Written in ES5 so it runs anywhere.
+    window.addEventListener('error', function (event) {
+      if (window.__viewerBooted) return;
+      var el = document.getElementById('load-error');
+      if (!el || el.textContent) return;
+      el.textContent =
+        'Die Seite konnte nicht gestartet werden. Bitte einen aktuellen Browser verwenden ' +
+        '(z. B. Chrome, Firefox oder Safari ab Version 15.4) und die Seite neu laden.';
+      el.style.display = 'block';
+    });
   </script>
   ${siteIconHeadLinks()}
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
@@ -149,8 +178,8 @@ export function generateViewerHtml(
        above it has downloaded and executed. Preloading lets it start immediately, in parallel
        with everything else. crossorigin is required even same-origin: fetch() always runs in
        CORS mode, and an uncredentialed preload wouldn't be reused otherwise. -->
-  <link rel="preload" href="./${VIEWER_FILES.statsCore}?v=${assetVersion}" as="fetch" crossorigin="anonymous" />
-  <link rel="preload" href="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}" as="script" />
+  <link rel="preload" href="${v(`./${VIEWER_FILES.statsCore}`)}" as="fetch" crossorigin="anonymous" />
+  <link rel="preload" href="${v('./vendor/maplibre-gl-4.7.1/maplibre-gl.js')}" as="script" />
   <link rel="preconnect" href="https://api.maptiler.com" crossorigin />
   <link rel="preconnect" href="https://tiles.tilda-geo.de" crossorigin />
   <link rel="dns-prefetch" href="https://tile.openstreetmap.de" />
@@ -364,7 +393,7 @@ export function generateViewerHtml(
         display: none !important;
       }
       .region-search-results {
-        max-height: min(220px, calc(100dvh - 320px));
+        max-height: max(132px, min(220px, calc(100dvh - 320px)));
       }
       /* The sheet's sticky header (title + handle) is ~4.5rem tall. */
       .region-search-block { scroll-margin-top: 5rem; }
@@ -591,7 +620,7 @@ export function generateViewerHtml(
       display: block; grid-column: 1 / -1;
       color: #475569; font-style: italic; font-size: 0.75rem; padding: 2px 0;
     }
-    .ranking-divider { text-align: center; font-style: normal; color: #aaa; }
+    .ranking-divider { text-align: center; font-style: normal; color: #767676; }
     .ranking-toolbar {
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px;
       margin-bottom: 6px;
@@ -671,7 +700,7 @@ export function generateViewerHtml(
       border-radius: 8px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
       padding: 10px 12px 12px;
-      font-size: 0.75rem;
+      font-size: 0.8125rem;
       color: #333;
       touch-action: pan-y;
     }
@@ -729,7 +758,7 @@ export function generateViewerHtml(
     .region-detail-more[open] > summary { margin-bottom: 6px; }
     .region-detail-gap {
       margin: 0 0 10px; padding: 8px 10px; border-radius: 6px;
-      font-size: 0.75rem; line-height: 1.45;
+      font-size: 0.8125rem; line-height: 1.45;
     }
     .region-detail-gap[hidden] { display: none !important; }
     .region-detail-gap strong { font-weight: 700; }
@@ -757,10 +786,11 @@ export function generateViewerHtml(
       display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--model::before {
-      content: 'Erwartungswert aus Strukturdaten'; display: block;
+      content: 'Vergleich mit ähnlichen Gemeinden (statistisches Modell)'; display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .model-profile-note { display: block; margin: 2px 0 4px; font-size: 0.75rem; opacity: 0.85; }
     .model-breakdown-details {
       margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.1);
       font-size: 0.75rem;
@@ -803,7 +833,7 @@ export function generateViewerHtml(
     }
     .region-detail-quality[hidden] { display: none !important; }
     .region-detail-quality strong { font-weight: 700; color: #333; }
-    .region-detail-quality--good { border-left-color: #43a047; }
+    .region-detail-quality--good { border-left-color: #43a047; color: #475569; }
     .region-detail-quality--mixed { border-left-color: #f9a825; background: #fffaf0; }
     .region-detail-quality--poor,
     .region-detail-quality--sparse { border-left-color: #ef6c00; background: #fff4e5; color: #6b3a00; }
@@ -811,6 +841,16 @@ export function generateViewerHtml(
     .region-detail-gap--peer .region-detail-gap-headline {
       display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
+    .region-detail-gap--behind .region-detail-gap-headline::before { content: '▼ '; }
+    .region-detail-gap--ahead .region-detail-gap-headline::before { content: '▲ '; }
+    .region-detail-gap--neutral .region-detail-gap-headline::before { content: '' !important; }
+    .region-detail-gap--model .region-detail-gap-headline::before { content: '' !important; }
+    .region-detail-gap--model.region-detail-gap--behind .model-status::before { content: '▼ '; }
+    .region-detail-gap--model.region-detail-gap--ahead .model-status::before { content: '▲ '; }
+    .region-detail-gap--view .region-detail-gap-headline {
+      display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
+    }
+    .region-detail-gap--view::before,
     .region-detail-gap--peer::before {
       content: var(--peer-gap-label, 'Gemeinden mit ähnlichem Profil bundesweit'); display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
@@ -899,7 +939,7 @@ export function generateViewerHtml(
     }
     .region-detail-bar-fill { height: 100%; border-radius: 3px; }
     .region-detail-rows li.region-detail-row-excluded { opacity: 0.55; }
-    .region-detail-rows li.region-detail-row-excluded .km { color: #718096; }
+    .region-detail-rows li.region-detail-row-excluded .km { color: #64748b; }
     .region-detail-rows li.region-detail-row-excluded .region-detail-bar-fill {
       background: #b0bec5 !important; opacity: 0.4;
     }
@@ -962,6 +1002,9 @@ export function generateViewerHtml(
     @media ${PHONE_MEDIA} {
       .maplibregl-ctrl-bottom-right {
         margin-bottom: calc(var(--sheet-peek) + 8px);
+      }
+      body[data-sheet="half"] .maplibregl-ctrl-bottom-right {
+        margin-bottom: calc(56 * var(--vph, 1vh) + 8px);
       }
       body[data-sheet="full"] .maplibregl-ctrl-bottom-right {
         display: none;
@@ -1123,7 +1166,7 @@ export function generateViewerHtml(
       border-radius: 12px;
       padding: 0;
       width: min(720px, calc(100vw - 32px));
-      max-height: calc(100vh - 48px);
+      max-height: calc(100 * var(--vph, 1vh) - 48px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       background: #fff;
       color: #1f2421;
@@ -1213,7 +1256,7 @@ export function generateViewerHtml(
       border-radius: 12px;
       padding: 0;
       width: min(420px, calc(100vw - 32px));
-      max-height: calc(100vh - 48px);
+      max-height: calc(100 * var(--vph, 1vh) - 48px);
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
       background: #fff;
       color: #1f2421;
@@ -1504,6 +1547,8 @@ export function generateViewerHtml(
       #view-csv-btn-toolbar { min-height: 36px; padding-left: 12px; padding-right: 12px; }
       .ranking-mode-btn { min-height: 36px; padding-left: 12px; padding-right: 12px; }
       .region-locate { display: inline-flex; align-items: center; min-height: 44px; }
+      .map-legend-toggles label, .legend-cvd-toggle { min-height: 32px; }
+      .map-legend-toggles { gap: 4px 18px; }
       .hint { font-size: 0.75rem; }
       #share-fab::after { content: ''; position: absolute; inset: -7px; }
     }
@@ -1518,6 +1563,13 @@ export function generateViewerHtml(
   </style>
 </head>
 <body>
+  <noscript>
+    <p style="margin: 16px; font: 15px/1.5 system-ui, sans-serif; max-width: 40rem">
+      Der Radinfra-Vergleich ist eine interaktive Karte und braucht JavaScript. Ohne JavaScript
+      lesbar: <a href="./methodik.html">Methodik &amp; Datenquellen</a> und
+      <a href="./impressum.html">Impressum</a>.
+    </p>
+  </noscript>
   <main id="app-root">
     <div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur"></div>
     <div id="sheet-scrim" aria-hidden="true"></div>
@@ -1525,7 +1577,7 @@ export function generateViewerHtml(
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
     <span class="share-fab-label">Teilen &amp; Exportieren</span>
   </button>
-  <span id="copy-view-link-feedback" hidden></span>
+  <span id="copy-view-link-feedback" role="status" aria-live="polite" hidden></span>
   <button type="button" id="search-fab" class="search-fab">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3a7 7 0 0 1 5.6 11.2l5.1 5.1-1.4 1.4-5.1-5.1A7 7 0 1 1 10 3zm0 2a5 5 0 1 0 0 10 5 5 0 0 0 0-10z"/></svg>
     <span>Deine Gemeinde suchen</span>
@@ -1533,7 +1585,7 @@ export function generateViewerHtml(
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
     <div class="cml-title">Radinfra je km Straße</div>
-    <div class="cml-def" id="cml-def">km Radinfra ÷ km Straße</div>
+    <div class="cml-def" id="cml-def">km Radinfra je 100 km Straße</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
       <span id="cml-min">0 %</span>
@@ -1574,6 +1626,7 @@ export function generateViewerHtml(
         Mein Standort verwenden
       </button>
       <p class="region-locate-status" id="region-locate-status" role="status" hidden></p>
+      <p class="hint region-search-hint">Oder ein Gebiet auf der Karte anklicken.</p>
     </div>
     <details class="panel-section region-scope-block" id="region-scope-block" open>
       <summary>Gebiet &amp; Karte</summary>
@@ -1582,9 +1635,9 @@ export function generateViewerHtml(
              picks how fine the polygons in it are. The picker under "Zeige" steps one level into
              the area (Bundesland from Deutschland, Landkreis from a Bundesland). -->
         <nav class="region-breadcrumb" id="region-breadcrumb" aria-label="Gebietspfad"></nav>
-        <label for="darstellung-select">Flächen</label>
+        <label for="darstellung-select">Ebene</label>
         <select id="darstellung-select"></select>
-        <label for="map-metric-select">Färben nach</label>
+        <label for="map-metric-select">Karte zeigt</label>
         <select id="map-metric-select">
           <option value="bikeShare">Radinfra je km Straße</option>
           <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
@@ -1636,6 +1689,8 @@ export function generateViewerHtml(
           <option value="100">Normal</option>
           <option value="115">Groß</option>
           <option value="130">Sehr groß</option>
+          <option value="150">150 %</option>
+          <option value="200">200 %</option>
         </select>
         <!-- Not user-facing. Cap/outlier handling, overlay zoom levels and line colours stay as
              the state behind their URL parameters (cap, robustScale, radfarbe, strassenfarbe,
@@ -1790,6 +1845,7 @@ export function generateViewerHtml(
     </div>
     <p class="footer">
       ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
+      <a href="./methodik.html#version" title="Zählversion – so lassen sich Zahlen zitieren">Zählversion ${COUNTING_VERSION}</a> ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       <a href="./impressum.html">Impressum &amp; Datenschutz</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
@@ -1876,16 +1932,16 @@ export function generateViewerHtml(
       </button>
     </div>
     <div class="export-dialog-footer">
-      <span id="export-dialog-feedback" class="export-dialog-feedback" hidden></span>
+      <span id="export-dialog-feedback" class="export-dialog-feedback" role="status" aria-live="polite" hidden></span>
     </div>
   </dialog>
-  <script src="./statsClassSums.js?v=${assetVersion}"></script>
-  <script src="./regionNavigation.js?v=${assetVersion}"></script>
-  <script src="./statsMsgpack.js?v=${assetVersion}"></script>
-  <script src="./neighborView.js?v=${assetVersion}"></script>
-  <script src="./regionSearch.js?v=${assetVersion}"></script>
-  <script src="./rankingDisplay.js?v=${assetVersion}"></script>
-  <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=${assetVersion}"></script>
+  <script src="${v('./statsClassSums.js')}"></script>
+  <script src="${v('./regionNavigation.js')}"></script>
+  <script src="${v('./statsMsgpack.js')}"></script>
+  <script src="${v('./neighborView.js')}"></script>
+  <script src="${v('./regionSearch.js')}"></script>
+  <script src="${v('./rankingDisplay.js')}"></script>
+  <script src="${v('./vendor/maplibre-gl-4.7.1/maplibre-gl.js')}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
@@ -2093,7 +2149,7 @@ export function generateViewerHtml(
     const gemeindeGeometryLoads = new Map(); // shard key → Promise, kept so a file is fetched once
     function loadGemeindeGeometryShard(key) {
       if (!gemeindeGeometryLoads.has(key)) {
-        const load = fetch(CONFIG.gemeindeGeometryBase + key + '.msgpack?v=' + CONFIG.assetVersion)
+        const load = fetch(CONFIG.gemeindeGeometryBase + key + '.msgpack?v=' + CONFIG.assetVersions.gemeindeGeometry)
           .then(async (res) => {
             if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + key);
             const shard = StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
@@ -3135,7 +3191,7 @@ export function generateViewerHtml(
         if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
         else if (metric === 'cars') cmlTitle.textContent = 'Pkw / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
-        else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle / 10k';
+        else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle je 10.000 Einw.';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
         else cmlTitle.textContent = 'Radinfra je km Straße';
       }
@@ -3194,7 +3250,7 @@ export function generateViewerHtml(
         if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' Pkw';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
-        else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1) + ' / 10k';
+        else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1);
         else if (metric === 'commuters') cmlMax.textContent = (max > 0 ? '+' : '') + deNumber(Math.round(max), 0);
         else cmlMax.textContent = formatUiPct(max) + ' %';
       }
@@ -3216,7 +3272,7 @@ export function generateViewerHtml(
         } else if (metric === 'rent') {
           text = deNumber(val, 1) + (i === count - 1 ? ' €/m²' : '');
         } else if (metric === 'accidents') {
-          text = deNumber(val, 1) + (i === count - 1 ? ' / 10k' : '');
+          text = deNumber(val, 1);
         } else if (metric === 'commuters') {
           text = (val > 0 ? '+' : '') + deNumber(Math.round(val), 0);
         } else {
@@ -5154,10 +5210,21 @@ export function generateViewerHtml(
     function renderRegionQuality(p) {
       const q = TildaStats.assessBikeDataQuality(p.road_length, p.bikelane_length);
       regionDetailQuality.replaceChildren();
-      // Good data needs no sentence; the card only speaks up when the number is shaky.
-      if (!q || q.level === 'good') {
+      if (!q) {
         regionDetailQuality.hidden = true;
         regionDetailQuality.className = 'region-detail-quality';
+        return;
+      }
+      // Good data gets one short line too — otherwise a missing warning could mean either.
+      if (q.level === 'good') {
+        regionDetailQuality.className = 'region-detail-quality region-detail-quality--good';
+        const head = document.createElement('strong');
+        head.textContent = 'Datenlage: gut. ';
+        regionDetailQuality.append(
+          head,
+          document.createTextNode('Die Radinfrastruktur ist in OpenStreetMap eindeutig getaggt.'),
+        );
+        regionDetailQuality.hidden = false;
         return;
       }
       regionDetailQuality.className = 'region-detail-quality region-detail-quality--' + q.level;
@@ -5196,6 +5263,10 @@ export function generateViewerHtml(
       regionDetailQuality.hidden = false;
     }
 
+    function capitalizeFirst(text) {
+      return text ? text.charAt(0).toUpperCase() + text.slice(1) : text;
+    }
+
     function renderRegionGap(p) {
       const g = regionGapSummary(p);
       regionDetailGap.replaceChildren();
@@ -5205,30 +5276,41 @@ export function generateViewerHtml(
         return;
       }
       const viewLabel = viewComparisonLabel();
+      regionDetailGap.className =
+        'region-detail-gap region-detail-gap--view ' +
+        (g.behind ? 'region-detail-gap--behind' : 'region-detail-gap--ahead');
+      // The box carries the view's rank, so the meta line does not repeat it.
+      regionDetailGap.style.setProperty(
+        '--peer-gap-label',
+        "'" + capitalizeFirst(viewLabel).replace(/'/g, '’') + "'",
+      );
+      const rankInfo = rankByFeatureId.get(p.id);
+      const headline = document.createElement('span');
+      headline.className = 'region-detail-gap-headline';
+      headline.textContent =
+        (rankInfo ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' · ' : '') +
+        'Median ' +
+        formatUiPct(g.medianPct) +
+        ' %';
+      regionDetailGap.appendChild(headline);
       if (g.behind) {
-        regionDetailGap.className = 'region-detail-gap region-detail-gap--behind';
         appendGapText(
           regionDetailGap,
-          'Bis ins Mittelfeld ' +
-            viewLabel +
-            ' (Median ' +
-            formatUiPct(g.medianPct) +
-            ' %) fehlen rund ',
+          'Bis ins Mittelfeld fehlen rund ',
           TildaStats.formatGapKm(g.medianGapKm),
           ' Radinfrastruktur.',
         );
-        if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
-          regionDetailGap.appendChild(
-            document.createTextNode(
-              ' Spitze: ' + g.leaderName + ' mit ' + formatUiPct(g.leaderPct) + ' %.',
-            ),
-          );
-        }
       } else {
-        regionDetailGap.className = 'region-detail-gap region-detail-gap--ahead';
-        regionDetailGap.textContent = g.atMedian
-          ? 'Liegt im Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).'
-          : 'Liegt über dem Mittelfeld ' + viewLabel + ' (Median ' + formatUiPct(g.medianPct) + ' %).';
+        regionDetailGap.appendChild(
+          document.createTextNode(g.atMedian ? 'Im Mittelfeld.' : 'Über dem Mittelfeld.'),
+        );
+      }
+      if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
+        regionDetailGap.appendChild(
+          document.createTextNode(
+            ' Spitze: ' + g.leaderName + ' mit ' + formatUiPct(g.leaderPct) + ' %.',
+          ),
+        );
       }
       regionDetailGap.hidden = false;
     }
@@ -5406,8 +5488,8 @@ export function generateViewerHtml(
         m = { ...m, inputs: { ...m.inputs, density: densityIndex.byId[p.id] } };
       }
       const bandLabel = aggregated
-        ? 'typische Abweichung auf dieser Ebene ±'
-        : 'Streuband ±1 SE = ±';
+        ? 'übliche Streuung auf dieser Ebene ±'
+        : 'übliche Streuung ±';
 
       regionDetailModelGap.className =
         'region-detail-gap region-detail-gap--model ' +
@@ -5424,13 +5506,23 @@ export function generateViewerHtml(
         formatUiPct(m.expectedPct) +
         ' % (ca. ' +
         deNumber(Math.round(m.expectedKm), 0) +
-        ' km je Fahrtrichtung) · ' +
+        ' km je Fahrtrichtung)' +
         (aggregated
-          ? 'Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
-          : 'aus Bundesland, Gelände, Dichte, Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen');
+          ? ' · Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
+          : '');
       regionDetailModelGap.appendChild(headline);
+      if (!aggregated) {
+        const profile = document.createElement('span');
+        profile.className = 'model-profile-note';
+        profile.textContent =
+          'So viel haben Gemeinden mit gleichem Profil im Schnitt – Profil aus Bundesland, Gelände, ' +
+          'Dichte, Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen. ' +
+          'Ein Unterschied ist keine Bewertung: er enthält auch, was in OpenStreetMap (noch) fehlt.';
+        regionDetailModelGap.appendChild(profile);
+      }
 
       const statusText = document.createElement('span');
+      statusText.className = 'model-status';
       const diffKmStr = TildaStats.formatGapKm(Math.abs(m.diffKm));
       const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %-Punkte';
 
@@ -5441,10 +5533,10 @@ export function generateViewerHtml(
           formatUiPct(m.actualPct) +
           ' % (' +
           deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
-          ' km) · Im typischen Streubereich (' +
+          ' km) · im üblichen Bereich (' +
           sign +
           formatUiPct(m.diffPct) +
-          ' %-Punkte ggü. Erwartung; ' +
+          ' %-Punkte; ' +
           bandLabel +
           formatUiPct(m.residualStdErrorPct) +
           ' %-Punkte).';
@@ -5456,9 +5548,9 @@ export function generateViewerHtml(
           deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
           ' km) · ' +
           diffKmStr +
-          ' unter Erwartung (−' +
+          ' weniger als erwartet (−' +
           diffPctStr +
-          ' Abweichung vom statistischen Modell).';
+          ').';
       } else {
         statusText.textContent =
           'Tatsächlich ' +
@@ -5467,9 +5559,9 @@ export function generateViewerHtml(
           deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
           ' km) · ' +
           diffKmStr +
-          ' über Erwartung (+' +
+          ' mehr als erwartet (+' +
           diffPctStr +
-          ' Abweichung vom statistischen Modell).';
+          ').';
       }
       regionDetailModelGap.appendChild(statusText);
 
@@ -6767,7 +6859,9 @@ export function generateViewerHtml(
       const rankLine =
         currentMapMetric === 'bikeShare' && p.lowRoad && p.roadSumKm > 0
           ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
-          : rankText;
+          : rankInfo && regionGapSummary(p)
+            ? '' // the view callout below carries the rank
+            : rankText;
       const pct =
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
           ? formatUiPct(p.bikeSharePct) + ' %'
@@ -6864,7 +6958,8 @@ export function generateViewerHtml(
         neighborButton.addEventListener('click', async () => {
           neighborButton.disabled = true;
           const shown = await showWithNeighbors(p.id);
-          if (!shown) neighborButton.textContent = 'Keine Nachbarn gefunden';
+          // No neighbours in the index: drop the button rather than leave a dead label.
+          if (!shown) neighborButton.hidden = true;
           else neighborButton.disabled = false;
         });
         links.appendChild(neighborButton);
@@ -7105,8 +7200,21 @@ export function generateViewerHtml(
 
     function clearRegionSelection() {
       clearOverlayLineHighlight();
+      const previousId = selectedFeatureId;
+      const focusWasInCard = regionDetailEl.contains(document.activeElement);
       setSelectedFeatureId(null);
       regionDetailEl.hidden = true;
+      if (focusWasInCard) {
+        // The focused element is about to disappear; land on the region's ranking row (or the
+        // search field) instead of letting focus fall back to <body>.
+        const row = previousId
+          ? document.querySelector('#ranking-list li[data-ranking-id="' + previousId + '"]')
+          : null;
+        const target = row || document.getElementById('region-search-input');
+        if (target && typeof target.focus === 'function') {
+          try { target.focus({ preventScroll: true }); } catch (e) {}
+        }
+      }
       delete document.body.dataset.regionDetail;
       placeRegionDetail();
       setHoveredRegionId(null);
@@ -7286,31 +7394,58 @@ export function generateViewerHtml(
       list.replaceChildren();
       const qualityKey = document.getElementById('ranking-quality-key');
       if (qualityKey) qualityKey.hidden = true;
-      for (const row of rankingDisplayRows(withMetric)) {
-        if (row.type === 'divider') {
-          const gap = document.createElement('li');
-          gap.className = 'ranking-divider';
-          gap.textContent = '…';
-          list.appendChild(gap);
-          continue;
+      const rows = rankingDisplayRows(withMetric);
+      const appendRows = (from, to) => {
+        for (let i = from; i < to; i++) {
+          const row = rows[i];
+          if (row.type === 'divider') {
+            const gap = document.createElement('li');
+            gap.className = 'ranking-divider';
+            gap.textContent = '…';
+            list.appendChild(gap);
+            continue;
+          }
+          appendRankingRow(list, row.rank, row.f, minPct, maxPct);
         }
-        appendRankingRow(list, row.rank, row.f, minPct, maxPct);
+      };
+      const finish = () => {
+        syncRankingTabStop(list);
+        const withoutMetric = sorted.length - withMetric.length;
+        if (withoutMetric > 0) {
+          const note = document.createElement('li');
+          note.className = 'ranking-more';
+          note.textContent =
+            currentMapMetric === 'bikeShare'
+              ? withoutMetric + ' ohne Rang (weniger als 5 km Straße erfasst)'
+              : currentMapMetric === 'cars' || currentMapMetric === 'accidents'
+                ? withoutMetric + ' ohne Rang (keine Daten oder unter 1.000 Einwohnern)'
+                : withoutMetric + ' ohne Daten in dieser Ansicht';
+          list.appendChild(note);
+        }
+        syncRankingRowHighlights();
+      };
+      // "Alle" for every Gemeinde in Germany is ~11k rows; building them in one go blocks the
+      // page for seconds on a phone. Render the first screenfuls now, the rest in slices.
+      const token = ++rankingRenderToken;
+      const firstChunk = Math.min(rows.length, RANKING_RENDER_CHUNK);
+      appendRows(0, firstChunk);
+      if (firstChunk === rows.length) {
+        finish();
+        return;
       }
-      syncRankingTabStop(list);
-      const withoutMetric = sorted.length - withMetric.length;
-      if (withoutMetric > 0) {
-        const note = document.createElement('li');
-        note.className = 'ranking-more';
-        note.textContent =
-          currentMapMetric === 'bikeShare'
-            ? withoutMetric + ' ohne Rang (weniger als 5 km Straße erfasst)'
-            : currentMapMetric === 'cars' || currentMapMetric === 'accidents'
-              ? withoutMetric + ' ohne Rang (keine Daten oder unter 1.000 Einwohnern)'
-              : withoutMetric + ' ohne Daten in dieser Ansicht';
-        list.appendChild(note);
-      }
-      syncRankingRowHighlights();
+      let next = firstChunk;
+      const step = () => {
+        if (token !== rankingRenderToken) return; // a newer ranking replaced this one
+        const to = Math.min(rows.length, next + RANKING_RENDER_CHUNK);
+        appendRows(next, to);
+        next = to;
+        if (next < rows.length) setTimeout(step, 0);
+        else finish();
+      };
+      setTimeout(step, 0);
     }
+    let rankingRenderToken = 0;
+    const RANKING_RENDER_CHUNK = 400;
 
     function urlParams() {
       return new URLSearchParams(location.search);
@@ -7417,6 +7552,15 @@ export function generateViewerHtml(
       bearing: initialMapPos ? initialMapPos.bearing : 0,
       pitch: initialMapPos ? initialMapPos.pitch : 0,
       preserveDrawingBuffer: true,
+      locale: {
+        'Map.Title': 'Karte',
+        'AttributionControl.ToggleAttribution': 'Quellenangabe ein-/ausblenden',
+        'NavigationControl.ZoomIn': 'Hineinzoomen',
+        'NavigationControl.ZoomOut': 'Herauszoomen',
+        'NavigationControl.ResetBearing': 'Nach Norden ausrichten',
+        'ScaleControl.Meters': 'm',
+        'ScaleControl.Kilometers': 'km',
+      },
     });
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.addControl(
@@ -10128,7 +10272,7 @@ export function generateViewerHtml(
       }
       neighborsBuildStarted = true;
       setLoadStatus('Nachbarn werden berechnet…');
-      const worker = new Worker('./neighborsBuild.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
+      const worker = new Worker('./neighborsBuild.worker.js?v=' + CONFIG.assetVersions.neighborsBuildWorker, { type: 'module' });
       const finish = () => {
         worker.onmessage = null;
         worker.onerror = null;
@@ -10196,7 +10340,7 @@ export function generateViewerHtml(
         void loadPrecomputedNeighborsOnMain();
         return;
       }
-      const worker = new Worker('./neighbors.worker.js?v=' + CONFIG.assetVersion, { type: 'module' });
+      const worker = new Worker('./neighbors.worker.js?v=' + CONFIG.assetVersions.neighborsWorker, { type: 'module' });
       const finish = () => {
         worker.onmessage = null;
         worker.onerror = null;
@@ -10276,6 +10420,7 @@ export function generateViewerHtml(
         explicitMapPositionPending = false;
         urlSyncEnabled = true;
         urlSyncBaseline = currentStateUrl();
+        window.__viewerBooted = true;
       } catch (e) {
         showLoadError(e, 'Die Karte konnte nicht vollständig geladen werden.');
       }
