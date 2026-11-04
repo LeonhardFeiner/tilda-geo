@@ -479,6 +479,7 @@ const bundleTargets = [
   { entry: 'regionSearch.bundle.ts', name: 'regionSearch.js' },
   { entry: 'statsMsgpack.bundle.ts', name: 'statsMsgpack.js' },
   { entry: 'rankingDisplay.bundle.ts', name: 'rankingDisplay.js' },
+  { entry: 'viewerUrlOptions.bundle.ts', name: 'viewerUrlOptions.js' },
 ] as const
 
 for (const target of bundleTargets) {

@@ -25,6 +25,7 @@ const BUNDLES = [
   'neighborView.js',
   'regionSearch.js',
   'rankingDisplay.js',
+  'viewerUrlOptions.js',
 ]
 
 export type ShareCall = { title?: string; text?: string; url?: string; files?: unknown[] }

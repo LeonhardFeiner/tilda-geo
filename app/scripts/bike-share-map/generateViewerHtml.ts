@@ -1951,6 +1951,7 @@ export function generateViewerHtml(
   <script src="${v('./neighborView.js')}"></script>
   <script src="${v('./regionSearch.js')}"></script>
   <script src="${v('./rankingDisplay.js')}"></script>
+  <script src="${v('./viewerUrlOptions.js')}"></script>
   <script src="${v('./vendor/maplibre-gl-4.7.1/maplibre-gl.js')}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
@@ -7614,60 +7615,8 @@ export function generateViewerHtml(
       return new URLSearchParams(location.search);
     }
 
-    function parseMapString(str) {
-      if (!str) return null;
-      let clean = str.trim();
-      if (clean.startsWith('#')) clean = clean.slice(1).trim();
-      if (clean.startsWith('map=')) clean = clean.slice(4).trim();
-      const parts = clean.split(/[/,]/).map((s) => parseFloat(s.trim()));
-      if (parts.length >= 3 && parts.slice(0, 3).every((n) => Number.isFinite(n))) {
-        const [zoom, lat, lng, rawBearing = 0, rawPitch = 0] = parts;
-        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
-        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
-        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && zoom >= 0 && zoom <= 24) {
-          return { zoom, center: [lng, lat], bearing, pitch };
-        }
-      }
-      return null;
-    }
-
     function getMapPositionFromUrl() {
-      if (location.hash) {
-        const fromHash = parseMapString(location.hash);
-        if (fromHash) return fromHash;
-      }
-      const params = urlParams();
-      const qMap = params.get('map');
-      if (qMap) {
-        const fromQMap = parseMapString(qMap);
-        if (fromQMap) return fromQMap;
-      }
-      const latStr = params.get('lat');
-      const lngStr = params.get('lng') || params.get('lon');
-      const zoomStr = params.get('zoom') || params.get('z');
-      if (latStr && lngStr) {
-        const lat = parseFloat(latStr);
-        const lng = parseFloat(lngStr);
-        const zoom = zoomStr ? parseFloat(zoomStr) : 10;
-        const rawBearing = parseFloat(params.get('bearing') || '0');
-        const rawPitch = parseFloat(params.get('pitch') || '0');
-        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
-        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
-        if (
-          Number.isFinite(lat) &&
-          Number.isFinite(lng) &&
-          Number.isFinite(zoom) &&
-          lat >= -90 &&
-          lat <= 90 &&
-          lng >= -180 &&
-          lng <= 180 &&
-          zoom >= 0 &&
-          zoom <= 24
-        ) {
-          return { zoom, center: [lng, lat], bearing, pitch };
-        }
-      }
-      return null;
+      return ViewerUrl.mapPositionFromUrl(location.hash, urlParams());
     }
 
     function isMapAtPosition(pos) {
@@ -8596,22 +8545,19 @@ export function generateViewerHtml(
       window.addEventListener('touchcancel', endUiPinch, { capture: true });
     }
 
+    // Parsing and writing of the URL options live in viewerUrlOptions.ts (global ViewerUrl).
+    // Function declarations (hoisted), so callers earlier in the script keep working.
     function parseBoolParam(value, defaultValue) {
-      if (value == null || value === '') return defaultValue;
-      const v = value.toLowerCase();
-      if (v === '0' || v === 'false' || v === 'no' || v === 'off') return false;
-      return true;
+      return ViewerUrl.parseBoolParam(value, defaultValue);
     }
-
-    function parseHexColorParam(value) {
-      if (value == null || value === '') return null;
-      const v = value.startsWith('#') ? value : '#' + value;
-      if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null;
-      return v.toLowerCase();
-    }
-
-    function hexColorWithoutHash(value) {
-      return value.replace(/^#/, '').toLowerCase();
+    function viewerUrlConfig() {
+      return {
+        basemapIds: Object.keys(CONFIG.basemapStyles),
+        colorScaleIds: CONFIG.colorScales.map((sc) => sc.id),
+        overlayMinZoomLimits: CONFIG.overlayMinZoomLimits,
+        overlayRoadFullMinZoomLimits: CONFIG.overlayRoadFullMinZoomLimits,
+        defaultOverlayMinZoom: CONFIG.defaultOverlayMinZoom,
+      };
     }
 
     function lengthClassFiltersEqual(a, b) {
@@ -8654,71 +8600,48 @@ export function generateViewerHtml(
     function appendViewerOptionsToUrl(params) {
       const filter = readLengthClassFilterFromUi();
       lengthClassFilter = filter;
-      if (isUiMinimal()) params.set('minimal', '1');
-      else params.delete('minimal');
-      if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
-      else params.delete('basemap');
-      if (!toggleBikelanes.checked) params.set('radwege', '0');
-      else params.delete('radwege');
-      if (toggleRoads.checked) params.set('strassen', '1');
-      else params.delete('strassen');
-      if (toggleBusyRoads?.checked) params.set('verkehr', '1');
-      else params.delete('verkehr');
-      if (!rankingDetails.open) params.set('ranking', '0');
-      else params.delete('ranking');
-      if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
-      else params.delete('rankingMode');
-      if (currentMapMetric !== 'bikeShare') {
-        params.set('metrik', currentMapMetric);
-      } else {
-        params.delete('metrik');
-      }
-      if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
-        params.set('colors', colorScaleSelect.value);
-      } else {
-        params.delete('colors');
-      }
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
-      const defaultCapEnabled = defaultScaleCapEnabledForView();
-      const defaultRobust = defaultRobustScaleEnabledForView();
-      if (capPct !== CONFIG.defaultColorCapPct) params.set('cap', String(capPct));
-      else params.delete('cap');
-      if (enabled !== defaultCapEnabled) {
-        params.set('capEnabled', enabled ? '1' : '0');
-      } else {
-        params.delete('capEnabled');
-      }
-      if (robustEnabled !== defaultRobust) {
-        params.set('robustScale', robustEnabled ? '1' : '0');
-      } else {
-        params.delete('robustScale');
-      }
-      const scaleBike = bikelaneColorForScale(colorScaleSelect.value).toLowerCase();
-      const bikeHex = overlayBikelaneColorInput.value.toLowerCase();
-      if (bikeHex !== scaleBike) params.set('radfarbe', hexColorWithoutHash(bikeHex));
-      else params.delete('radfarbe');
-      const roadHex = overlayRoadColorInput.value.toLowerCase();
-      if (roadHex !== CONFIG.defaultOverlayColors.road.toLowerCase()) {
-        params.set('strassenfarbe', hexColorWithoutHash(roadHex));
-      } else {
-        params.delete('strassenfarbe');
-      }
-      const { bikelane: bikeMinZ, roadMajor, roadFull } = overlayMinZoomFromInputs();
-      if (bikeMinZ !== CONFIG.defaultOverlayMinZoom.bikelane) {
-        params.set('radwegeMinZoom', String(bikeMinZ));
-      } else {
-        params.delete('radwegeMinZoom');
-      }
-      if (roadMajor !== CONFIG.defaultOverlayMinZoom.roadMajor) {
-        params.set('strassenMinZoomMajor', String(roadMajor));
-      } else {
-        params.delete('strassenMinZoomMajor');
-      }
-      if (roadFull !== CONFIG.defaultOverlayMinZoom.roadFull) {
-        params.set('strassenMinZoomFull', String(roadFull));
-      } else {
-        params.delete('strassenMinZoomFull');
-      }
+      const zoom = overlayMinZoomFromInputs();
+      ViewerUrl.writeViewerUrlOptions(
+        params,
+        {
+          minimal: isUiMinimal(),
+          basemap: basemapSelect.value,
+          bikelanes: toggleBikelanes.checked,
+          roads: toggleRoads.checked,
+          busyRoads: !!toggleBusyRoads?.checked,
+          rankingOpen: rankingDetails.open,
+          rankingMode,
+          metric: currentMapMetric,
+          colors: colorScaleSelect.value,
+          capPct,
+          capEnabled: enabled,
+          robustScale: robustEnabled,
+          bikelaneColor: overlayBikelaneColorInput.value,
+          roadColor: overlayRoadColorInput.value,
+          bikelaneMinZoom: zoom.bikelane,
+          roadMinZoomMajor: zoom.roadMajor,
+          roadMinZoomFull: zoom.roadFull,
+        },
+        {
+          basemap: CONFIG.basemap,
+          bikelanes: true,
+          roads: false,
+          busyRoads: false,
+          rankingOpen: true,
+          rankingMode: 'topflop',
+          metric: 'bikeShare',
+          colors: CONFIG.defaultColorScale,
+          capPct: CONFIG.defaultColorCapPct,
+          capEnabled: defaultScaleCapEnabledForView(),
+          robustScale: defaultRobustScaleEnabledForView(),
+          bikelaneColor: bikelaneColorForScale(colorScaleSelect.value),
+          roadColor: CONFIG.defaultOverlayColors.road,
+          bikelaneMinZoom: CONFIG.defaultOverlayMinZoom.bikelane,
+          roadMinZoomMajor: CONFIG.defaultOverlayMinZoom.roadMajor,
+          roadMinZoomFull: CONFIG.defaultOverlayMinZoom.roadFull,
+        },
+      );
       if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
         const roads = enabledClassIds(filter, 'road');
         const bikes = enabledClassIds(filter, 'bikelane');
@@ -9002,9 +8925,7 @@ export function generateViewerHtml(
     }
 
     function clampOverlayMinZoom(value, fallback, limits = CONFIG.overlayMinZoomLimits) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return fallback;
-      return Math.max(limits.min, Math.min(limits.max, Math.round(n)));
+      return ViewerUrl.clampOverlayMinZoom(value, fallback, limits);
     }
 
     function overlayMinZoomFromInputs() {
@@ -9106,13 +9027,9 @@ export function generateViewerHtml(
         applyViewScopeToUi(scope);
       }
 
-      const basemapParam = params.get('basemap');
-      const basemap =
-        basemapParam && CONFIG.basemapStyles[basemapParam]
-          ? basemapParam
-          : live
-            ? CONFIG.basemap
-            : null;
+      const o = ViewerUrl.readViewerUrlOptions(params, viewerUrlConfig());
+      // On a live re-apply (Back/Forward) a missing parameter means that option's default.
+      const basemap = o.basemap ?? (live ? CONFIG.basemap : null);
       if (live) {
         // setBasemap() swaps the style and re-adds the overlays once it has loaded; the raw
         // setStyle() below only gets away without that because at init nothing has been
@@ -9127,83 +9044,50 @@ export function generateViewerHtml(
         map.setStyle(CONFIG.basemapStyles[basemap]);
       }
 
-      const radwege = params.get('radwege');
-      if (radwege != null && radwege !== '') {
-        toggleBikelanes.checked = parseBoolParam(radwege, true);
-      } else if (live) {
-        toggleBikelanes.checked = true;
-      }
-      const strassen = params.get('strassen');
-      if (strassen != null && strassen !== '') {
-        toggleRoads.checked = parseBoolParam(strassen, false);
-      } else if (live) {
-        toggleRoads.checked = false;
-      }
+      if (o.bikelanes != null) toggleBikelanes.checked = o.bikelanes;
+      else if (live) toggleBikelanes.checked = true;
+      if (o.roads != null) toggleRoads.checked = o.roads;
+      else if (live) toggleRoads.checked = false;
       if (toggleBusyRoads) {
-        const verkehr = params.get('verkehr');
-        if (verkehr != null && verkehr !== '') toggleBusyRoads.checked = parseBoolParam(verkehr, false);
+        if (o.busyRoads != null) toggleBusyRoads.checked = o.busyRoads;
         else if (live) toggleBusyRoads.checked = false;
       }
 
-      const ranking = params.get('ranking');
-      if (ranking != null && ranking !== '') {
-        rankingDetails.open = parseBoolParam(ranking, true);
-      } else {
-        rankingDetails.open = true;
-      }
-      const rankingModeParam = params.get('rankingMode');
-      if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
-        rankingMode = rankingModeParam;
+      rankingDetails.open = o.rankingOpen ?? true;
+      if (o.rankingMode) {
+        rankingMode = o.rankingMode;
         syncRankingModeButtons();
       } else if (live && rankingMode !== 'topflop') {
         rankingMode = 'topflop';
         syncRankingModeButtons();
       }
-      const metrik = params.get('metrik');
-      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents', 'commuters'].includes(metrik)) {
-        currentMapMetric = metrik;
-        if (mapMetricSelect) mapMetricSelect.value = metrik;
+      if (o.metric) {
+        currentMapMetric = o.metric;
+        if (mapMetricSelect) mapMetricSelect.value = o.metric;
       } else if (live && currentMapMetric !== 'bikeShare') {
         currentMapMetric = 'bikeShare';
         if (mapMetricSelect) mapMetricSelect.value = 'bikeShare';
       }
 
-      const colors = params.get('colors');
       let scaleFromUrl = null;
-      if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
-        colorScaleSelect.value = colors;
-        scaleFromUrl = colors;
+      if (o.colors) {
+        colorScaleSelect.value = o.colors;
+        scaleFromUrl = o.colors;
       } else if (live && colorScaleSelect.value !== CONFIG.defaultColorScale) {
         colorScaleSelect.value = CONFIG.defaultColorScale;
         scaleFromUrl = CONFIG.defaultColorScale;
       }
 
-      const cap = params.get('cap');
-      if (cap != null && cap !== '') {
-        const capNum = Number(cap);
-        if (Number.isFinite(capNum)) scaleCapPctInput.value = String(capNum);
-      } else if (live) {
-        scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
-      }
-      const capEnabled = params.get('capEnabled');
-      if (capEnabled != null && capEnabled !== '') {
-        scaleCapEnabledCb.checked = parseBoolParam(
-          capEnabled,
-          defaultScaleCapEnabledForView(),
-        );
+      if (o.capPct != null) scaleCapPctInput.value = String(o.capPct);
+      else if (live) scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
+      if (o.capEnabled != null) {
+        scaleCapEnabledCb.checked = o.capEnabled;
         lastScaleCapViewAllowed = viewShowsGemeindenLevelForCurrentView();
       } else {
         updateScaleCapDefaultForView();
       }
-      const robustScale = params.get('robustScale');
-      if (robustScale != null && robustScale !== '') {
-        scaleRobustEnabledCb.checked = parseBoolParam(
-          robustScale,
-          defaultRobustScaleEnabledForView(),
-        );
-      } else if (live) {
-        scaleRobustEnabledCb.checked = defaultRobustScaleEnabledForView();
-      }
+      if (o.robustScale != null) scaleRobustEnabledCb.checked = o.robustScale;
+      else if (live) scaleRobustEnabledCb.checked = defaultRobustScaleEnabledForView();
       syncScaleCapInputState();
 
       if (!applyLengthClassFilterFromUrl(params) && live) {
@@ -9212,54 +9096,19 @@ export function generateViewerHtml(
       }
       syncCountingUi();
 
-      const radfarbe =
-        params.get('radfarbe') ?? params.get('radwegeFarbe') ?? params.get('bikelaneColor');
-      const radParsed = parseHexColorParam(radfarbe);
-      if (radParsed) overlayBikelaneColorInput.value = radParsed;
+      if (o.bikelaneColor) overlayBikelaneColorInput.value = o.bikelaneColor;
       else if (scaleFromUrl || live) {
         syncOverlayColorInputsFromScale(scaleFromUrl || colorScaleSelect.value);
       }
-
-      const strassenfarbe =
-        params.get('strassenfarbe') ?? params.get('strassenFarbe') ?? params.get('roadColor');
-      const roadParsed = parseHexColorParam(strassenfarbe);
-      if (roadParsed) overlayRoadColorInput.value = roadParsed;
+      if (o.roadColor) overlayRoadColorInput.value = o.roadColor;
       else if (live) overlayRoadColorInput.value = CONFIG.defaultOverlayColors.road;
 
-      const radwegeMinZoom =
-        params.get('radwegeMinZoom') ?? params.get('bikelaneMinZoom') ?? params.get('radwegeMinzoom');
-      if (radwegeMinZoom != null && radwegeMinZoom !== '') {
-        overlayBikelaneMinzoomInput.value = String(
-          clampOverlayMinZoom(radwegeMinZoom, CONFIG.defaultOverlayMinZoom.bikelane),
-        );
-      } else if (live) {
-        overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
-      }
-      const strassenMinZoomMajor =
-        params.get('strassenMinZoomMajor') ??
-        params.get('strassenMinZoom') ??
-        params.get('roadMinZoom') ??
-        params.get('strassenMinzoom');
-      if (strassenMinZoomMajor != null && strassenMinZoomMajor !== '') {
-        overlayRoadMinzoomMajorInput.value = String(
-          clampOverlayMinZoom(strassenMinZoomMajor, CONFIG.defaultOverlayMinZoom.roadMajor),
-        );
-      } else if (live) {
-        overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
-      }
-      const strassenMinZoomFull =
-        params.get('strassenMinZoomFull') ?? params.get('strassenMinZoomVoll');
-      if (strassenMinZoomFull != null && strassenMinZoomFull !== '') {
-        overlayRoadMinzoomFullInput.value = String(
-          clampOverlayMinZoom(
-            strassenMinZoomFull,
-            CONFIG.defaultOverlayMinZoom.roadFull,
-            CONFIG.overlayRoadFullMinZoomLimits,
-          ),
-        );
-      } else if (live) {
-        overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
-      }
+      if (o.bikelaneMinZoom != null) overlayBikelaneMinzoomInput.value = String(o.bikelaneMinZoom);
+      else if (live) overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
+      if (o.roadMinZoomMajor != null) overlayRoadMinzoomMajorInput.value = String(o.roadMinZoomMajor);
+      else if (live) overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
+      if (o.roadMinZoomFull != null) overlayRoadMinzoomFullInput.value = String(o.roadMinZoomFull);
+      else if (live) overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
 
       updateBasemapHint();
       updateLegendBar(colorScaleSelect.value);

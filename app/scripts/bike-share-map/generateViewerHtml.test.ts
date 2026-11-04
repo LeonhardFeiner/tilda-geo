@@ -175,10 +175,9 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('parses exact map position, bearing, and pitch from URL hash and parameters', () => {
-    expect(html).toContain('function parseMapString(')
+    // Parsing itself is tested in viewerUrlOptions.test.ts.
     expect(html).toContain('function getMapPositionFromUrl()')
-    expect(html).toContain("clean.startsWith('map=')")
-    expect(html).toContain('parts.length >= 3')
+    expect(html).toContain('ViewerUrl.mapPositionFromUrl(location.hash, urlParams())')
   })
 
   test('initializes map with explicit camera position when present in URL', () => {
@@ -451,8 +450,9 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('value="rent"')
     expect(html).toContain('value="accidents"')
     expect(html).toContain('value="commuters"')
-    expect(html).toContain("params.set('metrik', currentMapMetric)")
-    expect(html).toContain("params.get('metrik')")
+    // The metrik parameter is read and written by viewerUrlOptions.ts (tested there).
+    expect(html).toContain('ViewerUrl.readViewerUrlOptions(params, viewerUrlConfig())')
+    expect(html).toContain('metric: currentMapMetric,')
     expect(html).toContain('colorScaleRangeForMetric(metric, features)')
     expect(html).toContain('id="choropleth-legend-title"')
   })

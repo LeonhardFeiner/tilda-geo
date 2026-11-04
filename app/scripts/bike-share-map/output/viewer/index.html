@@ -1803,9 +1803,10 @@
   <script src="./neighborView.js?v=de5dd7ab39"></script>
   <script src="./regionSearch.js?v=efbf9552f0"></script>
   <script src="./rankingDisplay.js?v=bc75091337"></script>
+  <script src="./viewerUrlOptions.js?v=770c057ef0"></script>
   <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js?v=8d00c7860a"></script>
   <script>
-    const CONFIG = {"generatedAt":"2026-11-04T23:10:50.272Z","dataDateLabel":"20.10.2026","assetVersion":"20261104231050","assetVersions":{"gemeindeGeometry":"0ec571dbef","neighborsBuildWorker":"195724583f","neighborsWorker":"9ffe4b6310","statsDecodeWorker":"9bad166506"},"basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=e0ea782b90","statsGemeindenMsgpackUrl":"./stats-gemeinden.msgpack?v=9f77afb0fe","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=31f09ebe3b","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=2aebfd2d5a","neighborsMsgpackUrl":"./neighbors.msgpack?v=381e666a82","neighborsUrl":"./neighbors.json?v=50b6743852","peersUrl":"./gemeinde-peers.json?v=f6f3c646ec","densityUrl":"./gemeinde-density.json?v=64167baec5","transitUrl":"./gemeinde-transit.json?v=beac803526","terrainUrl":"./gemeinde-terrain.json?v=192a2fdcec","zensusUrl":"./gemeinde-zensus.json?v=b22f34488a","carsUrl":"./gemeinde-cars.json?v=b0baa08d75","calmedUrl":"./gemeinde-calmed.json?v=a9377bd9b0","accidentsUrl":"./gemeinde-accidents.json?v=492515429e","commutersUrl":"./gemeinde-commuters.json?v=19fadd57cc","mappingUrl":"./gemeinde-mapping.json?v=7d18df9db3","trafficUrl":"./gemeinde-traffic.json?v=f0a5b12450","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=52923c07b9","regiostarUrl":"./gemeinde-regiostar.json?v=e721175d7d","atlasUrl":"./gemeinde-atlas.json?v=19cb9baffa","busyRoadsUrl":"./busy-roads.geojson?v=8044415e45","historyUrl":"./history.json?v=5451ddf1dc","detourPageUrl":"./umweg.html","detourLandkreise":["relation/62371"],"colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahnen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
+    const CONFIG = {"generatedAt":"2026-11-04T23:20:32.267Z","dataDateLabel":"20.10.2026","assetVersion":"20261104232032","assetVersions":{"gemeindeGeometry":"0ec571dbef","neighborsBuildWorker":"195724583f","neighborsWorker":"9ffe4b6310","statsDecodeWorker":"9bad166506"},"basemap":"light","basemapStyles":{"blank":{"version":8,"sources":{},"layers":[{"id":"background","type":"background","paint":{"background-color":"#f2f2ec"}}]},"light":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"muted":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=ECOoUBmpqklzSCASXxcu"],"tileSize":256,"attribution":"© MapTiler © OpenStreetMap contributors"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{"raster-opacity":0.92}}]},"de":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.de/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap Deutschland / FOSSGIS"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]},"osm":{"version":8,"sources":{"basemap":{"type":"raster","tiles":["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],"tileSize":256,"attribution":"© OpenStreetMap"}},"layers":[{"id":"basemap-raster","type":"raster","source":"basemap","paint":{}}]}},"basemapOptions":[{"id":"blank","label":"Leer","description":"Neutraler Hintergrund – beste Lesbarkeit für Radnetz & Flächenfarben"},{"id":"light","label":"Hell","description":"Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)"},{"id":"muted","label":"Gedeckt","description":"Voyager (MapTiler) – etwas mehr Kontext als „hell“"},{"id":"de","label":"OSM Deutschland","description":"OpenStreetMap mit deutschen Beschriftungen"},{"id":"osm","label":"OSM international","description":"Klassische OSM-Karte (oft englische Beschriftung) – viel Detail"}],"bikelanesTiles":"https://tiles.tilda-geo.de/atlas_generalized_bikelanes/{z}/{x}/{y}","roadsTiles":"https://tiles.tilda-geo.de/atlas_generalized_roads/{z}/{x}/{y}","statsMsgpackUrl":"./stats-core.msgpack?v=e0ea782b90","statsGemeindenMsgpackUrl":"./stats-gemeinden.msgpack?v=9f77afb0fe","statsExtraMsgpackUrl":"./stats-extra.msgpack?v=31f09ebe3b","gemeindeGeometryBase":"./gemeinde-geometry/","lazyDarstellungPresenceUrl":"./lazy-darstellung-presence.json?v=2aebfd2d5a","neighborsMsgpackUrl":"./neighbors.msgpack?v=381e666a82","neighborsUrl":"./neighbors.json?v=50b6743852","peersUrl":"./gemeinde-peers.json?v=f6f3c646ec","densityUrl":"./gemeinde-density.json?v=64167baec5","transitUrl":"./gemeinde-transit.json?v=beac803526","terrainUrl":"./gemeinde-terrain.json?v=192a2fdcec","zensusUrl":"./gemeinde-zensus.json?v=b22f34488a","carsUrl":"./gemeinde-cars.json?v=b0baa08d75","calmedUrl":"./gemeinde-calmed.json?v=a9377bd9b0","accidentsUrl":"./gemeinde-accidents.json?v=492515429e","commutersUrl":"./gemeinde-commuters.json?v=19fadd57cc","mappingUrl":"./gemeinde-mapping.json?v=7d18df9db3","trafficUrl":"./gemeinde-traffic.json?v=f0a5b12450","trafficFederalUrl":"./gemeinde-traffic-federal.json?v=52923c07b9","regiostarUrl":"./gemeinde-regiostar.json?v=e721175d7d","atlasUrl":"./gemeinde-atlas.json?v=19cb9baffa","busyRoadsUrl":"./busy-roads.geojson?v=8044415e45","historyUrl":"./history.json?v=5451ddf1dc","detourPageUrl":"./umweg.html","detourLandkreise":["relation/62371"],"colorScales":[{"id":"traffic","label":"Ampel (Rot–Gelb–Grün)","legendGradient":"linear-gradient(to right, #c62828, #ffeb3b, #2e7d32)","low":"#c62828","mid":"#ffeb3b","high":"#2e7d32","bikelaneColor":"#1565c0"},{"id":"green","label":"Grün (dezent)","legendGradient":"linear-gradient(to right, #e8f5e9, #43a047, #1b5e20)","low":"#e8f5e9","mid":"#43a047","high":"#1b5e20","bikelaneColor":"#b71c1c"},{"id":"colorblind","label":"Blau–Gelb–Orange (farbenblind)","legendGradient":"linear-gradient(to right, #e69f00, #f0e442, #3274a1)","low":"#e69f00","mid":"#f0e442","high":"#3274a1","bikelaneColor":"#882255"}],"defaultColorScale":"traffic","defaultColorCapPct":50,"defaultColorCapEnabled":false,"defaultRobustScaleEnabled":true,"defaultOverlayColors":{"bikelane":"#1565c0","road":"#546e7a"},"defaultOverlayMinZoom":{"bikelane":9,"roadMajor":9,"roadFull":11},"overlayMinZoomLimits":{"min":4,"max":14},"overlayRoadFullMinZoomLimits":{"min":11,"max":14},"tileRoadResidentialMinZoom":11,"roadClassOptions":[{"id":"motorway_like","label":"Autobahnen"},{"id":"primary_like","label":"Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)"},{"id":"secondary_like","label":"Sonstige Straßen und Zufahrten"},{"id":"residential_like","label":"Wohn- und Erschließungsstraßen"}],"bikelaneClassOptions":[{"id":"needsClarification","label":"Klärung nötig"},{"id":"bike_with_foot_traffic","label":"Rad mit Fußverkehr"},{"id":"bike_with_car_traffic","label":"Rad mit Kfz-Verkehr"},{"id":"bike_next_to_foot_traffic","label":"Rad neben Fußverkehr"},{"id":"bike_next_to_car_traffic","label":"Rad neben Kfz-Verkehr"},{"id":"separate_bike_traffic","label":"Getrennter Radverkehr"}],"radinfraDefaultFilter":{"road":{"motorway_like":true,"primary_like":true,"secondary_like":true,"residential_like":true},"bikelane":{"needsClarification":true,"bike_with_foot_traffic":true,"bike_with_car_traffic":true,"bike_next_to_foot_traffic":true,"bike_next_to_car_traffic":true,"separate_bike_traffic":true}}};
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -8125,60 +8126,8 @@
       return new URLSearchParams(location.search);
     }
 
-    function parseMapString(str) {
-      if (!str) return null;
-      let clean = str.trim();
-      if (clean.startsWith('#')) clean = clean.slice(1).trim();
-      if (clean.startsWith('map=')) clean = clean.slice(4).trim();
-      const parts = clean.split(/[/,]/).map((s) => parseFloat(s.trim()));
-      if (parts.length >= 3 && parts.slice(0, 3).every((n) => Number.isFinite(n))) {
-        const [zoom, lat, lng, rawBearing = 0, rawPitch = 0] = parts;
-        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
-        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
-        if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180 && zoom >= 0 && zoom <= 24) {
-          return { zoom, center: [lng, lat], bearing, pitch };
-        }
-      }
-      return null;
-    }
-
     function getMapPositionFromUrl() {
-      if (location.hash) {
-        const fromHash = parseMapString(location.hash);
-        if (fromHash) return fromHash;
-      }
-      const params = urlParams();
-      const qMap = params.get('map');
-      if (qMap) {
-        const fromQMap = parseMapString(qMap);
-        if (fromQMap) return fromQMap;
-      }
-      const latStr = params.get('lat');
-      const lngStr = params.get('lng') || params.get('lon');
-      const zoomStr = params.get('zoom') || params.get('z');
-      if (latStr && lngStr) {
-        const lat = parseFloat(latStr);
-        const lng = parseFloat(lngStr);
-        const zoom = zoomStr ? parseFloat(zoomStr) : 10;
-        const rawBearing = parseFloat(params.get('bearing') || '0');
-        const rawPitch = parseFloat(params.get('pitch') || '0');
-        const bearing = Number.isFinite(rawBearing) ? rawBearing : 0;
-        const pitch = Number.isFinite(rawPitch) ? Math.max(0, Math.min(85, rawPitch)) : 0;
-        if (
-          Number.isFinite(lat) &&
-          Number.isFinite(lng) &&
-          Number.isFinite(zoom) &&
-          lat >= -90 &&
-          lat <= 90 &&
-          lng >= -180 &&
-          lng <= 180 &&
-          zoom >= 0 &&
-          zoom <= 24
-        ) {
-          return { zoom, center: [lng, lat], bearing, pitch };
-        }
-      }
-      return null;
+      return ViewerUrl.mapPositionFromUrl(location.hash, urlParams());
     }
 
     function isMapAtPosition(pos) {
@@ -9107,22 +9056,19 @@
       window.addEventListener('touchcancel', endUiPinch, { capture: true });
     }
 
+    // Parsing and writing of the URL options live in viewerUrlOptions.ts (global ViewerUrl).
+    // Function declarations (hoisted), so callers earlier in the script keep working.
     function parseBoolParam(value, defaultValue) {
-      if (value == null || value === '') return defaultValue;
-      const v = value.toLowerCase();
-      if (v === '0' || v === 'false' || v === 'no' || v === 'off') return false;
-      return true;
+      return ViewerUrl.parseBoolParam(value, defaultValue);
     }
-
-    function parseHexColorParam(value) {
-      if (value == null || value === '') return null;
-      const v = value.startsWith('#') ? value : '#' + value;
-      if (!/^#[0-9a-fA-F]{6}$/.test(v)) return null;
-      return v.toLowerCase();
-    }
-
-    function hexColorWithoutHash(value) {
-      return value.replace(/^#/, '').toLowerCase();
+    function viewerUrlConfig() {
+      return {
+        basemapIds: Object.keys(CONFIG.basemapStyles),
+        colorScaleIds: CONFIG.colorScales.map((sc) => sc.id),
+        overlayMinZoomLimits: CONFIG.overlayMinZoomLimits,
+        overlayRoadFullMinZoomLimits: CONFIG.overlayRoadFullMinZoomLimits,
+        defaultOverlayMinZoom: CONFIG.defaultOverlayMinZoom,
+      };
     }
 
     function lengthClassFiltersEqual(a, b) {
@@ -9165,71 +9111,48 @@
     function appendViewerOptionsToUrl(params) {
       const filter = readLengthClassFilterFromUi();
       lengthClassFilter = filter;
-      if (isUiMinimal()) params.set('minimal', '1');
-      else params.delete('minimal');
-      if (basemapSelect.value !== CONFIG.basemap) params.set('basemap', basemapSelect.value);
-      else params.delete('basemap');
-      if (!toggleBikelanes.checked) params.set('radwege', '0');
-      else params.delete('radwege');
-      if (toggleRoads.checked) params.set('strassen', '1');
-      else params.delete('strassen');
-      if (toggleBusyRoads?.checked) params.set('verkehr', '1');
-      else params.delete('verkehr');
-      if (!rankingDetails.open) params.set('ranking', '0');
-      else params.delete('ranking');
-      if (rankingMode !== 'topflop') params.set('rankingMode', rankingMode);
-      else params.delete('rankingMode');
-      if (currentMapMetric !== 'bikeShare') {
-        params.set('metrik', currentMapMetric);
-      } else {
-        params.delete('metrik');
-      }
-      if (colorScaleSelect.value !== CONFIG.defaultColorScale) {
-        params.set('colors', colorScaleSelect.value);
-      } else {
-        params.delete('colors');
-      }
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
-      const defaultCapEnabled = defaultScaleCapEnabledForView();
-      const defaultRobust = defaultRobustScaleEnabledForView();
-      if (capPct !== CONFIG.defaultColorCapPct) params.set('cap', String(capPct));
-      else params.delete('cap');
-      if (enabled !== defaultCapEnabled) {
-        params.set('capEnabled', enabled ? '1' : '0');
-      } else {
-        params.delete('capEnabled');
-      }
-      if (robustEnabled !== defaultRobust) {
-        params.set('robustScale', robustEnabled ? '1' : '0');
-      } else {
-        params.delete('robustScale');
-      }
-      const scaleBike = bikelaneColorForScale(colorScaleSelect.value).toLowerCase();
-      const bikeHex = overlayBikelaneColorInput.value.toLowerCase();
-      if (bikeHex !== scaleBike) params.set('radfarbe', hexColorWithoutHash(bikeHex));
-      else params.delete('radfarbe');
-      const roadHex = overlayRoadColorInput.value.toLowerCase();
-      if (roadHex !== CONFIG.defaultOverlayColors.road.toLowerCase()) {
-        params.set('strassenfarbe', hexColorWithoutHash(roadHex));
-      } else {
-        params.delete('strassenfarbe');
-      }
-      const { bikelane: bikeMinZ, roadMajor, roadFull } = overlayMinZoomFromInputs();
-      if (bikeMinZ !== CONFIG.defaultOverlayMinZoom.bikelane) {
-        params.set('radwegeMinZoom', String(bikeMinZ));
-      } else {
-        params.delete('radwegeMinZoom');
-      }
-      if (roadMajor !== CONFIG.defaultOverlayMinZoom.roadMajor) {
-        params.set('strassenMinZoomMajor', String(roadMajor));
-      } else {
-        params.delete('strassenMinZoomMajor');
-      }
-      if (roadFull !== CONFIG.defaultOverlayMinZoom.roadFull) {
-        params.set('strassenMinZoomFull', String(roadFull));
-      } else {
-        params.delete('strassenMinZoomFull');
-      }
+      const zoom = overlayMinZoomFromInputs();
+      ViewerUrl.writeViewerUrlOptions(
+        params,
+        {
+          minimal: isUiMinimal(),
+          basemap: basemapSelect.value,
+          bikelanes: toggleBikelanes.checked,
+          roads: toggleRoads.checked,
+          busyRoads: !!toggleBusyRoads?.checked,
+          rankingOpen: rankingDetails.open,
+          rankingMode,
+          metric: currentMapMetric,
+          colors: colorScaleSelect.value,
+          capPct,
+          capEnabled: enabled,
+          robustScale: robustEnabled,
+          bikelaneColor: overlayBikelaneColorInput.value,
+          roadColor: overlayRoadColorInput.value,
+          bikelaneMinZoom: zoom.bikelane,
+          roadMinZoomMajor: zoom.roadMajor,
+          roadMinZoomFull: zoom.roadFull,
+        },
+        {
+          basemap: CONFIG.basemap,
+          bikelanes: true,
+          roads: false,
+          busyRoads: false,
+          rankingOpen: true,
+          rankingMode: 'topflop',
+          metric: 'bikeShare',
+          colors: CONFIG.defaultColorScale,
+          capPct: CONFIG.defaultColorCapPct,
+          capEnabled: defaultScaleCapEnabledForView(),
+          robustScale: defaultRobustScaleEnabledForView(),
+          bikelaneColor: bikelaneColorForScale(colorScaleSelect.value),
+          roadColor: CONFIG.defaultOverlayColors.road,
+          bikelaneMinZoom: CONFIG.defaultOverlayMinZoom.bikelane,
+          roadMinZoomMajor: CONFIG.defaultOverlayMinZoom.roadMajor,
+          roadMinZoomFull: CONFIG.defaultOverlayMinZoom.roadFull,
+        },
+      );
       if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
         const roads = enabledClassIds(filter, 'road');
         const bikes = enabledClassIds(filter, 'bikelane');
@@ -9513,9 +9436,7 @@
     }
 
     function clampOverlayMinZoom(value, fallback, limits = CONFIG.overlayMinZoomLimits) {
-      const n = Number(value);
-      if (!Number.isFinite(n)) return fallback;
-      return Math.max(limits.min, Math.min(limits.max, Math.round(n)));
+      return ViewerUrl.clampOverlayMinZoom(value, fallback, limits);
     }
 
     function overlayMinZoomFromInputs() {
@@ -9617,13 +9538,9 @@
         applyViewScopeToUi(scope);
       }
 
-      const basemapParam = params.get('basemap');
-      const basemap =
-        basemapParam && CONFIG.basemapStyles[basemapParam]
-          ? basemapParam
-          : live
-            ? CONFIG.basemap
-            : null;
+      const o = ViewerUrl.readViewerUrlOptions(params, viewerUrlConfig());
+      // On a live re-apply (Back/Forward) a missing parameter means that option's default.
+      const basemap = o.basemap ?? (live ? CONFIG.basemap : null);
       if (live) {
         // setBasemap() swaps the style and re-adds the overlays once it has loaded; the raw
         // setStyle() below only gets away without that because at init nothing has been
@@ -9638,83 +9555,50 @@
         map.setStyle(CONFIG.basemapStyles[basemap]);
       }
 
-      const radwege = params.get('radwege');
-      if (radwege != null && radwege !== '') {
-        toggleBikelanes.checked = parseBoolParam(radwege, true);
-      } else if (live) {
-        toggleBikelanes.checked = true;
-      }
-      const strassen = params.get('strassen');
-      if (strassen != null && strassen !== '') {
-        toggleRoads.checked = parseBoolParam(strassen, false);
-      } else if (live) {
-        toggleRoads.checked = false;
-      }
+      if (o.bikelanes != null) toggleBikelanes.checked = o.bikelanes;
+      else if (live) toggleBikelanes.checked = true;
+      if (o.roads != null) toggleRoads.checked = o.roads;
+      else if (live) toggleRoads.checked = false;
       if (toggleBusyRoads) {
-        const verkehr = params.get('verkehr');
-        if (verkehr != null && verkehr !== '') toggleBusyRoads.checked = parseBoolParam(verkehr, false);
+        if (o.busyRoads != null) toggleBusyRoads.checked = o.busyRoads;
         else if (live) toggleBusyRoads.checked = false;
       }
 
-      const ranking = params.get('ranking');
-      if (ranking != null && ranking !== '') {
-        rankingDetails.open = parseBoolParam(ranking, true);
-      } else {
-        rankingDetails.open = true;
-      }
-      const rankingModeParam = params.get('rankingMode');
-      if (rankingModeParam === 'all' || rankingModeParam === 'topflop') {
-        rankingMode = rankingModeParam;
+      rankingDetails.open = o.rankingOpen ?? true;
+      if (o.rankingMode) {
+        rankingMode = o.rankingMode;
         syncRankingModeButtons();
       } else if (live && rankingMode !== 'topflop') {
         rankingMode = 'topflop';
         syncRankingModeButtons();
       }
-      const metrik = params.get('metrik');
-      if (metrik && ['bikeShare', 'modelGap', 'cars', 'rent', 'accidents', 'commuters'].includes(metrik)) {
-        currentMapMetric = metrik;
-        if (mapMetricSelect) mapMetricSelect.value = metrik;
+      if (o.metric) {
+        currentMapMetric = o.metric;
+        if (mapMetricSelect) mapMetricSelect.value = o.metric;
       } else if (live && currentMapMetric !== 'bikeShare') {
         currentMapMetric = 'bikeShare';
         if (mapMetricSelect) mapMetricSelect.value = 'bikeShare';
       }
 
-      const colors = params.get('colors');
       let scaleFromUrl = null;
-      if (colors && CONFIG.colorScales.some((s) => s.id === colors)) {
-        colorScaleSelect.value = colors;
-        scaleFromUrl = colors;
+      if (o.colors) {
+        colorScaleSelect.value = o.colors;
+        scaleFromUrl = o.colors;
       } else if (live && colorScaleSelect.value !== CONFIG.defaultColorScale) {
         colorScaleSelect.value = CONFIG.defaultColorScale;
         scaleFromUrl = CONFIG.defaultColorScale;
       }
 
-      const cap = params.get('cap');
-      if (cap != null && cap !== '') {
-        const capNum = Number(cap);
-        if (Number.isFinite(capNum)) scaleCapPctInput.value = String(capNum);
-      } else if (live) {
-        scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
-      }
-      const capEnabled = params.get('capEnabled');
-      if (capEnabled != null && capEnabled !== '') {
-        scaleCapEnabledCb.checked = parseBoolParam(
-          capEnabled,
-          defaultScaleCapEnabledForView(),
-        );
+      if (o.capPct != null) scaleCapPctInput.value = String(o.capPct);
+      else if (live) scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
+      if (o.capEnabled != null) {
+        scaleCapEnabledCb.checked = o.capEnabled;
         lastScaleCapViewAllowed = viewShowsGemeindenLevelForCurrentView();
       } else {
         updateScaleCapDefaultForView();
       }
-      const robustScale = params.get('robustScale');
-      if (robustScale != null && robustScale !== '') {
-        scaleRobustEnabledCb.checked = parseBoolParam(
-          robustScale,
-          defaultRobustScaleEnabledForView(),
-        );
-      } else if (live) {
-        scaleRobustEnabledCb.checked = defaultRobustScaleEnabledForView();
-      }
+      if (o.robustScale != null) scaleRobustEnabledCb.checked = o.robustScale;
+      else if (live) scaleRobustEnabledCb.checked = defaultRobustScaleEnabledForView();
       syncScaleCapInputState();
 
       if (!applyLengthClassFilterFromUrl(params) && live) {
@@ -9723,54 +9607,19 @@
       }
       syncCountingUi();
 
-      const radfarbe =
-        params.get('radfarbe') ?? params.get('radwegeFarbe') ?? params.get('bikelaneColor');
-      const radParsed = parseHexColorParam(radfarbe);
-      if (radParsed) overlayBikelaneColorInput.value = radParsed;
+      if (o.bikelaneColor) overlayBikelaneColorInput.value = o.bikelaneColor;
       else if (scaleFromUrl || live) {
         syncOverlayColorInputsFromScale(scaleFromUrl || colorScaleSelect.value);
       }
-
-      const strassenfarbe =
-        params.get('strassenfarbe') ?? params.get('strassenFarbe') ?? params.get('roadColor');
-      const roadParsed = parseHexColorParam(strassenfarbe);
-      if (roadParsed) overlayRoadColorInput.value = roadParsed;
+      if (o.roadColor) overlayRoadColorInput.value = o.roadColor;
       else if (live) overlayRoadColorInput.value = CONFIG.defaultOverlayColors.road;
 
-      const radwegeMinZoom =
-        params.get('radwegeMinZoom') ?? params.get('bikelaneMinZoom') ?? params.get('radwegeMinzoom');
-      if (radwegeMinZoom != null && radwegeMinZoom !== '') {
-        overlayBikelaneMinzoomInput.value = String(
-          clampOverlayMinZoom(radwegeMinZoom, CONFIG.defaultOverlayMinZoom.bikelane),
-        );
-      } else if (live) {
-        overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
-      }
-      const strassenMinZoomMajor =
-        params.get('strassenMinZoomMajor') ??
-        params.get('strassenMinZoom') ??
-        params.get('roadMinZoom') ??
-        params.get('strassenMinzoom');
-      if (strassenMinZoomMajor != null && strassenMinZoomMajor !== '') {
-        overlayRoadMinzoomMajorInput.value = String(
-          clampOverlayMinZoom(strassenMinZoomMajor, CONFIG.defaultOverlayMinZoom.roadMajor),
-        );
-      } else if (live) {
-        overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
-      }
-      const strassenMinZoomFull =
-        params.get('strassenMinZoomFull') ?? params.get('strassenMinZoomVoll');
-      if (strassenMinZoomFull != null && strassenMinZoomFull !== '') {
-        overlayRoadMinzoomFullInput.value = String(
-          clampOverlayMinZoom(
-            strassenMinZoomFull,
-            CONFIG.defaultOverlayMinZoom.roadFull,
-            CONFIG.overlayRoadFullMinZoomLimits,
-          ),
-        );
-      } else if (live) {
-        overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
-      }
+      if (o.bikelaneMinZoom != null) overlayBikelaneMinzoomInput.value = String(o.bikelaneMinZoom);
+      else if (live) overlayBikelaneMinzoomInput.value = String(CONFIG.defaultOverlayMinZoom.bikelane);
+      if (o.roadMinZoomMajor != null) overlayRoadMinzoomMajorInput.value = String(o.roadMinZoomMajor);
+      else if (live) overlayRoadMinzoomMajorInput.value = String(CONFIG.defaultOverlayMinZoom.roadMajor);
+      if (o.roadMinZoomFull != null) overlayRoadMinzoomFullInput.value = String(o.roadMinZoomFull);
+      else if (live) overlayRoadMinzoomFullInput.value = String(CONFIG.defaultOverlayMinZoom.roadFull);
 
       updateBasemapHint();
       updateLegendBar(colorScaleSelect.value);
