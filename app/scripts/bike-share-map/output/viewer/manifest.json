@@ -1,1 +1,206 @@
-../manifest.json
+{
+  "version": 2,
+  "deutschlandId": "relation/51477",
+  "kreisfreieStaedteIds": [
+    "relation/62772",
+    "relation/62654",
+    "relation/62532",
+    "relation/62407",
+    "relation/62340",
+    "relation/62525",
+    "relation/62640",
+    "relation/62646",
+    "relation/62644",
+    "relation/62508",
+    "relation/62634",
+    "relation/62470",
+    "relation/62531",
+    "relation/62559",
+    "relation/62658",
+    "relation/62594",
+    "relation/62717",
+    "relation/62430",
+    "relation/62581",
+    "relation/62414",
+    "relation/62526",
+    "relation/1829065",
+    "relation/191645",
+    "relation/62456",
+    "relation/62539",
+    "relation/62562",
+    "relation/62745",
+    "relation/62403",
+    "relation/62713",
+    "relation/27020",
+    "relation/62573",
+    "relation/62400",
+    "relation/62523",
+    "relation/62768",
+    "relation/62374",
+    "relation/62522",
+    "relation/62671",
+    "relation/1800297",
+    "relation/62638",
+    "relation/62499",
+    "relation/535895",
+    "relation/62487",
+    "relation/62751",
+    "relation/62396",
+    "relation/62589",
+    "relation/62381",
+    "relation/62693",
+    "relation/62652",
+    "relation/62518",
+    "relation/62598",
+    "relation/62349",
+    "relation/62701",
+    "relation/27021",
+    "relation/62512",
+    "relation/62578",
+    "relation/62748",
+    "relation/62391",
+    "relation/62484",
+    "relation/62649",
+    "relation/62449",
+    "relation/27027",
+    "relation/62347",
+    "relation/62481",
+    "relation/62630",
+    "relation/62691",
+    "relation/62590",
+    "relation/62410",
+    "relation/62385",
+    "relation/62428",
+    "relation/62591",
+    "relation/62528",
+    "relation/62724",
+    "relation/62780",
+    "relation/62734",
+    "relation/62695",
+    "relation/62409",
+    "relation/62631",
+    "relation/62629",
+    "relation/62471",
+    "relation/62642",
+    "relation/62369",
+    "relation/62411",
+    "relation/62455",
+    "relation/2168233",
+    "relation/62405",
+    "relation/62659",
+    "relation/62720",
+    "relation/62534",
+    "relation/62685",
+    "relation/62699",
+    "relation/62352",
+    "relation/62636",
+    "relation/62375",
+    "relation/62450",
+    "relation/172679",
+    "relation/62495",
+    "relation/62554",
+    "relation/62493",
+    "relation/62496",
+    "relation/62444",
+    "relation/62418",
+    "relation/62453",
+    "relation/62478",
+    "relation/62464",
+    "relation/62719"
+  ],
+  "stadtstaatIds": [
+    "relation/62422",
+    "relation/62782"
+  ],
+  "featureCount": 22997,
+  "osmDataFrom": "2026-10-20T20:23:47.000Z",
+  "datasets": {
+    "busy-roads": {
+      "fetchedAt": "2026-10-24T02:46:34.642Z",
+      "source": "Straßenverkehrszählung 2021, BAYSIS (© Bayerische Straßenbauverwaltung, CC BY 4.0)"
+    },
+    "gemeinde-demographics": {
+      "fetchedAt": "2026-10-24T02:51:42.389Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/AuszugGV4QAktuell.xlsx?__blob=publicationFile"
+    },
+    "transit-stop-counts": {
+      "fetchedAt": "2026-10-21T10:58:09.885Z",
+      "aggregatedAt": "2026-10-24T03:21:30.819Z",
+      "osmDataFrom": "2026-10-16T20:21:21.000Z",
+      "source": "OpenStreetMap public transport stops; Zensus 2022 100 m grid"
+    },
+    "station-access": {
+      "fetchedAt": "2026-10-24T03:19:15.295Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "routing/station_access.py over the OSM road network and Zensus 2022 100 m grid"
+    },
+    "highway-access": {
+      "fetchedAt": "2026-10-24T02:50:06.647Z",
+      "aggregatedAt": "2026-10-24T03:21:30.837Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "OpenStreetMap motorways/motorroads; Zensus 2022 100 m grid"
+    },
+    "terrain-flatness": {
+      "fetchedAt": "2026-10-24T02:51:33.911Z",
+      "aggregatedAt": "2026-10-24T03:21:30.854Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Mapzen/AWS Terrain Tiles (SRTM, EU-DEM) sampled along TILDA roads"
+    },
+    "zensus-housing-demographics": {
+      "fetchedAt": "2026-11-03T22:07:01.039Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Destatis Zensus 2022 Regionaltabellen"
+    },
+    "car-density": {
+      "fetchedAt": "2026-10-24T02:51:59.907Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Kraftfahrt-Bundesamt (KBA) Reihe FZ 3, Stand 1. Januar 2026"
+    },
+    "calmed-roads": {
+      "fetchedAt": "2026-10-24T02:41:01.248Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "TILDA / OSM aggregated_lengths"
+    },
+    "accidents": {
+      "fetchedAt": "2026-10-24T02:52:01.218Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Statistische Ämter des Bundes und der Länder – Unfallatlas 2025"
+    },
+    "commuters": {
+      "fetchedAt": "2026-10-24T02:52:15.159Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Bundesagentur für Arbeit (BA) – Gemeindedaten der sozialversicherungspflichtig Beschäftigten nach Wohn- und Arbeitsort (Stichtag 30.06.2025)"
+    },
+    "mapping-completeness": {
+      "fetchedAt": "2026-10-24T02:43:02.553Z",
+      "osmDataFrom": "2026-10-20T20:23:47Z",
+      "source": "OpenStreetMap via TILDA roads (maxspeed/surface/lit tags)"
+    },
+    "traffic-volumes": {
+      "fetchedAt": "2026-10-24T02:46:34.646Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Straßenverkehrszählung 2021, BAYSIS (© Bayerische Straßenbauverwaltung, CC BY 4.0)"
+    },
+    "traffic-federal": {
+      "fetchedAt": "2026-10-24T02:46:34.672Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Straßenverkehrszählung 2021: BAYSIS (Bayern, CC BY 4.0) und BASt (übrige Länder, Bundesstraßen)"
+    },
+    "regiostar": {
+      "fetchedAt": "2026-11-03T23:46:34.621Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "BMDV/BBSR RegioStaR, Gebietsstand 31.12.2020"
+    },
+    "deutschlandatlas": {
+      "fetchedAt": "2026-11-03T23:47:46.626Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "Deutschlandatlas HA26 (BMWSB/BBSR)"
+    },
+    "stations": {
+      "fetchedAt": "2026-10-24T02:52:15.731Z",
+      "osmDataFrom": "2026-10-20T20:23:47.000Z",
+      "source": "OpenStreetMap (public_transport stations via TILDA publicTransport)"
+    }
+  }
+}

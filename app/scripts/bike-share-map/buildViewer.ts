@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { createHash } from 'node:crypto'
 /**
  * Interactive viewer: stats.msgpack + neighbors + HTML.
  */
@@ -12,7 +13,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, join, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import {
   decodeStatsRegionPack,
@@ -86,6 +87,28 @@ function symlinkOutputFile(sourcePath: string, linkPath: string) {
   return true
 }
 
+/**
+ * Per-dataset stamps for manifest.json's `datasets` field: what fetchCommon.writeDataset put into
+ * each output/<name>.json this build read (fetchedAt, aggregatedAt, osmDataFrom, source). Keyed by
+ * the output file name without extension; a dataset without any stamp is left out.
+ */
+type DatasetStamp = {
+  fetchedAt?: string
+  aggregatedAt?: string
+  osmDataFrom?: string
+  source?: string
+}
+const datasetStamps: Record<string, DatasetStamp> = {}
+function recordDatasetStamp(fileName: string, data: unknown) {
+  if (!data || typeof data !== 'object') return
+  const stamp: DatasetStamp = {}
+  for (const key of ['fetchedAt', 'aggregatedAt', 'osmDataFrom', 'source'] as const) {
+    const value = (data as Record<string, unknown>)[key]
+    if (typeof value === 'string' && value) stamp[key] = value
+  }
+  if (Object.keys(stamp).length) datasetStamps[fileName.replace(/\.[^.]+$/, '')] = stamp
+}
+
 // stats.msgpack is split into two packs so the viewer doesn't have to download everything up
 // front: stats-core.msgpack (admin levels most visits actually browse) and stats-extra.msgpack
 // (Gemeindeverbände/Stadtbezirke, ~40% of the combined size, behind two niche Darstellung
@@ -133,9 +156,25 @@ if (!hasNeighborsMsgpack) {
     `Warning: ${neighborsMsgpackPath} missing – Nachbar-Ansichten brauchen: bun run bike-share-map:export-stats-geojson\n`,
   )
 }
-symlinkOutputFile(manifestPath, join(viewerDir, VIEWER_FILES.manifest))
+// manifest.json is written at the end of the build (enriched with per-dataset stamps, see
+// datasetStamps); drop any stale symlink/copy so a failed build can't leave the old one behind.
+rmSync(join(viewerDir, VIEWER_FILES.manifest), { force: true })
 // Map lines of the busy rural roads (fetchTrafficVolumes.ts), loaded only when switched on.
-symlinkOutputFile(join(outputRoot, VIEWER_FILES.busyRoads), join(viewerDir, VIEWER_FILES.busyRoads))
+if (
+  symlinkOutputFile(
+    join(outputRoot, VIEWER_FILES.busyRoads),
+    join(viewerDir, VIEWER_FILES.busyRoads),
+  )
+) {
+  try {
+    recordDatasetStamp(
+      VIEWER_FILES.busyRoads,
+      JSON.parse(readFileSync(join(outputRoot, VIEWER_FILES.busyRoads), 'utf8')),
+    )
+  } catch (err) {
+    process.stderr.write(`${VIEWER_FILES.busyRoads} stamp skipped: ${err}\n`)
+  }
+}
 // stats.geojson (49 MB) is a local analysis file only; the page reads the msgpack packs.
 rmSync(join(viewerDir, 'stats.geojson'), { force: true })
 
@@ -178,7 +217,10 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
   try {
     const readJson = async <T>(name: string) => {
       const path = join(outputRoot, name)
-      return existsSync(path) ? (JSON.parse(await Bun.file(path).text()) as T) : null
+      if (!existsSync(path)) return null
+      const data = JSON.parse(await Bun.file(path).text()) as T
+      recordDatasetStamp(name, data)
+      return data
     }
     const demo = (await readJson<{ gemeinden?: DemographicsRow[] }>('gemeinde-demographics.json'))!
     type ById<T> = { byId?: Record<string, T> }
@@ -228,6 +270,7 @@ for (const dataset of VIEWER_PASS_THROUGH_DATASETS) {
     const data = JSON.parse(await Bun.file(sourcePath).text()) as {
       byId?: Record<string, unknown>
     }
+    recordDatasetStamp(dataset.source, data)
     writeFileSync(join(viewerDir, target), JSON.stringify({ byId: data.byId ?? {} }))
     process.stdout.write(
       `${dataset.label}: ${Object.keys(data.byId ?? {}).length} regions → ${viewerDir}/${target}\n`,
@@ -342,6 +385,7 @@ process.stdout.write(`Impressum: ${viewerDir}/impressum.html\n`)
 const stationsPath = join(outputRoot, 'stations.json')
 if (existsSync(stationsPath)) {
   const stationsData = JSON.parse(await Bun.file(stationsPath).text()) as Record<string, unknown>
+  recordDatasetStamp('stations.json', stationsData)
   // Departures per station (routing/station_departures.py), matched by "lng,lat,category" so a
   // re-fetched stations.json still lines up. Older files only had the positional array, which is
   // only valid for the exact station list it was computed for.
@@ -460,15 +504,74 @@ for (const workerEntry of ['neighbors.worker.ts', 'neighborsBuild.worker.ts'] as
   }
 }
 
+// Content hash per asset the page links to, so an unchanged file stays cached across deploys
+// (the ?v= used to be the build time, which invalidated everything on every push).
+function assetContentVersions(): Record<string, string> {
+  const versions: Record<string, string> = {}
+  const hashOf = (paths: string[]) => {
+    const h = createHash('sha1')
+    for (const p of paths) h.update(readFileSync(p))
+    return h.digest('hex').slice(0, 10)
+  }
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name)
+      if (entry.isDirectory()) {
+        if (entry.name === GEMEINDE_GEOMETRY_DIR) {
+          const files = readdirSync(full)
+            .filter((f) => f.endsWith('.msgpack'))
+            .sort()
+            .map((f) => join(full, f))
+          versions[GEMEINDE_GEOMETRY_DIR] = hashOf(files)
+        } else if (entry.name === 'vendor' || dir !== viewerDir) {
+          // vendor/<lib>/<files>: the only nested folder the page links into
+          walk(full)
+        }
+        continue
+      }
+      if (!entry.isFile() && !entry.isSymbolicLink()) continue
+      if (!/\.(js|css|json|msgpack|geojson)$/.test(entry.name)) continue
+      try {
+        versions[relative(viewerDir, full)] = hashOf([full])
+      } catch {
+        // a dangling symlink: the page falls back to the build timestamp
+      }
+    }
+  }
+  walk(viewerDir)
+  return versions
+}
+
 writeFileSync(
   join(viewerDir, 'index.html'),
   generateViewerHtml(
     new Date().toISOString(),
     dataDateLabel,
     detourLandkreise.map((l) => l.id),
+    assetContentVersions(),
   ),
   'utf8',
 )
+
+// manifest.json: the export's manifest (version, ids, featureCount, osmDataFrom – unchanged) plus
+// `datasets`, the fetchedAt/aggregatedAt/osmDataFrom/source stamps of every context dataset this
+// build read, so the served site says how old each input is. A regular file, not a symlink: the
+// one in output/ stays the export's.
+if (existsSync(manifestPath)) {
+  const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as Record<string, unknown>
+  const manifestTarget = join(viewerDir, VIEWER_FILES.manifest)
+  rmSync(manifestTarget, { force: true }) // never write through a leftover symlink into output/
+  writeFileSync(
+    manifestTarget,
+    JSON.stringify({ ...manifest, datasets: datasetStamps }, null, 2),
+    'utf8',
+  )
+  process.stdout.write(
+    `Manifest: ${Object.keys(datasetStamps).length} dataset stamp(s) → ${manifestTarget}\n`,
+  )
+} else {
+  process.stderr.write(`Warning: ${manifestPath} missing – manifest.json not written\n`)
+}
 
 const sharePages = await generateSharePages()
 process.stdout.write(

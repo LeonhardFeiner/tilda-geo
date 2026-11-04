@@ -66,6 +66,20 @@ jobs:
           touch _site/.nojekyll
           du -sh _site
 
+      # GitHub Pages rejects artifacts over 1 GB (and the tarball upload itself gets slow long
+      # before). _site holds real files (cp -L above dereferenced the output/ symlinks, and
+      # upload-pages-artifact tars with --dereference anyway), so du measures what gets uploaded.
+      - name: Check Pages artifact size (limit 900 MB)
+        run: |
+          size_mb=$(du -smL _site | cut -f1)
+          echo "Pages artifact: ${size_mb} MB (GitHub Pages limit 1 GB; this check fails above 900 MB)"
+          echo "### Pages artifact: ${size_mb} MB" >> "$GITHUB_STEP_SUMMARY"
+          du -smL _site/* | sort -rn | head -15
+          if [ "$size_mb" -gt 900 ]; then
+            echo "::error::Pages artifact is ${size_mb} MB, above the 900 MB guard (GitHub Pages limit is 1 GB). Shrink output/viewer (see app/scripts/bike-share-map/README.md) before deploying."
+            exit 1
+          fi
+
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
