@@ -169,12 +169,13 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.500</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = 63,6&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = 63,0&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±5,59&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.417</code>, <strong>R² = 68,9&nbsp;%</strong>, <strong>R²_cv = 68,2&nbsp;%</strong>, Basiswert <strong>41,4&nbsp;%</strong>, <strong>SE = ±23,2&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.500</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = 63,6&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = 62,4&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±5,59&nbsp;%-Punkte</strong>.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.417</code>, <strong>R² = 68,9&nbsp;%</strong>, <strong>R²_cv = 67,6&nbsp;%</strong>, Basiswert <strong>41,4&nbsp;%</strong>, <strong>SE = ±23,2&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
     <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
-    <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Liegt sie innerhalb des modelltypischen Streubands (±1 SE), erscheint sie in hellen Tönen, jenseits davon kräftig. Grau bedeutet: kein Wert.</li>
+    <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Innerhalb der typischen Abweichung (±1 Residualstandardfehler) bleiben die Töne blass, volle Farbe gibt es erst jenseits der doppelten – das sind etwa die äußersten 5&nbsp;%. Grau bedeutet: kein Wert.</li>
+    <li><strong>Unsicherheit der Faktoren:</strong> Die Standardfehler der Koeffizienten sind cluster-robust nach Landkreisen geschätzt (397 Landkreise und kreisfreie Städte), weil benachbarte Gemeinden sich in Kartierung, Verwaltung und Gelände ähneln und ihre Abweichungen nicht unabhängig sind. In der Faktoren-Zerlegung der Detailkarte heißt ein Beitrag nur dann „senkt“ oder „hebt“, wenn er mindestens zwei Standardfehler von null entfernt ist; sonst steht dort grau „kein klarer Effekt“.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
     <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
     <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
@@ -187,7 +188,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <th>Einflussfaktor</th>
         <th>Beschreibung / Quelle</th>
-        <th class="num">Koeffizient (β)</th>
+        <th class="num">Koeffizient (β ± Standardfehler)</th>
       </tr>
     </thead>
     <tbody>
@@ -199,46 +200,46 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
         <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,4638 / %</td>
+        <td class="num">−0,4638 ± 0,0595 / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
         <td>Höhe über Normalnull in Metern (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,0031 / m</td>
+        <td class="num">−0,0031 ± 0,0011 / m</td>
       </tr>
       <tr>
         <td><strong>Siedlungsdichte (log10)</strong></td>
         <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
-        <td class="num">+4,3994 / Dekade</td>
+        <td class="num">+4,3994 ± 0,5214 / Dekade</td>
       </tr>
       <tr>
         <td><strong>Entfernung zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
-        <td class="num">+0,0055 / km</td>
+        <td class="num">+0,0055 ± 0,0337<br /><small>kein klarer Effekt</small> / km</td>
       </tr>
       <tr>
         <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
-        <td class="num">+1,2372 / (€/m²)</td>
+        <td class="num">+1,2372 ± 0,2119 / (€/m²)</td>
       </tr>
       <tr>
         <td><strong>Pkw-Dichte</strong></td>
         <td>Gemeldete Pkw je 1.000 Einwohner (KBA)</td>
-        <td class="num">−0,0028 / (Pkw/1k)</td>
+        <td class="num">−0,0028 ± 0,0013 / (Pkw/1k)</td>
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
         <td>Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz in %. Fahrradstraßen und Fußgängerzonen zählen nicht dazu, weil sie schon im Radinfra-Anteil stecken.</td>
-        <td class="num">+0,4104 / %-Punkt</td>
+        <td class="num">+0,4104 ± 0,0615 / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
         <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
-        <td class="num">+0,2847 / %-Punkt</td>
+        <td class="num">+0,2847 ± 0,0404 / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Raumtyp (RegioStaR 7)</strong></td>
-        <td>Regionalstatistische Raumtypologie des BMDV: ordnet jede Gemeinde nach Größe und zentraler Funktion und nach der Region um sie herum ein (Stadtregion oder ländliche Region). Erfasst, was die Dichte allein nicht zeigt – etwa ob ein Ort Zentrum für sein Umland ist. Je Typ ein eigener Wert, verglichen mit „ländliche Region, kleinstädtischer, dörflicher Raum“: Metropole, Regiopole und Großstadt +5,9572&nbsp;%-Punkte, Stadtregion, Mittelstadt und städtischer Raum −0,2562&nbsp;%-Punkte, Stadtregion, kleinstädtisch, dörflich −0,8815&nbsp;%-Punkte, ländliche Region, zentrale Stadt +4,0402&nbsp;%-Punkte, ländliche Region, städtischer Raum +0,1312&nbsp;%-Punkte. Gemeinden, die seit 2020 fusioniert oder umgeschlüsselt wurden, erhalten den Typ ihrer Vorgängergemeinde.</td>
+        <td>Regionalstatistische Raumtypologie des BMDV: ordnet jede Gemeinde nach Größe und zentraler Funktion und nach der Region um sie herum ein (Stadtregion oder ländliche Region). Erfasst, was die Dichte allein nicht zeigt – etwa ob ein Ort Zentrum für sein Umland ist. Je Typ ein eigener Wert, verglichen mit „ländliche Region, kleinstädtischer, dörflicher Raum“: Metropole, Regiopole und Großstadt +5,9572 ± 0,82&nbsp;%-Punkte, Stadtregion, Mittelstadt und städtischer Raum −0,2562 ± 0,45&nbsp;%-Punkte (kein klarer Effekt), Stadtregion, kleinstädtisch, dörflich −0,8815 ± 0,43&nbsp;%-Punkte, ländliche Region, zentrale Stadt +4,0402 ± 0,63&nbsp;%-Punkte, ländliche Region, städtischer Raum +0,1312 ± 0,28&nbsp;%-Punkte (kein klarer Effekt). Gemeinden, die seit 2020 fusioniert oder umgeschlüsselt wurden, erhalten den Typ ihrer Vorgängergemeinde.</td>
         <td class="num">je Typ</td>
       </tr>
     </tbody>
@@ -299,9 +300,9 @@ zitiert, speichert sich bitte eine eigene Kopie.</p>
 
   <h2 id="version">Version und Zitierweise</h2>
   <p>Die Zahlen hängen von drei Ständen ab, die sich unabhängig voneinander ändern:</p>
-  <ul><li><strong>Zählversion:</strong> <code>share-2026-10</code> – wie Längen gemessen werden (siehe Änderungen unten).</li><li><strong>OpenStreetMap-Daten:</strong> Stand 20.10.2026.</li><li><strong>Erwartungswert-Modell:</strong> geschätzt am 03.11.2026 an den damals aktuellen Daten.</li></ul>
+  <ul><li><strong>Zählversion:</strong> <code>share-2026-10</code> – wie Längen gemessen werden (siehe Änderungen unten).</li><li><strong>OpenStreetMap-Daten:</strong> Stand 20.10.2026.</li><li><strong>Erwartungswert-Modell:</strong> geschätzt am 04.11.2026 an den damals aktuellen Daten.</li></ul>
   <p>Vorgeschlagene Zitierweise:</p>
-  <p><code>Radinfra-Vergleich, Zählversion share-2026-10, OSM-Daten vom 20.10.2026, Modell vom 03.11.2026, https://leonhardfeiner.github.io/tilda-geo/, abgerufen am [Datum].</code></p>
+  <p><code>Radinfra-Vergleich, Zählversion share-2026-10, OSM-Daten vom 20.10.2026, Modell vom 04.11.2026, https://leonhardfeiner.github.io/tilda-geo/, abgerufen am [Datum].</code></p>
   <p>Die Seite zeigt immer nur den aktuellen Stand; ältere Stände werden nicht vorgehalten. Wer Werte
   zitiert, speichert sich die CSV (Spalte <code>zaehlversion</code>) und notiert das Abrufdatum.</p>
   <h3>Änderungen</h3>

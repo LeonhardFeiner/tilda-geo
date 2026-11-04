@@ -77,6 +77,8 @@ export const DETOUR_DIR = 'detour'
  */
 export const VIEWER_FILES = {
   statsCore: 'stats-core.msgpack',
+  /** The Gemeinden (level 8) of stats-core, fetched right after it so the first map is faster. */
+  statsGemeinden: 'stats-gemeinden.msgpack',
   statsExtra: 'stats-extra.msgpack',
   lazyDarstellungPresence: 'lazy-darstellung-presence.json',
   neighborsMsgpack: 'neighbors.msgpack',

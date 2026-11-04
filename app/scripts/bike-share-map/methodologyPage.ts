@@ -113,7 +113,11 @@ function regioStarBetaList() {
     regio76: 'ländliche Region, städtischer Raum',
   }
   return (Object.keys(names) as Array<keyof typeof names>)
-    .map((k) => `${names[k]} ${beta(STD_MODEL.betas[k])}&nbsp;%-Punkte`)
+    .map((k) => {
+      const se = STD_MODEL.betaSe?.[k]
+      const unclear = se != null && Math.abs(STD_MODEL.betas[k]) < 2 * se
+      return `${names[k]} ${beta(STD_MODEL.betas[k])}${se != null ? ` ± ${de(se, 2)}` : ''}&nbsp;%-Punkte${unclear ? ' (kein klarer Effekt)' : ''}`
+    })
     .join(', ')
 }
 const PRIMARY_MODEL = STRUCTURAL_MODEL_CONFIGS.primary
@@ -123,6 +127,14 @@ const de = (v: number, digits = 1) =>
   v.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits })
 /** Signed coefficient with a real minus sign, e.g. −0,4745. */
 const beta = (v: number) => (v < 0 ? '−' : '+') + de(Math.abs(v), 4)
+/** β ± cluster-robust standard error; "(kein klarer Effekt)" when |β| < 2 SE. */
+const betaSe = (key: keyof typeof STD_MODEL.betas) => {
+  const b = STD_MODEL.betas[key]
+  const se = STD_MODEL.betaSe?.[key]
+  if (se == null) return beta(b)
+  const unclear = Math.abs(b) < 2 * se
+  return `${beta(b)} ± ${de(se, 4)}${unclear ? '<br /><small>kein klarer Effekt</small>' : ''}`
+}
 
 const LAND_NAMES: Record<string, string> = {
   'relation/62611': 'Baden-Württemberg',
@@ -418,12 +430,13 @@ ${siteIconHeadLinks()}
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
     <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
     <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
-    <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Liegt sie innerhalb des modelltypischen Streubands (±1 SE), erscheint sie in hellen Tönen, jenseits davon kräftig. Grau bedeutet: kein Wert.</li>
+    <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Innerhalb der typischen Abweichung (±1 Residualstandardfehler) bleiben die Töne blass, volle Farbe gibt es erst jenseits der doppelten – das sind etwa die äußersten 5&nbsp;%. Grau bedeutet: kein Wert.</li>
+    <li><strong>Unsicherheit der Faktoren:</strong> Die Standardfehler der Koeffizienten sind cluster-robust nach Landkreisen geschätzt (${STD_MODEL.clusterCount ?? '–'} Landkreise und kreisfreie Städte), weil benachbarte Gemeinden sich in Kartierung, Verwaltung und Gelände ähneln und ihre Abweichungen nicht unabhängig sind. In der Faktoren-Zerlegung der Detailkarte heißt ein Beitrag nur dann „senkt“ oder „hebt“, wenn er mindestens zwei Standardfehler von null entfernt ist; sonst steht dort grau „kein klarer Effekt“.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
     <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
     <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
@@ -436,7 +449,7 @@ ${siteIconHeadLinks()}
       <tr>
         <th>Einflussfaktor</th>
         <th>Beschreibung / Quelle</th>
-        <th class="num">Koeffizient (β)</th>
+        <th class="num">Koeffizient (β ± Standardfehler)</th>
       </tr>
     </thead>
     <tbody>
@@ -448,42 +461,42 @@ ${siteIconHeadLinks()}
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
         <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">${beta(STD_MODEL.betas.roadSlope)} / %</td>
+        <td class="num">${betaSe('roadSlope')} / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
         <td>Höhe über Normalnull in Metern (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">${beta(STD_MODEL.betas.elevMean)} / m</td>
+        <td class="num">${betaSe('elevMean')} / m</td>
       </tr>
       <tr>
         <td><strong>Siedlungsdichte (log10)</strong></td>
         <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
-        <td class="num">${beta(STD_MODEL.betas.logDens)} / Dekade</td>
+        <td class="num">${betaSe('logDens')} / Dekade</td>
       </tr>
       <tr>
         <td><strong>Entfernung zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
-        <td class="num">${beta(STD_MODEL.betas.stDist)} / km</td>
+        <td class="num">${betaSe('stDist')} / km</td>
       </tr>
       <tr>
         <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
-        <td class="num">${beta(STD_MODEL.betas.rent)} / (€/m²)</td>
+        <td class="num">${betaSe('rent')} / (€/m²)</td>
       </tr>
       <tr>
         <td><strong>Pkw-Dichte</strong></td>
         <td>Gemeldete Pkw je 1.000 Einwohner (KBA)</td>
-        <td class="num">${beta(STD_MODEL.betas.carsPer1000)} / (Pkw/1k)</td>
+        <td class="num">${betaSe('carsPer1000')} / (Pkw/1k)</td>
       </tr>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
         <td>Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz in %. Fahrradstraßen und Fußgängerzonen zählen nicht dazu, weil sie schon im Radinfra-Anteil stecken.</td>
-        <td class="num">${beta(STD_MODEL.betas.livingStreetSharePct)} / %-Punkt</td>
+        <td class="num">${betaSe('livingStreetSharePct')} / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
         <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
-        <td class="num">${beta(STD_MODEL.betas.busyFederalSharePct)} / %-Punkt</td>
+        <td class="num">${betaSe('busyFederalSharePct')} / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Raumtyp (RegioStaR 7)</strong></td>

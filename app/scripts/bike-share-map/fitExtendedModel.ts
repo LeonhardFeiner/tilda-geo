@@ -83,6 +83,8 @@ const landNames: Record<string, string> = {
 type Sample = {
   id: string
   blId: string
+  /** Landkreis (or the kreisfreie Stadt itself): the unit for robust errors and blocked CV. */
+  cluster: string
   y: number
   roadKm: number
   weight: number
@@ -183,6 +185,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
       samples.push({
         id,
         blId,
+        cluster: String(p.landkreis_id || id),
         y,
         roadKm,
         weight: roadKm,
@@ -301,7 +304,18 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
       betas[v] = theta[lands.length + j] ?? 0
     })
 
-    return { landBaselines, betas, means: pMeans }
+    return { landBaselines, betas, means: pMeans, theta, invM, numParams }
+  }
+
+  /** Centered design row as fitWls builds it (Land dummies, then the inputs minus their means). */
+  function designRow(row: Sample, means: Record<string, number>) {
+    const zRow: number[] = Array.from({ length: lands.length + varNames.length }, () => 0)
+    const landIdx = lands.indexOf(row.blId)
+    if (landIdx >= 0) zRow[landIdx] = 1
+    for (let j = 0; j < varNames.length; j++) {
+      zRow[lands.length + j] = row[varNames[j]!] - (means[varNames[j]!] ?? 0)
+    }
+    return zRow
   }
 
   const fullFit = fitWls(samples)
@@ -326,30 +340,81 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
   const r2InSample = 1 - ssRes / ssTot
   const weightedRse = Math.sqrt(ssRes / totalWeight)
 
-  // 10-fold Cross-Validation
-  const shuffled = [...samples]
+  // Coefficient uncertainty: cluster-robust (sandwich) covariance with Landkreise as clusters.
+  // Neighbouring Gemeinden share mappers, administrations and terrain, so their errors are not
+  // independent; the classical formula would make every factor look far more certain than it is.
+  // CR1 small-sample factor G/(G−1)·(N−1)/(N−P).
+  const P = fullFit.numParams
+  const scores = new Map<string, number[]>()
+  for (const row of samples) {
+    const z = designRow(row, fullFit.means)
+    let yPred = 0
+    for (let k = 0; k < P; k++) yPred += (fullFit.theta[k] ?? 0) * (z[k] ?? 0)
+    const we = row.weight * (row.y - yPred)
+    let u = scores.get(row.cluster)
+    if (!u) {
+      u = Array.from({ length: P }, () => 0)
+      scores.set(row.cluster, u)
+    }
+    for (let k = 0; k < P; k++) u[k] = (u[k] ?? 0) + we * (z[k] ?? 0)
+  }
+  const meat: number[][] = Array.from({ length: P }, () => Array.from({ length: P }, () => 0))
+  for (const u of scores.values()) {
+    for (let a = 0; a < P; a++) {
+      const ua = u[a] ?? 0
+      if (ua === 0) continue
+      const meatRow = meat[a]!
+      for (let b = 0; b < P; b++) meatRow[b] = (meatRow[b] ?? 0) + ua * (u[b] ?? 0)
+    }
+  }
+  const G = scores.size
+  const N = samples.length
+  const cr1 = (G / (G - 1)) * ((N - 1) / (N - P))
+  const inv = fullFit.invM
+  const tmp = inv.map((row) =>
+    Array.from({ length: P }, (_, b) =>
+      row.reduce((acc, v, k) => acc + v * (meat[k]?.[b] ?? 0), 0),
+    ),
+  )
+  const covariance = tmp.map((row) =>
+    Array.from(
+      { length: P },
+      (_, b) => cr1 * row.reduce((acc, v, k) => acc + v * (inv[k]?.[b] ?? 0), 0),
+    ),
+  )
+  const off = lands.length
+  const betaCov = varNames.map((_, a) =>
+    varNames.map((__, b) => covariance[off + a]?.[off + b] ?? 0),
+  )
+  console.log(`Cluster-robust SEs from ${G} Landkreise:`)
+  varNames.forEach((v, j) => {
+    const se = Math.sqrt(betaCov[j]?.[j] ?? 0)
+    console.log(`  ${v}: ${(fullFit.betas[v] ?? 0).toFixed(4)} ± ${se.toFixed(4)}`)
+  })
+
+  // 10-fold cross-validation, blocked by Landkreis: all Gemeinden of a Kreis are left out
+  // together. Random folds put a Gemeinde's neighbours (same mappers, same Kreis) into training
+  // and overstate how well the model transfers to places it has not seen.
+  const clusters = Array.from(new Set(samples.map((s) => s.cluster))).sort()
   let seed = 42
   function rand() {
     seed = (seed * 16807) % 2147483647
     return (seed - 1) / 2147483646
   }
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  for (let i = clusters.length - 1; i > 0; i--) {
     const j = Math.floor(rand() * (i + 1))
-    const tmp = shuffled[i]!
-    shuffled[i] = shuffled[j]!
-    shuffled[j] = tmp
+    const tmp = clusters[i]!
+    clusters[i] = clusters[j]!
+    clusters[j] = tmp
   }
-
   const K_FOLDS = 10
+  const foldOf = new Map(clusters.map((c, i) => [c, i % K_FOLDS]))
   let cvSsTot = 0
   let cvSsRes = 0
 
   for (let fold = 0; fold < K_FOLDS; fold++) {
-    const testStart = Math.floor((fold * shuffled.length) / K_FOLDS)
-    const testEnd = Math.floor(((fold + 1) * shuffled.length) / K_FOLDS)
-
-    const trainData = [...shuffled.slice(0, testStart), ...shuffled.slice(testEnd)]
-    const testData = shuffled.slice(testStart, testEnd)
+    const trainData = samples.filter((s) => foldOf.get(s.cluster) !== fold)
+    const testData = samples.filter((s) => foldOf.get(s.cluster) === fold)
 
     const foldFit = fitWls(trainData)
     const foldMeanY =
@@ -374,7 +439,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
   const r2Cv = 1 - cvSsRes / cvSsTot
 
   console.log(`In-Sample Weighted R^2: ${(r2InSample * 100).toFixed(2)} %`)
-  console.log(`Cross-Validated R^2 (10-fold): ${(r2Cv * 100).toFixed(2)} %`)
+  console.log(`Cross-Validated R^2 (10-fold, blocked by Landkreis): ${(r2Cv * 100).toFixed(2)} %`)
   console.log(`Weighted Residual Std Error: ${weightedRse.toFixed(2)} %p`)
   console.log(`Baseline Bike Share %: ${weightedMeanY.toFixed(2)} %`)
 
@@ -418,6 +483,16 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
         Number((fullFit.betas[v] ?? 0).toFixed(4)),
       ]),
     ),
+    // Cluster-robust standard errors and covariance of the betas (same key order as `betas`), so
+    // the viewer can say which factor contributions are distinguishable from zero.
+    betaSe: Object.fromEntries(
+      varNames.map((v, j) => [
+        v === 'stDistKm' ? 'stDist' : v,
+        Number(Math.sqrt(betaCov[j]?.[j] ?? 0).toPrecision(4)),
+      ]),
+    ),
+    betaCovariance: betaCov.map((row) => row.map((x) => Number(x.toPrecision(4)))),
+    clusterCount: G,
     bundeslandBaselines: {
       ...Object.fromEntries(
         lands.map((l) => [l, Number((fullFit.landBaselines[l] ?? 0).toFixed(2))]),

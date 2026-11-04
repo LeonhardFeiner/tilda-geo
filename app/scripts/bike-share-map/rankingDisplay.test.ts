@@ -7,6 +7,8 @@ import {
   barFractionFromZero,
   isStructuralModelLevel,
   modelGapColorStops,
+  factorEffectIsClear,
+  factorStandardErrors,
   bikelaneGapKm,
   contextBand,
   medianOfSorted,
@@ -590,7 +592,8 @@ describe('aggregateResidualStdErrorPct', () => {
 describe('modelGapColorStops', () => {
   test('changes colour at zero so the sign of a small gap stays visible', () => {
     const stops = modelGapColorStops(2, 8, false)
-    expect(stops.map(([v]) => v)).toEqual([-8, -2, -0.001, 0.001, 2, 8])
+    // pale within one typical deviation, mid colour at two, full only beyond
+    expect(stops.map(([v]) => v)).toEqual([-8, -4, -2, -0.001, 0.001, 2, 4, 8])
     const near = stops.filter(([v]) => Math.abs(v) < 0.01).map(([, c]) => c)
     expect(near[0]).not.toBe(near[1])
   })
@@ -610,5 +613,24 @@ describe('rankingBarBounds', () => {
   test('uses the list extremes, so ranks above the colour cap still differ', () => {
     expect(rankingBarBounds([44.6, 34.9, 12, null, Number.NaN])).toEqual({ max: 44.6, min: 0 })
     expect(rankingBarBounds([-3, 2.5, -7.25])).toEqual({ max: 2.5, min: -7.25 })
+  })
+})
+
+describe('factor uncertainty', () => {
+  test('a contribution counts as clear only beyond two standard errors and 0.05 pp', () => {
+    expect(factorEffectIsClear(1, 0.4)).toBe(true)
+    expect(factorEffectIsClear(1, 0.6)).toBe(false)
+    expect(factorEffectIsClear(0.04, 0)).toBe(false)
+    expect(factorEffectIsClear(-1, null)).toBe(true)
+    expect(factorEffectIsClear(null, 0.1)).toBe(false)
+  })
+
+  test('the standard error of a contribution scales with the distance from the mean', () => {
+    const cfg = STRUCTURAL_MODEL_CONFIGS.standard
+    const se1 = factorStandardErrors(cfg, { rent: 1 }).deltaRent!
+    const se2 = factorStandardErrors(cfg, { rent: 2 }).deltaRent!
+    expect(se1).toBeCloseTo(cfg.betaSe!.rent!, 3)
+    expect(se2).toBeCloseTo(2 * se1, 6)
+    expect(factorStandardErrors(cfg, {}).deltaRent).toBe(0)
   })
 })

@@ -86,6 +86,7 @@ export function generateViewerHtml(
       gemeindeGeometry: versionOf(GEMEINDE_GEOMETRY_DIR),
       neighborsBuildWorker: versionOf('neighborsBuild.worker.js'),
       neighborsWorker: versionOf('neighbors.worker.js'),
+      statsDecodeWorker: versionOf('statsDecode.worker.js'),
     },
     basemap: DEFAULT_BASEMAP,
     basemapStyles,
@@ -97,6 +98,7 @@ export function generateViewerHtml(
     bikelanesTiles: TILDA_BIKELANES_TILES,
     roadsTiles: TILDA_ROADS_TILES,
     statsMsgpackUrl: v(`./${VIEWER_FILES.statsCore}`),
+    statsGemeindenMsgpackUrl: v(`./${VIEWER_FILES.statsGemeinden}`),
     statsExtraMsgpackUrl: v(`./${VIEWER_FILES.statsExtra}`),
     gemeindeGeometryBase: `./${GEMEINDE_GEOMETRY_DIR}/`,
     lazyDarstellungPresenceUrl: v(`./${VIEWER_FILES.lazyDarstellungPresence}`),
@@ -790,6 +792,14 @@ export function generateViewerHtml(
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
+    .model-breakdown-table tr.model-row-unclear td { color: #64748b; }
+    .ctx-more {
+      display: block; margin: 8px 0 0; padding: 6px 10px; cursor: pointer;
+      border: 1px solid #cbd5e1; border-radius: 6px; background: #fff;
+      color: #1565c0; font: inherit; font-weight: 600;
+    }
+    .ctx-more:hover { background: #f1f5f9; }
+    .ctx-group[hidden], .ctx-row[hidden] { display: none !important; }
     .model-profile-note { display: block; margin: 2px 0 4px; font-size: 0.75rem; opacity: 0.85; }
     .model-breakdown-details {
       margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(0, 0, 0, 0.1);
@@ -1958,6 +1968,25 @@ export function generateViewerHtml(
       if (!res.ok) throw new Error('stats-core.msgpack: HTTP ' + res.status);
       return await res.arrayBuffer();
     });
+    // The Gemeinden (stats-gemeinden.msgpack) start downloading once stats-core is in, so the two
+    // don't share the bandwidth the first map is waiting for.
+    const gemeindenDataPromise = statsDataPromise.then(() =>
+      fetch(CONFIG.statsGemeindenMsgpackUrl).then(async (res) => {
+        if (!res.ok) throw new Error('stats-gemeinden.msgpack: HTTP ' + res.status);
+        return await res.arrayBuffer();
+      }),
+    );
+    // Only the plain landing page (Landkreise of Germany, nothing selected) may draw before the
+    // Gemeinden are in. Any URL that picks an area, a level, a region or a metric waits for them.
+    const VIEW_PARAMS = ['region', 'focus', 'simple', 'gebiet', 'untergebiet', 'darstellung', 'metrik'];
+    const bootWithoutGemeinden = (() => {
+      try {
+        const q = new URLSearchParams(location.search);
+        return !VIEW_PARAMS.some((k) => q.has(k));
+      } catch (e) {
+        return false;
+      }
+    })();
     // {id → demographic-peer bucket key, key → label}; used by the region card. Optional.
     let peerGroupIndex = null;
     fetch(CONFIG.peersUrl)
@@ -2186,10 +2215,76 @@ export function generateViewerHtml(
       }
     }
 
+    /**
+     * Decode a stats pack in a worker (statsDecode.worker.js) so the page stays responsive while
+     * ~11k regions unpack; the bytes are transferred, not copied. Falls back to decoding here
+     * when workers are unavailable or the worker fails.
+     */
+    function decodeStatsPack(bytes) {
+      const local = () => StatsPack.decodeRegionFeatures(new Uint8Array(bytes));
+      if (typeof Worker !== 'function') return Promise.resolve(local());
+      return new Promise((resolve) => {
+        let worker;
+        try {
+          worker = new Worker('./statsDecode.worker.js?v=' + CONFIG.assetVersions.statsDecodeWorker, {
+            type: 'module',
+          });
+        } catch (e) {
+          resolve(local());
+          return;
+        }
+        // Keep a copy for the fallback: transferring empties the original buffer.
+        const copy = bytes.slice(0);
+        const fallback = () => {
+          worker.terminate();
+          resolve(StatsPack.decodeRegionFeatures(new Uint8Array(copy)));
+        };
+        worker.onmessage = (event) => {
+          if (event.data?.type !== 'ok') {
+            fallback();
+            return;
+          }
+          worker.terminate();
+          try {
+            resolve(JSON.parse(event.data.json));
+          } catch (e) {
+            fallback();
+          }
+        };
+        worker.onerror = fallback;
+        worker.postMessage({ type: 'decode', bytes }, [bytes]);
+      });
+    }
+
+    let gemeindenLoaded = false;
+    let gemeindenPromise = null;
+    /** Resolves once the Gemeinden are part of allFeatures (and the indexes are rebuilt). */
+    function ensureGemeindenLoaded() {
+      if (gemeindenLoaded) return Promise.resolve();
+      if (gemeindenPromise) return gemeindenPromise;
+      gemeindenPromise = gemeindenDataPromise
+        .then((bytes) => decodeStatsPack(bytes))
+        .then((features) => {
+          allFeatures = allFeatures.concat(features);
+          rebuildRegionIndex();
+          gemeindenLoaded = true;
+        })
+        .catch((err) => {
+          gemeindenPromise = null;
+          throw err;
+        });
+      return gemeindenPromise;
+    }
+
     const statsReadyPromise = statsDataPromise
-      .then((bytes) => {
-        allFeatures = StatsPack.decodeRegionFeatures(new Uint8Array(bytes));
-        rebuildRegionIndex();
+      .then((bytes) => decodeStatsPack(bytes))
+      .then(async (features) => {
+        allFeatures = features;
+        if (!bootWithoutGemeinden) {
+          await ensureGemeindenLoaded();
+        } else {
+          rebuildRegionIndex();
+        }
         rawLoaded = true;
         if (loadStatus) loadStatus.textContent = '';
       })
@@ -3143,12 +3238,11 @@ export function generateViewerHtml(
       if (!rawLoaded) return;
       // "Gesamt" means every region, including Gemeindeverbände/Stadtbezirke — load them even
       // if the current Darstellung never needed them.
-      if (!extraLevelsLoaded) {
-        try {
-          await ensureExtraLevelsLoaded();
-        } catch {
-          /* export with whatever loaded rather than blocking the download entirely */
-        }
+      try {
+        await ensureGemeindenLoaded();
+        if (!extraLevelsLoaded) await ensureExtraLevelsLoaded();
+      } catch {
+        /* export with whatever loaded rather than blocking the download entirely */
       }
       await whenRegionExtraIndexesReady();
       lengthClassFilter = readLengthClassFilterFromUi();
@@ -3212,9 +3306,11 @@ export function generateViewerHtml(
           metricDef.innerHTML =
             'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
             '<strong>Grün</strong> = darüber, <strong>Rot</strong> = darunter. ' +
-            'Helle Töne liegen innerhalb der typischen Abweichung auf dieser Ebene (±' +
+            'Blasse Töne liegen innerhalb der typischen Abweichung auf dieser Ebene (±' +
             formatUiPct(lastModelBandPct) +
-            ' %-Punkte), kräftige Töne außerhalb. Landkreise und Bezirke: Summe ihrer Gemeinden; für Länder kein Wert. ' +
+            ' %-Punkte), volle Farbe erst jenseits der doppelten (±' +
+            formatUiPct(2 * lastModelBandPct) +
+            ' %-Punkte, etwa die äußersten 5 %). Landkreise und Bezirke: Summe ihrer Gemeinden; für Länder kein Wert. ' +
             '<strong>Grau</strong> = kein Wert.';
         } else if (metric === 'cars') {
           metricDef.textContent =
@@ -5621,6 +5717,24 @@ export function generateViewerHtml(
         tbody.appendChild(tr);
       };
 
+      // "senkt/hebt" only where the contribution is at least two of its (cluster-robust)
+      // standard errors away from zero; the rest is shown, but greyed as "kein klarer Effekt".
+      const factorLabel = (key, delta, up, down) =>
+        RankingDisplay.factorEffectIsClear(delta, m.factorSe?.[key])
+          ? delta > 0
+            ? up
+            : down
+          : Math.abs(delta) < 0.05
+            ? 'neutral'
+            : 'kein klarer Effekt';
+      const factorClass = (key, delta) =>
+        RankingDisplay.factorEffectIsClear(delta, m.factorSe?.[key]) ? null : 'model-row-unclear';
+      const factorNote = (key, text) => {
+        const se = m.factorSe?.[key];
+        const band = typeof se === 'number' && se >= 0.05 ? '±' + formatUiPct(se) + ' %-Pkt. Unsicherheit' : null;
+        return [text, band].filter(Boolean).join(' · ') || null;
+      };
+
       addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gemeinden (nach Netzlänge gewichtet)', formatUiPct(m.baselinePct) + ' %', '');
 
       if (m.deltaLand != null && Math.abs(m.deltaLand) >= 0.01) {
@@ -5639,35 +5753,39 @@ export function generateViewerHtml(
       if (m.inputs.elevMean != null) topoNotes.push(deNumber(Math.round(m.inputs.elevMean), 0) + ' m Höhe');
       addRow(
         'Topografie & Hanglage',
-        topoNotes.join(', ') || null,
+        factorNote('deltaTopo', topoNotes.join(', ')),
         m.deltaTopo,
-        m.deltaTopo <= -0.05 ? 'senkt Erwartung' : m.deltaTopo >= 0.05 ? 'hebt Erwartung' : 'neutral',
+        factorLabel('deltaTopo', m.deltaTopo, 'hebt Erwartung', 'senkt Erwartung'),
+        factorClass('deltaTopo', m.deltaTopo),
       );
 
       if (m.deltaRent != null) {
         addRow(
           'Mietniveau',
-          m.inputs.rent != null ? deNumber(m.inputs.rent, 2) + ' €/m² Kaltmiete' : null,
+          factorNote('deltaRent', m.inputs.rent != null ? deNumber(m.inputs.rent, 2) + ' €/m² Kaltmiete' : null),
           m.deltaRent,
-          m.deltaRent >= 0.05 ? 'gehobenes Niveau' : m.deltaRent <= -0.05 ? 'niedrigeres Niveau' : 'neutral',
+          factorLabel('deltaRent', m.deltaRent, 'gehobenes Niveau', 'niedrigeres Niveau'),
+          factorClass('deltaRent', m.deltaRent),
         );
       }
 
       if (m.deltaLiving != null) {
         addRow(
           'Spielstraßen (verkehrsberuhigte Bereiche)',
-          m.inputs.livingStreetSharePct != null ? deNumber(m.inputs.livingStreetSharePct, 1) + ' % des Netzes' : null,
+          factorNote('deltaLiving', m.inputs.livingStreetSharePct != null ? deNumber(m.inputs.livingStreetSharePct, 1) + ' % des Netzes' : null),
           m.deltaLiving,
-          m.deltaLiving >= 0.05 ? 'hohe Beruhigung' : m.deltaLiving <= -0.05 ? 'wenig Beruhigung' : 'neutral',
+          factorLabel('deltaLiving', m.deltaLiving, 'hohe Beruhigung', 'wenig Beruhigung'),
+          factorClass('deltaLiving', m.deltaLiving),
         );
       }
 
       if (m.deltaBusy != null) {
         addRow(
           'Vielbefahrene Bundesstraßen',
-          m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes' : null,
+          factorNote('deltaBusy', m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes' : null),
           m.deltaBusy,
-          m.deltaBusy >= 0.05 ? 'hebt Erwartung' : m.deltaBusy <= -0.05 ? 'senkt Erwartung' : 'neutral',
+          factorLabel('deltaBusy', m.deltaBusy, 'hebt Erwartung', 'senkt Erwartung'),
+          factorClass('deltaBusy', m.deltaBusy),
         );
       }
 
@@ -5676,32 +5794,36 @@ export function generateViewerHtml(
         const code = m.inputs.regioStar7;
         addRow(
           'Raumtyp (RegioStaR)',
-          Number.isInteger(code) ? RankingDisplay.REGIOSTAR7_LABELS[code] || null : 'gemischt',
+          factorNote('deltaRegion', Number.isInteger(code) ? RankingDisplay.REGIOSTAR7_LABELS[code] || null : 'gemischt'),
           m.deltaRegion,
-          m.deltaRegion >= 0.05 ? 'hebt Erwartung' : m.deltaRegion <= -0.05 ? 'senkt Erwartung' : 'neutral',
+          factorLabel('deltaRegion', m.deltaRegion, 'hebt Erwartung', 'senkt Erwartung'),
+          factorClass('deltaRegion', m.deltaRegion),
         );
       }
 
       addRow(
         'Siedlungsdichte',
-        m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null,
+        factorNote('deltaDens', m.inputs.density != null ? deNumber(Math.round(m.inputs.density), 0) + ' Einw./km²' : null),
         m.deltaDens,
-        m.deltaDens >= 0.05 ? 'überdurchschn.' : m.deltaDens <= -0.05 ? 'unterdurchschn.' : 'neutral',
+        factorLabel('deltaDens', m.deltaDens, 'überdurchschn.', 'unterdurchschn.'),
+        factorClass('deltaDens', m.deltaDens),
       );
 
       addRow(
         'ÖPNV-Haltestellennähe',
-        m.inputs.stDistKm != null ? 'Ø ' + deNumber(m.inputs.stDistKm, 1) + ' km Distanz' : null,
+        factorNote('deltaTransit', m.inputs.stDistKm != null ? 'Ø ' + deNumber(m.inputs.stDistKm, 1) + ' km Distanz' : null),
         m.deltaTransit,
-        m.deltaTransit >= 0.05 ? 'gute Anbindung' : m.deltaTransit <= -0.05 ? 'weite Wege' : 'neutral',
+        factorLabel('deltaTransit', m.deltaTransit, 'gute Anbindung', 'weite Wege'),
+        factorClass('deltaTransit', m.deltaTransit),
       );
 
       if (m.deltaCars != null) {
         addRow(
           'Motorisierungsgrad',
-          m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' Pkw / 1k Einw.' : null,
+          factorNote('deltaCars', m.inputs.carsPer1000 != null ? deNumber(Math.round(m.inputs.carsPer1000), 0) + ' Pkw je 1.000 Einw.' : null),
           m.deltaCars,
-          m.deltaCars >= 0.05 ? 'wenig Pkw' : m.deltaCars <= -0.05 ? 'viele Pkw' : 'neutral',
+          factorLabel('deltaCars', m.deltaCars, 'wenig Pkw', 'viele Pkw'),
+          factorClass('deltaCars', m.deltaCars),
         );
       }
 
@@ -5724,7 +5846,7 @@ export function generateViewerHtml(
       addRow(
         'Modell-Abweichung (Residuum)',
         m.isWithin1Se
-          ? 'Im typischen Streubereich (±1 SE)'
+          ? 'Im üblichen Bereich (±1 typische Abweichung)'
           : m.behind
             ? 'Unter Erwartungswert'
             : 'Über Erwartungswert',
@@ -5742,11 +5864,12 @@ export function generateViewerHtml(
         m.modelName +
         ': Das Modell bildet ' +
         formatUiPct(m.r2TotalPct) +
-        ' % der Unterschiede zwischen Gemeinden ab (10-fache Kreuzvalidierung: ' +
+        ' % der Unterschiede zwischen Gemeinden ab (Kreuzvalidierung mit ganzen Landkreisen: ' +
         formatUiPct(m.r2CvPct) +
         ' %, n = ' +
         deNumber(m.n, 0) +
-        ' Gemeinden). Es beschreibt Zusammenhänge, keine Ursachen – ein statistischer Vergleichswert, kein planerischer Zielwert.' +
+        ' Gemeinden). Es beschreibt Zusammenhänge, keine Ursachen – ein statistischer Vergleichswert, kein planerischer Zielwert. ' +
+        'Grau mit „kein klarer Effekt“: der Beitrag ist kleiner als zwei Standardfehler, also von null nicht sicher zu unterscheiden.' +
         (aggregated
           ? ' Für dieses Gebiet sind Erwartungswert und Faktoren die nach Straßenlänge gewichtete Summe seiner Gemeinden; das Streuband ist die typische Abweichung aller Gebiete dieser Ebene.'
           : '');
@@ -6446,7 +6569,13 @@ export function generateViewerHtml(
      * header for why these can diverge, e.g. a high-elevation plateau can be locally flatter than
      * a lower-lying river valley).
      */
+    /** Model inputs, mapping depth and accidents first; the other rows behind "Alle Kennzahlen". */
+    const CONTEXT_CORE = new Set(RankingDisplay.CONTEXT_CORE_KEYS);
+    let showAllContext = false;
+
     function renderRegionExtra(p) {
+      // A plot left open on a folded row would be invisible: unfold for it.
+      if (openContextPlotKey && !CONTEXT_CORE.has(openContextPlotKey)) showAllContext = true;
       if (regionDetailMore?.open) ensureRegionExtraIndexes();
       else ensureModelIndexes();
       const level = String(p.level ?? '');
@@ -6573,7 +6702,41 @@ export function generateViewerHtml(
             toggle();
           });
         }
+        if (!showAllContext && !CONTEXT_CORE.has(metric.key)) {
+          row.hidden = true;
+          row.classList.add('ctx-row--extra');
+        }
         regionDetailExtra.appendChild(row);
+      }
+      // A heading whose rows are all folded away goes too.
+      let hiddenCount = 0;
+      for (const heading of regionDetailExtra.querySelectorAll('.ctx-group')) {
+        let el = heading.nextElementSibling;
+        let anyVisible = false;
+        while (el && !el.classList.contains('ctx-group')) {
+          if (el.classList.contains('ctx-row') && !el.hidden) anyVisible = true;
+          el = el.nextElementSibling;
+        }
+        heading.hidden = !anyVisible;
+      }
+      hiddenCount = regionDetailExtra.querySelectorAll('.ctx-row--extra').length;
+      if (hiddenCount > 0 || showAllContext) {
+        const more = document.createElement('button');
+        more.type = 'button';
+        more.className = 'ctx-more';
+        more.setAttribute('aria-expanded', String(showAllContext));
+        more.textContent = showAllContext
+          ? 'Weniger Kennzahlen'
+          : 'Alle Kennzahlen (' + hiddenCount + ' weitere)';
+        more.addEventListener('click', () => {
+          showAllContext = !showAllContext;
+          renderRegionExtra(p);
+          regionDetailExtra.querySelector('.ctx-more')?.focus({ preventScroll: true });
+        });
+        if (showAllContext) {
+          for (const row of regionDetailExtra.querySelectorAll('.ctx-row--extra')) row.hidden = false;
+        }
+        regionDetailExtra.appendChild(more);
       }
       regionDetailExtra.hidden = !regionDetailExtra.firstChild;
       // Hidden card = first selection: showRegionDetail reopens the plot once the card has a width.
@@ -9633,10 +9796,35 @@ export function generateViewerHtml(
       return applyCurrentView();
     }
 
+    /** Views drawn from Länder, Bezirke and Kreise alone; every other view needs the Gemeinden. */
+    const DARSTELLUNGEN_WITHOUT_GEMEINDEN = new Set([
+      'bundeslaender',
+      'regierungsbezirke',
+      'landkreis_kreisfrei',
+      'landkreise',
+      'kreisfreie',
+    ]);
+    function viewNeedsGemeinden() {
+      return (
+        isNeighborView() ||
+        currentMapMetric !== 'bikeShare' ||
+        !DARSTELLUNGEN_WITHOUT_GEMEINDEN.has(currentViewScope.darstellung)
+      );
+    }
+
     async function applyCurrentView() {
       const refitScope = refitScopeOnNextApply;
       refitScopeOnNextApply = false;
       syncViewScopeFromUi();
+      if (!gemeindenLoaded && viewNeedsGemeinden()) {
+        setLoadStatus('Lade Gemeinden …');
+        try {
+          await ensureGemeindenLoaded();
+        } catch (err) {
+          showLoadError(err, 'Die Gemeinden konnten nicht geladen werden.');
+        }
+        setLoadStatus('');
+      }
       // The neighbour index (~1.3 MB) is only fetched once a view could use it: a neighbour
       // view, or a single Landkreis in the scope, whose Zeige select can then offer "Nachbarn".
       if (isNeighborView() || neighborOptionsFocus()) ensureNeighborsLoaded();
@@ -9961,6 +10149,7 @@ export function generateViewerHtml(
      * and fetch only those Gemeinden's polygons.
      */
     async function findRegionAtLocation(lng, lat) {
+      await ensureGemeindenLoaded();
       const margin = 0.02;
       const nearbyLandkreise = new Set();
       for (const f of allFeatures) {
@@ -10388,7 +10577,7 @@ export function generateViewerHtml(
       try {
         const res = await fetch(url, controller ? { signal: controller.signal } : undefined);
         if (!res.ok) throw new Error('HTTP ' + res.status + ' für ' + url);
-        return StatsPack.decodeRegionFeatures(new Uint8Array(await res.arrayBuffer()));
+        return await decodeStatsPack(await res.arrayBuffer());
       } finally {
         clearTimeout(timeoutId);
       }
@@ -10421,6 +10610,18 @@ export function generateViewerHtml(
         urlSyncEnabled = true;
         urlSyncBaseline = currentStateUrl();
         window.__viewerBooted = true;
+        if (!gemeindenLoaded) {
+          ensureGemeindenLoaded()
+            .then(() => {
+              // New regions: the level list, the search, the card (a Kreis's model gap is the
+              // sum of its Gemeinden) and anything typed into the search before they came.
+              populateDarstellungSelect();
+              refreshSelectedRegionIfNeeded();
+              const input = document.getElementById('region-search-input');
+              if (input && input.value.trim()) input.dispatchEvent(new Event('input', { bubbles: true }));
+            })
+            .catch((err) => showLoadError(err, 'Die Gemeinden konnten nicht geladen werden.'));
+        }
       } catch (e) {
         showLoadError(e, 'Die Karte konnte nicht vollständig geladen werden.');
       }

@@ -1,6 +1,11 @@
 import { DEFAULT_MIN_ROAD_KM_FOR_SCALE } from './choroplethScale'
 
-export { CONTEXT_METRIC_GROUPS, CONTEXT_METRIC_LABELS, REGIOSTAR7_LABELS } from './contextMetrics'
+export {
+  CONTEXT_CORE_KEYS,
+  CONTEXT_METRIC_GROUPS,
+  CONTEXT_METRIC_LABELS,
+  REGIOSTAR7_LABELS,
+} from './contextMetrics'
 import { GENERATED_STRUCTURAL_MODEL_CONFIGS } from './structuralModelConfigs.generated'
 
 export type RankingDisplayItem = { id: string }
@@ -363,11 +368,90 @@ export type StructuralModelConfig = {
     livingStreetSharePct: number
     busyFederalSharePct: number
   } & RegioStarDummies
+  /** Cluster-robust (by Landkreis) standard errors of the betas. */
+  betaSe?: Partial<Record<ModelBetaKey, number>>
+  /** Their covariance, rows/columns in MODEL_BETA_KEYS order. */
+  betaCovariance?: number[][]
+  /** Number of Landkreise the errors and the blocked cross-validation are clustered by. */
+  clusterCount?: number
   bundeslandBaselines: Record<string, number>
   r2: {
     totalPct: number
     cvPct: number
   }
+}
+
+/** Order of the betas in `betaCovariance` (= fitExtendedModel varNames, stDistKm → stDist). */
+export const MODEL_BETA_KEYS = [
+  'roadSlope',
+  'elevMean',
+  'logDens',
+  'stDist',
+  'rent',
+  'carsPer1000',
+  'livingStreetSharePct',
+  'busyFederalSharePct',
+  ...(Object.keys(REGIOSTAR_DUMMIES) as RegioStarDummy[]),
+] as const
+export type ModelBetaKey = (typeof MODEL_BETA_KEYS)[number]
+
+/** Which betas make up each factor row of the breakdown. */
+const DELTA_BETA_KEYS: Record<string, readonly ModelBetaKey[]> = {
+  deltaSlope: ['roadSlope'],
+  deltaElev: ['elevMean'],
+  deltaTopo: ['roadSlope', 'elevMean'],
+  deltaDens: ['logDens'],
+  deltaTransit: ['stDist'],
+  deltaRent: ['rent'],
+  deltaCars: ['carsPer1000'],
+  deltaLiving: ['livingStreetSharePct'],
+  deltaBusy: ['busyFederalSharePct'],
+  deltaRegion: Object.keys(REGIOSTAR_DUMMIES) as RegioStarDummy[],
+}
+
+/**
+ * Standard error of each factor contribution: a factor adds β·(x − mean), so its uncertainty is
+ * √(aᵀ Σ a) with a = the input's distance from the mean (several betas for a combined row).
+ * `design` holds x − mean per beta key; for a Kreis it is the road-weighted mean over its
+ * Gemeinden, which keeps this exact because a contribution is linear in it.
+ */
+export function factorStandardErrors(
+  cfg: StructuralModelConfig,
+  design: Partial<Record<ModelBetaKey, number>>,
+  scaleFactor = 1,
+) {
+  const cov = cfg.betaCovariance
+  const out: Record<string, number | null> = {}
+  for (const [delta, keys] of Object.entries(DELTA_BETA_KEYS)) {
+    if (!cov) {
+      out[delta] = null
+      continue
+    }
+    let v = 0
+    for (const a of keys) {
+      const ia = MODEL_BETA_KEYS.indexOf(a)
+      for (const b of keys) {
+        const ib = MODEL_BETA_KEYS.indexOf(b)
+        v += (design[a] ?? 0) * (cov[ia]?.[ib] ?? 0) * (design[b] ?? 0)
+      }
+    }
+    out[delta] = Math.sqrt(Math.max(0, v)) * scaleFactor
+  }
+  return out
+}
+
+/**
+ * Whether a factor contribution is distinguishable from zero: at least twice its standard error
+ * (about 95 % confidence) and at least 0.05 percentage points. Without errors in the config the
+ * old 0.05 rule applies.
+ */
+export function factorEffectIsClear(
+  delta: number | null | undefined,
+  se: number | null | undefined,
+) {
+  if (delta == null || !Number.isFinite(delta)) return false
+  if (Math.abs(delta) < 0.05) return false
+  return se == null ? true : Math.abs(delta) >= 2 * se
 }
 
 /**
@@ -475,9 +559,15 @@ export function aggregateStructuralPredictions(
       return [k, w > 0 ? known.reduce((a, m) => a + (m.inputs[k] ?? 0) * m.roadKm, 0) / w : null]
     }),
   ) as StructuralModelPrediction['inputs']
+  const design = Object.fromEntries(
+    MODEL_BETA_KEYS.map((k) => [k, weighted((m) => m.design[k] ?? 0)]),
+  ) as Partial<Record<ModelBetaKey, number>>
+  const cfg = STRUCTURAL_MODEL_CONFIGS[first.modelType] || STRUCTURAL_MODEL_CONFIGS.standard
   return {
     ...first,
     ...deltas,
+    design,
+    factorSe: factorStandardErrors(cfg, design, first.scaleFactor),
     baselinePct: weighted((m) => m.baselinePct),
     landBaselinePct: weighted((m) => m.landBaselinePct),
     expectedPct,
@@ -520,21 +610,26 @@ export const MODEL_BAND_MIN_REGIONS = 8
 
 /**
  * Colour stops for the model gap: a continuous diverging scale whose light tints near zero still
- * show the sign, so a small deviation never looks like missing data. `bandPct` (±1 typical
- * deviation) marks where the tints turn into full colour.
+ * show the sign, so a small deviation never looks like missing data. `bandPct` is one typical
+ * deviation: within it the tints stay pale, they reach mid colour at two, and only beyond two
+ * typical deviations (about the outer 5 %) does a region get full colour. At one deviation a
+ * third of all Gemeinden were strongly coloured by construction.
  */
 export function modelGapColorStops(bandPct: number, boundPct: number, colorblind: boolean) {
   const band = Math.max(0.1, bandPct)
-  const bound = Math.max(boundPct, band + 0.1)
-  const [low, lowBand, lowNear, highNear, highBand, high] = colorblind
-    ? ['#b35806', '#f1a340', '#fde9c9', '#dbe8f3', '#7fa9d1', '#2166ac']
-    : ['#b71c1c', '#e57373', '#fbe3e1', '#e1f1e2', '#81c784', '#1b5e20']
+  const twoBand = 2 * band
+  const bound = Math.max(boundPct, twoBand + 0.1)
+  const [low, lowTwo, lowBand, lowNear, highNear, highBand, highTwo, high] = colorblind
+    ? ['#b35806', '#f1a340', '#fbd9a6', '#fdf0de', '#e8f0f8', '#b9d0e7', '#7fa9d1', '#2166ac']
+    : ['#b71c1c', '#e57373', '#f6bcb6', '#fdf0ee', '#eef7ef', '#bfe3c2', '#81c784', '#1b5e20']
   return [
     [-bound, low],
+    [-twoBand, lowTwo],
     [-band, lowBand],
     [-0.001, lowNear],
     [0.001, highNear],
     [band, highBand],
+    [twoBand, highTwo],
     [bound, high],
   ] as Array<[number, string]>
 }
@@ -700,6 +795,19 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
   const diffKm = bikeKm - expectedKm
   const residualStdErrorPct = c.residualStdErrorPct * scaleFactor
   const isWithin1Se = Math.abs(diffPct) <= residualStdErrorPct
+  const design: Partial<Record<ModelBetaKey, number>> = {
+    roadSlope: roadSlope - c.means.roadSlope,
+    elevMean: elevMean - c.means.elevMean,
+    logDens: Math.log10(Math.max(1, density)) - c.means.logDens,
+    stDist: stDistKm - c.means.stDist,
+    rent: rent - c.means.rent,
+    carsPer1000: carsPer1000 - c.means.carsPer1000,
+    livingStreetSharePct: livingStreetSharePct - c.means.livingStreetSharePct,
+    busyFederalSharePct: busyFederalSharePct - c.means.busyFederalSharePct,
+  }
+  for (const key of Object.keys(REGIOSTAR_DUMMIES) as RegioStarDummy[]) {
+    design[key] = dummies[key] - c.means[key]
+  }
 
   return {
     modelType,
@@ -728,6 +836,9 @@ export function computeStructuralModelPrediction(params: StructuralModelParams) 
     behind: diffPct < -0.05,
     isWithin1Se,
     residualStdErrorPct,
+    scaleFactor,
+    design,
+    factorSe: factorStandardErrors(c, design, scaleFactor),
     n: c.n,
     r2TotalPct: c.r2TotalPct,
     r2CvPct: c.r2CvPct,

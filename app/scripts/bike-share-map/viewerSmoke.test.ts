@@ -37,6 +37,35 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'the landing page draws from stats-core alone and loads the Gemeinden right after',
+    async () => {
+      page = await bootViewer()
+      const p = page
+      const core = p.window.__fetches.findIndex((url) => url.startsWith('stats-core.msgpack'))
+      await p.waitFor(
+        () => p.window.__fetches.some((url) => url.startsWith('stats-gemeinden.msgpack')),
+        'the stats-gemeinden fetch',
+      )
+      const gemeinden = p.window.__fetches.findIndex((url) =>
+        url.startsWith('stats-gemeinden.msgpack'),
+      )
+      expect(core).toBeGreaterThanOrEqual(0)
+      expect(gemeinden).toBeGreaterThan(core)
+      // A Gemeinde view after that has its regions.
+      const select = p.q<HTMLSelectElement>('#darstellung-select')
+      await p.waitFor(
+        () =>
+          [...select.options].some(
+            (o) => o.value === 'gemeinden_kreisfrei' || o.value === 'gemeinden',
+          ),
+        'a Gemeinden option',
+      )
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'a Gemeindeverbände view loads the extra stats pack and ranks its regions',
     async () => {
       page = await bootViewer(

@@ -119,3 +119,21 @@ export const CONTEXT_METRIC_GROUPS = [
   },
   { title: 'Gelände', keys: ['elevation', 'areaSlope', 'roadSlope', 'roadSteep'] },
 ] as const satisfies ReadonlyArray<{ title: string; keys: readonly ContextMetricKey[] }>
+
+/**
+ * Rows "Mehr Zahlen" shows before "Alle Kennzahlen": the inputs of the expected-value model, how
+ * completely the area is mapped, and bike accidents. The rest is one click away.
+ */
+export const CONTEXT_CORE_KEYS: readonly ContextMetricKey[] = [
+  'mappingDepth',
+  'busyFederalShare',
+  'density',
+  'regioStar',
+  'rent',
+  'carDensity',
+  'livingShare',
+  'bikeAccidentsPer10k',
+  'stationDistance',
+  'elevation',
+  'roadSlope',
+]

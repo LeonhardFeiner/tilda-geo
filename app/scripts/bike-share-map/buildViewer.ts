@@ -121,7 +121,12 @@ if (existsSync(msgpackPath)) {
   // one: keep them out of stats-core and write one small file per Landkreis the page fetches
   // when a view needs them.
   const { light, shards } = splitGemeindeGeometry(core)
-  writeFileSync(join(viewerDir, VIEWER_FILES.statsCore), encodeStatsRegionPack(light))
+  // The Gemeinden are three quarters of what is left; the plain landing page (Landkreise of
+  // Germany) draws none of them, so they come in a second file that loads right after the first.
+  const top = light.filter((f) => String(f.properties?.level) !== '8')
+  const gemeinden = light.filter((f) => String(f.properties?.level) === '8')
+  writeFileSync(join(viewerDir, VIEWER_FILES.statsCore), encodeStatsRegionPack(top))
+  writeFileSync(join(viewerDir, VIEWER_FILES.statsGemeinden), encodeStatsRegionPack(gemeinden))
   writeFileSync(join(viewerDir, VIEWER_FILES.statsExtra), encodeStatsRegionPack(extra))
   const geometryDir = join(viewerDir, GEMEINDE_GEOMETRY_DIR)
   rmSync(geometryDir, { recursive: true, force: true })
@@ -130,7 +135,7 @@ if (existsSync(msgpackPath)) {
     writeFileSync(join(geometryDir, `${key}.msgpack`), encodeStatsRegionPack(shardFeatures))
   }
   process.stdout.write(
-    `Stats split: ${core.length} core + ${extra.length} extra (Gemeindeverbände/Stadtbezirke) ` +
+    `Stats split: ${top.length} core + ${gemeinden.length} Gemeinden + ${extra.length} extra (Gemeindeverbände/Stadtbezirke) ` +
       `→ ${viewerDir}/stats-core.msgpack, stats-extra.msgpack; ` +
       `Gemeinde polygons in ${shards.size} files → ${geometryDir}/\n`,
   )
@@ -490,7 +495,11 @@ for (const target of bundleTargets) {
   }
 }
 
-for (const workerEntry of ['neighbors.worker.ts', 'neighborsBuild.worker.ts'] as const) {
+for (const workerEntry of [
+  'neighbors.worker.ts',
+  'neighborsBuild.worker.ts',
+  'statsDecode.worker.ts',
+] as const) {
   const workerBundle = await Bun.build({
     entrypoints: [join(scriptDir, workerEntry)],
     outdir: viewerDir,
