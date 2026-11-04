@@ -7,12 +7,11 @@ export type LegalPageInput = {
 
 /**
  * Impressum + Datenschutz next to the viewer (`impressum.html`, linked from both footers).
- * Address and email are placeholders on purpose: fill in LEGAL_CONTACT before the site is used
- * in public, an Impressum without a postal address is not a valid one.
+ * Postal address and email are required by § 5 DDG; an Impressum without them is not valid.
  */
 export const LEGAL_CONTACT = {
-  address: '[ANSCHRIFT EINTRAGEN: Straße Hausnummer, PLZ Ort]',
-  email: '[E-MAIL EINTRAGEN]',
+  address: 'Otterbachstr. 5, 85301 Schweitenkirchen',
+  email: 'feiner.politik@outlook.de',
 }
 
 export function legalPageHtml(input: LegalPageInput): string {
