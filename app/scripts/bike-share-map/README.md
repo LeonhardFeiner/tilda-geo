@@ -43,8 +43,8 @@ current export, so run the export first.
 3. **Context datasets** — re-run what is affected. Each refuses to overwrite its file with a
    result more than 20 % smaller (set `BIKE_SHARE_ALLOW_SHRINK=1` if a drop is real).
 
-   | Needs the DB                                                                                                                                           | Needs only the network (cached in `cache/`)                                                     |
-   | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+   | Needs the DB                                                                                                                                           | Needs only the network (cached in `cache/`)                                                                         |
+   | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- |
    | `calmed-roads`, `mapping-completeness`, `transit-stop-counts`, `terrain-flatness`, `highway-distance`, `traffic-volumes`, `stations`, `station-access` | `gemeinde-demographics`, `zensus-housing`, `car-density`, `accidents`, `commuters`, `regiostar`, `deutschlandatlas` |
 
    Then `bun run bike-share-map:populate-context` (needs the DB) for kreisfreie Städte, Kreise and
