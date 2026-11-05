@@ -23,6 +23,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -44,19 +45,19 @@ jobs:
         working-directory: app
         run: bun install --frozen-lockfile
 
-      # The pre-push hook runs these too, but `git push --no-verify` or a manual dispatch skips it.
-      # Includes the check that every inline <script> parses and the jsdom boot of the real page.
-      - name: Test bike-share viewer
-        working-directory: app
-        run: bun x vitest run scripts/bike-share-map
-
+      # Build first: the jsdom page tests (viewerSmoke, detourPage) load the bundles from
+      # output/viewer/, and the copies committed in git may be older than the source. Testing
+      # before the build blocked correct deploys (and could pass a stale bundle that the fresh
+      # build then breaks).
       - name: Build bike-share viewer output
         working-directory: app
         run: bun run bike-share-map:viewer
 
-      - name: Test the built page boots
+      # The pre-push hook runs these too, but `git push --no-verify` or a manual dispatch skips it.
+      # Includes the check that every inline <script> parses and the jsdom boot of the real pages.
+      - name: Test bike-share viewer (against the fresh build)
         working-directory: app
-        run: bun x vitest run scripts/bike-share-map/viewerSmoke.test.ts
+        run: bun x vitest run scripts/bike-share-map
 
       - name: Prepare Pages artifact (dereference symlinks)
         run: |
@@ -87,6 +88,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     needs: build
     environment:
       name: github-pages
@@ -104,6 +106,7 @@ jobs:
   # Runs independently of `deploy`, so a failure here never blocks the github.io site.
   mirror:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: build
     env:
       MIRROR_REPO: LeonhardFeiner/radweg
@@ -134,8 +137,12 @@ jobs:
           mkdir -p _site
           tar -xf _artifact/artifact.tar -C _site
           new_base="https://${MIRROR_DOMAIN}/"
-          grep -rlF --include='*.html' "$SOURCE_BASE_URL" _site \
-            | xargs -r sed -i "s#${SOURCE_BASE_URL}#${new_base}#g"
+          files=$(grep -rlF --include='*.html' "$SOURCE_BASE_URL" _site || true)
+          if [ -z "$files" ]; then
+            echo "::error::No HTML file contains $SOURCE_BASE_URL; SHARE_PAGE_BASE_URL in constants.ts changed? Update SOURCE_BASE_URL here."
+            exit 1
+          fi
+          printf '%s\n' "$files" | xargs sed -i "s#${SOURCE_BASE_URL}#${new_base}#g"
           if grep -rqF --include='*.html' "$SOURCE_BASE_URL" _site; then
             echo "::error::Old base URL still present after rewrite"
             exit 1
