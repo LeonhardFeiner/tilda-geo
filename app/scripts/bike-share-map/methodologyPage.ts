@@ -549,6 +549,12 @@ ${siteIconHeadLinks()}
   Gewählt wird die Route mit der kleinsten Summe aus Fahrzeit und ${CAR_SECONDS_PER_KM}&nbsp;Sekunden je
   Kilometer, wie bei üblichen Routenplanern: Eine Autobahnschleife, die viele Kilometer mehr fährt, um
   eine Minute zu sparen, gilt nicht als Autostrecke. Kein Verkehr, keine Ampeln.</p>
+  <p><strong>Vergleich mit der schnellsten Radroute:</strong> Statt mit dem Auto lässt sich die Radroute
+  auch mit der schnellsten Radroute vergleichen (Regler ganz links). Dann zeigen die Zahlen, was das
+  Meiden von Verkehr kostet: wie viele Kilometer, Höhenmeter und Minuten eine verkehrsarme Route
+  gegenüber der schnellsten mehr braucht. Langsamer ist sie nie, kürzer kann sie sein, etwa über
+  einen direkten, aber langsameren Feldweg. Ist ein Ort nur über gesperrte Straßen erreichbar, gilt
+  er wie beim Auto-Vergleich als nicht erreichbar.</p>
   <p><strong>Höhenmeter:</strong> Summe der Anstiege entlang der Route, aus den Mapzen/AWS Terrain
   Tiles (etwa 13&nbsp;m Auflösung) alle 25&nbsp;m abgetastet und leicht geglättet. Die Höhenmeter werden
   berichtet, aber bei der Routenwahl nicht vermieden. „Mehr Höhenmeter“ vergleicht mit dem Anstieg

@@ -107,8 +107,46 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
         }
       }
       expect(map.getSource('route-bike').data.features!.length).toBeGreaterThan(0)
-      expect(map.getSource('route-car').data.geometry!.coordinates.length).toBeGreaterThan(1)
+      expect(map.getSource('route-ref').data.geometry!.coordinates.length).toBeGreaterThan(1)
       expect(p.window.location.search).toContain('nach=')
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'comparing with the fastest bike route: zero at slider 0, positive detours further right',
+    async () => {
+      page = await bootPage(html(), ['detourRouting.js'], '?vergleich=rad&sicherheit=0', loaded)
+      const p = page
+      await p.waitFor(() => p.q('#status').textContent!.includes('Dörfer'), 'the graph to load')
+      expect(p.q<HTMLInputElement>('input[name=vergleich][value=rad]').checked).toBe(true)
+      const search = p.q<HTMLInputElement>('#origin-search')
+      search.value = 'Schweitenkirchen'
+      search.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+      await p.waitFor(() => rows(p).length > 0, 'the destination table')
+      expect(p.q('#ref-head').textContent).toBe('Schnellst')
+      expect(p.q('#summary').textContent).toContain('gegenüber der schnellsten Radroute')
+      // Same search on both sides: every +km cell is ±0,0.
+      const extraKm = () => rows(p).map((tr) => tr.children[4]!.textContent)
+      expect(new Set(extraKm())).toEqual(new Set(['±0,0']))
+
+      const slider = p.q<HTMLInputElement>('#safety')
+      slider.value = '100'
+      slider.dispatchEvent(new p.window.Event('input', { bubbles: true }))
+      await p.waitFor(() => p.window.location.search.includes('sicherheit=100'), 'the slider')
+      expect(extraKm().some((c) => c!.startsWith('+'))).toBe(true)
+      // The fastest route minimises time, so no low-traffic route is quicker (it may be shorter:
+      // a direct gravel track is slower than the longer road).
+      const extraMin = rows(p).map((tr) => tr.children[6]!.textContent!)
+      expect(extraMin.some((c) => c.startsWith('−') && c !== '−0')).toBe(false)
+
+      // Back to the car: the reference column changes and the URL drops the parameter.
+      const auto = p.q<HTMLInputElement>('input[name=vergleich][value=auto]')
+      auto.checked = true
+      auto.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+      expect(p.q('#ref-head').textContent).toBe('Auto')
+      expect(p.window.location.search).not.toContain('vergleich=')
       expect(p.errors).toEqual([])
     },
     TIMEOUT,

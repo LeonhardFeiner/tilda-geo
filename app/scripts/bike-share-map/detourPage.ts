@@ -20,7 +20,22 @@ const METRICS = {
   km: { label: 'Mehr Kilometer', unit: 'km', stops: [0, 1, 3], digits: 1 },
   hm: { label: 'Mehr Höhenmeter', unit: 'Hm', stops: [0, 30, 100], digits: 0 },
   min: { label: 'Mehr Minuten', unit: 'min', stops: [0, 15, 40], digits: 0 },
-  faktor: { label: 'Faktor Rad ÷ Auto', unit: '×', stops: [1, 1.3, 2], digits: 2 },
+  faktor: { label: 'Längenfaktor', unit: '×', stops: [1, 1.3, 2], digits: 2 },
+} as const
+
+/**
+ * What the bike route is compared with. `auto`: the usual car route (the page's original
+ * question — is cycling there a real alternative?). `rad`: the fastest bike route, i.e. the same
+ * bike search at slider 0 — what does avoiding traffic cost the cyclist?
+ */
+const REFERENCES = {
+  auto: { label: 'Auto', head: 'Auto', dative: 'dem Auto', legend: 'Auto' },
+  rad: {
+    label: 'Schnellste Radroute',
+    head: 'Schnellst',
+    dative: 'der schnellsten Radroute',
+    legend: 'Schnellste Radroute',
+  },
 } as const
 const SCALE_COLOURS = ['#1a9850', '#fee08b', '#d73027']
 const UNREACHABLE_COLOUR = '#9aa0a6'
@@ -198,7 +213,7 @@ export function detourPageHtml({
     <summary><h1>Umwege per Rad</h1></summary>
     <div class="body">
       <p class="page-nav"><a href="${viewerHref}">&larr; Zur Karte</a> · <a href="${methodikHref}#umweg">Methodik</a></p>
-      <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die übliche Autostrecke — von einem Ort zu allen anderen im Landkreis.</p>
+      <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die übliche Autostrecke oder die schnellste Radroute — von einem Ort zu allen anderen im Landkreis.</p>
       <p id="status">Lade Daten …</p>
       <fieldset id="lk-box" hidden>
         <legend>Landkreis</legend>
@@ -208,6 +223,15 @@ export function detourPageHtml({
         <legend><label for="origin-search" style="padding:0">Startort</label></legend>
         <input id="origin-search" type="search" list="place-list" placeholder="Ort suchen oder auf der Karte antippen" autocomplete="off" />
         <datalist id="place-list"></datalist>
+      </fieldset>
+      <fieldset class="seg" id="ref-box">
+        <legend>Vergleich mit</legend>
+        ${Object.entries(REFERENCES)
+          .map(
+            ([key, r], i) =>
+              `<label><input type="radio" name="vergleich" value="${key}"${i === 0 ? ' checked' : ''}><span>${r.label}</span></label>`,
+          )
+          .join('\n        ')}
       </fieldset>
       <fieldset>
         <legend><label for="safety" style="padding:0">Wie verkehrsarm soll die Radroute sein?</label></legend>
@@ -237,7 +261,7 @@ export function detourPageHtml({
             <option value="faktor">Faktor</option>
           </select>
           <button class="btn" id="csv" type="button" style="float:right">CSV</button></p>
-        <div style="overflow-x:auto"><table id="table"><thead><tr><th>Ort</th><th title="Luftlinie">Luft</th><th title="Auto: km / min">Auto</th><th title="Rad: km / min">Rad</th><th title="Mehr Kilometer">+km</th><th title="Mehr Höhenmeter bergauf">+Hm</th><th title="Mehr Minuten">+min</th></tr></thead><tbody></tbody></table></div>
+        <div style="overflow-x:auto"><table id="table"><thead><tr><th>Ort</th><th title="Luftlinie">Luft</th><th id="ref-head" title="Auto: km / min">Auto</th><th title="Rad: km / min">Rad</th><th title="Mehr Kilometer">+km</th><th title="Mehr Höhenmeter bergauf">+Hm</th><th title="Mehr Minuten">+min</th></tr></thead><tbody></tbody></table></div>
       </div>
       <div id="pair" hidden></div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Radinfrastruktur-Kategorien: TILDA; Höhen: Mapzen/AWS Terrain Tiles. Annahmen: siehe <a href="${methodikHref}#umweg">Methodik</a>.</p>
@@ -250,6 +274,7 @@ export function detourPageHtml({
     const LANDKREISE = ${JSON.stringify(landkreise)};
     const DATA_BASE = ${JSON.stringify(dataBaseHref)};
     const METRICS = ${JSON.stringify(METRICS)};
+    const REFERENCES = ${JSON.stringify(REFERENCES)};
     const SCALE_COLOURS = ${JSON.stringify(SCALE_COLOURS)};
     const UNREACHABLE = ${JSON.stringify(UNREACHABLE_COLOUR)};
     const STRESS_STOPS = ${JSON.stringify(STRESS_STOPS)};
@@ -269,6 +294,7 @@ export function detourPageHtml({
       dest: params.get('nach') ? Number(params.get('nach')) : null,
       safety: Math.max(0, Math.min(100, Number(params.get('sicherheit') || 70))),
       metric: METRICS[params.get('zeige')] ? params.get('zeige') : 'km',
+      ref: params.get('vergleich') === 'rad' ? 'rad' : 'auto',
       hamlets: params.get('weiler') === '1',
       sort: 'air',
     };
@@ -297,6 +323,7 @@ export function detourPageHtml({
     $('safety').value = state.safety;
     $('hamlets').checked = state.hamlets;
     document.querySelector('input[name=zeige][value=' + state.metric + ']').checked = true;
+    document.querySelector('input[name=vergleich][value=' + state.ref + ']').checked = true;
 
     function syncUrl() {
       const p = new URLSearchParams();
@@ -305,6 +332,7 @@ export function detourPageHtml({
       if (state.dest != null) p.set('nach', String(state.dest));
       if (state.safety !== 70) p.set('sicherheit', String(state.safety));
       if (state.metric !== 'km') p.set('zeige', state.metric);
+      if (state.ref !== 'auto') p.set('vergleich', state.ref);
       if (state.hamlets) p.set('weiler', '1');
       const q = p.toString();
       history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
@@ -383,8 +411,8 @@ export function detourPageHtml({
       return state.hamlets || p.kind !== 'hamlet';
     }
 
-    // ---- routing (cached per origin; the bike search also per slider value)
-    let carResult = null;
+    // ---- routing (reference cached per origin and kind; the bike search also per slider value)
+    let refResult = null;
     let bikeResult = null;
     let bikeSafety = -1;
     let rows = [];
@@ -393,12 +421,17 @@ export function detourPageHtml({
       const oi = indexById.get(state.origin);
       if (oi === undefined) return;
       const o = places[oi];
-      if (!carResult) carResult = R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0, R.CAR_SECONDS_PER_KM);
+      if (!refResult) {
+        refResult =
+          state.ref === 'rad'
+            ? R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0)
+            : R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0, R.CAR_SECONDS_PER_KM);
+      }
       if (bikeSafety !== state.safety) {
         bikeResult = R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, state.safety / 100);
         bikeSafety = state.safety;
       }
-      rows = R.detourTable(graph, oi, carResult, bikeResult);
+      rows = R.detourTable(graph, oi, refResult, bikeResult, state.ref === 'rad' ? 'bikeNode' : 'carNode');
     }
 
     function metricValue(row, key) {
@@ -440,7 +473,7 @@ export function detourPageHtml({
               properties: {
                 name: p.name,
                 kind: p.kind,
-                colour: state.origin == null ? '#3b6fb6' : i === indexById.get(state.origin) ? '#000' : r && r.car && r.bike ? colourFor(v, state.metric) : UNREACHABLE,
+                colour: state.origin == null ? '#3b6fb6' : i === indexById.get(state.origin) ? '#000' : r && r.ref && r.bike ? colourFor(v, state.metric) : UNREACHABLE,
                 origin: i === indexById.get(state.origin) ? 1 : 0,
                 dest: i === indexById.get(state.dest) ? 1 : 0,
                 r: p.kind === 'hamlet' ? 4 : p.kind === 'village' ? 6 : 8,
@@ -463,9 +496,9 @@ export function detourPageHtml({
     onMapReady(() => {
       map.addSource('outline', { type: 'geojson', data: outline });
       map.addLayer({ id: 'outline', type: 'line', source: 'outline', paint: { 'line-color': '#444', 'line-width': 1.5, 'line-dasharray': [3, 2] } });
-      map.addSource('route-car', { type: 'geojson', data: EMPTY });
+      map.addSource('route-ref', { type: 'geojson', data: EMPTY });
       map.addSource('route-bike', { type: 'geojson', data: EMPTY });
-      map.addLayer({ id: 'route-car', type: 'line', source: 'route-car', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#555', 'line-width': 4, 'line-dasharray': [2, 1.5], 'line-opacity': 0.9 } });
+      map.addLayer({ id: 'route-ref', type: 'line', source: 'route-ref', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#555', 'line-width': 4, 'line-dasharray': [2, 1.5], 'line-opacity': 0.9 } });
       map.addLayer({ id: 'route-bike-halo', type: 'line', source: 'route-bike', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': 7, 'line-opacity': 0.8 } });
       map.addLayer({ id: 'route-bike', type: 'line', source: 'route-bike', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['interpolate', ['linear'], ['get', 'stress'], ...STRESS_STOPS.flatMap((s, i) => [s, STRESS_COLOURS[i]])], 'line-width': 4 } });
       map.addSource('dots', { type: 'geojson', data: EMPTY });
@@ -511,7 +544,7 @@ export function detourPageHtml({
       const p = places[i];
       state.origin = p.id;
       state.dest = null;
-      carResult = null;
+      refResult = null;
       bikeSafety = -1;
       search.value = p.name;
       if (pan) map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 11) });
@@ -531,6 +564,9 @@ export function detourPageHtml({
 
     function render() {
       $('safety-note').textContent = safetyNote();
+      const head = $('ref-head');
+      head.textContent = REFERENCES[state.ref].head;
+      head.title = REFERENCES[state.ref].label + ': km / min';
       syncUrl();
       compute();
       const legend = $('legend');
@@ -544,8 +580,8 @@ export function detourPageHtml({
       box.hidden = state.origin == null;
       if (state.origin == null) {
         $('pair').hidden = true;
-        if (map.getSource('route-car')) {
-          map.getSource('route-car').setData(EMPTY);
+        if (map.getSource('route-ref')) {
+          map.getSource('route-ref').setData(EMPTY);
           map.getSource('route-bike').setData(EMPTY);
         }
         return;
@@ -565,13 +601,14 @@ export function detourPageHtml({
 
     function renderSummary(shown) {
       const o = places[indexById.get(state.origin)];
-      const both = shown.filter((r) => r.car && r.bike);
+      const both = shown.filter((r) => r.ref && r.bike);
       const unreachable = shown.filter((r) => !r.bike).length;
       const parts = [];
       parts.push('<strong>' + o.name + '</strong>' + (o.gemeinde && o.gemeinde !== o.name ? ' (' + o.gemeinde + ')' : '') + ', ' + (KIND_LABEL[o.kind] || o.kind) + '.');
       if (both.length) {
-        parts.push('Zu den ' + both.length + ' anderen Orten ist die Radroute im Median ' + signed(median(both.map((r) => r.extraKm)), 1) + ' km, ' + signed(median(both.map((r) => r.extraClimbM)), 0) + ' Hm und ' + signed(median(both.map((r) => r.extraMin)), 0) + ' min gegenüber dem Auto; Faktor ' + deNum(median(both.map((r) => r.factor)), 2) + '.');
+        parts.push('Zu den ' + both.length + ' anderen Orten ist die Radroute im Median ' + signed(median(both.map((r) => r.extraKm)), 1) + ' km, ' + signed(median(both.map((r) => r.extraClimbM)), 0) + ' Hm und ' + signed(median(both.map((r) => r.extraMin)), 0) + ' min gegenüber ' + REFERENCES[state.ref].dative + '; Faktor ' + deNum(median(both.map((r) => r.factor)), 2) + '.');
       }
+      if (state.ref === 'rad' && state.safety === 0) parts.push('Der Regler steht auf „schnellste Route“ — Rad- und Vergleichsroute sind gleich; nach rechts schieben, um den Preis verkehrsarmer Wege zu sehen.');
       if (unreachable) parts.push(unreachable + ' Orte sind mit dieser Einstellung per Rad nicht erreichbar.');
       $('summary').innerHTML = parts.join(' ');
     }
@@ -594,13 +631,13 @@ export function detourPageHtml({
       for (const r of sortRows(shown)) {
         const tr = document.createElement('tr');
         tr.dataset.index = r.index;
-        if (!r.car || !r.bike) tr.className = 'unreachable';
+        if (!r.ref || !r.bike) tr.className = 'unreachable';
         if (r.place.id === state.dest) tr.classList.add('selected');
         const v = metricValue(r, state.metric);
         const cells = [
-          '<span class="dot" style="background:' + (r.car && r.bike ? colourFor(v, state.metric) : UNREACHABLE) + '"></span>' + r.place.name + (r.place.gemeinde && r.place.gemeinde !== r.place.name ? '<span class="gm">' + r.place.gemeinde + '</span>' : ''),
+          '<span class="dot" style="background:' + (r.ref && r.bike ? colourFor(v, state.metric) : UNREACHABLE) + '"></span>' + r.place.name + (r.place.gemeinde && r.place.gemeinde !== r.place.name ? '<span class="gm">' + r.place.gemeinde + '</span>' : ''),
           deNum(r.airKm, 1),
-          r.car ? deNum(r.car.km, 1) + ' / ' + deNum(r.car.min, 0) : '–',
+          r.ref ? deNum(r.ref.km, 1) + ' / ' + deNum(r.ref.min, 0) : '–',
           r.bike ? deNum(r.bike.km, 1) + ' / ' + deNum(r.bike.min, 0) : '–',
           r.extraKm != null ? signed(r.extraKm, 1) : '–',
           r.extraClimbM != null ? signed(r.extraClimbM, 0) : '–',
@@ -616,7 +653,7 @@ export function detourPageHtml({
       const pair = $('pair');
       if (state.dest == null || !indexById.has(state.dest)) {
         pair.hidden = true;
-        map.getSource('route-car').setData(EMPTY);
+        map.getSource('route-ref').setData(EMPTY);
         map.getSource('route-bike').setData(EMPTY);
         return;
       }
@@ -624,9 +661,14 @@ export function detourPageHtml({
       const r = rows.find((x) => x.index === di);
       const d = places[di];
       const o = places[indexById.get(state.origin)];
-      const carCoords = r && r.car ? R.routeCoordinates(graph, graph.car, adjCar, carResult, d.carNode) : [];
+      const refBike = state.ref === 'rad';
+      const refCoords = r && r.ref
+        ? (refBike
+          ? R.routeCoordinates(graph, graph.bike, adjBike, refResult, d.bikeNode)
+          : R.routeCoordinates(graph, graph.car, adjCar, refResult, d.carNode))
+        : [];
       const bikeEdges = r && r.bike ? R.routeEdges(graph.bike, adjBike, bikeResult, d.bikeNode) : [];
-      map.getSource('route-car').setData(carCoords.length ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: carCoords } } : EMPTY);
+      map.getSource('route-ref').setData(refCoords.length ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: refCoords } } : EMPTY);
       map.getSource('route-bike').setData({
         type: 'FeatureCollection',
         features: bikeEdges.map(({ edge, forward }) => ({
@@ -648,15 +690,16 @@ export function detourPageHtml({
       }
       const pct = (v) => (total ? deNum((v / total) * 100, 0) + ' %' : '–');
       const html = ['<h2>' + o.name + ' → ' + d.name + '</h2>'];
-      if (r && r.car) html.push('<p>Auto: ' + deNum(r.car.km, 1) + ' km, ' + deNum(r.car.min, 0) + ' min.</p>');
-      else html.push('<p>Mit dem Auto nicht erreichbar (kein Straßenanschluss im Graphen).</p>');
+      const refLabel = REFERENCES[state.ref].label;
+      if (r && r.ref) html.push('<p>' + refLabel + ': ' + deNum(r.ref.km, 1) + ' km, ' + deNum(r.ref.min, 0) + ' min.</p>');
+      else html.push(refBike ? '<p>Auch die schnellste Radroute erreicht den Ort nicht (kein Anschluss im Radnetz).</p>' : '<p>Mit dem Auto nicht erreichbar (kein Straßenanschluss im Graphen).</p>');
       if (r && r.bike) {
-        html.push('<p>Rad: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min</strong> gegenüber dem Auto' : '') + '.</p>');
+        html.push('<p>Rad: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min</strong> gegenüber ' + REFERENCES[state.ref].dative : '') + '.</p>');
         html.push('<p class="muted">Radroute: ' + pct(share.calm) + ' Radweg oder ruhige Straße, ' + pct(share.town) + ' Ortsstraße mit Verkehr, ' + pct(share.busy) + ' Landstraße ohne Radweg.</p>');
       } else {
         html.push('<p>Per Rad mit dieser Einstellung nicht erreichbar — Regler nach links schieben.</p>');
       }
-      html.push('<div class="route-legend"><span><i class="car"></i>Auto</span>' + STRESS_COLOURS.map((c, i) => '<span><i style="background:' + c + '"></i>' + ['Radweg / ruhig', 'Ort, Verkehr', '70 km/h', 'Landstraße'][i] + '</span>').join('') + '</div>');
+      html.push('<div class="route-legend"><span><i class="car"></i>' + REFERENCES[state.ref].legend + '</span>' + STRESS_COLOURS.map((c, i) => '<span><i style="background:' + c + '"></i>' + ['Radweg / ruhig', 'Ort, Verkehr', '70 km/h', 'Landstraße'][i] + '</span>').join('') + '</div>');
       html.push('<p><button class="btn" id="swap" type="button">' + d.name + ' als Startort</button> <button class="btn" id="clear-dest" type="button">Route ausblenden</button></p>');
       pair.innerHTML = html.join('');
       pair.hidden = false;
@@ -676,6 +719,11 @@ export function detourPageHtml({
       state.metric = document.querySelector('input[name=zeige]:checked').value;
       render();
     });
+    $('ref-box').addEventListener('change', () => {
+      state.ref = document.querySelector('input[name=vergleich]:checked').value;
+      refResult = null;
+      render();
+    });
     $('hamlets').addEventListener('change', () => {
       state.hamlets = $('hamlets').checked;
       render();
@@ -686,10 +734,11 @@ export function detourPageHtml({
     });
     $('csv').addEventListener('click', () => {
       const o = places[indexById.get(state.origin)];
-      const head = ['Ziel', 'Gemeinde', 'Art', 'Luftlinie km', 'Auto km', 'Auto min', 'Rad km', 'Rad min', 'Rad Hm bergauf', 'Mehr km', 'Mehr Hm', 'Mehr min', 'Faktor'];
-      const line = (r) => [r.place.name, r.place.gemeinde || '', r.place.kind, r.airKm.toFixed(2), r.car ? r.car.km.toFixed(2) : '', r.car ? r.car.min.toFixed(1) : '', r.bike ? r.bike.km.toFixed(2) : '', r.bike ? r.bike.min.toFixed(1) : '', r.bike ? r.bike.climbM.toFixed(0) : '', r.extraKm != null ? r.extraKm.toFixed(2) : '', r.extraClimbM != null ? r.extraClimbM.toFixed(0) : '', r.extraMin != null ? r.extraMin.toFixed(1) : '', r.factor != null ? r.factor.toFixed(2) : ''];
+      const refHead = REFERENCES[state.ref].label;
+      const head = ['Ziel', 'Gemeinde', 'Art', 'Luftlinie km', refHead + ' km', refHead + ' min', 'Rad km', 'Rad min', 'Rad Hm bergauf', 'Mehr km', 'Mehr Hm', 'Mehr min', 'Faktor'];
+      const line = (r) => [r.place.name, r.place.gemeinde || '', r.place.kind, r.airKm.toFixed(2), r.ref ? r.ref.km.toFixed(2) : '', r.ref ? r.ref.min.toFixed(1) : '', r.bike ? r.bike.km.toFixed(2) : '', r.bike ? r.bike.min.toFixed(1) : '', r.bike ? r.bike.climbM.toFixed(0) : '', r.extraKm != null ? r.extraKm.toFixed(2) : '', r.extraClimbM != null ? r.extraClimbM.toFixed(0) : '', r.extraMin != null ? r.extraMin.toFixed(1) : '', r.factor != null ? r.factor.toFixed(2) : ''];
       const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
-      const csv = ['# Start: ' + o.name + '; Sicherheit ' + state.safety + '; ' + entry.name, head.map(esc).join(';'), ...sortRows(rows).map((r) => line(r).map(esc).join(';'))].join('\\n');
+      const csv = ['# Start: ' + o.name + '; Sicherheit ' + state.safety + '; Vergleich: ' + REFERENCES[state.ref].label + '; ' + entry.name, head.map(esc).join(';'), ...sortRows(rows).map((r) => line(r).map(esc).join(';'))].join('\\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
       a.download = 'umweg-' + o.name.replace(/[^\\wäöüÄÖÜß-]+/g, '_') + '.csv';

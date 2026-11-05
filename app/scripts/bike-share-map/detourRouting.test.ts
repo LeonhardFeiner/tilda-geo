@@ -257,15 +257,31 @@ describe('detourTable', () => {
     const rows = detourTable(g, 0, car, bike)
     expect(rows.map((r) => r.place.name)).toEqual(['B', 'D', 'Nowhere'])
     const b = rows[0]!
-    expect(b.car?.km).toBe(1)
+    expect(b.ref?.km).toBe(1)
     expect(b.bike?.km).toBe(1.6)
     expect(b.extraKm).toBeCloseTo(0.6)
     expect(b.extraClimbM).toBe(30)
     expect(b.factor).toBeCloseTo(1.6)
     expect(b.airKm).toBeCloseTo(1, 1)
-    expect(rows[2]!.car).toBeNull()
+    expect(rows[2]!.ref).toBeNull()
     expect(rows[2]!.bike).toBeNull()
     expect(rows[2]!.extraKm).toBeNull()
+  })
+
+  test('compares with the fastest bike route when the reference is a bike search', () => {
+    const g = toyGraph()
+    const adj = buildAdjacency(g.bike, g.nodeCount)
+    const fast = shortestPaths(g.bike, adj, g.nodeCount, 0, 0)
+    const safe = shortestPaths(g.bike, adj, g.nodeCount, 0, 1)
+    const b = detourTable(g, 0, fast, safe, 'bikeNode')[0]!
+    // Fastest: the direct 1 km road; safe: the 1.6 km cycleway over C (30 m up).
+    expect(b.ref?.km).toBe(1)
+    expect(b.extraKm).toBeCloseTo(0.6)
+    expect(b.extraClimbM).toBe(30)
+    // Same search on both sides: no detour at all.
+    const same = detourTable(g, 0, fast, fast, 'bikeNode')[0]!
+    expect(same.extraKm).toBe(0)
+    expect(same.factor).toBe(1)
   })
 })
 

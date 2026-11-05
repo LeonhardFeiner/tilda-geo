@@ -612,13 +612,14 @@ export type DetourRow = {
   place: DetourPlace
   /** Straight line, km. */
   airKm: number
-  car: { km: number; min: number } | null
+  /** The route the bike route is compared with: the usual car route or the fastest bike route. */
+  ref: { km: number; min: number } | null
   bike: { km: number; min: number; climbM: number } | null
-  /** Extra km / climb / minutes of the bike route over the car route; null when either is missing. */
+  /** Extra km / climb / minutes of the bike route over the reference; null when either is missing. */
   extraKm: number | null
   extraClimbM: number | null
   extraMin: number | null
-  /** bike km ÷ car km. */
+  /** bike km ÷ reference km. */
   factor: number | null
 }
 
@@ -632,24 +633,26 @@ export function haversineKm(lon1: number, lat1: number, lon2: number, lat2: numb
 }
 
 /**
- * One row per place other than the origin. Car climb is not reported: cars do not care, and the
- * question is what the cyclist has to climb.
+ * One row per place other than the origin. `ref` is the search the bike route is compared with:
+ * the car search (`refNode` 'carNode', the default) or a bike search at safety 0 ('bikeNode') —
+ * then the row answers what the low-traffic route costs over the fastest bike route. Extra climb
+ * compares the two routes, not the bike route with zero.
  */
 export function detourTable(
   graph: DetourGraph,
   originIndex: number,
-  car: SearchResult,
+  ref: SearchResult,
   bike: SearchResult,
+  refNode: 'carNode' | 'bikeNode' = 'carNode',
 ): DetourRow[] {
   const origin = graph.places[originIndex]!
   const rows: DetourRow[] = []
   graph.places.forEach((place, index) => {
     if (index === originIndex) return
-    const carOk = place.carNode >= 0 && Number.isFinite(car.cost[place.carNode]!)
+    const rn = place[refNode]
+    const refOk = rn >= 0 && Number.isFinite(ref.cost[rn]!)
     const bikeOk = place.bikeNode >= 0 && Number.isFinite(bike.cost[place.bikeNode]!)
-    const carRow = carOk
-      ? { km: car.metres[place.carNode]! / 1000, min: car.seconds[place.carNode]! / 60 }
-      : null
+    const refRow = refOk ? { km: ref.metres[rn]! / 1000, min: ref.seconds[rn]! / 60 } : null
     const bikeRow = bikeOk
       ? {
           km: bike.metres[place.bikeNode]! / 1000,
@@ -657,23 +660,18 @@ export function detourTable(
           climbM: bike.climb[place.bikeNode]!,
         }
       : null
-    const both = carRow && bikeRow
+    const both = refRow && bikeRow
     rows.push({
       index,
       place,
       airKm: haversineKm(origin.lon, origin.lat, place.lon, place.lat),
-      car: carRow,
+      ref: refRow,
       bike: bikeRow,
-      extraKm: both ? bikeRow.km - carRow.km : null,
-      extraClimbM: both ? bikeRow.climbM - carClimb(graph, car, place.carNode) : null,
-      extraMin: both ? bikeRow.min - carRow.min : null,
-      factor: both && carRow.km > 0 ? bikeRow.km / carRow.km : null,
+      extraKm: both ? bikeRow.km - refRow.km : null,
+      extraClimbM: both ? bikeRow.climbM - ref.climb[rn]! : null,
+      extraMin: both ? bikeRow.min - refRow.min : null,
+      factor: both && refRow.km > 0 ? bikeRow.km / refRow.km : null,
     })
   })
   return rows
-}
-
-/** Climb along the car route — the "extra climb" compares the two routes, not the bike route to zero. */
-function carClimb(_graph: DetourGraph, car: SearchResult, node: number) {
-  return car.climb[node]!
 }
