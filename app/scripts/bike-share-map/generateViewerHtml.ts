@@ -788,7 +788,7 @@ export function generateViewerHtml(
       display: block; font-size: 0.8125rem; font-weight: 700; margin-bottom: 2px;
     }
     .region-detail-gap--model::before {
-      content: 'Vergleich mit ähnlichen Gemeinden (statistisches Modell)'; display: block;
+      content: 'Statistisches Modell: erwarteter Wert'; display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -857,7 +857,7 @@ export function generateViewerHtml(
     }
     .region-detail-gap--view::before,
     .region-detail-gap--peer::before {
-      content: var(--peer-gap-label, 'Gemeinden mit ähnlichem Profil bundesweit'); display: block;
+      content: var(--peer-gap-label, 'Vergleichsgruppe bundesweit'); display: block;
       font-size: 0.75rem; font-weight: 700; letter-spacing: 0.06em;
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
@@ -3075,11 +3075,11 @@ export function generateViewerHtml(
         { key: 'employedAtResidence', header: 'Sozialvers. Beschäftigte am Wohnort (BA 2025)', numeric: 'num0' },
         { key: 'commuteKm', header: 'Ø Pendeldistanz der Beschäftigten am Wohnort (km, Gemeindeverband)', numeric: 'num1' },
         { key: 'stops', header: 'Bahn-/Tram-/Fähr-Haltestellen pro km²', numeric: 'num2' },
-        { key: 'stationDistance', header: 'Ø Luftlinie zur nächsten Haltestelle (km, einwohnergewichtet)', numeric: 'num1' },
+        { key: 'stationDistance', header: 'Ø Luftlinie zum nächsten Bahn-/Tramhalt (km, einwohnergewichtet)', numeric: 'num1' },
         ...STATION_ACCESS_MODES.flatMap((m) => [
-          { key: 'station_' + m.key + '_min', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (min, einwohnergewichtet)', numeric: 'num1' },
-          { key: 'station_' + m.key + '_km', header: 'Ø ' + m.csv + ' zur nächsten Haltestelle (km, entlang der Wege)', numeric: 'num1' },
-          { key: 'station_' + m.key + '_within_pct', header: 'Einwohner ' + m.csv + ' in 10 min an einer Haltestelle (%)', numeric: 'num1' },
+          { key: 'station_' + m.key + '_min', header: 'Ø ' + m.csv + ' zum nächsten Bahn-/Tramhalt (min, einwohnergewichtet)', numeric: 'num1' },
+          { key: 'station_' + m.key + '_km', header: 'Ø ' + m.csv + ' zum nächsten Bahn-/Tramhalt (km, entlang der Wege)', numeric: 'num1' },
+          { key: 'station_' + m.key + '_within_pct', header: 'Einwohner ' + m.csv + ' in 10 min an einem Bahn-/Tramhalt (%)', numeric: 'num1' },
         ]),
         { key: 'transitServed', header: 'Einwohner im Umkreis einer Haltestelle mit ≥ 20 Abfahrten/Tag (%, Gemeindeverband)', numeric: 'num1' },
         { key: 'highwayDistance', header: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße (km, einwohnergewichtet)', numeric: 'num1' },
@@ -5412,7 +5412,7 @@ export function generateViewerHtml(
           regionDetailGap,
           'Bis ins Mittelfeld fehlen rund ',
           TildaStats.formatGapKm(g.medianGapKm),
-          ' Radinfrastruktur.',
+          '.',
         );
       } else {
         regionDetailGap.appendChild(
@@ -5535,13 +5535,13 @@ export function generateViewerHtml(
       const isCounty = String(p.level) === '6';
       regionDetailPeerGap.style.setProperty(
         '--peer-gap-label',
-        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Gemeinden mit ähnlichem Profil bundesweit'",
+        isCounty ? "'Vergleichbare Kreise bundesweit'" : "'Vergleichsgruppe bundesweit'",
       );
       regionDetailPeerGap.appendChild(
         document.createTextNode(
           (isCounty
-            ? 'unter Landkreisen und kreisfreien Städten mit ähnlichem Profil ('
-            : 'unter Gemeinden mit ähnlichem Profil (') +
+            ? 'unter Landkreisen und kreisfreien Städten derselben Größenklasse und Siedlungsart ('
+            : 'unter Gemeinden derselben Größenklasse und Siedlungsart (') +
             s.groupLabel +
             ').',
         ),
@@ -5567,7 +5567,7 @@ export function generateViewerHtml(
           link,
           ' (' +
             Math.max(1, Math.round(s.roleModel.km)) +
-            ' km entfernt, gleiches Profil): ' +
+            ' km entfernt, gleiche Vergleichsgruppe): ' +
             formatUiPct(s.roleModel.pct) +
             ' %.',
         );
@@ -5618,9 +5618,7 @@ export function generateViewerHtml(
       headline.textContent =
         'Erwartet: ' +
         formatUiPct(m.expectedPct) +
-        ' % (ca. ' +
-        deNumber(Math.round(m.expectedKm), 0) +
-        ' km je Fahrtrichtung)' +
+        ' %' +
         (aggregated
           ? ' · Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
           : '');
@@ -5629,52 +5627,37 @@ export function generateViewerHtml(
         const profile = document.createElement('span');
         profile.className = 'model-profile-note';
         profile.textContent =
-          'So viel haben Gemeinden mit gleichem Profil im Schnitt – Profil aus Bundesland, Gelände, ' +
-          'Dichte, Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrenen Bundesstraßen. ' +
+          'So viel lässt ein Modell im Schnitt erwarten, das Bundesland, Raumtyp, Gelände, Dichte, ' +
+          'Entfernung zur Bahn, Miete, Pkw-Dichte, Spielstraßen und vielbefahrene Bundesstraßen berücksichtigt. ' +
           'Ein Unterschied ist keine Bewertung: er enthält auch, was in OpenStreetMap (noch) fehlt.';
         regionDetailModelGap.appendChild(profile);
       }
 
       const statusText = document.createElement('span');
       statusText.className = 'model-status';
-      const diffKmStr = TildaStats.formatGapKm(Math.abs(m.diffKm));
+      // Only percentage points here: the one missing-km figure on the card is the gap to the
+      // median above; a second and third km figure from the model was quoted interchangeably.
       const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %-Punkte';
+      const bandStr = bandLabel + formatUiPct(m.residualStdErrorPct) + ' %-Punkte';
+      const actualStr = 'Tatsächlich ' + formatUiPct(m.actualPct) + ' % · ';
 
       if (m.isWithin1Se) {
         const sign = m.diffPct > 0 ? '+' : '';
         statusText.textContent =
-          'Tatsächlich ' +
-          formatUiPct(m.actualPct) +
-          ' % (' +
-          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
-          ' km) · im üblichen Bereich (' +
+          actualStr +
+          'im üblichen Bereich (' +
           sign +
           formatUiPct(m.diffPct) +
           ' %-Punkte; ' +
-          bandLabel +
-          formatUiPct(m.residualStdErrorPct) +
-          ' %-Punkte).';
-      } else if (m.behind) {
-        statusText.textContent =
-          'Tatsächlich ' +
-          formatUiPct(m.actualPct) +
-          ' % (' +
-          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
-          ' km) · ' +
-          diffKmStr +
-          ' weniger als erwartet (−' +
-          diffPctStr +
+          bandStr +
           ').';
       } else {
         statusText.textContent =
-          'Tatsächlich ' +
-          formatUiPct(m.actualPct) +
-          ' % (' +
-          deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) +
-          ' km) · ' +
-          diffKmStr +
-          ' mehr als erwartet (+' +
+          actualStr +
           diffPctStr +
+          (m.behind ? ' weniger' : ' mehr') +
+          ' als erwartet (' +
+          bandStr +
           ').';
       }
       regionDetailModelGap.appendChild(statusText);
@@ -5828,7 +5811,7 @@ export function generateViewerHtml(
       );
 
       addRow(
-        'ÖPNV-Haltestellennähe',
+        'Nähe zu Bahn/Tram',
         factorNote('deltaTransit', m.inputs.stDistKm != null ? 'Ø ' + deNumber(m.inputs.stDistKm, 1) + ' km Distanz' : null),
         m.deltaTransit,
         factorLabel('deltaTransit', m.deltaTransit, 'gute Anbindung', 'weite Wege'),
@@ -5849,7 +5832,7 @@ export function generateViewerHtml(
         'Struktureller Erwartungswert',
         'Summe der Zeilen darüber',
         formatUiPct(m.expectedPct) + ' %',
-        'ca. ' + deNumber(Math.round(m.expectedKm), 0) + ' km',
+        '',
         'model-row-total',
       );
 
@@ -5869,7 +5852,7 @@ export function generateViewerHtml(
             ? 'Unter Erwartungswert'
             : 'Über Erwartungswert',
         (m.diffPct > 0 ? '+' : '') + formatDelta(m.diffPct),
-        (m.diffKm > 0 ? '+' : '') + deNumber(m.diffKm, 1) + ' km',
+        '',
         'model-row-diff',
       );
 
@@ -6395,8 +6378,8 @@ export function generateViewerHtml(
           },
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
         },
-        stationAccessMetric('foot', 'Ø zu Fuß zur nächsten Haltestelle'),
-        stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle'),
+        stationAccessMetric('foot', 'Ø zu Fuß zum nächsten Bahn-/Tramhalt'),
+        stationAccessMetric('bike', 'Ø mit dem Rad zum nächsten Bahn-/Tramhalt'),
         {
           key: 'transitServed',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.transitServed,

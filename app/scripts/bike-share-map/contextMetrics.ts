@@ -37,7 +37,7 @@ export const CONTEXT_METRIC_LABELS = {
   commuterRates: 'Ein- / Auspendlerquote',
   employedAtWorkplace: 'Sozialvers. Beschäftigte am Arbeitsort',
   stops: 'Bahn-/Tram-/Fährhaltestellen',
-  stationDistance: 'Ø Luftlinie zur nächsten Haltestelle',
+  stationDistance: 'Ø Luftlinie zum nächsten Bahn-/Tramhalt',
   highwayDistance: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße',
   elevation: 'Höhenlage (Ø)',
   areaSlope: 'Geländesteigung (Ø, Fläche)',

@@ -332,7 +332,7 @@ ${siteIconHeadLinks()}
     `<strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="${DESTATIS_URL}">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.`,
     `<strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.`,
     `<strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.`,
-    `<strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.`,
+    `<strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zum nächsten Bahn-/Tramhalt). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.`,
     `<strong>Gemeindefinanzen, Bevölkerungsentwicklung, Pendeln, Erreichbarkeit:</strong> <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> des Bundes – Steuereinnahmekraft je Einwohner (2024), Bevölkerungsentwicklung 2019–2024, mittlere Pendeldistanz und Anteil der Einwohner an Haltestellen mit mindestens 20 Abfahrten am Tag (beide je Gemeindeverband) sowie Pkw-Fahrzeiten zur nächsten Grundschule, weiterführenden Schule und zum Supermarkt (Thünen-Erreichbarkeitsmodell). Kreise und Länder: einwohnergewichtetes Mittel ihrer Gemeinden.`,
     `<strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.`,
     `<strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (${UNFALLATLAS_YEAR}), Statistik der Bundesagentur für Arbeit. Radunfälle mit Personenschaden werden je 10.000 Einwohner angegeben; das ist kein Risikomaß, weil das Radverkehrsaufkommen unbekannt ist – wo mehr Rad gefahren wird, gibt es bei gleichem Risiko mehr Unfälle.`,
@@ -353,7 +353,15 @@ ${siteIconHeadLinks()}
   <p>Der Hauptwert setzt die <strong>gesamte</strong> Länge der Radinfrastruktur ins Verhältnis zur
   Straßenlänge – auch selbstständige Wege abseits von Straßen (z.&nbsp;B. durch Felder oder Parks)
   zählen mit. Längen werden je Fahrtrichtung gezählt: Eine Straße mit Gegenverkehr zählt doppelt,
-  ebenso ein Zweirichtungsradweg; ein Radfahrstreifen auf jeder Seite zählt je Seite einfach.
+  eine Einbahnstraße und jede Fahrbahn einer Autobahn einfach; ein Radfahrstreifen auf jeder Seite
+  zählt je Seite einfach. Bei Wegen entscheidet das OpenStreetMap-Tag <code>oneway</code>: Mit
+  <code>oneway=no</code> zählt ein Weg doppelt, mit <code>oneway=yes</code> einfach. Fehlt das Tag,
+  gilt die TILDA-Regel: Gemeinsame und getrennte Geh- und Radwege sowie Gehwege mit „Rad frei“, die
+  neben einer Straße verlaufen könnten, zählen <strong>einfach</strong> – auch wenn sie in beide
+  Richtungen befahren werden dürfen. Reine Radwege (Zeichen 237), Wege abseits von Straßen und
+  unklar getaggte Wege zählen ohne Tag doppelt. Die Regel gilt überall gleich; für eine einzelne
+  Gemeinde kann sie den Wert aber spürbar verschieben, denn ein nachgetragenes
+  <code>oneway=no</code> verdoppelt die gezählte Länge eines solchen Wegs.
   Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%; zwei
   Zweirichtungsradwege, einer auf jeder Seite, entsprechen 200&nbsp;%. Werte über 100&nbsp;% kommen
   deshalb vor, vor allem bei sehr kleinen Straßennetzen; in der CSV sind sie mit

@@ -301,8 +301,10 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes population-weighted walking and bike time to next station in context metrics', () => {
-    expect(html).toContain("stationAccessMetric('foot', 'Ø zu Fuß zur nächsten Haltestelle')")
-    expect(html).toContain("stationAccessMetric('bike', 'Ø mit dem Rad zur nächsten Haltestelle')")
+    expect(html).toContain("stationAccessMetric('foot', 'Ø zu Fuß zum nächsten Bahn-/Tramhalt')")
+    expect(html).toContain(
+      "stationAccessMetric('bike', 'Ø mit dem Rad zum nächsten Bahn-/Tramhalt')",
+    )
     expect(html).toContain("note: 'entlang der Wege, einwohnergewichtet'")
     expect(html).toContain('transitIndex?.byId[id]?.access?.[mode]?.[0]')
     expect(html).not.toContain("key: 'stationAccess'")
@@ -357,7 +359,9 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   test('supports demographic peer comparison, role models and context scopes for Landkreise', () => {
     expect(html).toContain("(level !== '8' && level !== '6')")
     expect(html).toContain('ROLE_MODEL_MAX_KM_LANDKREIS = 180')
-    expect(html).toContain('unter Landkreisen und kreisfreien Städten mit ähnlichem Profil')
+    expect(html).toContain(
+      'unter Landkreisen und kreisfreien Städten derselben Größenklasse und Siedlungsart',
+    )
     expect(html).toContain("label: (isCounty ? 'Ähnliche Kreise (' : 'Ähnliche Gemeinden (')")
     expect(html).toContain(
       "'6': { nom: 'Landkreise und kreisfreie Städte', gen: 'Landkreise und kreisfreien Städte' }",

@@ -162,12 +162,12 @@ describe('formatters', () => {
 })
 
 describe('formatGapKm', () => {
-  it('says the per-direction length and the road length it means', () => {
+  it('leads with the road length and adds the per-direction length it was counted in', () => {
     expect(formatGapKm(22.5)).toBe(
-      '22,5 km je Fahrtrichtung (z. B. 11 km Straße mit Radweg auf beiden Seiten)',
+      '11 km Radweg für beide Richtungen (22,5 km je Fahrtrichtung gezählt)',
     )
     expect(formatGapKm(3)).toBe(
-      '3 km je Fahrtrichtung (z. B. 1,5 km Straße mit Radweg auf beiden Seiten)',
+      '1,5 km Radweg für beide Richtungen (3 km je Fahrtrichtung gezählt)',
     )
   })
 })
