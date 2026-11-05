@@ -129,13 +129,14 @@ export const DATA_DOWNLOAD_COLUMNS = {
   hauptstr_gemeinde_pct: 'dito, Baulastträger Gemeinde',
   vielbefahren_km:
     'Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße',
-  vielbefahren_anteil_pct: 'vielbefahren_km / strassen_km (Standard-Zählfilter), %; 0 = keine',
+  vielbefahren_anteil_pct:
+    'vielbefahren_km / (strassen_km / 2), % – strassen_km zählt je Fahrtrichtung, vielbefahren_km einfach; 0 = keine',
   vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   vielbefahren_mit_radweg_pct: 'vielbefahren_mit_radweg_km / vielbefahren_km, %',
   bundesstr_vielbefahren_km:
     'Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße; 0 = keine',
   bundesstr_vielbefahren_anteil_pct:
-    'bundesstr_vielbefahren_km / strassen_km (Standard-Zählfilter), %; geht ins Modell ein',
+    'bundesstr_vielbefahren_km / (strassen_km / 2), % (strassen_km zählt je Fahrtrichtung); geht ins Modell ein',
   bundesstr_vielbefahren_mit_radweg_km: 'davon mit Radinfrastruktur daneben (innerhalb ~20 m), km',
   bundesstr_vielbefahren_mit_radweg_pct:
     'bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %',

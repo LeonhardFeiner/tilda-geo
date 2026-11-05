@@ -409,6 +409,8 @@ ${siteIconHeadLinks()}
   Die Karte zeigt beide Quellen; ein Klick auf eine Linie nennt die Quelle.</p>
   <p><strong>Länge und Anteil:</strong> Neben dem Anteil mit Radweg nennt die Detailkarte die
   Kilometer über der Schwelle und ihren Anteil am gesamten Straßennetz des Gebiets (Standard-Zählfilter).
+  Beide sind in Straßenkilometern gerechnet: Das Straßennetz, das sonst je Fahrtrichtung zählt, geht
+  dafür mit der halben Länge ein.
   Ein Gebiet ohne vielbefahrene Außerortsstrecke hat dabei 0&nbsp;km und 0&nbsp;%, nicht „keine
   Daten“. Der bundesweite Anteil der Bundesstraßen geht als Merkmal in das Erwartungswert-Modell ein.</p>
   <p><strong>Einschränkungen:</strong> Ortsdurchfahrten (hier gelten andere Regeln) und

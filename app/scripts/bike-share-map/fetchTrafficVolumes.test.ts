@@ -105,8 +105,8 @@ describe('withRoadShares', () => {
     regions,
   )
 
-  test('gives the busy km as a share of the road network', () => {
-    expect(byId.busy).toEqual({ needKm: 4, coveredKm: 1, coveredPct: 25, sharePct: 5 })
+  test('gives the busy km as a share of the road network in road km (half the per-direction km)', () => {
+    expect(byId.busy).toEqual({ needKm: 4, coveredKm: 1, coveredPct: 25, sharePct: 10 })
   })
 
   test('writes 0 km / 0 % for a region without a busy road, with no covered share', () => {

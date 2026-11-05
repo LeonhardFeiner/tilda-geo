@@ -29,7 +29,7 @@
  * road network, a few metres off OSM at most.
  *
  * Per region, the busy km are also given as a share of its road network (`sharePct`, default
- * counting filter, from output/stats.msgpack), and every region of the source's area gets an
+ * counting filter, from output/stats.msgpack, per-direction km halved to road km), and every region of the source's area gets an
  * entry — a Gemeinde without a busy road has 0 km and 0 %, not "no data". That share is a
  * structural model input (fitExtendedModel.ts) and a context metric with a scatter plot.
  *
@@ -371,7 +371,8 @@ export type TrafficRegion = {
   coveredPct?: number
   /** Only where the classes differ (Bavaria; the Bundesstraßen result is all B). */
   byClass?: Partial<Record<NeedRoadClass, { needKm: number; coveredKm: number }>>
-  /** needKm as % of the region's road network (default counting filter); absent without roads. */
+  /** needKm as % of the region's road network in road km (default counting filter, per-direction
+   * km halved); absent without roads. */
   sharePct?: number
 }
 
@@ -416,7 +417,10 @@ export function withRoadShares(byId: Record<string, TrafficRegion>, regions: Reg
   for (const { id, roadKm } of regions) {
     const entry = byId[id]
     const needKm = entry?.needKm ?? 0
-    const sharePct = roadKm > 0 ? Number(((needKm / roadKm) * 100).toFixed(2)) : undefined
+    // needKm is road km (one per km of road, as BAYSIS/BASt give it); roadKm counts each direction
+    // (aggregate_lengths.sql), so a two-way road is in it twice. Halve it, as formatGapKm does,
+    // or the share comes out about half the truth.
+    const sharePct = roadKm > 0 ? Number(((needKm / (roadKm / 2)) * 100).toFixed(2)) : undefined
     out[id] = entry ? { ...entry, sharePct } : { needKm: 0, coveredKm: 0, sharePct }
   }
   return out
