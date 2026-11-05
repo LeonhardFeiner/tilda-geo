@@ -793,12 +793,7 @@ export function generateViewerHtml(
       text-transform: uppercase; opacity: 0.7; margin-bottom: 2px;
     }
     .model-breakdown-table tr.model-row-unclear td { color: #64748b; }
-    .ctx-more {
-      display: block; margin: 8px 0 0; padding: 6px 10px; cursor: pointer;
-      border: 1px solid #cbd5e1; border-radius: 6px; background: #fff;
-      color: #1565c0; font: inherit; font-weight: 600;
-    }
-    .ctx-more:hover { background: #f1f5f9; }
+    .ctx-scope-toggle { margin: 2px 0 6px; }
     .ctx-group[hidden], .ctx-row[hidden] { display: none !important; }
     .model-profile-note { display: block; margin: 2px 0 4px; font-size: 0.75rem; opacity: 0.85; }
     .model-breakdown-details {
@@ -4452,28 +4447,46 @@ export function generateViewerHtml(
     // the individual OSM street types and bike-infrastructure types. Kept across regions.
     let regionBreakdownMode = 'summary';
 
-    function appendBreakdownToggle(parent, onChange) {
+    /**
+     * Two or more pressed-state buttons side by side ("Zusammengefasst | Detailliert"), shared by
+     * the street breakdown and the context figures so both switches look and behave alike.
+     */
+    function createSegmentedToggle(ariaLabel, options, current, onPick) {
       const group = document.createElement('div');
       group.className = 'detail-mode';
       group.setAttribute('role', 'group');
-      group.setAttribute('aria-label', 'Aufschlüsselung');
-      for (const [mode, label] of [
-        ['summary', 'Zusammengefasst'],
-        ['detail', 'Detailliert'],
-      ]) {
+      group.setAttribute('aria-label', ariaLabel);
+      for (const [value, label] of options) {
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'detail-mode-btn';
+        btn.dataset.value = value;
         btn.textContent = label;
-        btn.setAttribute('aria-pressed', String(regionBreakdownMode === mode));
+        btn.setAttribute('aria-pressed', String(current === value));
         btn.addEventListener('click', () => {
-          if (regionBreakdownMode === mode) return;
-          regionBreakdownMode = mode;
-          onChange();
+          if (current === value) return;
+          onPick(value);
         });
         group.appendChild(btn);
       }
-      parent.appendChild(group);
+      return group;
+    }
+
+    function appendBreakdownToggle(parent, onChange) {
+      parent.appendChild(
+        createSegmentedToggle(
+          'Aufschlüsselung',
+          [
+            ['summary', 'Zusammengefasst'],
+            ['detail', 'Detailliert'],
+          ],
+          regionBreakdownMode,
+          (mode) => {
+            regionBreakdownMode = mode;
+            onChange();
+          },
+        ),
+      );
     }
 
     function selectedRegionGeometry() {
@@ -5071,15 +5084,19 @@ export function generateViewerHtml(
           return node;
         };
         /** Static copy of a card part: no ids, no buttons/links/selects, folded parts left out. */
-        const printable = (node) => {
+        const printable = (node, { unfold = false } = {}) => {
           if (!node || node.hidden) return null;
           const copy = node.cloneNode(true);
+          // The PDF is the full data sheet: rows behind "Wichtigste | Alle" print either way.
+          if (unfold) {
+            for (const n of copy.querySelectorAll('.ctx-row--extra, .ctx-group')) n.hidden = false;
+          }
           copy.removeAttribute('id');
           for (const n of copy.querySelectorAll('[id]')) n.removeAttribute('id');
           for (const sel of copy.querySelectorAll('select')) {
             sel.replaceWith(el('span', null, sel.selectedOptions[0]?.textContent || ''));
           }
-          for (const n of copy.querySelectorAll('.ctx-plot, .ctx-hint, [hidden]')) n.remove();
+          for (const n of copy.querySelectorAll('.ctx-plot, .ctx-hint, .detail-mode, [hidden]')) n.remove();
           // Inline buttons (e.g. the nearby example's name) carry text the sentence needs.
           for (const btn of copy.querySelectorAll('button')) btn.replaceWith(el('strong', null, btn.textContent));
           return copy;
@@ -5131,7 +5148,7 @@ export function generateViewerHtml(
         }
         section('Rangliste', buildPrintRanking(feature));
         // The context rows render with the card even while "Mehr Zahlen" is folded.
-        section('Umfeld', printable(regionDetailExtra));
+        section('Umfeld', printable(regionDetailExtra, { unfold: true }));
 
         const filter = readLengthClassFilterFromUi();
         const byClass = el('div', 'ps-columns');
@@ -6703,14 +6720,13 @@ export function generateViewerHtml(
             toggle();
           });
         }
-        if (!showAllContext && !CONTEXT_CORE.has(metric.key)) {
-          row.hidden = true;
+        if (!CONTEXT_CORE.has(metric.key)) {
           row.classList.add('ctx-row--extra');
+          row.hidden = !showAllContext;
         }
         regionDetailExtra.appendChild(row);
       }
       // A heading whose rows are all folded away goes too.
-      let hiddenCount = 0;
       for (const heading of regionDetailExtra.querySelectorAll('.ctx-group')) {
         let el = heading.nextElementSibling;
         let anyVisible = false;
@@ -6720,24 +6736,28 @@ export function generateViewerHtml(
         }
         heading.hidden = !anyVisible;
       }
-      hiddenCount = regionDetailExtra.querySelectorAll('.ctx-row--extra').length;
-      if (hiddenCount > 0 || showAllContext) {
-        const more = document.createElement('button');
-        more.type = 'button';
-        more.className = 'ctx-more';
-        more.setAttribute('aria-expanded', String(showAllContext));
-        more.textContent = showAllContext
-          ? 'Weniger Kennzahlen'
-          : 'Alle Kennzahlen (' + hiddenCount + ' weitere)';
-        more.addEventListener('click', () => {
-          showAllContext = !showAllContext;
-          renderRegionExtra(p);
-          regionDetailExtra.querySelector('.ctx-more')?.focus({ preventScroll: true });
-        });
-        if (showAllContext) {
-          for (const row of regionDetailExtra.querySelectorAll('.ctx-row--extra')) row.hidden = false;
-        }
-        regionDetailExtra.appendChild(more);
+      // Same switch as the streets' "Zusammengefasst | Detailliert", at the top of the list so
+      // it stays in reach once all rows are open (the old button sat below the whole list).
+      const extraCount = regionDetailExtra.querySelectorAll('.ctx-row--extra').length;
+      if (extraCount > 0) {
+        const toggle = createSegmentedToggle(
+          'Umfang der Kennzahlen',
+          [
+            ['core', 'Wichtigste'],
+            ['all', 'Alle (' + regionDetailExtra.querySelectorAll('.ctx-row').length + ')'],
+          ],
+          showAllContext ? 'all' : 'core',
+          (value) => {
+            showAllContext = value === 'all';
+            renderRegionExtra(p);
+            regionDetailExtra
+              .querySelector('.ctx-scope-toggle .detail-mode-btn[aria-pressed="true"]')
+              ?.focus({ preventScroll: true });
+          },
+        );
+        toggle.classList.add('ctx-scope-toggle');
+        const hintEl = regionDetailExtra.querySelector('.ctx-hint');
+        regionDetailExtra.insertBefore(toggle, hintEl ? hintEl.nextSibling : regionDetailExtra.firstChild);
       }
       regionDetailExtra.hidden = !regionDetailExtra.firstChild;
       // Hidden card = first selection: showRegionDetail reopens the plot once the card has a width.

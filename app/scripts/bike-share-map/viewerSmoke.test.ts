@@ -256,6 +256,65 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'the context switch "Wichtigste | Alle" folds the extra rows and sits above them',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      const more = page.q('#region-detail-more') as HTMLDetailsElement
+      more.open = true
+      more.dispatchEvent(new window.Event('toggle'))
+      const visibleRows = () =>
+        page!.qAll('#region-detail-extra .ctx-row').filter((row) => !row.hidden).length
+      const buttons = () => page!.qAll('#region-detail-extra .ctx-scope-toggle .detail-mode-btn')
+      await page.waitFor(() => buttons().length === 2, 'the context switch')
+      // The Deutschlandatlas rows come with the fold, a moment later.
+      await page.waitFor(
+        () =>
+          page!
+            .qAll('#region-detail-extra .ctx-label')
+            .some((l) => l.textContent?.startsWith('Steuereinnahmekraft')),
+        'the Deutschlandatlas rows',
+      )
+      const allRows = page.qAll('#region-detail-extra .ctx-row').length
+      expect(buttons().map((b) => b.textContent)).toEqual(['Wichtigste', `Alle (${allRows})`])
+      expect(buttons()[0]!.getAttribute('aria-pressed')).toBe('true')
+      const coreRows = visibleRows()
+      expect(coreRows).toBeLessThan(allRows)
+      // Above the first row, not below the list like the old button.
+      const toggle = page.q('#region-detail-extra .ctx-scope-toggle')
+      const firstRow = page.q('#region-detail-extra .ctx-row')
+      expect(
+        toggle.compareDocumentPosition(firstRow) & window.Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy()
+
+      buttons()[1]!.click()
+      expect(visibleRows()).toBe(allRows)
+      expect(buttons()[1]!.getAttribute('aria-pressed')).toBe('true')
+      expect(window.document.activeElement).toBe(buttons()[1])
+      buttons()[0]!.click()
+      expect(visibleRows()).toBe(coreRows)
+
+      // The PDF is the full data sheet: every row, whatever the switch says, and no switch.
+      page.q('#export-item-pdf').click()
+      const umfeld = () =>
+        page!
+          .qAll('#print-sheet .ps-section')
+          .find((s) => s.querySelector('h2')?.textContent === 'Umfeld')
+      await page.waitFor(() => !!umfeld(), 'the printed Umfeld section')
+      expect(umfeld()!.querySelectorAll('.ctx-row').length).toBe(allRows)
+      expect(umfeld()!.querySelector('.detail-mode, [hidden]')).toBeNull()
+      expect(umfeld()!.querySelectorAll('.ctx-group').length).toBe(
+        page.qAll('#region-detail-extra .ctx-group').length,
+      )
+      // jsdom has no canvas and no createObjectURL: the map picture and plot rasters fail there.
+      const jsdomGaps = /print map TypeError: .*drawImage|createObjectURL is not a function/
+      expect(page.errors.filter((e) => !jsdomGaps.test(e))).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'clicking a street row highlights that street type, in both breakdowns',
     async () => {
       page = await bootViewer(IN_LANDKREIS)
