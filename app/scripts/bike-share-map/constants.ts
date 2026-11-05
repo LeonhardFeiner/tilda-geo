@@ -64,7 +64,7 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
 export const STATION_AREAS_PAGE_STEM = 'naechste-station'
 
 /**
- * Unlisted detour map (detourPage.ts): safe bike route vs. fastest car road between the places
+ * Unlisted detour map (detourPage.ts): safe bike route vs. usual car road between the places
  * of a Landkreis. Linked only from the region card of Gemeinden whose Landkreis has a graph in
  * output/detour/ (fetchDetourGraph.ts).
  */

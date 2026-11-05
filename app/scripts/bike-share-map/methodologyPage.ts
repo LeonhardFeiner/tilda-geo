@@ -8,7 +8,12 @@ import {
   URBANIZATION_LABELS,
   type UrbanizationCode,
 } from './demographicPeers'
-import { CLOSE_FROM_SAFETY, CLOSED_STRESS, STRESS_WEIGHT } from './detourRouting'
+import {
+  CAR_SECONDS_PER_KM,
+  CLOSE_FROM_SAFETY,
+  CLOSED_STRESS,
+  STRESS_WEIGHT,
+} from './detourRouting'
 import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
 import { COUNTING_VERSION } from './snapshotHistory'
@@ -509,7 +514,7 @@ ${siteIconHeadLinks()}
 
   <h2 id="umweg">Umwege per Rad</h2>
   <p>Die Umweg-Karte (aus der Detailkarte einer Gemeinde verlinkt, sofern für ihren Landkreis
-  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises die schnellste Autostrecke mit
+  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises die übliche Autostrecke mit
   einer Radroute zu allen anderen Orten: wie viele Kilometer, Höhenmeter bergauf und Minuten die
   Radroute mehr oder weniger braucht. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
   (<code>place=town/village/hamlet</code>) eingetragenen Ortspunkte, jeweils an den nächsten Punkt
@@ -528,8 +533,12 @@ ${siteIconHeadLinks()}
   Wege. Ab ${Math.round(CLOSE_FROM_SAFETY * 100)}&nbsp;% werden Abschnitte ab Belastung
   ${String(CLOSED_STRESS).replace('.', ',')} (Mischverkehr ab etwa 70&nbsp;km/h) gar nicht genutzt; ein Ort, der nur
   über solche Straßen erreichbar ist, gilt dann als nicht erreichbar.</p>
-  <p><strong>Auto:</strong> Tempolimit (sonst typischer Wert je Straßenart) mit Abschlag für Kreuzungen
-  und Kurven, Einbahnstraßen, keine Feld- und Waldwege. Kein Verkehr, keine Ampeln.</p>
+  <p><strong>Auto:</strong> Durchschnittstempo aus dem Tempolimit (sonst typischer Wert je Straßenart),
+  mit Abschlag für Kreuzungen, Kurven und Ortsdurchfahrten: etwa 35&nbsp;km/h bei 50, 55&nbsp;km/h bei 70,
+  75&nbsp;km/h bei 100 und 110&nbsp;km/h auf der Autobahn. Einbahnstraßen, keine Feld- und Waldwege.
+  Gewählt wird die Route mit der kleinsten Summe aus Fahrzeit und ${CAR_SECONDS_PER_KM}&nbsp;Sekunden je
+  Kilometer, wie bei üblichen Routenplanern: Eine Autobahnschleife, die viele Kilometer mehr fährt, um
+  eine Minute zu sparen, gilt nicht als Autostrecke. Kein Verkehr, keine Ampeln.</p>
   <p><strong>Höhenmeter:</strong> Summe der Anstiege entlang der Route, aus den Mapzen/AWS Terrain
   Tiles (etwa 13&nbsp;m Auflösung) alle 25&nbsp;m abgetastet und leicht geglättet. Die Höhenmeter werden
   berichtet, aber bei der Routenwahl nicht vermieden. „Mehr Höhenmeter“ vergleicht mit dem Anstieg

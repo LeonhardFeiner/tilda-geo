@@ -3,6 +3,7 @@ import {
   type DetourGraph,
   type EdgeSet,
   bikeStress,
+  CAR_SECONDS_PER_KM,
   buildAdjacency,
   CLOSE_FROM_SAFETY,
   CLOSED_STRESS,
@@ -194,6 +195,26 @@ describe('shortestPaths', () => {
       Infinity,
     )
     expect(shortestPaths(noDetour, a, 2, 0, CLOSE_FROM_SAFETY).cost[1]).toBe(Infinity)
+  })
+
+  test('the per-km cost drops a long fast loop that only saves a little time', () => {
+    // 0 → 1 direct: 27 km at 75 km/h = 1296 s. Via 2: 2 × 20 km at 120 km/h = 1200 s, so the
+    // loop is 96 s faster but 13 km longer — 390 s of per-km cost at 30 s/km.
+    const set = edges([
+      {
+        from: [0, 0, 2],
+        to: [1, 2, 1],
+        len: [27000, 20000, 20000],
+        kmhF: [75, 120, 120],
+        kmhB: [75, 120, 120],
+      },
+    ])
+    const a = buildAdjacency(set, 3)
+    expect(shortestPaths(set, a, 3, 0, 0).metres[1]).toBe(40000)
+    const usual = shortestPaths(set, a, 3, 0, 0, CAR_SECONDS_PER_KM)
+    expect(usual.metres[1]).toBe(27000)
+    // Reported minutes stay travel time; the per-km term only steers the choice.
+    expect(usual.seconds[1]).toBeCloseTo(27000 / (75 / 3.6), 3)
   })
 
   test('one-way edges are only passable in their direction', () => {

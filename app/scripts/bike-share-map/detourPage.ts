@@ -30,7 +30,7 @@ const STRESS_COLOURS = ['#1a9850', '#fdd835', '#f46d43', '#b2182b']
 
 /**
  * Unlisted page: pick a place, see for every other place of the Landkreis how much longer a bike
- * route that avoids traffic is than the fastest car road — km, climb, minutes. Routing happens in
+ * route that avoids traffic is than the usual car road (time + CAR_SECONDS_PER_KM) — km, climb, minutes. Routing happens in
  * the browser (detourRouting.ts) on a small per-Landkreis graph, so the safety slider is
  * continuous and both routes can be drawn.
  */
@@ -198,7 +198,7 @@ export function detourPageHtml({
     <summary><h1>Umwege per Rad</h1></summary>
     <div class="body">
       <p class="page-nav"><a href="${viewerHref}">&larr; Zur Karte</a> · <a href="${methodikHref}#umweg">Methodik</a></p>
-      <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die schnellste Autostrecke — von einem Ort zu allen anderen im Landkreis.</p>
+      <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die übliche Autostrecke — von einem Ort zu allen anderen im Landkreis.</p>
       <p id="status">Lade Daten …</p>
       <fieldset id="lk-box" hidden>
         <legend>Landkreis</legend>
@@ -393,7 +393,7 @@ export function detourPageHtml({
       const oi = indexById.get(state.origin);
       if (oi === undefined) return;
       const o = places[oi];
-      if (!carResult) carResult = R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0);
+      if (!carResult) carResult = R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0, R.CAR_SECONDS_PER_KM);
       if (bikeSafety !== state.safety) {
         bikeResult = R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, state.safety / 100);
         bikeSafety = state.safety;

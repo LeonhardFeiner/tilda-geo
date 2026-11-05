@@ -7139,7 +7139,7 @@ export function generateViewerHtml(
           CONFIG.detourPageUrl + '?lk=' + encodeURIComponent(detourLandkreis) +
           (String(p.level) === '8' ? '&gemeinde=' + encodeURIComponent(p.id) : '');
         detour.textContent = 'Umwege per Rad zu den Nachbarorten';
-        detour.title = 'Wie viel länger eine verkehrsarme Radroute als die schnellste Autostrecke ist';
+        detour.title = 'Wie viel länger eine verkehrsarme Radroute als die übliche Autostrecke ist';
         links.appendChild(detour);
       }
       if (offerOsmEdit) {

@@ -4,7 +4,7 @@
  * (detourPage.ts, via the detourRouting.js bundle) and the tests share one definition.
  *
  * The question the page answers: from one place, how much longer (km, climb, minutes) is a bike
- * route that avoids traffic than the fastest car road to every other place of the Landkreis?
+ * route that avoids traffic than the usual car road to every other place of the Landkreis?
  * "Avoids traffic" is a slider: 0 = fastest legal bike route, 1 = stays off busy roads.
  *
  * Graph: one node array (lon/lat/elevation), two directed-capable edge sets over it — `bike`
@@ -37,6 +37,13 @@ export const CLOSED_STRESS = 0.7
 
 /** Snapping a place to the network: beyond this it stays unrouted. */
 export const SNAP_MAX_M = 400
+
+/**
+ * Car routes cost travel time plus this many seconds per km, like the distance term in OSRM's
+ * or Valhalla's car profiles. Pure fastest-path picked 40 km motorway loops over 27 km direct
+ * country roads to save a minute; nobody drives that, and it made bike detours look small.
+ */
+export const CAR_SECONDS_PER_KM = 30
 
 export type PlaceKind = 'city' | 'town' | 'village' | 'hamlet'
 
@@ -461,6 +468,8 @@ export function shortestPaths(
   nodeCount: number,
   source: number,
   safety: number,
+  /** Extra cost in seconds per km on top of travel time (see CAR_SECONDS_PER_KM); 0 = pure time. */
+  secondsPerKm = 0,
 ): SearchResult {
   const cost = new Float64Array(nodeCount).fill(Number.POSITIVE_INFINITY)
   const seconds = new Float64Array(nodeCount)
@@ -537,7 +546,7 @@ export function shortestPaths(
       if (closeBusy && stress >= closedStress) continue
       const len = set.len[e]!
       const time = len / (kmh / 3.6)
-      const edgeCost = time * (1 + weight * (stress / STRESS_SCALE))
+      const edgeCost = time * (1 + weight * (stress / STRESS_SCALE)) + (len / 1000) * secondsPerKm
       const v = adj.target[i]!
       const next = cost[u]! + edgeCost
       if (next < cost[v]!) {

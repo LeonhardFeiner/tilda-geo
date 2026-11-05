@@ -131,8 +131,31 @@ function parseMaxspeed(value: string | null | undefined) {
   return Number.isFinite(n) && n > 0 ? n : null
 }
 
+/**
+ * Typical average speed for a speed limit, interpolated between the steps. Country roads lose
+ * more to curves, villages and junctions than the old flat 0.85 assumed; town roads at 50 move
+ * faster than 0.6 × limit. Together with the per-km cost in the router this stops the car
+ * route from swinging onto the motorway for a minute's gain.
+ */
+const CAR_AVERAGE_BY_LIMIT: Array<[number, number]> = [
+  [10, 6],
+  [30, 18],
+  [50, 35],
+  [60, 45],
+  [70, 55],
+  [100, 75],
+  [130, 110],
+]
+
 function carAverageKmh(limit: number) {
-  return limit * (limit >= 100 ? 0.85 : limit >= 70 ? 0.75 : 0.6)
+  const steps = CAR_AVERAGE_BY_LIMIT
+  if (limit <= steps[0]![0]) return (limit * steps[0]![1]) / steps[0]![0]
+  for (let i = 1; i < steps.length; i++) {
+    const [x1, y1] = steps[i]!
+    const [x0, y0] = steps[i - 1]!
+    if (limit <= x1) return y0 + ((limit - x0) / (x1 - x0)) * (y1 - y0)
+  }
+  return steps[steps.length - 1]![1]
 }
 
 // --------------------------------------------------------------------------- geometry helpers
