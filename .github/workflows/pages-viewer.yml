@@ -95,3 +95,68 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  # Second copy of the same build under the BFS subdomain. A Pages site has exactly one address
+  # (with a custom domain, github.io only redirects), so the subdomain is served from its own repo
+  # and this repo keeps working on github.io. The build is reused; only the absolute base URL in
+  # canonical/og:* tags (SHARE_PAGE_BASE_URL, HTML only) is swapped. Skipped until the
+  # MIRROR_DEPLOY_KEY secret exists (private half of a deploy key with write access on MIRROR_REPO).
+  # Runs independently of `deploy`, so a failure here never blocks the github.io site.
+  mirror:
+    runs-on: ubuntu-latest
+    needs: build
+    env:
+      MIRROR_REPO: LeonhardFeiner/radweg
+      MIRROR_DOMAIN: radweg.bfschweitenkirchen.de
+      SOURCE_BASE_URL: https://leonhardfeiner.github.io/tilda-geo/
+      MIRROR_DEPLOY_KEY: ${{ secrets.MIRROR_DEPLOY_KEY }}
+    steps:
+      - name: Check for deploy key
+        id: key
+        run: |
+          if [ -z "$MIRROR_DEPLOY_KEY" ]; then
+            echo "MIRROR_DEPLOY_KEY not set; skipping the mirror deploy."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Download Pages artifact
+        if: steps.key.outputs.present == 'true'
+        uses: actions/download-artifact@v4
+        with:
+          name: github-pages
+          path: _artifact
+
+      - name: Prepare mirror site
+        if: steps.key.outputs.present == 'true'
+        run: |
+          mkdir -p _site
+          tar -xf _artifact/artifact.tar -C _site
+          new_base="https://${MIRROR_DOMAIN}/"
+          grep -rlF --include='*.html' "$SOURCE_BASE_URL" _site \
+            | xargs -r sed -i "s#${SOURCE_BASE_URL}#${new_base}#g"
+          if grep -rqF --include='*.html' "$SOURCE_BASE_URL" _site; then
+            echo "::error::Old base URL still present after rewrite"
+            exit 1
+          fi
+          echo "$MIRROR_DOMAIN" > _site/CNAME
+          touch _site/.nojekyll
+          du -sh _site
+
+      # Orphan force-push: the branch always holds one commit, so the mirror repo doesn't grow
+      # by ~500 MB per deploy.
+      - name: Push to mirror repo
+        if: steps.key.outputs.present == 'true'
+        run: |
+          install -m 600 /dev/null ~/deploy_key
+          printf '%s\n' "$MIRROR_DEPLOY_KEY" > ~/deploy_key
+          export GIT_SSH_COMMAND="ssh -i ~/deploy_key -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          cd _site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA}"
+          git push --force "git@github.com:${MIRROR_REPO}.git" gh-pages
+          rm -f ~/deploy_key
