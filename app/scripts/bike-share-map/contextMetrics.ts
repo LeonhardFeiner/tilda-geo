@@ -38,6 +38,8 @@ export const CONTEXT_METRIC_LABELS = {
   employedAtWorkplace: 'Sozialvers. Beschäftigte am Arbeitsort',
   stops: 'Bahn-/Tram-/Fährhaltestellen',
   stationDistance: 'Ø Luftlinie zum nächsten Bahn-/Tramhalt',
+  stationFoot: 'Ø zu Fuß zum nächsten Bahn-/Tramhalt',
+  stationBike: 'Ø mit dem Rad zum nächsten Bahn-/Tramhalt',
   highwayDistance: 'Ø Distanz zur nächsten Autobahn/Kraftfahrstraße',
   elevation: 'Höhenlage (Ø)',
   areaSlope: 'Geländesteigung (Ø, Fläche)',
@@ -110,6 +112,8 @@ export const CONTEXT_METRIC_GROUPS = [
     keys: [
       'stops',
       'stationDistance',
+      'stationFoot',
+      'stationBike',
       'transitServed',
       'highwayDistance',
       'primarySchool',

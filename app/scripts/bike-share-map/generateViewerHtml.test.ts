@@ -1,6 +1,7 @@
 import { Script } from 'node:vm'
 import { describe, expect, test } from 'vitest'
 import { UNFALLATLAS_YEAR } from './constants'
+import { CONTEXT_METRIC_GROUPS } from './contextMetrics'
 import { generateViewerHtml } from './generateViewerHtml'
 
 describe('generateViewerHtml mobile zoom prevention and redirection', () => {
@@ -301,10 +302,16 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('includes population-weighted walking and bike time to next station in context metrics', () => {
-    expect(html).toContain("stationAccessMetric('foot', 'Ø zu Fuß zum nächsten Bahn-/Tramhalt')")
     expect(html).toContain(
-      "stationAccessMetric('bike', 'Ø mit dem Rad zum nächsten Bahn-/Tramhalt')",
+      "stationAccessMetric('foot', RankingDisplay.CONTEXT_METRIC_LABELS.stationFoot)",
     )
+    expect(html).toContain(
+      "stationAccessMetric('bike', RankingDisplay.CONTEXT_METRIC_LABELS.stationBike)",
+    )
+    // Grouped under "Erreichbarkeit", not left over after "Gelände".
+    const reach = CONTEXT_METRIC_GROUPS.find((g) => g.title === 'Erreichbarkeit')!
+    expect(reach.keys).toContain('stationFoot')
+    expect(reach.keys).toContain('stationBike')
     expect(html).toContain("note: 'entlang der Wege, einwohnergewichtet'")
     expect(html).toContain('transitIndex?.byId[id]?.access?.[mode]?.[0]')
     expect(html).not.toContain("key: 'stationAccess'")

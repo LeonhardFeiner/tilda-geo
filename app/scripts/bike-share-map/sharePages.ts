@@ -218,9 +218,8 @@ export function shareQualitySentence(s: Pick<ShareRegionSummary, 'quality'>) {
 
 export function shareHeadline(s: ShareRegionSummary) {
   const pct = formatStatPctUi(s.bikeSharePct)
-  // "nur" judges; with shaky data the number is reported, not judged.
-  const prefix = s.behind && !shareQualityUncertain(s) ? 'nur ' : ''
-  return `${s.name}: ${prefix}${pct} % Radinfra – ${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
+  // Facts only, no "nur"; "km je 100 km Straße" rather than "%", which reads as a share of roads.
+  return `${s.name}: ${pct} km Radinfra je 100 km Straße – ${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
 }
 
 /**
@@ -232,7 +231,7 @@ function peerGroupSentence(s: ShareRegionSummary): string {
   const peer = s.peerGroup
   if (!peer) return ''
   if (peer.behind) {
-    return ` Auch unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) reicht es nur zu ${shareRankPhrase(peer)}.`
+    return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}): ${shareRankPhrase(peer)}.`
   }
   return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) liegt ${s.name} über dem Median.`
 }
@@ -250,9 +249,9 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const tail = `${peerSentence}${qualitySentence} Daten: OpenStreetMap, Stand ${dataDateLabel}.`
   if (gapIsMeaningful(s)) {
     const gapKm = formatGapKm(s.gapKm)
-    return `${base} Bis ins Mittelfeld (Median ${median} %) fehlen rund ${gapKm}.${tail}`
+    return `${base} Bis ins Mittelfeld (Median ${median} km je 100 km Straße) fehlen rund ${gapKm}.${tail}`
   }
-  return `${base} Median: ${median} %.${tail}`
+  return `${base} Median: ${median} km je 100 km Straße.${tail}`
 }
 
 export function slugForId(id: string) {
@@ -377,7 +376,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const bg = s.behind ? '#3a1414' : '#0d3b2e'
   const rankLineText = `${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
   const subLineText = gapIsMeaningful(s)
-    ? `Es fehlen rund ${formatGapKm(s.gapKm)} bis ins Mittelfeld (Median ${formatStatPctUi(s.medianPct)} %)`
+    ? `Bis zum Median (${formatStatPctUi(s.medianPct)} km je 100 km) fehlen rund ${formatGapKm(s.gapKm)}`
     : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
   const peer = s.peerGroup
   const peerLineText = peer
@@ -406,8 +405,8 @@ export function shareOgSvg(s: ShareRegionSummary) {
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="${bg}" />
   <text x="60" y="110" font-family="Arial, sans-serif" font-size="${nameSize}" font-weight="700" fill="#ffffff">${name}</text>
-  <text x="60" y="280" font-family="Arial, sans-serif" font-size="150" font-weight="800" fill="${accent}">${pct} %</text>
-  <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur an Straßen (km)${
+  <text x="60" y="280" font-family="Arial, sans-serif" font-size="150" font-weight="800" fill="${accent}">${pct} km</text>
+  <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur je 100 km Straße${
     typeof s.mainRoadPct === 'number'
       ? ` · an Hauptverkehrsstraßen: ${escapeHtml(formatStatPctUi(s.mainRoadPct))} %`
       : ''

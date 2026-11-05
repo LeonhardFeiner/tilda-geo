@@ -5333,10 +5333,13 @@ export function generateViewerHtml(
       if (q.level === 'good') {
         regionDetailQuality.className = 'region-detail-quality region-detail-quality--good';
         const head = document.createElement('strong');
-        head.textContent = 'Datenlage: gut. ';
+        head.textContent = 'Datenlage: eindeutig getaggt. ';
         regionDetailQuality.append(
           head,
-          document.createTextNode('Die Radinfrastruktur ist in OpenStreetMap eindeutig getaggt.'),
+          document.createTextNode(
+            'Alle erfassten Radwege sind in OpenStreetMap eindeutig eingeordnet. Ob Wege ganz ' +
+              'fehlen, zeigt das nicht (siehe Kartierungstiefe unter „Mehr Zahlen“).',
+          ),
         );
         regionDetailQuality.hidden = false;
         return;
@@ -6216,6 +6219,8 @@ export function generateViewerHtml(
           key: 'bikeAccidents',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidents,
           note: 'Unfallatlas ${UNFALLATLAS_YEAR}',
+          // A raw count mostly measures size; the rated comparison is the per-10.000 row.
+          noBar: true,
           source: accidentsIndex,
           get: (id) => {
             const v = accidentsIndex?.byId[id]?.bikeAccidents;
@@ -6378,8 +6383,8 @@ export function generateViewerHtml(
           },
           format: (v) => deNumber(v, v < 10 ? 1 : 0) + ' km',
         },
-        stationAccessMetric('foot', 'Ø zu Fuß zum nächsten Bahn-/Tramhalt'),
-        stationAccessMetric('bike', 'Ø mit dem Rad zum nächsten Bahn-/Tramhalt'),
+        stationAccessMetric('foot', RankingDisplay.CONTEXT_METRIC_LABELS.stationFoot),
+        stationAccessMetric('bike', RankingDisplay.CONTEXT_METRIC_LABELS.stationBike),
         {
           key: 'transitServed',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.transitServed,
@@ -7031,14 +7036,16 @@ export function generateViewerHtml(
             : rankText;
       const pct =
         p.roadSumKm > 0 && typeof p.bikeSharePct === 'number'
-          ? formatUiPct(p.bikeSharePct) + ' %'
+          ? formatUiPct(p.bikeSharePct) + ' km'
           : '–';
       const pctEl = document.createElement('span');
       pctEl.className = 'region-detail-pct';
       pctEl.textContent = pct;
       const pctLabel = document.createElement('span');
       pctLabel.className = 'region-detail-pct-label';
-      pctLabel.textContent = ' Radinfrastruktur im Verhältnis zum Straßennetz';
+      // "km je 100 km Straße", not "%": a bare percentage reads as "share of roads with a path",
+      // which this is not (off-road paths count, two-way roads count twice).
+      pctLabel.textContent = ' Radinfrastruktur je 100 km Straße';
       const rankEl = document.createElement('span');
       rankEl.className = 'region-detail-rank';
       rankEl.textContent = rankLine;
@@ -8868,9 +8875,8 @@ export function generateViewerHtml(
           let msg =
             name +
             ': ' +
-            (behind ? 'nur ' : '') +
             formatUiPct(p.bikeSharePct) +
-            ' % Radinfrastruktur im Verhältnis zum Straßennetz';
+            ' km Radinfrastruktur je 100 km Straße';
           if (rankInfo) {
             msg += ' – Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' ' + viewComparisonLabel();
           }
@@ -10202,10 +10208,10 @@ export function generateViewerHtml(
       if (feature && feature.properties) {
         const p = feature.properties;
         const url = shareableLink();
-        const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' %' : '';
+        const pctText = p.bikeSharePct != null ? formatUiPct(p.bikeSharePct) + ' km' : '';
         const shareText =
           (p.name || 'Gebiet') +
-          (pctText ? ': ' + pctText + ' Radinfrastruktur im Verhältnis zum Straßennetz.' : '') +
+          (pctText ? ': ' + pctText + ' Radinfrastruktur je 100 km Straße.' : '') +
           '\\n' +
           url;
         if (typeof navigator.share === 'function') {

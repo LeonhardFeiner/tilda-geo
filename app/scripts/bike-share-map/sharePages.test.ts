@@ -196,10 +196,11 @@ describe('shareHeadline / shareDescription', () => {
   const summaries = buildShareRegionSummaries(regions, lkNames)
   const sk = summaries.get('relation/396557')!
 
-  test('headline carries the real numbers and last-place phrasing', () => {
+  test('headline carries the real numbers and last-place phrasing, without judging words', () => {
     expect(shareHeadline(sk)).toBe(
-      'Schweitenkirchen: nur 1,6 % Radinfra – letzter Platz im Landkreis Pfaffenhofen an der Ilm',
+      'Schweitenkirchen: 1,6 km Radinfra je 100 km Straße – letzter Platz im Landkreis Pfaffenhofen an der Ilm',
     )
+    expect(shareHeadline(sk)).not.toContain('nur')
   })
 
   test('description states the km gap for a behind region', () => {
@@ -230,7 +231,8 @@ describe('shareHeadline / shareDescription', () => {
       },
     }
     const text = shareDescription(withPeer, '12.09.2026')
-    expect(text).toContain('Auch unter vergleichbaren Gemeinden bundesweit')
+    expect(text).toContain('Unter vergleichbaren Gemeinden bundesweit')
+    expect(text).not.toContain('reicht es nur')
     expect(text).toContain('ländlich geprägt, 5.000–10.000 Einwohner')
     expect(text).toContain('Platz 340 von 412')
   })
@@ -249,13 +251,13 @@ describe('shareHeadline / shareDescription', () => {
     expect(shareDescription({ ...sk, quality: null }, '12.09.2026')).not.toContain('Datenlage')
   })
 
-  test('unclear tagging drops "nur" and adds the viewer-worded caveat, keeping the gap', () => {
+  test('unclear tagging adds the viewer-worded caveat, keeping the gap', () => {
     const poor = {
       ...sk,
       quality: { level: 'poor' as const, unclearKm: 2.3, bikeKm: 5.2, unclearShare: 0.442 },
     }
     expect(shareHeadline(poor)).toBe(
-      'Schweitenkirchen: 1,6 % Radinfra – letzter Platz im Landkreis Pfaffenhofen an der Ilm',
+      'Schweitenkirchen: 1,6 km Radinfra je 100 km Straße – letzter Platz im Landkreis Pfaffenhofen an der Ilm',
     )
     const text = shareDescription(poor, '12.09.2026')
     expect(text).toContain('fehlen rund')
@@ -349,7 +351,8 @@ describe('shareStubHtml / shareOgSvg', () => {
   test('og image is valid SVG containing the headline numbers', () => {
     const svg = shareOgSvg(sk)
     expect(svg).toMatch(/^<svg /)
-    expect(svg).toContain('1,6 %')
+    expect(svg).toContain('1,6 km')
+    expect(svg).toContain('Radinfrastruktur je 100 km Straße')
     expect(svg).toContain('Schweitenkirchen')
   })
 
@@ -384,11 +387,11 @@ describe('shareStubHtml / shareOgSvg', () => {
     }
     const poorSvg = shareOgSvg(poor)
     expect(poorSvg).toContain('Datenlage unsicher (OSM)')
-    expect(poorSvg).toContain('Es fehlen rund')
+    expect(poorSvg).toContain('Bis zum Median')
     const sparse = { ...sk, quality: { level: 'sparse' as const, bikeKm: 0.3, roadKm: 316.9 } }
     const sparseSvg = shareOgSvg(sparse)
     expect(sparseSvg).toContain('Datenlage unsicher (OSM): kaum Radinfrastruktur erfasst')
-    expect(sparseSvg).not.toContain('Es fehlen rund')
+    expect(sparseSvg).not.toContain('Bis zum Median')
     expect(sparseSvg).toContain('Median dieser Auswahl')
   })
 

@@ -14,6 +14,7 @@ import {
   CLOSED_STRESS,
   STRESS_WEIGHT,
 } from './detourRouting'
+import { authorDisclosureHtml } from './legalPage'
 import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
 import { COUNTING_VERSION } from './snapshotHistory'
@@ -223,9 +224,9 @@ export function methodologyPageHtml(input: MethodologyPageInput): string {
   const peerSection =
     input.peerGemeindeCount > 0
       ? `<h2>Vergleich mit ähnlichen Gemeinden</h2>
-<p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit „wir sind halt ländlich“ nicht
-als Erklärung reicht, wird jede Gemeinde zusätzlich bundesweit mit Gemeinden <em>derselben
-Größenklasse und Verstädterung</em> verglichen:</p>
+<p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit Gemeinden mit ähnlichen
+Voraussetzungen nebeneinanderstehen, wird jede Gemeinde zusätzlich bundesweit mit Gemeinden
+<em>derselben Größenklasse und Verstädterung</em> verglichen:</p>
 ${peerBandList()}
 <p>Grundlage ist das <a href="${DESTATIS_URL}">Gemeindeverzeichnis des Statistischen Bundesamts</a>
 (vierteljährlich). Der Vergleich erscheint für ${input.peerGemeindeCount.toLocaleString('de-DE')}
@@ -524,9 +525,9 @@ ${siteIconHeadLinks()}
 
   <h2 id="umweg">Umwege per Rad</h2>
   <p>Die Umweg-Karte (aus der Detailkarte einer Gemeinde verlinkt, sofern für ihren Landkreis
-  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises die übliche Autostrecke mit
-  einer Radroute zu allen anderen Orten: wie viele Kilometer, Höhenmeter bergauf und Minuten die
-  Radroute mehr oder weniger braucht. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
+  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises eine verkehrsarme Radroute zu
+  allen anderen Orten mit der schnellsten Radroute oder der üblichen Autostrecke: wie viele Kilometer,
+  Höhenmeter bergauf und Minuten sie mehr oder weniger braucht, und woraus beide Routen bestehen. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
   (<code>place=town/village/hamlet</code>) eingetragenen Ortspunkte, jeweils an den nächsten Punkt
   des Rad- bzw. Straßennetzes angebunden (höchstens 400&nbsp;m entfernt).</p>
   <p><strong>Radnetz:</strong> alle Wege, die TILDA als für Räder befahrbar einstuft, mit ihrer
@@ -549,16 +550,24 @@ ${siteIconHeadLinks()}
   Gewählt wird die Route mit der kleinsten Summe aus Fahrzeit und ${CAR_SECONDS_PER_KM}&nbsp;Sekunden je
   Kilometer, wie bei üblichen Routenplanern: Eine Autobahnschleife, die viele Kilometer mehr fährt, um
   eine Minute zu sparen, gilt nicht als Autostrecke. Kein Verkehr, keine Ampeln.</p>
-  <p><strong>Vergleich mit der schnellsten Radroute:</strong> Statt mit dem Auto lässt sich die Radroute
-  auch mit der schnellsten Radroute vergleichen (Regler ganz links). Dann zeigen die Zahlen, was das
+  <p><strong>Vergleich mit der schnellsten Radroute (Standard):</strong> Die Radroute wird mit der
+  schnellsten Radroute verglichen (Regler ganz links), wahlweise mit dem Auto. Dann zeigen die Zahlen, was das
   Meiden von Verkehr kostet: wie viele Kilometer, Höhenmeter und Minuten eine verkehrsarme Route
   gegenüber der schnellsten mehr braucht. Langsamer ist sie nie, kürzer kann sie sein, etwa über
   einen direkten, aber langsameren Feldweg. Ist ein Ort nur über gesperrte Straßen erreichbar, gilt
   er wie beim Auto-Vergleich als nicht erreichbar.</p>
+  <p><strong>Woraus eine Route besteht:</strong> Für jede Route wird die Länge aufgeteilt in
+  Radwege und Radstreifen (TILDA-Kategorien mit Radinfrastruktur), Feld- und Wirtschaftswege
+  (<code>highway=track</code>), sonstige ruhige Wege und Straßen (Belastung unter 0,2, etwa Tempo-30-Straßen
+  und Fußwege mit Radfreigabe), Straßen mit Verkehr (Belastung 0,2 bis 0,6, etwa Tempo 50) und Straßen
+  mit Tempo 70–100 ohne Radweg (Belastung ab 0,6). Zusätzlich ausgewiesen: Abschnitte mit in OSM
+  erfasstem unbefestigtem Belag (Schotter, Erde, Gras u.&nbsp;Ä.; ohne Angabe gilt ein Weg nicht als
+  unbefestigt) und Abschnitte, auf denen geschoben wird. Die Übersicht nennt jeweils den Median über alle
+  angezeigten Orte.</p>
   <p><strong>Höhenmeter:</strong> Summe der Anstiege entlang der Route, aus den Mapzen/AWS Terrain
   Tiles (etwa 13&nbsp;m Auflösung) alle 25&nbsp;m abgetastet und leicht geglättet. Die Höhenmeter werden
   berichtet, aber bei der Routenwahl nicht vermieden. „Mehr Höhenmeter“ vergleicht mit dem Anstieg
-  der Autostrecke. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
+  der Vergleichsroute. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
   <p><strong>Einschränkungen:</strong> Ein Ortspunkt ist nicht jede Adresse des Orts; bei großen Orten
   kann die Strecke zum Ortsrand deutlich kürzer sein. Wege außerhalb des Landkreises werden bis etwa
   4&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
@@ -577,6 +586,9 @@ ${siteIconHeadLinks()}
   </div>
 
   ${downloadSection}
+
+  <h2 id="autor">Wer steht dahinter?</h2>
+  ${authorDisclosureHtml(input.projectLead, input.dataDateLabel)}
 
   <h2 id="version">Version und Zitierweise</h2>
   <p>Die Zahlen hängen von drei Ständen ab, die sich unabhängig voneinander ändern:</p>

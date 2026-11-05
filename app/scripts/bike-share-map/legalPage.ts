@@ -14,6 +14,25 @@ export const LEGAL_CONTACT = {
   email: 'feiner.politik@outlook.de',
 }
 
+/** OSM account the author edits with; linked so every edit can be checked by date. */
+export const AUTHOR_OSM_USER = 'LeonhardFeiner'
+
+/**
+ * Who is behind the site, stated up front: the author is politically active in one of the
+ * compared Gemeinden and edits OpenStreetMap there. Shown in the Impressum and on methodik.html.
+ */
+export function authorDisclosureHtml(projectLead: string, dataDateLabel?: string): string {
+  const osmHistory = `https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history`
+  return `<p>Der Radinfra-Vergleich ist ein privates, nicht-kommerzielles Projekt von ${projectLead}.
+  ${projectLead} ist Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen; das Logo greift
+  deren Gestaltung auf. Damit die Zahlen trotzdem nachprüfbar bleiben, werden sie für alle Gemeinden in
+  Deutschland automatisch nach derselben Regel aus offenen Daten berechnet; Methodik, Quellen und
+  eine CSV mit allen Werten sind öffentlich.</p>
+  <p>${projectLead} trägt selbst zu OpenStreetMap bei, auch in Schweitenkirchen (Benutzer
+  <a href="${osmHistory}">${AUTHOR_OSM_USER}</a>). Jede dieser Änderungen ist dort mit Datum
+  öffentlich einsehbar${dataDateLabel ? `; die Karte zeigt den OSM-Stand vom ${dataDateLabel}` : ''}.</p>`
+}
+
 export function legalPageHtml(input: LegalPageInput): string {
   return `<!DOCTYPE html>
 <html lang="de">
@@ -47,8 +66,9 @@ ${siteIconHeadLinks()}
   <h2>Impressum</h2>
   <p>Angaben gemäß § 5 DDG; verantwortlich für den Inhalt nach § 18 Abs. 2 MStV:</p>
   <p>${input.projectLead}<br />${LEGAL_CONTACT.address}<br />E-Mail: ${LEGAL_CONTACT.email}</p>
-  <p>Der Radinfra-Vergleich ist ein privates, nicht-kommerzielles Projekt. Die Zahlen werden
-  automatisch aus offenen Daten berechnet; Methodik und Quellen stehen auf der Seite
+  <h2>Wer steht dahinter?</h2>
+  ${authorDisclosureHtml(input.projectLead)}
+  <p>Methodik und Quellen stehen auf der Seite
   <a href="./methodik.html">Methodik &amp; Datenquellen</a>.</p>
 
   <h2>Datenschutz</h2>
