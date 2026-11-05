@@ -57,6 +57,12 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
       expect(p.q('#origin-box').hidden).toBe(false)
       expect(p.q('#summary').textContent).toContain('Schweitenkirchen')
       expect(p.q('#summary').textContent).toMatch(/im Median [+−±]\d+,\d km/)
+      // Default comparison: the fastest bike route, and what it runs on.
+      expect(p.q<HTMLInputElement>('input[name=vergleich][value=rad]').checked).toBe(true)
+      expect(p.q('#summary').textContent).toMatch(
+        /führt im Median zu \d+ % über Straßen mit Tempo 70–100 ohne Radweg/,
+      )
+      expect(p.q('#summary').textContent).toContain('Feld- und Wirtschaftswege')
       // Default: hamlets hidden, so only villages and towns are listed.
       expect(rows(p).length).toBeGreaterThan(50)
       expect(rows(p).length).toBeLessThan(200)
@@ -101,6 +107,7 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
       rows(p)[0]!.click()
       expect(p.q('#pair').hidden).toBe(false)
       expect(p.q('#pair h2').textContent).toContain('Ilmmünster →')
+      expect(p.q('#pair').textContent).toContain('Diese Radroute (')
       const map = p.window.__map as unknown as {
         getSource: (id: string) => {
           data: { type: string; features?: unknown[]; geometry?: { coordinates: unknown[] } }
@@ -141,12 +148,12 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
       const extraMin = rows(p).map((tr) => tr.children[6]!.textContent!)
       expect(extraMin.some((c) => c.startsWith('−') && c !== '−0')).toBe(false)
 
-      // Back to the car: the reference column changes and the URL drops the parameter.
+      // The car: the reference column changes and the URL carries the parameter.
       const auto = p.q<HTMLInputElement>('input[name=vergleich][value=auto]')
       auto.checked = true
       auto.dispatchEvent(new p.window.Event('change', { bubbles: true }))
       expect(p.q('#ref-head').textContent).toBe('Auto')
-      expect(p.window.location.search).not.toContain('vergleich=')
+      expect(p.window.location.search).toContain('vergleich=auto')
       expect(p.errors).toEqual([])
     },
     TIMEOUT,

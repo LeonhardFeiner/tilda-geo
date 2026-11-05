@@ -81,6 +81,21 @@ const BIKE_KMH_BY_ROAD: Record<string, number> = {
   steps: 2,
   cycleway: 18,
 }
+/** Surfaces the detour page reports as unpaved (sett and cobblestone are paved, just rough). */
+const UNPAVED_SURFACES = new Set([
+  'compacted',
+  'fine_gravel',
+  'gravel',
+  'pebblestone',
+  'unpaved',
+  'ground',
+  'dirt',
+  'earth',
+  'grass',
+  'sand',
+  'mud',
+  'woodchips',
+])
 const BIKE_DEFAULT_KMH = 18
 const PUSH_KMH = 5
 const SURFACE_FACTOR: Record<string, number> = {
@@ -659,7 +674,14 @@ export async function buildDetourGraph(client: Client, { landkreis, bufferKm }: 
       kmhF: kmh,
       kmhB: onewayBike ? Math.min(kmh, PUSH_KMH) : kmh,
       stress,
-      cat: enumIndex(categories, categoryIndex, category),
+      // Flags after the category (detourRouting.splitCategoryLabel): what the route runs on.
+      cat: enumIndex(
+        categories,
+        categoryIndex,
+        category +
+          (road === 'track' ? '|track' : '') +
+          (UNPAVED_SURFACES.has(String(t.surface ?? '')) ? '|unpaved' : ''),
+      ),
     })
   }
 

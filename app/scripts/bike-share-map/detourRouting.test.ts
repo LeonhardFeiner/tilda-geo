@@ -1,5 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import {
+  routeComposition,
+  splitCategoryLabel,
+  STRESS_SCALE,
   type DetourGraph,
   type EdgeSet,
   bikeStress,
@@ -319,5 +322,46 @@ describe('packing', () => {
       [11.5068, 48.506],
     ])
     expect(edgeCoordinates(back, back.bike, 1, false)[0]).toEqual([11.5068, 48.506])
+  })
+})
+
+describe('routeComposition', () => {
+  test('splits a route by kind of way and adds flags', () => {
+    expect(splitCategoryLabel('mixedTrafficFoot|track|unpaved')).toEqual({
+      category: 'mixedTrafficFoot',
+      track: true,
+      unpaved: true,
+    })
+    const meta = {
+      categories: [
+        'cycleway_isolated',
+        'mixedTrafficFoot|track|unpaved',
+        'mixedTrafficMotor',
+        'mixedTrafficFoot',
+      ],
+    }
+    const set = {
+      len: Uint16Array.from([100, 200, 300, 400, 50]),
+      stress: Uint8Array.from([0, 0, 1 * STRESS_SCALE, 0.35 * STRESS_SCALE, 0]),
+      cat: Uint8Array.from([0, 1, 2, 2, 3]),
+      kmhF: Uint8Array.from([18, 9, 18, 18, 5]),
+      kmhB: Uint8Array.from([18, 9, 18, 18, 5]),
+    }
+    const edges = [0, 1, 2, 3, 4].map((edge) => ({ edge, forward: true }))
+    const c = routeComposition(
+      { meta } as unknown as Parameters<typeof routeComposition>[0],
+      set as unknown as Parameters<typeof routeComposition>[1],
+      edges,
+    )
+    expect(c).toEqual({
+      totalM: 1050,
+      infraM: 100,
+      trackM: 200,
+      quietM: 50,
+      townM: 400,
+      busyM: 300,
+      pushedM: 50,
+      unpavedM: 200,
+    })
   })
 })

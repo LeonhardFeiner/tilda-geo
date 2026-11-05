@@ -605,6 +605,76 @@ export function routeEdges(set: EdgeSet, adj: Adjacency, result: SearchResult, t
   return out.reverse()
 }
 
+// --------------------------------------------------------------------------- route composition
+
+/**
+ * Bike edge category labels carry flags after the TILDA category: `|track` for farm and forest
+ * tracks (highway=track), `|unpaved` for a mapped unpaved surface (fetchDetourGraph.ts).
+ */
+export function splitCategoryLabel(label: string) {
+  const [category = '', ...flags] = label.split('|')
+  return { category, track: flags.includes('track'), unpaved: flags.includes('unpaved') }
+}
+
+/** Categories that are bike infrastructure in TILDA's sense (not just a quiet way). */
+const BIKE_INFRA = new Set(
+  [...SEPARATED, ...ON_ROAD_EXCLUSIVE, ...ON_ROAD_SHARED].filter(
+    (c) => !['mixedTrafficFoot', 'livingStreet', 'sharedMotorVehicleLane'].includes(c),
+  ),
+)
+
+/** Push speed and below: the route walks the bike there (footway without permission, wrong way). */
+export const PUSH_KMH_MAX = 5
+
+/**
+ * Metres of a bike route by kind of way. The first five are exclusive and add up to `totalM`:
+ * bike infrastructure; farm/forest tracks; other quiet ways (stress < 0.2); roads with
+ * moderate traffic (< 0.6); roads with fast traffic and no bike infrastructure (≥ 0.6, i.e.
+ * 70–100 km/h). `pushedM` and `unpavedM` overlap them.
+ */
+export type RouteComposition = {
+  totalM: number
+  infraM: number
+  trackM: number
+  quietM: number
+  townM: number
+  busyM: number
+  pushedM: number
+  unpavedM: number
+}
+
+export function routeComposition(
+  graph: Pick<DetourGraph, 'meta'>,
+  set: EdgeSet,
+  edges: Array<{ edge: number; forward: boolean }>,
+): RouteComposition {
+  const c: RouteComposition = {
+    totalM: 0,
+    infraM: 0,
+    trackM: 0,
+    quietM: 0,
+    townM: 0,
+    busyM: 0,
+    pushedM: 0,
+    unpavedM: 0,
+  }
+  for (const { edge, forward } of edges) {
+    const len = set.len[edge]!
+    const stress = set.stress[edge]! / STRESS_SCALE
+    const label = splitCategoryLabel(graph.meta.categories[set.cat[edge]!] ?? '')
+    c.totalM += len
+    if (BIKE_INFRA.has(label.category)) c.infraM += len
+    else if (label.track && stress < 0.2) c.trackM += len
+    else if (stress < 0.2) c.quietM += len
+    else if (stress < 0.6) c.townM += len
+    else c.busyM += len
+    const kmh = forward ? set.kmhF[edge]! : set.kmhB[edge]!
+    if (kmh <= PUSH_KMH_MAX) c.pushedM += len
+    if (label.unpaved) c.unpavedM += len
+  }
+  return c
+}
+
 // --------------------------------------------------------------------------- per-place table
 
 export type DetourRow = {

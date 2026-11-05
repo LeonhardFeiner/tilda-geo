@@ -29,13 +29,13 @@ const METRICS = {
  * bike search at slider 0 — what does avoiding traffic cost the cyclist?
  */
 const REFERENCES = {
-  auto: { label: 'Auto', head: 'Auto', dative: 'dem Auto', legend: 'Auto' },
   rad: {
     label: 'Schnellste Radroute',
     head: 'Schnellst',
     dative: 'der schnellsten Radroute',
     legend: 'Schnellste Radroute',
   },
+  auto: { label: 'Auto', head: 'Auto', dative: 'dem Auto', legend: 'Auto' },
 } as const
 const SCALE_COLOURS = ['#1a9850', '#fee08b', '#d73027']
 const UNREACHABLE_COLOUR = '#9aa0a6'
@@ -252,6 +252,7 @@ export function detourPageHtml({
       <label><input type="checkbox" id="hamlets" /> Weiler (place=hamlet) mit anzeigen</label>
       <div id="origin-box" hidden>
         <p id="summary"></p>
+        <div id="pair" hidden></div>
         <p><label for="sort" style="display:inline">Sortieren:</label>
           <select id="sort" style="width:auto;display:inline-block">
             <option value="air">Nähe</option>
@@ -263,7 +264,6 @@ export function detourPageHtml({
           <button class="btn" id="csv" type="button" style="float:right">CSV</button></p>
         <div style="overflow-x:auto"><table id="table"><thead><tr><th>Ort</th><th title="Luftlinie">Luft</th><th id="ref-head" title="Auto: km / min">Auto</th><th title="Rad: km / min">Rad</th><th title="Mehr Kilometer">+km</th><th title="Mehr Höhenmeter bergauf">+Hm</th><th title="Mehr Minuten">+min</th></tr></thead><tbody></tbody></table></div>
       </div>
-      <div id="pair" hidden></div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Radinfrastruktur-Kategorien: TILDA; Höhen: Mapzen/AWS Terrain Tiles. Annahmen: siehe <a href="${methodikHref}#umweg">Methodik</a>.</p>
     </div>
   </details>
@@ -294,7 +294,9 @@ export function detourPageHtml({
       dest: params.get('nach') ? Number(params.get('nach')) : null,
       safety: Math.max(0, Math.min(100, Number(params.get('sicherheit') || 70))),
       metric: METRICS[params.get('zeige')] ? params.get('zeige') : 'km',
-      ref: params.get('vergleich') === 'rad' ? 'rad' : 'auto',
+      // Default: the fastest bike route. Against the car, most of the extra time is just that
+      // bikes are slower than cars; against the fastest bike route it is the price of avoiding traffic.
+      ref: params.get('vergleich') === 'auto' ? 'auto' : 'rad',
       hamlets: params.get('weiler') === '1',
       sort: 'air',
     };
@@ -332,7 +334,7 @@ export function detourPageHtml({
       if (state.dest != null) p.set('nach', String(state.dest));
       if (state.safety !== 70) p.set('sicherheit', String(state.safety));
       if (state.metric !== 'km') p.set('zeige', state.metric);
-      if (state.ref !== 'auto') p.set('vergleich', state.ref);
+      if (state.ref !== 'rad') p.set('vergleich', state.ref);
       if (state.hamlets) p.set('weiler', '1');
       const q = p.toString();
       history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
@@ -413,6 +415,7 @@ export function detourPageHtml({
 
     // ---- routing (reference cached per origin and kind; the bike search also per slider value)
     let refResult = null;
+    let fastResult = null;
     let bikeResult = null;
     let bikeSafety = -1;
     let rows = [];
@@ -426,6 +429,10 @@ export function detourPageHtml({
           state.ref === 'rad'
             ? R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0)
             : R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0, R.CAR_SECONDS_PER_KM);
+      }
+      // The fastest bike route: what the cyclist has to ride without a detour (summary + route box).
+      if (!fastResult) {
+        fastResult = state.ref === 'rad' ? refResult : R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0);
       }
       if (bikeSafety !== state.safety) {
         bikeResult = R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, state.safety / 100);
@@ -545,6 +552,7 @@ export function detourPageHtml({
       state.origin = p.id;
       state.dest = null;
       refResult = null;
+      fastResult = null;
       bikeSafety = -1;
       search.value = p.name;
       if (pan) map.flyTo({ center: [p.lon, p.lat], zoom: Math.max(map.getZoom(), 11) });
@@ -605,6 +613,21 @@ export function detourPageHtml({
       const unreachable = shown.filter((r) => !r.bike).length;
       const parts = [];
       parts.push('<strong>' + o.name + '</strong>' + (o.gemeinde && o.gemeinde !== o.name ? ' (' + o.gemeinde + ')' : '') + ', ' + (KIND_LABEL[o.kind] || o.kind) + '.');
+      // What the routes run on (detourRouting.routeComposition), median over the places shown.
+      const comps = shown
+        .filter((r) => r.bike && r.place.bikeNode >= 0 && Number.isFinite(fastResult.cost[r.place.bikeNode]))
+        .map((r) => ({
+          fast: R.routeComposition(graph, graph.bike, R.routeEdges(graph.bike, adjBike, fastResult, r.place.bikeNode)),
+          safe: R.routeComposition(graph, graph.bike, R.routeEdges(graph.bike, adjBike, bikeResult, r.place.bikeNode)),
+        }))
+        .filter((c) => c.fast.totalM > 0 && c.safe.totalM > 0);
+      if (comps.length) {
+        const pctOf = (key, which) => deNum(median(comps.map((c) => (c[which][key] / c[which].totalM) * 100)), 0) + ' %';
+        parts.push('Die schnellste Radroute zu den ' + comps.length + ' anderen Orten führt im Median zu <strong>' + pctOf('busyM', 'fast') + ' über Straßen mit Tempo 70–100 ohne Radweg</strong>.');
+        if (state.safety > 0) {
+          parts.push('Die verkehrsarme Route führt im Median zu ' + pctOf('trackM', 'safe') + ' über Feld- und Wirtschaftswege und zu ' + pctOf('infraM', 'safe') + ' über Radwege.');
+        }
+      }
       if (both.length) {
         parts.push('Zu den ' + both.length + ' anderen Orten ist die Radroute im Median ' + signed(median(both.map((r) => r.extraKm)), 1) + ' km, ' + signed(median(both.map((r) => r.extraClimbM)), 0) + ' Hm und ' + signed(median(both.map((r) => r.extraMin)), 0) + ' min gegenüber ' + REFERENCES[state.ref].dative + '; Faktor ' + deNum(median(both.map((r) => r.factor)), 2) + '.');
       }
@@ -677,25 +700,33 @@ export function detourPageHtml({
           geometry: { type: 'LineString', coordinates: R.edgeCoordinates(graph, graph.bike, edge, forward) },
         })),
       });
-      // Stress share of the bike route, by length.
-      const share = { calm: 0, town: 0, busy: 0 };
-      let total = 0;
-      for (const { edge } of bikeEdges) {
-        const len = graph.bike.len[edge];
-        const s = graph.bike.stress[edge];
-        total += len;
-        if (s < 20) share.calm += len;
-        else if (s < 60) share.town += len;
-        else share.busy += len;
+      // What each route runs on, in km (detourRouting.routeComposition).
+      const kmOf = (m) => deNum(m / 1000, 1) + ' km';
+      function compositionText(c) {
+        const parts = [
+          [c.busyM, 'Straße mit Tempo 70–100 ohne Radweg'],
+          [c.townM, 'Straße mit Verkehr (bis etwa 50 km/h)'],
+          [c.infraM, 'Radweg oder Radstreifen'],
+          [c.trackM, 'Feld- und Wirtschaftsweg'],
+          [c.quietM, 'sonstige ruhige Wege und Straßen'],
+        ].filter((x) => x[0] >= 50).map((x) => kmOf(x[0]) + ' ' + x[1]);
+        const extra = [];
+        if (c.unpavedM >= 50) extra.push(kmOf(c.unpavedM) + ' mit erfasstem unbefestigtem Belag');
+        if (c.pushedM >= 50) extra.push(kmOf(c.pushedM) + ' schieben');
+        return parts.join(', ') + (extra.length ? '; davon ' + extra.join(', ') : '') + '.';
       }
-      const pct = (v) => (total ? deNum((v / total) * 100, 0) + ' %' : '–');
+      const fastEdges = fastResult && d.bikeNode >= 0 && Number.isFinite(fastResult.cost[d.bikeNode])
+        ? R.routeEdges(graph.bike, adjBike, fastResult, d.bikeNode) : [];
+      const fastComp = fastEdges.length ? R.routeComposition(graph, graph.bike, fastEdges) : null;
+      const safeComp = bikeEdges.length ? R.routeComposition(graph, graph.bike, bikeEdges) : null;
       const html = ['<h2>' + o.name + ' → ' + d.name + '</h2>'];
       const refLabel = REFERENCES[state.ref].label;
       if (r && r.ref) html.push('<p>' + refLabel + ': ' + deNum(r.ref.km, 1) + ' km, ' + deNum(r.ref.min, 0) + ' min.</p>');
       else html.push(refBike ? '<p>Auch die schnellste Radroute erreicht den Ort nicht (kein Anschluss im Radnetz).</p>' : '<p>Mit dem Auto nicht erreichbar (kein Straßenanschluss im Graphen).</p>');
       if (r && r.bike) {
-        html.push('<p>Rad: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min</strong> gegenüber ' + REFERENCES[state.ref].dative : '') + '.</p>');
-        html.push('<p class="muted">Radroute: ' + pct(share.calm) + ' Radweg oder ruhige Straße, ' + pct(share.town) + ' Ortsstraße mit Verkehr, ' + pct(share.busy) + ' Landstraße ohne Radweg.</p>');
+        html.push('<p>Verkehrsarme Radroute: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min</strong> gegenüber ' + REFERENCES[state.ref].dative : '') + '.</p>');
+        if (safeComp) html.push('<p class="muted">Diese Radroute (' + kmOf(safeComp.totalM) + '): ' + compositionText(safeComp) + '</p>');
+        if (fastComp && state.safety > 0) html.push('<p class="muted">Schnellste Radroute (' + kmOf(fastComp.totalM) + '): ' + compositionText(fastComp) + '</p>');
       } else {
         html.push('<p>Per Rad mit dieser Einstellung nicht erreichbar — Regler nach links schieben.</p>');
       }
