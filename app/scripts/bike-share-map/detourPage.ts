@@ -183,9 +183,13 @@ export function detourPageHtml({
     table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
     th, td { text-align: right; padding: 3px 4px; border-bottom: 1px solid var(--border); white-space: nowrap; }
     th:first-child, td:first-child { text-align: left; white-space: normal; }
-    th { font-weight: 600; color: var(--muted); font-size: 12px; cursor: pointer; user-select: none; }
+    th { font-weight: 600; color: var(--muted); font-size: 12px; }
     th[aria-sort] { color: var(--fg); }
+    .th-sort { all: unset; cursor: pointer; text-decoration: underline dotted; }
+    .th-sort:focus-visible { outline: 2px solid var(--fg); outline-offset: 1px; }
+    th[aria-sort] .th-sort::after { content: ' ▾'; }
     tbody tr { cursor: pointer; }
+    tbody tr:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
     tbody tr:hover, tbody tr.selected { background: var(--row-hover); }
     tbody tr.unreachable td { color: var(--muted); }
     td .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; border: 1px solid rgba(0,0,0,0.25); }
@@ -214,15 +218,16 @@ export function detourPageHtml({
     <div class="body">
       <p class="page-nav"><a href="${viewerHref}">&larr; Zur Karte</a> · <a href="${methodikHref}#umweg">Methodik</a></p>
       <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die übliche Autostrecke oder die schnellste Radroute — von einem Ort zu allen anderen im Landkreis.</p>
-      <p id="status">Lade Daten …</p>
+      <p id="status" aria-live="polite">Lade Daten …</p>
       <fieldset id="lk-box" hidden>
         <legend>Landkreis</legend>
-        <select id="lk-select"></select>
+        <select id="lk-select" aria-label="Landkreis"></select>
       </fieldset>
       <fieldset>
         <legend><label for="origin-search" style="padding:0">Startort</label></legend>
         <input id="origin-search" type="search" list="place-list" placeholder="Ort suchen oder auf der Karte antippen" autocomplete="off" />
         <datalist id="place-list"></datalist>
+        <p id="origin-hint" class="muted" aria-live="polite" hidden></p>
       </fieldset>
       <fieldset class="seg" id="ref-box">
         <legend>Vergleich mit</legend>
@@ -251,7 +256,7 @@ export function detourPageHtml({
       <div class="legend" id="legend" hidden><span id="legend-min"></span><div class="bar" id="legend-bar"></div><span id="legend-max"></span><i style="background:${UNREACHABLE_COLOUR}"></i><span>nicht erreichbar</span></div>
       <label><input type="checkbox" id="hamlets" /> Weiler (place=hamlet) mit anzeigen</label>
       <div id="origin-box" hidden>
-        <p id="summary"></p>
+        <p id="summary" aria-live="polite"></p>
         <div id="pair" hidden></div>
         <p><label for="sort" style="display:inline">Sortieren:</label>
           <select id="sort" style="width:auto;display:inline-block">
@@ -259,10 +264,10 @@ export function detourPageHtml({
             <option value="km">Mehr Kilometer</option>
             <option value="hm">Mehr Höhenmeter</option>
             <option value="min">Mehr Minuten</option>
-            <option value="faktor">Faktor</option>
+            <option value="faktor">Längenfaktor</option>
           </select>
           <button class="btn" id="csv" type="button" style="float:right">CSV</button></p>
-        <div style="overflow-x:auto"><table id="table"><thead><tr><th>Ort</th><th title="Luftlinie">Luft</th><th id="ref-head" title="Auto: km / min">Auto</th><th title="Rad: km / min">Rad</th><th title="Mehr Kilometer">+km</th><th title="Mehr Höhenmeter bergauf">+Hm</th><th title="Mehr Minuten">+min</th></tr></thead><tbody></tbody></table></div>
+        <div style="overflow-x:auto"><table id="table"><thead><tr><th scope="col">Ort</th><th scope="col" data-sort="air" title="Luftlinie"><button type="button" class="th-sort">Luft</button></th><th scope="col" id="ref-head" title="Auto: km / min">Auto</th><th scope="col" title="Rad: km / min">Rad</th><th scope="col" data-sort="km" title="Mehr Kilometer"><button type="button" class="th-sort">+km</button></th><th scope="col" data-sort="hm" title="Mehr Höhenmeter bergauf"><button type="button" class="th-sort">+Hm</button></th><th scope="col" data-sort="min" title="Mehr Minuten"><button type="button" class="th-sort">+min</button></th></tr></thead><tbody></tbody></table></div>
       </div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Radinfrastruktur-Kategorien: TILDA; Höhen: Mapzen/AWS Terrain Tiles. Annahmen: siehe <a href="${methodikHref}#umweg">Methodik</a>.</p>
     </div>
@@ -284,6 +289,7 @@ export function detourPageHtml({
     const R = DetourRouting;
     const $ = (id) => document.getElementById(id);
     const deNum = (v, digits) => v.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
+    const escHtml = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
     const signed = (v, digits) => (v > 0 ? '+' : v < 0 ? '−' : '±') + deNum(Math.abs(v), digits);
     const KIND_LABEL = { city: 'Stadt', town: 'Stadt', village: 'Dorf', hamlet: 'Weiler' };
 
@@ -385,7 +391,7 @@ export function detourPageHtml({
     const placeCount = { village: 0, hamlet: 0, town: 0 };
     for (const p of places) placeCount[p.kind === 'city' ? 'town' : p.kind] = (placeCount[p.kind === 'city' ? 'town' : p.kind] || 0) + 1;
     status.innerHTML =
-      '<strong>' + entry.name + '</strong>: ' + placeCount.town + ' Städte, ' + placeCount.village + ' Dörfer, ' + placeCount.hamlet + ' Weiler.';
+      '<strong>' + escHtml(entry.name) + '</strong>: ' + placeCount.town + ' Städte, ' + placeCount.village + ' Dörfer, ' + placeCount.hamlet + ' Weiler.';
 
     // Search: datalist of all places; a matching name selects the origin.
     const list = $('place-list');
@@ -400,12 +406,17 @@ export function detourPageHtml({
       const t = text.trim().toLowerCase();
       if (!t) return -1;
       for (const o of list.options) if (o.value.toLowerCase() === t) return indexById.get(Number(o.dataset.id));
-      const exact = places.findIndex((p) => p.name.toLowerCase() === t);
-      if (exact >= 0) return exact;
+      const exact = places.filter((p) => p.name.toLowerCase() === t);
+      // Several places share the name (e.g. Fürholzen): don't pick one silently.
+      if (exact.length > 1) return -2;
+      if (exact.length === 1) return places.indexOf(exact[0]);
       return places.findIndex((p) => p.name.toLowerCase().startsWith(t));
     }
     search.addEventListener('change', () => {
       const i = placeByLabel(search.value);
+      const hint = $('origin-hint');
+      hint.hidden = i !== -2;
+      hint.textContent = i === -2 ? 'Diesen Ortsnamen gibt es mehrfach – bitte einen Eintrag mit Gemeinde aus der Liste wählen.' : '';
       if (i >= 0) setOrigin(i, true);
     });
 
@@ -492,6 +503,12 @@ export function detourPageHtml({
       };
     }
 
+    /** Sources exist only once the style has loaded (a deep link can render before that). */
+    function setSourceData(id, data) {
+      const source = map.getSource(id);
+      if (source) source.setData(data);
+    }
+
     function onMapReady(fn) {
       if (map.isStyleLoaded()) fn();
       else map.once('load', fn);
@@ -567,7 +584,7 @@ export function detourPageHtml({
       const s = state.safety;
       if (s === 0) return 'Schnellste erlaubte Radroute — Landstraßen ohne Radweg werden genutzt.';
       if (s < CLOSE_PCT) return 'Straßen mit Autoverkehr zählen bis zum ' + deNum(1 + (s / 100) * STRESS_WEIGHT, 1) + '-Fachen ihrer Fahrzeit (bei 100 km/h ohne Radweg); kürzere Umwege lohnen sich dann.';
-      return 'Straßen ab 70 km/h ohne Radweg sind gesperrt; bleibt kein anderer Weg, gilt der Ort als nicht erreichbar.';
+      return 'Landstraßen ab 70 km/h ohne Radweg sind gesperrt (wenig befahrene Gemeindeverbindungsstraßen nicht); bleibt kein anderer Weg, gilt der Ort als nicht erreichbar.';
     }
 
     function render() {
@@ -612,7 +629,7 @@ export function detourPageHtml({
       const both = shown.filter((r) => r.ref && r.bike);
       const unreachable = shown.filter((r) => !r.bike).length;
       const parts = [];
-      parts.push('<strong>' + o.name + '</strong>' + (o.gemeinde && o.gemeinde !== o.name ? ' (' + o.gemeinde + ')' : '') + ', ' + (KIND_LABEL[o.kind] || o.kind) + '.');
+      parts.push('<strong>' + escHtml(o.name) + '</strong>' + (o.gemeinde && o.gemeinde !== o.name ? ' (' + escHtml(o.gemeinde) + ')' : '') + ', ' + (KIND_LABEL[o.kind] || o.kind) + '.');
       // What the routes run on (detourRouting.routeComposition), median over the places shown.
       const comps = shown
         .filter((r) => r.bike && r.place.bikeNode >= 0 && Number.isFinite(fastResult.cost[r.place.bikeNode]))
@@ -651,6 +668,10 @@ export function detourPageHtml({
     function renderTable(shown) {
       const tbody = $('table').querySelector('tbody');
       tbody.replaceChildren();
+      for (const th of $('table').querySelectorAll('th[data-sort]')) {
+        if (th.dataset.sort === state.sort) th.setAttribute('aria-sort', state.sort === 'air' ? 'ascending' : 'descending');
+        else th.removeAttribute('aria-sort');
+      }
       for (const r of sortRows(shown)) {
         const tr = document.createElement('tr');
         tr.dataset.index = r.index;
@@ -658,7 +679,7 @@ export function detourPageHtml({
         if (r.place.id === state.dest) tr.classList.add('selected');
         const v = metricValue(r, state.metric);
         const cells = [
-          '<span class="dot" style="background:' + (r.ref && r.bike ? colourFor(v, state.metric) : UNREACHABLE) + '"></span>' + r.place.name + (r.place.gemeinde && r.place.gemeinde !== r.place.name ? '<span class="gm">' + r.place.gemeinde + '</span>' : ''),
+          '<span class="dot" style="background:' + (r.ref && r.bike ? colourFor(v, state.metric) : UNREACHABLE) + '"></span>' + escHtml(r.place.name) + (r.place.gemeinde && r.place.gemeinde !== r.place.name ? '<span class="gm">' + escHtml(r.place.gemeinde) + '</span>' : ''),
           deNum(r.airKm, 1),
           r.ref ? deNum(r.ref.km, 1) + ' / ' + deNum(r.ref.min, 0) : '–',
           r.bike ? deNum(r.bike.km, 1) + ' / ' + deNum(r.bike.min, 0) : '–',
@@ -667,7 +688,14 @@ export function detourPageHtml({
           r.extraMin != null ? signed(r.extraMin, 0) : '–',
         ];
         tr.innerHTML = cells.map((c) => '<td>' + c + '</td>').join('');
+        tr.tabIndex = 0;
+        tr.setAttribute('aria-label', 'Route nach ' + r.place.name + ' zeigen');
         tr.addEventListener('click', () => setDest(r.index));
+        tr.addEventListener('keydown', (e) => {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          e.preventDefault();
+          setDest(r.index);
+        });
         tbody.appendChild(tr);
       }
     }
@@ -676,8 +704,8 @@ export function detourPageHtml({
       const pair = $('pair');
       if (state.dest == null || !indexById.has(state.dest)) {
         pair.hidden = true;
-        map.getSource('route-ref').setData(EMPTY);
-        map.getSource('route-bike').setData(EMPTY);
+        setSourceData('route-ref', EMPTY);
+        setSourceData('route-bike', EMPTY);
         return;
       }
       const di = indexById.get(state.dest);
@@ -691,8 +719,8 @@ export function detourPageHtml({
           : R.routeCoordinates(graph, graph.car, adjCar, refResult, d.carNode))
         : [];
       const bikeEdges = r && r.bike ? R.routeEdges(graph.bike, adjBike, bikeResult, d.bikeNode) : [];
-      map.getSource('route-ref').setData(refCoords.length ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: refCoords } } : EMPTY);
-      map.getSource('route-bike').setData({
+      setSourceData('route-ref', refCoords.length ? { type: 'Feature', properties: {}, geometry: { type: 'LineString', coordinates: refCoords } } : EMPTY);
+      setSourceData('route-bike', {
         type: 'FeatureCollection',
         features: bikeEdges.map(({ edge, forward }) => ({
           type: 'Feature',
@@ -705,7 +733,7 @@ export function detourPageHtml({
       function compositionText(c) {
         const parts = [
           [c.busyM, 'Straße mit Tempo 70–100 ohne Radweg'],
-          [c.townM, 'Straße mit Verkehr (bis etwa 50 km/h)'],
+          [c.townM, 'Straße mit Verkehr (meist Tempo 50, auch wenig befahrene Verbindungsstraßen)'],
           [c.infraM, 'Radweg oder Radstreifen'],
           [c.trackM, 'Feld- und Wirtschaftsweg'],
           [c.quietM, 'sonstige ruhige Wege und Straßen'],
@@ -719,7 +747,7 @@ export function detourPageHtml({
         ? R.routeEdges(graph.bike, adjBike, fastResult, d.bikeNode) : [];
       const fastComp = fastEdges.length ? R.routeComposition(graph, graph.bike, fastEdges) : null;
       const safeComp = bikeEdges.length ? R.routeComposition(graph, graph.bike, bikeEdges) : null;
-      const html = ['<h2>' + o.name + ' → ' + d.name + '</h2>'];
+      const html = ['<h2>' + escHtml(o.name) + ' → ' + escHtml(d.name) + '</h2>'];
       const refLabel = REFERENCES[state.ref].label;
       if (r && r.ref) html.push('<p>' + refLabel + ': ' + deNum(r.ref.km, 1) + ' km, ' + deNum(r.ref.min, 0) + ' min.</p>');
       else html.push(refBike ? '<p>Auch die schnellste Radroute erreicht den Ort nicht (kein Anschluss im Radnetz).</p>' : '<p>Mit dem Auto nicht erreichbar (kein Straßenanschluss im Graphen).</p>');
@@ -731,7 +759,7 @@ export function detourPageHtml({
         html.push('<p>Per Rad mit dieser Einstellung nicht erreichbar — Regler nach links schieben.</p>');
       }
       html.push('<div class="route-legend"><span><i class="car"></i>' + REFERENCES[state.ref].legend + '</span>' + STRESS_COLOURS.map((c, i) => '<span><i style="background:' + c + '"></i>' + ['Radweg / ruhig', 'Ort, Verkehr', '70 km/h', 'Landstraße'][i] + '</span>').join('') + '</div>');
-      html.push('<p><button class="btn" id="swap" type="button">' + d.name + ' als Startort</button> <button class="btn" id="clear-dest" type="button">Route ausblenden</button></p>');
+      html.push('<p><button class="btn" id="swap" type="button">' + escHtml(d.name) + ' als Startort</button> <button class="btn" id="clear-dest" type="button">Route ausblenden</button></p>');
       pair.innerHTML = html.join('');
       pair.hidden = false;
       $('swap').addEventListener('click', () => setOrigin(di, false));
@@ -763,13 +791,21 @@ export function detourPageHtml({
       state.sort = $('sort').value;
       render();
     });
+    // Column headers sort the same way as the select (descending, nearest first for Luft).
+    document.querySelectorAll('#table th[data-sort] .th-sort').forEach((button) => {
+      button.addEventListener('click', () => {
+        state.sort = button.parentElement.dataset.sort;
+        $('sort').value = state.sort;
+        render();
+      });
+    });
     $('csv').addEventListener('click', () => {
       const o = places[indexById.get(state.origin)];
       const refHead = REFERENCES[state.ref].label;
       const head = ['Ziel', 'Gemeinde', 'Art', 'Luftlinie km', refHead + ' km', refHead + ' min', 'Rad km', 'Rad min', 'Rad Hm bergauf', 'Mehr km', 'Mehr Hm', 'Mehr min', 'Faktor'];
       const line = (r) => [r.place.name, r.place.gemeinde || '', r.place.kind, r.airKm.toFixed(2), r.ref ? r.ref.km.toFixed(2) : '', r.ref ? r.ref.min.toFixed(1) : '', r.bike ? r.bike.km.toFixed(2) : '', r.bike ? r.bike.min.toFixed(1) : '', r.bike ? r.bike.climbM.toFixed(0) : '', r.extraKm != null ? r.extraKm.toFixed(2) : '', r.extraClimbM != null ? r.extraClimbM.toFixed(0) : '', r.extraMin != null ? r.extraMin.toFixed(1) : '', r.factor != null ? r.factor.toFixed(2) : ''];
       const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
-      const csv = ['# Start: ' + o.name + '; Sicherheit ' + state.safety + '; Vergleich: ' + REFERENCES[state.ref].label + '; ' + entry.name, head.map(esc).join(';'), ...sortRows(rows).map((r) => line(r).map(esc).join(';'))].join('\\n');
+      const csv = ['# Start: ' + o.name + '; Sicherheit ' + state.safety + '; Vergleich: ' + REFERENCES[state.ref].label + '; ' + entry.name + (state.hamlets ? '; mit Weilern' : '; ohne Weiler'), head.map(esc).join(';'), ...sortRows(rows.filter((r) => visible(r.place))).map((r) => line(r).map(esc).join(';'))].join('\\n');
       const a = document.createElement('a');
       a.href = URL.createObjectURL(new Blob(['\\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
       a.download = 'umweg-' + o.name.replace(/[^\\wäöüÄÖÜß-]+/g, '_') + '.csv';

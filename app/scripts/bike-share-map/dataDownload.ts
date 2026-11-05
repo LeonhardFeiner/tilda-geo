@@ -122,7 +122,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
   kartiert_licht_pct: 'Anteil der Straßenlänge mit erfasster Beleuchtung (lit), %',
   unabhaengig_km: 'Radinfrastruktur abseits von Straßen (Wege durch Feld, Wald, Park), km',
   hauptstr_km: 'Hauptverkehrsstraßen (OSM trunk, primary, secondary, tertiary) in km',
-  hauptstr_radinfra_pct: 'Anteil der Hauptverkehrsstraßen mit Radinfrastruktur, %',
+  hauptstr_radinfra_pct:
+    'Radinfrastruktur entlang der Hauptverkehrsstraßen je km Hauptverkehrsstraße, je Fahrtrichtung gezählt (100 % = für beide Richtungen), %',
   hauptstr_bund_pct: 'dito, Baulastträger Bund',
   hauptstr_land_pct: 'dito, Baulastträger Land',
   hauptstr_kreis_pct: 'dito, Baulastträger Kreis',
@@ -169,16 +170,16 @@ export const DATA_DOWNLOAD_COLUMNS = {
   auspendler: 'Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)',
   arbeitsplatzzentralitaet: `${L.jobCentrality}: Beschäftigte am Arbeitsort / am Wohnort`,
   modell_erwartung_pct:
-    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: Summe der Erwartungswerte ihrer Gemeinden (Länder: kein Wert, siehe Methodik)',
+    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: erwartete Kilometer ihrer Gemeinden summiert und durch deren Straßenkilometer geteilt (Länder: kein Wert, siehe Methodik)',
   modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
   modell_ausserhalb_1se:
-    '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte kräftige Farbe), sonst 0',
+    '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte endet dort der blasse Bereich, kräftige Farbe erst ab der doppelten Abweichung), sonst 0',
   modell_begrenzt:
     '1, wenn das lineare Modell rechnerisch unter 0 % lag und die Erwartung auf 0 % gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0',
   zaehlversion:
     'Zählversion der Längenmessung (siehe Methodik „Version und Zitierweise“); OSM-Datenstand = Datum im Dateinamen',
   hinweise:
-    'Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt, das Straßennetz ist sehr klein)',
+    'Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt; meist ist das Straßennetz sehr klein)',
 } as const
 
 export type DataDownloadColumn = keyof typeof DATA_DOWNLOAD_COLUMNS

@@ -377,7 +377,10 @@ ${siteIconHeadLinks()}
   <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
   jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
   Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa
-  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht. Die Karte und die Rangliste verwenden
+  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht. Auch hier wird je Fahrtrichtung
+  gezählt: Ein Zweirichtungsradweg auf nur einer Seite einer Straße mit Gegenverkehr ergibt 50&nbsp;%,
+  solange er in OpenStreetMap nicht mit <code>oneway=no</code> erfasst ist; 100&nbsp;% heißt
+  Radinfrastruktur für beide Fahrtrichtungen. Die Karte und die Rangliste verwenden
   immer den Wert über alle Straßen; der Anteil der Hauptverkehrsstraßen steht als Zusatzangabe in der
   Detailkarte und im Datenblatt. Die eigene Zählung aus den Einstellungen gilt nur für den Hauptwert.</p>
   <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
@@ -439,8 +442,9 @@ ${siteIconHeadLinks()}
   <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
   Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
   Normvorgabe für eine verkehrswendegerechte Infrastruktur. Eine positive Abweichung („über Erwartungswert“)
-  bedeutet, dass vor Ort mehr Radinfrastruktur erfasst ist, als bei Gemeinden mit ähnlicher Topografie,
-  Dichte, Miete und im selben Bundesland im Mittel zu erwarten wäre. Eine Abweichung kann auf lokale
+  bedeutet, dass vor Ort mehr Radinfrastruktur erfasst ist, als bei Gemeinden mit ähnlichen Voraussetzungen
+  (Bundesland, Raumtyp, Gelände, Dichte, Bahnanbindung, Miete, Pkw-Dichte, Spielstraßen, vielbefahrene
+  Bundesstraßen) im Mittel zu erwarten wäre. Eine Abweichung kann auf lokale
   Entscheidungen zurückgehen, aber ebenso auf Merkmale, die das Modell nicht kennt, oder auf die
   Datenlage in OpenStreetMap.</p>
 
@@ -454,9 +458,9 @@ ${siteIconHeadLinks()}
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Innerhalb der typischen Abweichung (±1 Residualstandardfehler) bleiben die Töne blass, volle Farbe gibt es erst jenseits der doppelten – das sind etwa die äußersten 5&nbsp;%. Grau bedeutet: kein Wert.</li>
     <li><strong>Unsicherheit der Faktoren:</strong> Die Standardfehler der Koeffizienten sind cluster-robust nach Landkreisen geschätzt (${STD_MODEL.clusterCount ?? '–'} Landkreise und kreisfreie Städte), weil benachbarte Gemeinden sich in Kartierung, Verwaltung und Gelände ähneln und ihre Abweichungen nicht unabhängig sind. In der Faktoren-Zerlegung der Detailkarte heißt ein Beitrag nur dann „senkt“ oder „hebt“, wenn er mindestens zwei Standardfehler von null entfernt ist; sonst steht dort grau „kein klarer Effekt“.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
-    <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
-    <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
-    <li><strong>Weitere geprüfte Merkmale (Stand November 2026):</strong> Eigentümerquote, Alters- und Baualtersstruktur, Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz und Pendlerquoten, Haltestellen mit dichtem Takt sowie die Fahrzeiten zu Schule und Supermarkt verbessern die kreuzvalidierte Vorhersage jeweils um höchstens 0,6&nbsp;Prozentpunkte R², sobald der Raumtyp im Modell ist. Sie stehen deshalb nur als Vergleichszahlen in der Detailkarte und in der CSV. Jedes weitere Merkmal macht die Faktoren-Zerlegung schwerer lesbar; die Pendlerquoten fehlen zudem für rund 5&nbsp;% der Gemeinden, die dann keinen Erwartungswert mehr hätten.</li>
+    <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (nach Straßenlänge gewichtete Wurzel aus der mittleren quadratischen Abweichung aller Gebiete der Ebene – dasselbe Maß wie der Residualstandardfehler der Gemeinden) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
+    <li><strong>Prüfung auf Kartierungslücken:</strong> Gemeinden mit höheren Mieten und höherer Dichte könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
+    <li><strong>Weitere geprüfte Merkmale (Stand ${modelFitDateLabel ?? 'der letzten Modellschätzung'}):</strong> Eigentümerquote, Alters- und Baualtersstruktur, Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz und Pendlerquoten, Haltestellen mit dichtem Takt sowie die Fahrzeiten zu Schule und Supermarkt verbessern die kreuzvalidierte Vorhersage jeweils um höchstens 0,6&nbsp;Prozentpunkte R², sobald der Raumtyp im Modell ist. Sie stehen deshalb nur als Vergleichszahlen in der Detailkarte und in der CSV. Jedes weitere Merkmal macht die Faktoren-Zerlegung schwerer lesbar; die Pendlerquoten fehlen zudem für rund 5&nbsp;% der Gemeinden, die dann keinen Erwartungswert mehr hätten.</li>
   </ul>
 
   <div class="table-scroll">
@@ -511,7 +515,7 @@ ${siteIconHeadLinks()}
       </tr>
       <tr>
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
-        <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
+        <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in % (Straßennetz in Straßenkilometern, siehe oben), bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
         <td class="num">${betaSe('busyFederalSharePct')} / %-Punkt</td>
       </tr>
       <tr>
@@ -531,8 +535,11 @@ ${siteIconHeadLinks()}
   (<code>place=town/village/hamlet</code>) eingetragenen Ortspunkte, jeweils an den nächsten Punkt
   des Rad- bzw. Straßennetzes angebunden (höchstens 400&nbsp;m entfernt).</p>
   <p><strong>Radnetz:</strong> alle Wege, die TILDA als für Räder befahrbar einstuft, mit ihrer
-  Radinfrastruktur-Kategorie. Angenommen werden etwa 18&nbsp;km/h, langsamer auf Feldwegen und
-  unbefestigtem Belag, Schieben auf Gehwegen ohne Freigabe und gegen Einbahnstraßen. Jeder Abschnitt
+  Radinfrastruktur-Kategorie. Angenommen werden etwa 18&nbsp;km/h, auch auf Radwegen, gemeinsamen
+  Geh- und Radwegen und asphaltierten Feldwegen. Langsamer: Feld- und Waldwege ohne Angabe zum Belag
+  (15&nbsp;km/h), erfasster unbefestigter Belag oder Pflaster (je nach Belag 50–90&nbsp;% des Tempos),
+  verkehrsberuhigte Bereiche (12&nbsp;km/h); geschoben wird auf Gehwegen ohne Freigabe und gegen
+  Einbahnstraßen. Jeder Abschnitt
   bekommt eine Belastung zwischen 0 und 1: 0 auf Radwegen, gemeinsamen Geh- und Radwegen,
   Fahrradstraßen, verkehrsberuhigten Bereichen und Wegen ohne Autoverkehr; im Mischverkehr steigt sie
   mit dem Tempolimit (30&nbsp;km/h: 0,1; 50&nbsp;km/h: 0,35; 70&nbsp;km/h: 0,7; ab 100&nbsp;km/h: 1).
@@ -546,7 +553,8 @@ ${siteIconHeadLinks()}
   über solche Straßen erreichbar ist, gilt dann als nicht erreichbar.</p>
   <p><strong>Auto:</strong> Durchschnittstempo aus dem Tempolimit (sonst typischer Wert je Straßenart),
   mit Abschlag für Kreuzungen, Kurven und Ortsdurchfahrten: etwa 35&nbsp;km/h bei 50, 55&nbsp;km/h bei 70,
-  75&nbsp;km/h bei 100 und 110&nbsp;km/h auf der Autobahn. Einbahnstraßen, keine Feld- und Waldwege.
+  75&nbsp;km/h bei 100 und 110&nbsp;km/h auf der Autobahn. Einbahnstraßen und getrennte Richtungsfahrbahnen
+  nur in Fahrtrichtung, keine Feld- und Waldwege.
   Gewählt wird die Route mit der kleinsten Summe aus Fahrzeit und ${CAR_SECONDS_PER_KM}&nbsp;Sekunden je
   Kilometer, wie bei üblichen Routenplanern: Eine Autobahnschleife, die viele Kilometer mehr fährt, um
   eine Minute zu sparen, gilt nicht als Autostrecke. Kein Verkehr, keine Ampeln.</p>
@@ -559,8 +567,9 @@ ${siteIconHeadLinks()}
   <p><strong>Woraus eine Route besteht:</strong> Für jede Route wird die Länge aufgeteilt in
   Radwege und Radstreifen (TILDA-Kategorien mit Radinfrastruktur), Feld- und Wirtschaftswege
   (<code>highway=track</code>), sonstige ruhige Wege und Straßen (Belastung unter 0,2, etwa Tempo-30-Straßen
-  und Fußwege mit Radfreigabe), Straßen mit Verkehr (Belastung 0,2 bis 0,6, etwa Tempo 50) und Straßen
-  mit Tempo 70–100 ohne Radweg (Belastung ab 0,6). Zusätzlich ausgewiesen: Abschnitte mit in OSM
+  und Fußwege mit Radfreigabe), Straßen mit Verkehr (Belastung 0,2 bis unter ${String(CLOSED_STRESS).replace('.', ',')}, etwa Tempo 50, auch
+  wenig befahrene Gemeindeverbindungsstraßen) und Straßen mit Tempo 70–100 ohne Radweg (Belastung ab
+  ${String(CLOSED_STRESS).replace('.', ',')}, also genau die Abschnitte, die der Regler ab ${Math.round(CLOSE_FROM_SAFETY * 100)}&nbsp;% sperrt). Zusätzlich ausgewiesen: Abschnitte mit in OSM
   erfasstem unbefestigtem Belag (Schotter, Erde, Gras u.&nbsp;Ä.; ohne Angabe gilt ein Weg nicht als
   unbefestigt) und Abschnitte, auf denen geschoben wird. Die Übersicht nennt jeweils den Median über alle
   angezeigten Orte.</p>
@@ -570,7 +579,7 @@ ${siteIconHeadLinks()}
   der Vergleichsroute. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
   <p><strong>Einschränkungen:</strong> Ein Ortspunkt ist nicht jede Adresse des Orts; bei großen Orten
   kann die Strecke zum Ortsrand deutlich kürzer sein. Wege außerhalb des Landkreises werden bis etwa
-  4&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
+  2,5&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
 
   <h2>Grenzen der Aussagekraft</h2>
   <div class="caveat">

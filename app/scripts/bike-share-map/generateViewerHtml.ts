@@ -1671,7 +1671,7 @@ export function generateViewerHtml(
           <span id="counting-state-label">Radinfra.de-Standard</span>
           <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
         </p>
-        <p class="hint">Welche Klassen in den Anteil Radinfra an Straßen (km) einfließen. Haken setzen oder entfernen:</p>
+        <p class="hint">Welche Klassen in den Wert „km Radinfra je 100 km Straße“ einfließen. Haken setzen oder entfernen:</p>
         <div class="counting-group" id="road-class-group">
           <p class="counting-group-heading">Straßen <span class="counting-count" id="road-class-count"></span></p>
           <div class="class-filters" id="road-class-filters"></div>
@@ -5465,6 +5465,7 @@ export function generateViewerHtml(
         medianPct: bench.medianPct,
         gapKm: RankingDisplay.bikelaneGapKm(p, bench.medianPct),
         behind: p.bikeSharePct < bench.medianPct - 0.05,
+        atMedian: Math.abs(p.bikeSharePct - bench.medianPct) <= 0.05,
         roleModel: nearestRoleModel(p, peerFeatures, bench.medianPct),
       };
     }
@@ -5543,7 +5544,7 @@ export function generateViewerHtml(
       regionDetailPeerGap.appendChild(
         document.createTextNode(
           (isCounty
-            ? 'unter Landkreisen und kreisfreien Städten derselben Größenklasse und Siedlungsart ('
+            ? 'in der bundesweiten Vergleichsgruppe ('
             : 'unter Gemeinden derselben Größenklasse und Siedlungsart (') +
             s.groupLabel +
             ').',
@@ -5551,7 +5552,11 @@ export function generateViewerHtml(
       );
       regionDetailPeerGap.appendChild(
         document.createTextNode(
-          (s.behind ? ' Median der Gruppe: ' : ' Über dem Median der Gruppe (') +
+          (s.behind
+            ? ' Median der Gruppe: '
+            : s.atMedian
+              ? ' Im Median der Gruppe ('
+              : ' Über dem Median der Gruppe (') +
             formatUiPct(s.medianPct) +
             (s.behind ? ' %.' : ' %).'),
         ),
@@ -5623,7 +5628,7 @@ export function generateViewerHtml(
         formatUiPct(m.expectedPct) +
         ' %' +
         (aggregated
-          ? ' · Summe der Erwartungswerte von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
+          ? ' · aus den erwarteten Kilometern von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
           : '');
       regionDetailModelGap.appendChild(headline);
       if (!aggregated) {
@@ -5786,7 +5791,7 @@ export function generateViewerHtml(
       if (m.deltaBusy != null) {
         addRow(
           'Vielbefahrene Bundesstraßen',
-          factorNote('deltaBusy', m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes' : null),
+          factorNote('deltaBusy', m.inputs.busyFederalSharePct != null ? deNumber(m.inputs.busyFederalSharePct, 1) + ' % des Netzes in Straßen-km' : null),
           m.deltaBusy,
           factorLabel('deltaBusy', m.deltaBusy, 'hebt Erwartung', 'senkt Erwartung'),
           factorClass('deltaBusy', m.deltaBusy),
@@ -5942,13 +5947,13 @@ export function generateViewerHtml(
         {
           key: prefix + 'Share',
           label: RankingDisplay.CONTEXT_METRIC_LABELS[prefix + 'Share'],
-          note: prefix === 'busyFederal' ? 'geht ins Modell ein' : 'Anteil am Straßennetz',
+          note: prefix === 'busyFederal' ? 'geht ins Modell ein' : 'Anteil am Straßennetz in Straßen-km',
           areaName,
           get source() { return index(); },
           get: (id) => num(entry(id)?.sharePct),
           format: (v, id) => {
             const km = entry(id)?.needKm;
-            return deNumber(v, 1) + ' % des Netzes' + (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '');
+            return deNumber(v, 1) + ' % des Netzes in Straßen-km' + (typeof km === 'number' ? ' (' + deNumber(km, 1) + ' km)' : '');
           },
         },
       ];
@@ -6242,7 +6247,7 @@ export function generateViewerHtml(
         {
           key: 'bikeAccidentsPer10k',
           label: RankingDisplay.CONTEXT_METRIC_LABELS.bikeAccidentsPer10k,
-          note: 'Verunglückte relativ zur Bevölkerung',
+          note: 'Unfälle relativ zur Bevölkerung, kein Risikomaß',
           source: accidentsIndex,
           get: (id) => {
             const v = accidentsIndex?.byId[id]?.bikeAccidentsPer10k;
@@ -7064,7 +7069,7 @@ export function generateViewerHtml(
         line.className = 'region-detail-main-road';
         const strong = document.createElement('strong');
         strong.textContent = formatUiPct(mainRoads.pct) + ' %';
-        line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur');
+        line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur (je Fahrtrichtung)');
         regionDetailMeta.appendChild(line);
       }
       renderRegionHistory(p);
@@ -7149,7 +7154,8 @@ export function generateViewerHtml(
           CONFIG.detourPageUrl + '?lk=' + encodeURIComponent(detourLandkreis) +
           (String(p.level) === '8' ? '&gemeinde=' + encodeURIComponent(p.id) : '');
         detour.textContent = 'Umwege per Rad zu den Nachbarorten';
-        detour.title = 'Wie viel länger eine verkehrsarme Radroute als die übliche Autostrecke ist';
+        detour.title =
+          'Wie viel länger eine verkehrsarme Radroute als die schnellste Radroute oder die übliche Autostrecke ist';
         links.appendChild(detour);
       }
       if (offerOsmEdit) {
@@ -8892,13 +8898,13 @@ export function generateViewerHtml(
               model.name +
               ' (' +
               Math.max(1, Math.round(model.km)) +
-              ' km entfernt, ähnlich groß) hat ' +
+              ' km entfernt, gleiche Vergleichsgruppe) hat ' +
               formatUiPct(model.pct) +
-              ' %.';
+              ' km je 100 km Straße.';
           }
           return msg;
         }
-        return 'So steht „' + name + '“ beim Radwegausbau da:';
+        return '„' + name + '“ im Radinfra-Vergleich: Radinfrastruktur im Verhältnis zum Straßennetz.';
       }
       const label = regionIndex ? viewLabelForCurrentMode() : 'diesem Gebiet';
       return 'Radinfra-Vergleich – „' + label + '“: Wie viel Radinfrastruktur gibt es im Verhältnis zum Straßennetz?';

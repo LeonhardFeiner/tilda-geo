@@ -33,6 +33,7 @@ import {
   encodeDetourGraph,
   haversineKm,
 } from './detourRouting'
+import { bikeKmh, PUSH_KMH, UNPAVED_SURFACES } from './detourSpeed'
 import {
   assertDatasetCount,
   currentOsmDataFrom,
@@ -45,6 +46,10 @@ const INDEX_PATH = join(OUT_DIR, 'index.json')
 const PLACES_PATH = join(import.meta.dir, 'routing', 'cache', 'places-de.json')
 
 const DEFAULT_LANDKREIS = 'relation/62371' // Landkreis Pfaffenhofen an der Ilm
+/**
+ * In Web-Mercator units, like every length in these queries (EPSG:3857): on the ground that is
+ * 4 × cos(latitude), about 2.6 km in Bavaria. methodik.html states the ground distance.
+ */
 const DEFAULT_BUFFER_KM = 4
 /** ~13 m/px at 48°N — village-to-village climb needs more than the 150 m of the Gemeinde metric. */
 const TILE_ZOOM = 13
@@ -58,64 +63,6 @@ const MIN_STEP_M = 0.5
 /** Interior polyline points are stored at this resolution (1e-5° ≈ 1 m) after simplifying. */
 const GEOM_SIMPLIFY_M = 1.5
 const PLACE_KINDS: ReadonlySet<string> = new Set(['city', 'town', 'village', 'hamlet'])
-
-// --------------------------------------------------------------------------- speed profiles
-//
-// Same spirit as routing/station_access.py: rough on purpose, no traffic lights, no traffic.
-
-const BIKE_KMH_BY_ROAD: Record<string, number> = {
-  living_street: 12,
-  service_road: 15,
-  service_alley: 15,
-  service_driveway: 15,
-  service_uncategorized: 15,
-  service_emergency_access: 15,
-  service: 15,
-  track: 12,
-  path: 12,
-  bicycle_road: 18,
-  pedestrian: 5,
-  footway: 5,
-  footway_crossing: 8,
-  footway_steps: 2,
-  steps: 2,
-  cycleway: 18,
-}
-/** Surfaces the detour page reports as unpaved (sett and cobblestone are paved, just rough). */
-const UNPAVED_SURFACES = new Set([
-  'compacted',
-  'fine_gravel',
-  'gravel',
-  'pebblestone',
-  'unpaved',
-  'ground',
-  'dirt',
-  'earth',
-  'grass',
-  'sand',
-  'mud',
-  'woodchips',
-])
-const BIKE_DEFAULT_KMH = 18
-const PUSH_KMH = 5
-const SURFACE_FACTOR: Record<string, number> = {
-  compacted: 0.9,
-  fine_gravel: 0.85,
-  gravel: 0.75,
-  pebblestone: 0.7,
-  unpaved: 0.75,
-  ground: 0.65,
-  dirt: 0.65,
-  earth: 0.65,
-  grass: 0.55,
-  sand: 0.5,
-  mud: 0.5,
-  woodchips: 0.6,
-  sett: 0.8,
-  cobblestone: 0.7,
-  unhewn_cobblestone: 0.6,
-  grass_paver: 0.7,
-}
 
 const CAR_DEFAULT_LIMIT: Record<string, number> = {
   motorway: 130,
@@ -652,15 +599,12 @@ export async function buildDetourGraph(client: Client, { landkreis, bufferKm }: 
       parseMaxspeed(t.adjoining_maxspeed as string | null) ??
       parseMaxspeed(parentRoad?.maxspeed) ??
       null
-    let kmh = BIKE_KMH_BY_ROAD[road ?? ''] ?? BIKE_DEFAULT_KMH
-    if (category.startsWith('footwayBicycleYes') || category === 'pedestrianAreaBicycleYes')
-      kmh = 14
-    else if (category === 'crossing') kmh = 10
-    else if (category === 'mixedTrafficFoot' && (road === 'footway' || road === 'pedestrian')) {
-      kmh = access === 'yes' || access === 'designated' || access === 'permissive' ? 14 : PUSH_KMH
-    }
-    if (access === 'dismount') kmh = Math.min(kmh, PUSH_KMH)
-    kmh *= SURFACE_FACTOR[String(t.surface ?? '')] ?? 1
+    const kmh = bikeKmh({
+      category,
+      road,
+      surface: (t.surface as string | null) ?? null,
+      access,
+    })
     const onewayBike = t.oneway === 'yes' && t.oneway_motor !== 'yes'
     // The categories keep the carriageway-vs-infrastructure distinction; the road class is what
     // the speed default and the page's legend need.
@@ -695,7 +639,12 @@ export async function buildDetourGraph(client: Client, { landkreis, bufferKm }: 
     const limit = Math.min(130, parseMaxspeed(row.maxspeed) ?? defaultLimit)
     let kmh = carAverageKmh(limit)
     if (road === 'bicycle_road' || road === 'living_street') kmh = Math.min(kmh, 8)
-    const oneway = row.oneway === 'yes' || road === 'motorway' || road === 'motorway_link'
+    // TILDA's sanitize_tags gives roads.oneway as yes | no | yes_dual_carriageway.
+    const oneway =
+      row.oneway === 'yes' ||
+      row.oneway === 'yes_dual_carriageway' ||
+      road === 'motorway' ||
+      road === 'motorway_link'
     carWays.push({
       ...line,
       parent: row.id,

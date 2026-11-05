@@ -57,8 +57,11 @@ fi
 run bun run bike-share-map:export-stats-geojson -- --geojson
 
 # Context datasets. Network ones re-read their cached downloads; the DB ones re-join to the export.
+# transit-stop-counts re-keys the station figures to the new export's region ids (the
+# publicTransport table itself is only refreshed by a full processing run).
 for script in calmed-roads mapping-completeness traffic-volumes highway-distance terrain-flatness \
-  gemeinde-demographics zensus-housing car-density accidents commuters regiostar deutschlandatlas; do
+  transit-stop-counts gemeinde-demographics zensus-housing car-density accidents commuters regiostar \
+  deutschlandatlas; do
   run bun run "bike-share-map:$script"
 done
 if [ "$WITH_ROUTING" = 1 ]; then

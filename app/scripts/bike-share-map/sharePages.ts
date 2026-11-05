@@ -233,7 +233,7 @@ function peerGroupSentence(s: ShareRegionSummary): string {
   if (peer.behind) {
     return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}): ${shareRankPhrase(peer)}.`
   }
-  return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) liegt ${s.name} über dem Median.`
+  return ` Unter vergleichbaren Gemeinden bundesweit (${peer.groupLabel}) liegt ${s.name} auf oder über dem Median.`
 }
 
 export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
@@ -241,7 +241,7 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const median = formatStatPctUi(s.medianPct)
   const mainRoads =
     typeof s.mainRoadPct === 'number'
-      ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} %.`
+      ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} % (je Fahrtrichtung).`
       : ''
   const base = `In ${s.name} kommen auf 100 km Straße ${pct} km Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
@@ -377,12 +377,12 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const rankLineText = `${shareRankPhrase(s)} ${groupLocationPhrase(s)}`
   const subLineText = gapIsMeaningful(s)
     ? `Bis zum Median (${formatStatPctUi(s.medianPct)} km je 100 km) fehlen rund ${formatGapKm(s.gapKm)}`
-    : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} %`
+    : `Median dieser Auswahl: ${formatStatPctUi(s.medianPct)} km je 100 km`
   const peer = s.peerGroup
   const peerLineText = peer
     ? peer.behind
       ? `Vergleichbare Gemeinden bundesweit (${peer.groupLabel}): ${shareRankPhrase(peer)}`
-      : `Vergleichbare Gemeinden bundesweit (${peer.groupLabel}): über dem Median`
+      : `Vergleichbare Gemeinden bundesweit (${peer.groupLabel}): auf oder über dem Median`
     : ''
   const nameSize = fitFontSize(s.name, 38, 22)
   const rankSize = fitFontSize(rankLineText, 32, 20)
@@ -397,7 +397,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   const qualityLineText = shareQualityUncertain(s)
     ? s.quality?.level === 'sparse'
       ? 'Datenlage unsicher (OSM): kaum Radinfrastruktur erfasst'
-      : 'Datenlage unsicher (OSM): nicht eindeutig getaggte Radwege'
+      : `Datenlage ${s.quality?.level === 'mixed' ? 'mittel' : 'unsicher'} (OSM): nicht eindeutig getaggte Radwege`
     : ''
   const qualityLine = qualityLineText
     ? `<text x="60" y="550" font-family="Arial, sans-serif" font-size="22" font-weight="600" fill="#f2c56b">${escapeHtml(qualityLineText)}</text>`

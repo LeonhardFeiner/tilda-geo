@@ -18,6 +18,8 @@ export type StationAreasPageInput = {
    */
   accessBaseHref: string
   accessFiles: StationAccessFiles
+  /** Appended as ?v= to every access file URL (content hash of that folder), so a deploy never mixes versions. */
+  accessVersion?: string
 }
 
 /** Same order as STATION_CATEGORIES in fetchStations.ts. */
@@ -52,6 +54,7 @@ export function stationAreasPageHtml({
   dataDateLabel,
   accessBaseHref,
   accessFiles,
+  accessVersion,
 }: StationAreasPageInput) {
   const style = JSON.stringify(buildBasemapStyleJson('light'))
   return `<!doctype html>
@@ -212,6 +215,7 @@ export function stationAreasPageHtml({
     let currentBins = null;
     const BAND_COLOURS = ${JSON.stringify(BAND_COLOURS)};
     const ACCESS_BASE = ${JSON.stringify(accessBaseHref)};
+    const ACCESS_QUERY = ${JSON.stringify(accessVersion ? `?v=${accessVersion}` : '')};
     const ACCESS_FILES = ${JSON.stringify(accessFiles)};
     // How you get there: label for sentences ("… mit dem Rad …") and the assumptions behind it.
     const WAYS = {
@@ -404,7 +408,7 @@ export function stationAreasPageHtml({
     // Each file is fetched once and kept; switching back is instant.
     const fileCache = new Map();
     function loadFile(name) {
-      if (!fileCache.has(name)) fileCache.set(name, fetch(ACCESS_BASE + name + '.json').then((r) => r.json()));
+      if (!fileCache.has(name)) fileCache.set(name, fetch(ACCESS_BASE + name + '.json' + ACCESS_QUERY).then((r) => r.json()));
       return fileCache.get(name);
     }
     const EMPTY = { type: 'FeatureCollection', features: [] };

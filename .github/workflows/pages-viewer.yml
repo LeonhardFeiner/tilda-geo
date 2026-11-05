@@ -59,6 +59,14 @@ jobs:
         working-directory: app
         run: bun x vitest run scripts/bike-share-map
 
+      # buildViewer writes output/history/<OSM date>.json when the data date is new. CI can
+      # regenerate it, but git never gets it, and a later re-export would lose that date.
+      - name: Check the history snapshot is committed
+        run: |
+          if git status --porcelain -- app/scripts/bike-share-map/output/history | grep .; then
+            echo "::warning::A history snapshot was created in CI; commit it from a local build (bun run bike-share-map:viewer)."
+          fi
+
       - name: Prepare Pages artifact (dereference symlinks)
         run: |
           mkdir -p _site

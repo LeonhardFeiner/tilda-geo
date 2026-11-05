@@ -146,7 +146,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
         'the model gap callout for the Landkreis',
       )
       const text = page.q('#region-detail-model-gap').textContent ?? ''
-      expect(text).toMatch(/Summe der Erwartungswerte von \d+ Gemeinden/)
+      expect(text).toMatch(/aus den erwarteten Kilometern von \d+ Gemeinden/)
       expect(text).toMatch(/Erwartet: \d+,\d %/)
       // A Kreis mixes RegioStaR types: the breakdown names none.
       expect(text).toContain('Raumtyp (RegioStaR)gemischt')

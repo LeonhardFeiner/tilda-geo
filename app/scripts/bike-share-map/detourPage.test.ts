@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, test } from 'vitest'
 import { detourPageHtml } from './detourPage'
 import type { DetourIndexEntry } from './fetchDetourGraph'
-import { bootPage, type ViewerPage } from './viewerHarness'
+import { bootPage, pageBundles, type ViewerPage } from './viewerHarness'
 
 /**
  * The detour page, generated from source, booted in jsdom against the committed Pfaffenhofen
@@ -42,7 +42,7 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
   test(
     'boots, lists the places and routes from Schweitenkirchen without errors',
     async () => {
-      page = await bootPage(html(), ['detourRouting.js'], '', loaded)
+      page = await bootPage(html(), pageBundles(html()), '', loaded)
       const p = page
       await p.waitFor(() => p.q('#status').textContent!.includes('Dörfer'), 'the graph to load')
       expect(p.errors).toEqual([])
@@ -82,7 +82,7 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
   test(
     'the slider changes the result and a destination shows both routes',
     async () => {
-      page = await bootPage(html(), ['detourRouting.js'], '?von=0', loaded)
+      page = await bootPage(html(), pageBundles(html()), '?von=0', loaded)
       const p = page
       await p.waitFor(() => p.q('#status').textContent!.includes('Dörfer'), 'the graph to load')
       const search = p.q<HTMLInputElement>('#origin-search')
@@ -124,7 +124,7 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
   test(
     'comparing with the fastest bike route: zero at slider 0, positive detours further right',
     async () => {
-      page = await bootPage(html(), ['detourRouting.js'], '?vergleich=rad&sicherheit=0', loaded)
+      page = await bootPage(html(), pageBundles(html()), '?vergleich=rad&sicherheit=0', loaded)
       const p = page
       await p.waitFor(() => p.q('#status').textContent!.includes('Dörfer'), 'the graph to load')
       expect(p.q<HTMLInputElement>('input[name=vergleich][value=rad]').checked).toBe(true)
@@ -160,11 +160,56 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
   )
 
   test(
+    'column headers sort, rows open by keyboard, an ambiguous name is not picked silently',
+    async () => {
+      page = await bootPage(html(), pageBundles(html()), '', loaded)
+      const p = page
+      await p.waitFor(() => p.q('#status').textContent!.includes('Dörfer'), 'the graph to load')
+      const search = p.q<HTMLInputElement>('#origin-search')
+
+      // Several places are called Fürholzen: typing the bare name selects none of them.
+      const fuerholzen = p
+        .qAll('#place-list option')
+        .filter((o) => (o as HTMLOptionElement).value.startsWith('Fürholzen'))
+      if (fuerholzen.length > 1) {
+        search.value = 'Fürholzen'
+        search.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+        expect(p.q('#origin-hint').hidden).toBe(false)
+        expect(p.q('#origin-box').hidden).toBe(true)
+      }
+
+      search.value = 'Schweitenkirchen'
+      search.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+      await p.waitFor(() => rows(p).length > 0, 'the destination table')
+      expect(p.q('#origin-hint').hidden).toBe(true)
+
+      // "+km" header: sorts like the select, marks itself with aria-sort.
+      p.q<HTMLButtonElement>('#table th[data-sort=km] .th-sort').click()
+      expect(p.q<HTMLSelectElement>('#sort').value).toBe('km')
+      expect(p.q('#table th[data-sort=km]').getAttribute('aria-sort')).toBe('descending')
+      expect(p.q('#table th[data-sort=air]').hasAttribute('aria-sort')).toBe(false)
+      const extra = rows(p)
+        .map((tr) => tr.children[4]!.textContent!)
+        .filter((c) => c !== '–')
+        .map((c) => Number(c.replace('−', '-').replace('±', '').replace(',', '.')))
+      expect(extra).toEqual([...extra].sort((a, b) => b - a))
+
+      // Enter on a focused row opens the route, like a click.
+      const row = rows(p)[0]!
+      expect(row.tabIndex).toBe(0)
+      row.dispatchEvent(new p.window.KeyboardEvent('keydown', { key: 'Enter', bubbles: true }))
+      expect(p.q('#pair').hidden).toBe(false)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     "?gemeinde= from the viewer card starts at the Gemeinde's main place",
     async () => {
       page = await bootPage(
         html(),
-        ['detourRouting.js'],
+        pageBundles(html()),
         '?lk=relation/62371&gemeinde=relation/396557',
         loaded,
       )

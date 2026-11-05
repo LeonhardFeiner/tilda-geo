@@ -17,16 +17,16 @@ import { generateViewerHtml } from './generateViewerHtml'
 
 const viewerDir = join(dirname(fileURLToPath(import.meta.url)), 'output', 'viewer')
 
-// Same order as the <script src> tags in index.html (MapLibre is vendored next to them).
-const BUNDLES = [
-  'statsClassSums.js',
-  'regionNavigation.js',
-  'statsMsgpack.js',
-  'neighborView.js',
-  'regionSearch.js',
-  'rankingDisplay.js',
-  'viewerUrlOptions.js',
-]
+/**
+ * The same-origin bundles a generated page loads, in document order, read from its own
+ * <script src> tags (vendored MapLibre is stubbed instead). Deriving them from the page means a
+ * script tag dropped from the template breaks the smoke test, as it would break the live page.
+ */
+export function pageBundles(html: string) {
+  return [...html.matchAll(/<script src="\.\/([^"?]+)(?:\?[^"]*)?"><\/script>/g)]
+    .map((m) => m[1]!)
+    .filter((src) => !src.startsWith('vendor/'))
+}
 
 export type ShareCall = { title?: string; text?: string; url?: string; files?: unknown[] }
 export type ViewerWindow = Window &
@@ -205,7 +205,7 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
       ).landkreise.map((l) => l.id)
     : []
   const html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026', detourIds)
-  return bootPage(html, BUNDLES, query, {
+  return bootPage(html, pageBundles(html), query, {
     ...options,
     ready: (page) =>
       page.qAll('#ranking-list li').length > 2 ||

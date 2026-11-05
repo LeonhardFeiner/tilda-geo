@@ -12,6 +12,7 @@ import {
   slugForId,
   type ShareRegionInput,
 } from './sharePages'
+import { formatGapKm } from './statsClassSums'
 
 const lkNames = new Map([
   ['relation/62371', 'Pfaffenhofen an der Ilm'],
@@ -206,8 +207,7 @@ describe('shareHeadline / shareDescription', () => {
   test('description states the km gap for a behind region', () => {
     const text = shareDescription(sk, '12.09.2026')
     expect(text).toContain('kommen auf 100 km Straße 1,6 km Radinfrastruktur')
-    expect(text).toContain('fehlen rund')
-    expect(text).toContain('km')
+    expect(text).toContain('fehlen rund ' + formatGapKm(sk.gapKm))
     expect(text).toContain('12.09.2026')
   })
 
@@ -393,6 +393,8 @@ describe('shareStubHtml / shareOgSvg', () => {
     expect(sparseSvg).toContain('Datenlage unsicher (OSM): kaum Radinfrastruktur erfasst')
     expect(sparseSvg).not.toContain('Bis zum Median')
     expect(sparseSvg).toContain('Median dieser Auswahl')
+    expect(sparseSvg).toMatch(/Median dieser Auswahl: [\d,]+ km je 100 km/)
+    expect(sparseSvg).not.toMatch(/\d %/)
   })
 
   test('shrinks the name font size instead of letting a long name run off the card', () => {

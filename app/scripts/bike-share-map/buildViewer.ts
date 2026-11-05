@@ -164,6 +164,18 @@ if (!hasNeighborsMsgpack) {
 // manifest.json is written at the end of the build (enriched with per-dataset stamps, see
 // datasetStamps); drop any stale symlink/copy so a failed build can't leave the old one behind.
 rmSync(join(viewerDir, VIEWER_FILES.manifest), { force: true })
+
+/**
+ * Context datasets that could not be written. Their viewer copies are deleted (the old ones are
+ * tracked in git, so keeping them would publish last build's numbers under a new data date), and
+ * under CI the build fails at the end: every source file is committed, so a skip there is a bug.
+ */
+const skippedDatasets: string[] = []
+function skipDataset(targets: string[], reason: unknown) {
+  for (const target of targets) rmSync(join(viewerDir, target), { force: true })
+  skippedDatasets.push(`${targets.join(' / ')}: ${reason}`)
+  process.stderr.write(`${targets.join(' / ')} skipped: ${reason}\n`)
+}
 // Map lines of the busy rural roads (fetchTrafficVolumes.ts), loaded only when switched on.
 if (
   symlinkOutputFile(
@@ -259,10 +271,17 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
       process.stdout.write(
         `Transit & highway access: ${Object.keys(transitById).length} regions → ${viewerDir}/${VIEWER_FILES.transit}\n`,
       )
+    } else {
+      skipDataset([VIEWER_FILES.transit], 'no transit, station-access or highway-access input')
     }
   } catch (err) {
-    process.stderr.write(`${VIEWER_FILES.peers} / density / transit skipped: ${err}\n`)
+    skipDataset([VIEWER_FILES.peers, VIEWER_FILES.density, VIEWER_FILES.transit], err)
   }
+} else {
+  skipDataset(
+    [VIEWER_FILES.peers, VIEWER_FILES.density, VIEWER_FILES.transit],
+    geoFeatures.length ? 'gemeinde-demographics.json missing' : 'no stats pack',
+  )
 }
 
 // Context datasets that are already keyed by region id: copied as {byId} (see
@@ -270,7 +289,10 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
 for (const dataset of VIEWER_PASS_THROUGH_DATASETS) {
   const sourcePath = join(outputRoot, dataset.source)
   const target = VIEWER_FILES[dataset.key]
-  if (!existsSync(sourcePath)) continue
+  if (!existsSync(sourcePath)) {
+    skipDataset([target], `${dataset.source} missing`)
+    continue
+  }
   try {
     const data = JSON.parse(await Bun.file(sourcePath).text()) as {
       byId?: Record<string, unknown>
@@ -281,7 +303,7 @@ for (const dataset of VIEWER_PASS_THROUGH_DATASETS) {
       `${dataset.label}: ${Object.keys(data.byId ?? {}).length} regions → ${viewerDir}/${target}\n`,
     )
   } catch (err) {
-    process.stderr.write(`${target} skipped: ${err}\n`)
+    skipDataset([target], err)
   }
 }
 
@@ -435,40 +457,22 @@ if (existsSync(stationsPath)) {
   writeFileSync(
     join(viewerDir, `${STATION_AREAS_PAGE_STEM}.html`),
     stationAreasPageHtml({
-      dataHref: `./${STATION_AREAS_PAGE_STEM}.json`,
+      dataHref: `./${STATION_AREAS_PAGE_STEM}.json?v=${contentHash([join(viewerDir, `${STATION_AREAS_PAGE_STEM}.json`)])}`,
       dataDateLabel,
       accessBaseHref: './station-access/',
       accessFiles,
+      accessVersion: existsSync(accessDir)
+        ? contentHash(
+            readdirSync(accessDir)
+              .filter((name) => name.endsWith('.json'))
+              .sort()
+              .map((name) => join(accessDir, name)),
+          )
+        : undefined,
     }),
     'utf8',
   )
   process.stdout.write(`Nearest-station map: ${viewerDir}/${STATION_AREAS_PAGE_STEM}.html\n`)
-}
-
-// Unlisted detour map: needs output/detour/index.json + one graph per Landkreis
-// (bun run bike-share-map:detour-graph -- --landkreis relation/…).
-const detourIndexPath = join(outputRoot, DETOUR_DIR, 'index.json')
-const detourLandkreise: DetourIndexEntry[] = existsSync(detourIndexPath)
-  ? (JSON.parse(readFileSync(detourIndexPath, 'utf8')) as { landkreise: DetourIndexEntry[] })
-      .landkreise
-  : []
-if (detourLandkreise.length) {
-  symlinkOutputFile(join(outputRoot, DETOUR_DIR), join(viewerDir, DETOUR_DIR))
-  writeFileSync(
-    join(viewerDir, `${DETOUR_PAGE_STEM}.html`),
-    detourPageHtml({
-      landkreise: detourLandkreise,
-      dataBaseHref: `./${DETOUR_DIR}/`,
-      routingScriptHref: './detourRouting.js',
-      dataDateLabel,
-      methodikHref: './methodik.html',
-      viewerHref: './index.html',
-    }),
-    'utf8',
-  )
-  process.stdout.write(
-    `Detour map: ${viewerDir}/${DETOUR_PAGE_STEM}.html (${detourLandkreise.map((l) => l.name).join(', ')})\n`,
-  )
 }
 
 const bundleTargets = [
@@ -514,15 +518,49 @@ for (const workerEntry of [
   }
 }
 
+// Written after the bundles: the page links detourRouting.js by content hash.
+// Unlisted detour map: needs output/detour/index.json + one graph per Landkreis
+// (bun run bike-share-map:detour-graph -- --landkreis relation/…).
+const detourIndexPath = join(outputRoot, DETOUR_DIR, 'index.json')
+const detourLandkreise: DetourIndexEntry[] = existsSync(detourIndexPath)
+  ? (JSON.parse(readFileSync(detourIndexPath, 'utf8')) as { landkreise: DetourIndexEntry[] })
+      .landkreise
+  : []
+if (detourLandkreise.length) {
+  symlinkOutputFile(join(outputRoot, DETOUR_DIR), join(viewerDir, DETOUR_DIR))
+  writeFileSync(
+    join(viewerDir, `${DETOUR_PAGE_STEM}.html`),
+    detourPageHtml({
+      // ?v= on the graph file and the routing bundle: both change together with the page.
+      landkreise: detourLandkreise.map((l) => ({
+        ...l,
+        file: `${l.file}?v=${contentHash([join(outputRoot, DETOUR_DIR, l.file)])}`,
+      })),
+      dataBaseHref: `./${DETOUR_DIR}/`,
+      routingScriptHref: `./detourRouting.js?v=${contentHash([join(viewerDir, 'detourRouting.js')])}`,
+      dataDateLabel,
+      methodikHref: './methodik.html',
+      viewerHref: './index.html',
+    }),
+    'utf8',
+  )
+  process.stdout.write(
+    `Detour map: ${viewerDir}/${DETOUR_PAGE_STEM}.html (${detourLandkreise.map((l) => l.name).join(', ')})\n`,
+  )
+}
+
 // Content hash per asset the page links to, so an unchanged file stays cached across deploys
 // (the ?v= used to be the build time, which invalidated everything on every push).
+/** Short content hash of files, for ?v= cache busting. */
+function contentHash(paths: string[]) {
+  const h = createHash('sha1')
+  for (const p of paths) h.update(readFileSync(p))
+  return h.digest('hex').slice(0, 10)
+}
+
 function assetContentVersions(): Record<string, string> {
   const versions: Record<string, string> = {}
-  const hashOf = (paths: string[]) => {
-    const h = createHash('sha1')
-    for (const p of paths) h.update(readFileSync(p))
-    return h.digest('hex').slice(0, 10)
-  }
+  const hashOf = contentHash
   const walk = (dir: string) => {
     for (const entry of readdirSync(dir, { withFileTypes: true })) {
       const full = join(dir, entry.name)
@@ -588,6 +626,17 @@ process.stdout.write(
   `Share pages: ${sharePages.stubCount} stubs, ${sharePages.imageCount} OG images, ` +
     `${sharePages.peerCount} with a demographic peer comparison → ${viewerDir}/r\n`,
 )
+
+if (skippedDatasets.length) {
+  process.stderr.write(
+    `\n${skippedDatasets.length} context dataset(s) skipped; their card rows and CSV columns stay empty:\n` +
+      skippedDatasets.map((line) => `  - ${line}\n`).join(''),
+  )
+  if (process.env.CI) {
+    process.stderr.write('CI build: refusing to publish with missing context data.\n')
+    process.exit(1)
+  }
+}
 
 process.stdout.write(`Viewer: ${viewerDir}/index.html\n`)
 process.stdout.write(`Needs:  ${msgpackPath} (bun run bike-share-map:export-stats-geojson)\n`)

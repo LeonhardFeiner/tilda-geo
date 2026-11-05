@@ -366,9 +366,9 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   test('supports demographic peer comparison, role models and context scopes for Landkreise', () => {
     expect(html).toContain("(level !== '8' && level !== '6')")
     expect(html).toContain('ROLE_MODEL_MAX_KM_LANDKREIS = 180')
-    expect(html).toContain(
-      'unter Landkreisen und kreisfreien Städten derselben Größenklasse und Siedlungsart',
-    )
+    // Kreis peer groups are either kreisfreie Städte by size or Landkreise by density, never both.
+    expect(html).toContain("'in der bundesweiten Vergleichsgruppe ('")
+    expect(html).not.toContain('unter Landkreisen und kreisfreien Städten derselben Größenklasse')
     expect(html).toContain("label: (isCounty ? 'Ähnliche Kreise (' : 'Ähnliche Gemeinden (')")
     expect(html).toContain(
       "'6': { nom: 'Landkreise und kreisfreie Städte', gen: 'Landkreise und kreisfreien Städte' }",

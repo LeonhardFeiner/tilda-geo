@@ -629,8 +629,10 @@ export const PUSH_KMH_MAX = 5
 /**
  * Metres of a bike route by kind of way. The first five are exclusive and add up to `totalM`:
  * bike infrastructure; farm/forest tracks; other quiet ways (stress < 0.2); roads with
- * moderate traffic (< 0.6); roads with fast traffic and no bike infrastructure (≥ 0.6, i.e.
- * 70–100 km/h). `pushedM` and `unpavedM` overlap them.
+ * moderate traffic (< CLOSED_STRESS); roads with fast traffic and no bike infrastructure
+ * (≥ CLOSED_STRESS, i.e. classified roads at 70–100 km/h — the same roads the slider closes;
+ * Gemeindeverbindungsstraßen top out at 0.6 and stay in the moderate bucket).
+ * `pushedM` and `unpavedM` overlap them.
  */
 export type RouteComposition = {
   totalM: number
@@ -666,7 +668,7 @@ export function routeComposition(
     if (BIKE_INFRA.has(label.category)) c.infraM += len
     else if (label.track && stress < 0.2) c.trackM += len
     else if (stress < 0.2) c.quietM += len
-    else if (stress < 0.6) c.townM += len
+    else if (stress < CLOSED_STRESS - 1e-9) c.townM += len
     else c.busyM += len
     const kmh = forward ? set.kmhF[edge]! : set.kmhB[edge]!
     if (kmh <= PUSH_KMH_MAX) c.pushedM += len
