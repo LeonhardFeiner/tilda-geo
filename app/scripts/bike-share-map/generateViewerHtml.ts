@@ -354,6 +354,11 @@ export function generateViewerHtml(
         content: '‹ Zurück zur Karte';
         font-size: 0.8125rem; font-weight: 600;
       }
+      /* The floating card enlarges the "×" with an absolutely positioned ::after. The bar
+         above is static, so that ::after would be placed against the sheet itself and lie
+         invisibly over the whole card — every tap in it ("Gemeinden anzeigen", neighbours,
+         …) then closed the card instead. The bar is already finger-sized; drop it. */
+      #region-detail-mount .region-detail-close::after { content: none; }
       #region-detail-mount .region-detail-header { padding-right: 0; }
 
       /* Share button, top-left over the map: a round twin of the search pill beside it. */
