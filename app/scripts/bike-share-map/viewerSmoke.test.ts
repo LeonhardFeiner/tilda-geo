@@ -188,6 +188,60 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'every map mode colours the regions, ranks them and labels the legend without errors',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      const select = page.q('#map-metric-select') as HTMLSelectElement
+      const values = [...select.options].map((o) => o.value)
+      expect(values).toEqual(
+        expect.arrayContaining(['mappingDepth', 'busyFederalCovered', 'density', 'stationBike']),
+      )
+      expect(page.qAll('#map-metric-select optgroup').length).toBe(3)
+      const title = () => page!.q('#choropleth-legend-title').textContent
+      const seen = new Set<string | null>()
+      for (const metric of values.filter((v) => v !== 'bikeShare')) {
+        const before = title()
+        seen.add(before)
+        select.value = metric
+        select.dispatchEvent(new window.Event('change'))
+        await page.waitFor(
+          () => title() !== before && page!.qAll('#ranking-list li[data-ranking-id]').length > 0,
+          'the legend and ranking for ' + metric,
+        )
+        expect(seen.has(title()), metric + ' has a legend title of its own').toBe(false)
+        const legend = page.q('#legend-labels').textContent ?? ''
+        expect(legend, metric).not.toMatch(/NaN|undefined|Infinity/)
+        expect(page.q('#cml-min').textContent, metric).not.toMatch(/NaN|undefined/)
+        const firstAria = page.q('#ranking-list li[data-ranking-id]').getAttribute('aria-label')
+        expect(firstAria, metric).not.toMatch(/keine Daten|NaN|undefined/)
+      }
+      // Rank 1 on the bike-to-station map is the shortest ride.
+      select.value = 'stationBike'
+      select.dispatchEvent(new window.Event('change'))
+      await page.waitFor(
+        () =>
+          title() === 'Flächenfarbe (Mit dem Rad zum Bahnhalt)' &&
+          /min mit dem Rad/.test(
+            page!.q('#ranking-list li[data-ranking-id]')?.getAttribute('aria-label') ?? '',
+          ),
+        'the stationBike ranking',
+      )
+      const minutes = page
+        .qAll('#ranking-list li[data-ranking-id]')
+        .map((li) =>
+          Number(/([\d,]+) min/.exec(li.getAttribute('aria-label') ?? '')?.[1]?.replace(',', '.')),
+        )
+        .filter((v) => Number.isFinite(v))
+      expect(minutes.length).toBeGreaterThan(1)
+      expect(minutes[0]!).toBeLessThanOrEqual(minutes.at(-1)!)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'Mehr Zahlen lists age, ownership and building age with bars, and the RegioStaR type without',
     async () => {
       page = await bootViewer(IN_LANDKREIS)

@@ -12,10 +12,14 @@
 export const MAP_METRICS = [
   'bikeShare',
   'modelGap',
+  'mappingDepth',
+  'busyFederalCovered',
   'cars',
   'rent',
+  'density',
   'accidents',
   'commuters',
+  'stationBike',
 ] as const
 export type MapMetric = (typeof MAP_METRICS)[number]
 export type RankingMode = 'topflop' | 'all'
