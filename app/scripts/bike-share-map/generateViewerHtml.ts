@@ -1644,12 +1644,22 @@ export function generateViewerHtml(
         <select id="darstellung-select"></select>
         <label for="map-metric-select">Karte zeigt</label>
         <select id="map-metric-select">
-          <option value="bikeShare">Radinfra je km Straße</option>
-          <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
-          <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
-          <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
-          <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
-          <option value="commuters">Pendlersaldo (BA Beschäftigungsstatistik)</option>
+          <optgroup label="Radinfrastruktur">
+            <option value="bikeShare">Radinfra je km Straße</option>
+            <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
+            <option value="busyFederalCovered">Vielbefahrene Bundesstraßen mit Radweg (%)</option>
+          </optgroup>
+          <optgroup label="Datenlage">
+            <option value="mappingDepth">Kartierungstiefe (OSM)</option>
+          </optgroup>
+          <optgroup label="Umfeld">
+            <option value="density">Einwohner je km²</option>
+            <option value="stationBike">Mit dem Rad zum Bahn-/Tramhalt (min)</option>
+            <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
+            <option value="rent">Ø Nettokaltmiete (€/m², Zensus)</option>
+            <option value="accidents">Fahrradunfälle / 10.000 Einw. (Unfallatlas)</option>
+            <option value="commuters">Pendlersaldo (BA Beschäftigungsstatistik)</option>
+          </optgroup>
         </select>
         <label for="region-child-select" id="region-child-label" hidden>Gebiet wählen</label>
         <select id="region-child-select" hidden></select>
@@ -2010,6 +2020,161 @@ export function generateViewerHtml(
     let regionExtraIndexesPromise = null;
     let currentMapMetric = 'bikeShare';
     let lastBikeShareRange = { min: 0, max: 20 };
+
+    const finiteOrNull = (v) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+    const NEUTRAL_BLUES = ['#eff3ff', '#6baed6', '#08519c'];
+    const NEUTRAL_PURPLES = ['#f2f0f7', '#9e9ac8', '#54278f'];
+    const LOW_IS_GOOD = { normal: ['#2e7d32', '#fff59d', '#c62828'], colorblind: ['#3274a1', '#f0e442', '#e69f00'] };
+    const HIGH_IS_GOOD = { normal: ['#c62828', '#fff59d', '#2e7d32'], colorblind: ['#e69f00', '#f0e442', '#3274a1'] };
+
+    /**
+     * Map modes that colour one context value per region on a three-stop scale. Each entry holds
+     * what the tooltip, legend, ranking and colours need, so a new mode is a row here plus its key
+     * in MAP_METRICS (viewerUrlOptions.ts), formatMapMetricValue and the select's options.
+     * prop: the enriched feature property; colors: low/mid/high per colour scale; range: a fixed
+     * scale, else the view's 2nd-98th percentile; log: scale and legend on log10 (density spans
+     * three orders of magnitude); ascending: rank 1 is the lowest value; rankable: false keeps the
+     * colour but leaves the region out of the ranking.
+     */
+    const SIMPLE_MAP_METRICS = {
+      mappingDepth: {
+        prop: 'mappingDepthPct',
+        get: (id) => finiteOrNull(mappingIndex?.byId[id]?.indexPct),
+        title: 'Kartierungstiefe (OSM)',
+        rankLabel: 'Kartierungstiefe',
+        summaryLabel: 'Kartierungstiefe in dieser Ansicht',
+        definition:
+          'Anteil der Straßenlänge, für den in OpenStreetMap Tempolimit, Belag und Beleuchtung erfasst sind ' +
+          '(Mittel der drei; ohne Service-Wege und Autobahnen). Diese Merkmale werden wie Radwege vor Ort erhoben: ' +
+          'Wo der Wert niedrig ist, kann auch Radinfrastruktur fehlen. Auf dem Land ist er von Natur aus etwas niedriger. ' +
+          '<strong>Grau</strong> = kein Wert. <a href="./methodik.html">Mehr dazu</a>',
+        colors: { normal: NEUTRAL_BLUES, colorblind: NEUTRAL_BLUES },
+        range: [0, 100],
+        tick: (v) => deNumber(Math.round(v), 0),
+        unit: ' %',
+        tooltip: (v, id) => {
+          const m = mappingIndex?.byId[id];
+          return (
+            deNumber(v, 0) +
+            ' % Kartierungstiefe' +
+            (m
+              ? '\\n(Tempo ' + deNumber(m.speedPct, 0) + ' %, Belag ' + deNumber(m.surfacePct, 0) + ' %, Licht ' + deNumber(m.litPct, 0) + ' %)'
+              : '')
+          );
+        },
+        aria: (v) => deNumber(v, 0) + ' Prozent Kartierungstiefe',
+        noData: 'Keine Kartierungsdaten verfügbar',
+      },
+      busyFederalCovered: {
+        prop: 'busyFederalCoveredPct',
+        get: (id) => finiteOrNull(trafficFederalIndex?.byId[id]?.coveredPct),
+        // Under 1 km of busy Bundesstraße a single section swings the share between 0 and 100 %.
+        rankable: (id) => (trafficFederalIndex?.byId[id]?.needKm ?? 0) >= 1,
+        unrankedNote: 'keine Daten oder unter 1 km vielbefahrene Bundesstraße',
+        title: 'Bundesstraßen mit Radweg',
+        rankLabel: 'Bundesstraßen mit Radweg',
+        summaryLabel: 'Anteil mit Radweg in dieser Ansicht',
+        definition:
+          'Anteil der vielbefahrenen Bundesstraßen außerorts (Verkehrszählung 2021, über der ERA-Schwelle für einen Radweg), ' +
+          'der einen Radweg hat. <strong>Grau</strong> = keine solche Bundesstraße im Gebiet. ' +
+          'Gebiete mit weniger als 1 km haben keinen Rang.',
+        colors: HIGH_IS_GOOD,
+        range: [0, 100],
+        tick: (v) => deNumber(Math.round(v), 0),
+        unit: ' %',
+        tooltip: (v, id) => {
+          const t = trafficFederalIndex?.byId[id];
+          return (
+            deNumber(v, 0) +
+            ' % der vielbefahrenen Bundesstraßen mit Radweg' +
+            (t ? '\\n(' + deNumber(t.coveredKm, 1) + ' von ' + deNumber(t.needKm, 1) + ' km)' : '')
+          );
+        },
+        aria: (v) => deNumber(v, 0) + ' Prozent der vielbefahrenen Bundesstraßen mit Radweg',
+        noData: 'Keine vielbefahrene Bundesstraße außerorts',
+      },
+      density: {
+        prop: 'densityPerKm2',
+        get: (id) => finiteOrNull(densityIndex?.byId[id]),
+        title: 'Einwohner je km²',
+        rankLabel: 'Bevölkerungsdichte',
+        summaryLabel: 'Einwohner je km² in dieser Ansicht',
+        definition:
+          'Einwohner je km² Fläche. Die Farbskala ist logarithmisch: Gleiche Abstände auf der Skala sind gleiche Vielfache. ' +
+          '<strong>Grau</strong> = kein Wert.',
+        colors: { normal: NEUTRAL_PURPLES, colorblind: NEUTRAL_PURPLES },
+        log: true,
+        tick: (v) => deNumber(roundSignificant(v, 2), 0),
+        unit: ' Einw./km²',
+        tooltip: (v) => deNumber(Math.round(v), 0) + ' Einwohner je km²',
+        aria: (v) => deNumber(Math.round(v), 0) + ' Einwohner je Quadratkilometer',
+        noData: 'Keine Einwohnerdaten verfügbar',
+      },
+      stationBike: {
+        prop: 'stationBikeMin',
+        get: (id) => finiteOrNull(transitIndex?.byId[id]?.access?.bike?.[0]),
+        ascending: true,
+        title: 'Mit dem Rad zum Bahnhalt',
+        rankLabel: 'Radweg zum Bahnhalt',
+        summaryLabel: 'Minuten mit dem Rad in dieser Ansicht',
+        definition:
+          'Durchschnittliche Fahrzeit mit dem Rad von den Wohnorten zum nächsten Bahn- oder Tramhalt, ' +
+          'entlang der Wege und nach Einwohnern gewichtet. Platz 1 = kürzester Weg. <strong>Grau</strong> = kein Wert.',
+        colors: LOW_IS_GOOD,
+        tick: (v) => deNumber(Math.round(v), 0),
+        unit: ' min',
+        tooltip: (v, id) => {
+          const km = transitIndex?.byId[id]?.access?.bike?.[1];
+          return (
+            'Ø ' +
+            formatMinutes(v) +
+            ' mit dem Rad zum nächsten Bahn-/Tramhalt' +
+            (typeof km === 'number' ? '\\n(' + deNumber(km, km < 10 ? 1 : 0) + ' km entlang der Wege)' : '')
+          );
+        },
+        aria: (v) => formatMinutes(v) + ' mit dem Rad zum nächsten Bahn- oder Tramhalt',
+        noData: 'Keine Erreichbarkeitsdaten verfügbar',
+      },
+    };
+
+    function simpleMapMetric(metric) {
+      return Object.prototype.hasOwnProperty.call(SIMPLE_MAP_METRICS, metric) ? SIMPLE_MAP_METRICS[metric] : null;
+    }
+
+    /** 1234 to 1200, 87 stays 87: legend ticks on a log scale. */
+    function roundSignificant(v, digits) {
+      if (!(v > 0)) return 0;
+      const f = Math.pow(10, Math.floor(Math.log10(v)) - digits + 1);
+      return Math.round(v / f) * f;
+    }
+
+    /** A simple metric's value as the colour scale sees it (log10 where the scale is logarithmic). */
+    function simpleScaleValue(m, v) {
+      return m.log ? Math.log10(Math.max(1, v)) : v;
+    }
+
+    function simpleMetricColors(m, scaleId) {
+      return scaleId === 'colorblind' ? m.colors.colorblind : m.colors.normal;
+    }
+
+    /** Linear 2nd-98th percentile range of a simple metric (log10 units where the scale is log). */
+    function simpleMetricRange(m, features) {
+      if (m.range) {
+        return { min: m.range[0], max: m.range[1], dataMin: m.range[0], dataMax: m.range[1], scaleCapped: false };
+      }
+      const vals = features
+        .map((f) => f.properties?.[m.prop])
+        .filter((v) => typeof v === 'number')
+        .map((v) => simpleScaleValue(m, v))
+        .sort((a, b) => a - b);
+      if (!vals.length) return { min: 0, max: 1, dataMin: 0, dataMax: 1, scaleCapped: false };
+      const at = (p) => vals[Math.min(vals.length - 1, Math.floor(p * vals.length))];
+      const dataMin = vals[0];
+      const dataMax = vals[vals.length - 1];
+      const min = m.log ? at(0.02) : Math.floor(at(0.02));
+      const max = Math.max(m.log ? at(0.98) : Math.ceil(at(0.98)), min + (m.log ? 0.5 : 5));
+      return { min, max, dataMin, dataMax, scaleCapped: min > dataMin || max < dataMax };
+    }
     const loadIndex = (url, assign) =>
       fetch(url)
         .then((res) => (res.ok ? res.json() : null))
@@ -2860,8 +3025,14 @@ export function generateViewerHtml(
       }
 
       const name = p.name || p.id;
+      const simpleValues = {};
+      for (const m of Object.values(SIMPLE_MAP_METRICS)) simpleValues[m.prop] = m.get(p.id);
+      const simple = simpleMapMetric(currentMapMetric);
       let label = '';
-      if (currentMapMetric === 'modelGap') {
+      if (simple) {
+        const v = simpleValues[simple.prop];
+        label = name + ': ' + (v != null ? simple.tooltip(v, p.id) : simple.noData);
+      } else if (currentMapMetric === 'modelGap') {
         if (modelGapPct != null && pct != null && expectedPct != null) {
           const sign = modelGapPct > 0 ? '+' : '';
           label =
@@ -2965,6 +3136,7 @@ export function generateViewerHtml(
           employedAtWorkplace,
           employedAtResidence,
           workplaces,
+          ...simpleValues,
           lowRoad,
           label,
         },
@@ -3276,9 +3448,11 @@ export function generateViewerHtml(
       const cmlTitle = document.querySelector('.cml-title');
       const choroplethTitle = document.getElementById('choropleth-legend-title');
       const metricDef = document.getElementById('metric-definition');
+      const simple = simpleMapMetric(metric);
 
       if (cmlTitle) {
-        if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
+        if (simple) cmlTitle.textContent = simple.title;
+        else if (metric === 'modelGap') cmlTitle.textContent = 'Modell-Abweichung';
         else if (metric === 'cars') cmlTitle.textContent = 'Pkw / 1.000 Einw.';
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle je 10.000 Einw.';
@@ -3289,7 +3463,8 @@ export function generateViewerHtml(
       if (cmlDef) cmlDef.hidden = metric !== 'bikeShare';
 
       if (choroplethTitle) {
-        if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
+        if (simple) choroplethTitle.textContent = 'Flächenfarbe (' + simple.title + ')';
+        else if (metric === 'modelGap') choroplethTitle.textContent = 'Flächenfarbe (Modell-Abweichung)';
         else if (metric === 'cars') choroplethTitle.textContent = 'Flächenfarbe (Pkw je 1.000 Einw.)';
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
@@ -3298,7 +3473,9 @@ export function generateViewerHtml(
       }
 
       if (metricDef) {
-        if (metric === 'modelGap') {
+        if (simple) {
+          metricDef.innerHTML = simple.definition;
+        } else if (metric === 'modelGap') {
           metricDef.innerHTML =
             'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
             '<strong>Grün</strong> = darüber, <strong>Rot</strong> = darunter. ' +
@@ -3330,8 +3507,11 @@ export function generateViewerHtml(
         }
       }
 
+      // Simple metrics on a log scale pass log10 bounds; ticks show the value again.
+      const simpleTick = (v) => simple.tick(simple.log ? Math.pow(10, v) : v);
       if (cmlMin) {
-        if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
+        if (simple) cmlMin.textContent = simpleTick(min);
+        else if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
         else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
         else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
         else if (metric === 'accidents') cmlMin.textContent = deNumber(min, 1);
@@ -3339,7 +3519,8 @@ export function generateViewerHtml(
         else cmlMin.textContent = formatUiPct(min) + ' %';
       }
       if (cmlMax) {
-        if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
+        if (simple) cmlMax.textContent = simpleTick(max) + simple.unit;
+        else if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' Pkw';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
         else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1);
@@ -3357,7 +3538,9 @@ export function generateViewerHtml(
         const val = min + span * t;
         const el = document.createElement('span');
         let text = '';
-        if (metric === 'modelGap') {
+        if (simple) {
+          text = simpleTick(val) + (i === count - 1 ? simple.unit : '');
+        } else if (metric === 'modelGap') {
           text = (val > 0 ? '+' : '') + formatUiPct(val) + (i === count - 1 ? ' %' : '');
         } else if (metric === 'cars') {
           text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' Pkw' : '');
@@ -3559,6 +3742,8 @@ export function generateViewerHtml(
     }
 
     function colorScaleRangeForMetric(metric, features) {
+      const simple = simpleMapMetric(metric);
+      if (simple) return simpleMetricRange(simple, features);
       if (metric === 'modelGap') {
         const vals = features
           .map((f) => f.properties?.modelGapPct)
@@ -4014,6 +4199,8 @@ export function generateViewerHtml(
     function getFeatureMetricValue(f, metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       const p = f?.properties || {};
+      const simple = simpleMapMetric(metric);
+      if (simple) return typeof p[simple.prop] === 'number' ? p[simple.prop] : null;
       if (metric === 'modelGap') return typeof p.modelGapPct === 'number' ? p.modelGapPct : null;
       if (metric === 'cars') return typeof p.carsPer1000 === 'number' ? p.carsPer1000 : null;
       if (metric === 'rent') return typeof p.rentColdM2 === 'number' ? p.rentColdM2 : null;
@@ -4031,6 +4218,8 @@ export function generateViewerHtml(
       }
       const val = getFeatureMetricValue(f, metric);
       if (typeof val !== 'number' || !Number.isFinite(val)) return false;
+      const simple = simpleMapMetric(metric);
+      if (simple?.rankable && !simple.rankable(f.properties?.id)) return false;
       // Per-resident rates of tiny places are dominated by single events or a fleet registered
       // at one address (Gyhum: 4.154 cars per 1.000). They keep their colour, but no rank.
       if (metric === 'cars' || metric === 'accidents') {
@@ -4052,7 +4241,7 @@ export function generateViewerHtml(
       }
       if (!aValid) return 1;
       if (!bValid) return -1;
-      if (bv !== av) return bv - av;
+      if (bv !== av) return simpleMapMetric(metric)?.ascending ? av - bv : bv - av;
       return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
     }
 
@@ -4065,6 +4254,8 @@ export function generateViewerHtml(
       if (val == null || typeof val !== 'number' || !Number.isFinite(val)) {
         return 'Platz ' + rank + ', ' + label + ', keine Daten';
       }
+      const simple = simpleMapMetric(metric);
+      if (simple) return 'Platz ' + rank + ', ' + label + ', ' + simple.aria(val);
       if (metric === 'modelGap') {
         return (
           'Platz ' +
@@ -4111,6 +4302,7 @@ export function generateViewerHtml(
 
     function rankingSummaryMetricLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
+      if (simpleMapMetric(metric)) return simpleMapMetric(metric).summaryLabel;
       if (metric === 'modelGap') return 'Modell-Abweichung in dieser Ansicht';
       if (metric === 'cars') return 'Pkw je 1.000 EW in dieser Ansicht';
       if (metric === 'rent') return 'Nettokaltmiete in dieser Ansicht';
@@ -4121,6 +4313,7 @@ export function generateViewerHtml(
 
     function rankingMetricRankLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
+      if (simpleMapMetric(metric)) return simpleMapMetric(metric).rankLabel;
       if (metric === 'modelGap') return 'Modell-Abweichung';
       if (metric === 'cars') return 'Pkw-Dichte';
       if (metric === 'rent') return 'Nettokaltmiete';
@@ -4304,6 +4497,13 @@ export function generateViewerHtml(
       if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '#cfd8dc';
       metric = metric || currentMapMetric || 'bikeShare';
       const isColorblind = scaleId === 'colorblind';
+      const simple = simpleMapMetric(metric);
+      if (simple) {
+        const [low, mid, high] = simpleMetricColors(simple, scaleId);
+        const span = Math.max(0.001, maxVal - minVal);
+        const t = Math.max(0, Math.min(1, (simpleScaleValue(simple, val) - minVal) / span));
+        return t <= 0.5 ? lerpColor(low, mid, t * 2) : lerpColor(mid, high, (t - 0.5) * 2);
+      }
       if (metric === 'modelGap') {
         return modelGapColorAt(modelGapForColor(val, modelBandPct), minVal, maxVal, isColorblind);
       }
@@ -7599,6 +7799,8 @@ export function generateViewerHtml(
               ? withoutMetric + ' ohne Rang (weniger als 5 km Straße erfasst)'
               : currentMapMetric === 'cars' || currentMapMetric === 'accidents'
                 ? withoutMetric + ' ohne Rang (keine Daten oder unter 1.000 Einwohnern)'
+                : simpleMapMetric(currentMapMetric)?.unrankedNote
+                  ? withoutMetric + ' ohne Rang (' + simpleMapMetric(currentMapMetric).unrankedNote + ')'
                 : withoutMetric + ' ohne Daten in dieser Ansicht';
           list.appendChild(note);
         }
@@ -9374,6 +9576,21 @@ export function generateViewerHtml(
       const scale = colorScaleById(scaleId);
       const isColorblind = scaleId === 'colorblind';
 
+      const simple = simpleMapMetric(metric);
+      if (simple) {
+        const [low, mid, high] = simpleMetricColors(simple, scaleId);
+        const raw = ['coalesce', ['get', simple.prop], 0];
+        const scaled = simple.log ? ['log10', ['max', 1, raw]] : raw;
+        const hi = Math.max(maxVal, minVal + 0.001);
+        const clamped = ['max', minVal, ['min', hi, scaled]];
+        return [
+          'case',
+          ['==', ['get', simple.prop], null],
+          '#cfd8dc',
+          ['interpolate', ['linear'], clamped, minVal, low, (minVal + hi) / 2, mid, hi, high],
+        ];
+      }
+
       if (metric === 'modelGap') {
         const stops = RankingDisplay.modelGapColorStops(
           lastModelBandPct,
@@ -9510,7 +9727,10 @@ export function generateViewerHtml(
       const scale = colorScaleById(scaleId);
       const isColorblind = scaleId === 'colorblind';
       let gradient = scale.legendGradient;
-      if (metric === 'modelGap') {
+      const simple = simpleMapMetric(metric);
+      if (simple) {
+        gradient = 'linear-gradient(to right, ' + simpleMetricColors(simple, scaleId).join(', ') + ')';
+      } else if (metric === 'modelGap') {
         const bound = Math.max(Math.abs(lastPctRange?.max || 10), lastModelBandPct + 0.1);
         const stops = RankingDisplay.modelGapColorStops(lastModelBandPct, bound, isColorblind);
         gradient =

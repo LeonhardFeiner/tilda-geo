@@ -158,6 +158,10 @@ describe('formatters', () => {
     expect(formatMapMetricValue(648.7, 'cars')).toBe('649 Pkw')
     expect(formatMapMetricValue(6.191, 'rent')).toBe('6,19 €/m²')
     expect(formatMapMetricValue(-1200, 'commuters')).toBe('-1.200')
+    expect(formatMapMetricValue(61.4, 'mappingDepth')).toBe('61 %')
+    expect(formatMapMetricValue(26.2, 'busyFederalCovered')).toBe('26 %')
+    expect(formatMapMetricValue(2553.2, 'density')).toBe('2.553 /km²')
+    expect(formatMapMetricValue(13, 'stationBike')).toBe('13 min')
   })
 })
 

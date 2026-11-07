@@ -679,7 +679,17 @@ export function formatMinutes(v: number) {
   return `${Math.floor(total / 60)} h${total % 60 ? ` ${total % 60} min` : ''}`
 }
 
-export type MapMetric = 'bikeShare' | 'modelGap' | 'cars' | 'rent' | 'accidents' | 'commuters'
+export type MapMetric =
+  | 'bikeShare'
+  | 'modelGap'
+  | 'mappingDepth'
+  | 'busyFederalCovered'
+  | 'cars'
+  | 'rent'
+  | 'density'
+  | 'accidents'
+  | 'commuters'
+  | 'stationBike'
 
 /** A ranking/legend value of one map metric with its unit; "–" when there is none. */
 export function formatMapMetricValue(val: number | null | undefined, metric: MapMetric) {
@@ -690,5 +700,9 @@ export function formatMapMetricValue(val: number | null | undefined, metric: Map
   if (metric === 'rent') return `${val.toFixed(2).replace('.', ',')} €/m²`
   if (metric === 'accidents') return `${formatStatPctUi(val)} / 10k`
   if (metric === 'commuters') return `${sign}${val.toLocaleString('de-DE')}`
+  if (metric === 'mappingDepth' || metric === 'busyFederalCovered')
+    return `${formatDeNumber(val, 0)} %`
+  if (metric === 'density') return `${formatDeNumber(Math.round(val), 0)} /km²`
+  if (metric === 'stationBike') return formatMinutes(val)
   return `${formatStatPctUi(val)} %`
 }
