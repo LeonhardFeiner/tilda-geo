@@ -110,7 +110,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
   landkreis_id: 'OSM-Relation des Kreises',
   strassen_km: 'Straßennetz in km (Standard-Zählfilter)',
   radinfra_km: 'Radinfrastruktur in km (Standard-Zählfilter)',
-  radinfra_anteil_pct: 'radinfra_km / strassen_km in %',
+  radinfra_anteil_pct:
+    'km Radinfrastruktur je 100 km Straße (radinfra_km / strassen_km × 100). Kein Anteil der Straßen mit Radweg: beide Fahrtrichtungen und Wege abseits von Straßen zählen',
   radinfra_unklar_km: 'Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km',
   datenlage:
     'gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra. Bewertet nur, wie eindeutig die erfasste Radinfrastruktur getaggt ist, nicht ob sie vollständig erfasst ist (dafür: kartierungstiefe_pct)',
@@ -123,7 +124,7 @@ export const DATA_DOWNLOAD_COLUMNS = {
   unabhaengig_km: 'Radinfrastruktur abseits von Straßen (Wege durch Feld, Wald, Park), km',
   hauptstr_km: 'Hauptverkehrsstraßen (OSM trunk, primary, secondary, tertiary) in km',
   hauptstr_radinfra_pct:
-    'Radinfrastruktur entlang der Hauptverkehrsstraßen je km Hauptverkehrsstraße, je Fahrtrichtung gezählt (100 % = für beide Richtungen), %',
+    'Radinfrastruktur entlang der Hauptverkehrsstraßen in km je 100 km Hauptverkehrsstraße, je Fahrtrichtung gezählt (100 = für beide Richtungen)',
   hauptstr_bund_pct: 'dito, Baulastträger Bund',
   hauptstr_land_pct: 'dito, Baulastträger Land',
   hauptstr_kreis_pct: 'dito, Baulastträger Kreis',
@@ -170,12 +171,12 @@ export const DATA_DOWNLOAD_COLUMNS = {
   auspendler: 'Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)',
   arbeitsplatzzentralitaet: `${L.jobCentrality}: Beschäftigte am Arbeitsort / am Wohnort`,
   modell_erwartung_pct:
-    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: erwartete Kilometer ihrer Gemeinden summiert und durch deren Straßenkilometer geteilt (Länder: kein Wert, siehe Methodik)',
-  modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte',
+    'Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), km Radinfrastruktur je 100 km Straße. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: erwartete Kilometer ihrer Gemeinden summiert und durch deren Straßenkilometer geteilt (Länder: kein Wert, siehe Methodik)',
+  modell_abweichung_pp: 'radinfra_anteil_pct − modell_erwartung_pct, km je 100 km Straße',
   modell_ausserhalb_1se:
     '1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte endet dort der blasse Bereich, kräftige Farbe erst ab der doppelten Abweichung), sonst 0',
   modell_begrenzt:
-    '1, wenn das lineare Modell rechnerisch unter 0 % lag und die Erwartung auf 0 % gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0',
+    '1, wenn das lineare Modell rechnerisch unter 0 lag und die Erwartung auf 0 gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0',
   zaehlversion:
     'Zählversion der Längenmessung (siehe Methodik „Version und Zitierweise“); OSM-Datenstand = Datum im Dateinamen',
   hinweise:

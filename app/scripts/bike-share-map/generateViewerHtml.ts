@@ -36,6 +36,10 @@ import { viewerRegionNavScript } from './viewerRegionNavScript'
 // none / coarse / fine).
 const PHONE_MEDIA =
   '(max-width: 768px), (max-height: 500px), (max-width: 1024px) and (pointer: coarse)'
+// A phone held sideways: the open sheet would leave a strip of map a hundred pixels high, so it
+// becomes a full-height panel on the left instead (a subset of PHONE_MEDIA).
+const SHORT_LANDSCAPE_MEDIA = '(max-height: 500px) and (min-aspect-ratio: 3/2)'
+const SIDE_SHEET_WIDTH = 'min(400px, 55vw)'
 const DESKTOP_MEDIA =
   '(min-width: 1025px) and (min-height: 501px), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: fine), ' +
@@ -298,6 +302,25 @@ export function generateViewerHtml(
       body[data-sheet="half"] .panel { height: calc(56 * var(--vph, 1vh)); overflow-y: auto; }
       body[data-sheet="full"] .panel { height: calc(94 * var(--vph, 1vh)); overflow-y: auto; }
       .panel.is-dragging { transition: none; }
+      @media ${SHORT_LANDSCAPE_MEDIA} {
+        html body[data-sheet="half"] .panel,
+        html body[data-sheet="full"] .panel {
+          right: auto; width: ${SIDE_SHEET_WIDTH};
+          height: calc(100 * var(--vph, 1vh));
+          border-radius: 0 16px 0 0;
+          box-shadow: 3px 0 18px rgba(0, 0, 0, 0.18);
+        }
+        /* 'html' prefix: these must beat the later bottom-sheet rules of equal weight.
+           The map beside the panel stays usable: no scrim, controls back at the bottom. */
+        html body[data-sheet="full"] #sheet-scrim { opacity: 0; pointer-events: none; }
+        html body[data-sheet="half"] .maplibregl-ctrl-bottom-right { margin-bottom: 8px; }
+        html body[data-sheet="full"] .maplibregl-ctrl-bottom-right { display: block; margin-bottom: 8px; }
+        html body[data-sheet="half"] #share-fab,
+        html body[data-sheet="full"] #share-fab { display: flex; left: calc(${SIDE_SHEET_WIDTH} + 10px); }
+        html body[data-sheet="half"] #search-fab { display: flex; left: calc(${SIDE_SHEET_WIDTH} + 62px); }
+        html body[data-sheet="full"][data-region-detail] #search-fab { display: flex; left: calc(${SIDE_SHEET_WIDTH} + 62px); }
+        html body[data-sheet="half"]:not([data-region-detail]) #search-fab { display: none; }
+      }
 
       .panel > summary {
         position: sticky; top: 0; z-index: 1;
@@ -810,6 +833,7 @@ export function generateViewerHtml(
     }
     .region-detail-gap--behind .model-breakdown-summary { color: #8a1c11; }
     .region-detail-gap--ahead .model-breakdown-summary { color: #1b5e20; }
+    .model-breakdown-scroll { overflow-x: auto; max-width: 100%; }
     .model-breakdown-table {
       width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 0.75rem;
       font-variant-numeric: tabular-nums;
@@ -979,6 +1003,12 @@ export function generateViewerHtml(
       padding: 4px 9px; cursor: pointer;
     }
     .load-error-retry:hover { background: #fff5f4; }
+    .no-webgl-notice {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      max-width: min(26rem, calc(100% - 32px)); margin: 0; padding: 12px 14px;
+      background: #fff; border: 1px solid #cbd5e1; border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12); color: #1e293b; font-size: 0.875rem; line-height: 1.45;
+    }
     #load-status { color: #555; font-size: 0.8125rem; margin: 0 0 8px; display: none; }
     body.ui-minimal #panel-main, body.ui-minimal #search-fab { display: none !important; }
     .region-nav { margin-bottom: 4px; }
@@ -1131,10 +1161,16 @@ export function generateViewerHtml(
     }
     /* After the base rule above: same specificity, so source order decides. */
     @media ${PHONE_MEDIA} {
+      /* MapLibre's attribution and the scale sit bottom-right at the same height; the legend
+         used to cover the start of the attribution ("…Map contributors"), which the MapTiler
+         and ODbL terms require to be readable. Lift the legend above the attribution row and
+         keep it clear of the scale beside it. */
       .canvas-mini-legend {
         left: 10px;
-        bottom: calc(var(--sheet-peek) + 12px);
+        bottom: calc(var(--sheet-peek) + 40px);
+        max-width: min(240px, calc(100vw - 140px));
       }
+      .maplibregl-ctrl-attrib { font-size: 0.625rem; line-height: 1.4; }
       body[data-sheet="half"] .canvas-mini-legend,
       body[data-sheet="full"] .canvas-mini-legend {
         opacity: 0;
@@ -1594,12 +1630,12 @@ export function generateViewerHtml(
   </button>
   <button type="button" id="exit-neighbor-view" class="exit-neighbor-view" hidden>‹ Ansicht wiederherstellen</button>
   <div id="canvas-mini-legend" class="canvas-mini-legend" aria-hidden="true">
-    <div class="cml-title">Radinfra je km Straße</div>
-    <div class="cml-def" id="cml-def">km Radinfra je 100 km Straße</div>
+    <div class="cml-title">Radinfrastruktur</div>
+    <div class="cml-def" id="cml-def">km je 100 km Straße</div>
     <div class="cml-bar" id="cml-bar"></div>
     <div class="cml-labels">
-      <span id="cml-min">0 %</span>
-      <span id="cml-max">20 %</span>
+      <span id="cml-min">0</span>
+      <span id="cml-max">20</span>
     </div>
   </div>
   <details class="panel" id="panel-main" open>
@@ -1650,7 +1686,7 @@ export function generateViewerHtml(
         <label for="map-metric-select">Karte zeigt</label>
         <select id="map-metric-select">
           <optgroup label="Radinfrastruktur">
-            <option value="bikeShare">Radinfra je km Straße</option>
+            <option value="bikeShare">Radinfra je 100 km Straße</option>
             <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
             <option value="busyFederalCovered">Vielbefahrene Bundesstraßen mit Radweg (%)</option>
           </optgroup>
@@ -1785,7 +1821,7 @@ export function generateViewerHtml(
       <summary>Legende</summary>
       <div class="map-legend">
         <div class="choropleth-legend">
-          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (Radinfra je km Straße)</span>
+          <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (km Radinfra je 100 km Straße)</span>
           <p class="metric-definition" id="metric-definition">
             Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
             <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
@@ -1879,7 +1915,7 @@ export function generateViewerHtml(
   <div id="region-detail" class="region-detail" hidden>
     <button type="button" class="region-detail-close" id="region-detail-close" aria-label="Schließen">×</button>
     <div class="region-detail-header">
-      <h2 id="region-detail-title"></h2>
+      <h2 id="region-detail-title" tabindex="-1"></h2>
     </div>
     <p class="region-detail-meta" id="region-detail-meta"></p>
     <div id="region-detail-actions"></div>
@@ -2515,7 +2551,7 @@ export function generateViewerHtml(
     let lastRankingMinPct = 0;
     let lastRankingMaxPct = 20;
     let rankingMode = 'topflop';
-    const DEFAULT_RANKING_TOP_N = 11;
+    const DEFAULT_RANKING_TOP_N = 10;
     const rankByFeatureId = new Map();
     let selectedFeatureId = null;
     let selectedFeatureOverride = null;
@@ -2791,7 +2827,7 @@ export function generateViewerHtml(
             ' km Radinfrastruktur je Fahrtrichtung (' +
             (pp >= 0 ? '+' : '−') +
             formatUiPct(Math.abs(pp)) +
-            ' Prozentpunkte)') +
+            ' km je 100 km Straße)') +
         ' – neu erfasst oder gebaut, laut OpenStreetMap.';
       regionDetailMeta.appendChild(line);
     }
@@ -3044,12 +3080,12 @@ export function generateViewerHtml(
             name +
             ': ' +
             sign +
-            formatUiPct(modelGapPct) +
-            ' %-Punkte ggü. Erwartung\\n(Tatsächlich: ' +
+            formatShare(modelGapPct) +
+            ' ggü. Erwartung\\n(Tatsächlich: ' +
             formatUiPct(pct) +
-            ' %, Erwartet: ' +
+            ', erwartet: ' +
             formatUiPct(expectedPct) +
-            ' %)';
+            ')';
         } else if (lowRoad) {
           label = name + ': Keine Modellprognose (wenig Straßennetz)';
         } else {
@@ -3105,8 +3141,8 @@ export function generateViewerHtml(
         label =
           name +
           ': ' +
-          (pct != null ? formatUiPct(pct) : '–') +
-          ' %\\n' +
+          (pct != null ? formatShare(pct) + ' Straße' : '–') +
+          '\\n' +
           TildaStats.formatStatKm(bike, TildaStats.STAT_KM_BIKE_UI_DECIMALS) +
           ' km / ' +
           TildaStats.formatStatKm(road, TildaStats.STAT_KM_ROAD_UI_DECIMALS) +
@@ -3190,6 +3226,12 @@ export function generateViewerHtml(
     function formatUiPct(value) {
       return TildaStats.formatStatPctUi(value);
     }
+    // The main metric is km of bike infrastructure per 100 km of road, never "%": a bare
+    // percentage reads as "share of roads with a path", which it is not (both directions of a
+    // road count, and so do paths away from roads). Numerically it is the same number.
+    function formatShare(value) {
+      return formatUiPct(value) + ' km je 100 km';
+    }
 
     const csvEscape = (value) => TildaStats.csvField(value, CSV_SEP);
 
@@ -3215,10 +3257,10 @@ export function generateViewerHtml(
         { key: 'landkreis_id', header: 'Landkreis-ID', numeric: false },
         { key: 'road_km', header: 'Straßen (km)', numeric: 'km' },
         { key: 'bikelane_km', header: 'Radinfra (km)', numeric: 'km' },
-        { key: 'bike_share_pct', header: 'Radinfra-Anteil (%)', numeric: 'pct' },
+        { key: 'bike_share_pct', header: 'Radinfra je 100 km Straße (km)', numeric: 'pct' },
         { key: 'data_quality', header: 'Datenlage', numeric: false },
         { key: 'unclear_share_pct', header: 'Davon unklar getaggt (%)', numeric: 'num1' },
-        { key: 'share_without_unclear_pct', header: 'Radinfra-Anteil ohne unklare Wege (%)', numeric: 'pct' },
+        { key: 'share_without_unclear_pct', header: 'Radinfra je 100 km Straße ohne unklare Wege (km)', numeric: 'pct' },
         { key: 'density', header: 'Einwohner pro km²', numeric: 'num0' },
         { key: 'rent', header: 'Ø Nettokaltmiete (€/m², Zensus 2022)', numeric: 'num2' },
         { key: 'youth', header: 'Kinder & Jugendliche unter 18 (%)', numeric: 'num1' },
@@ -3444,8 +3486,15 @@ export function generateViewerHtml(
      * the same relative position on the bar. Labelling only the two ends left every mid-tone
      * unreadable, which is most of the map.
      */
-    function updateLegendRange(min, max, metric) {
+    /**
+     * range: the scale's data extent. When the colours stop short of it (percentile or manual
+     * cap) the end label says so ("≥ 30,6 %"), or the top regions in the ranking read as data
+     * off the scale.
+     */
+    function updateLegendRange(min, max, metric, range) {
       metric = metric || currentMapMetric || 'bikeShare';
+      const lowCapped = Boolean(range && Number.isFinite(range.dataMin) && range.dataMin < min - 1e-9);
+      const highCapped = Boolean(range && Number.isFinite(range.dataMax) && range.dataMax > max + 1e-9);
       const labels = document.getElementById('legend-labels');
       const ticks = document.getElementById('legend-ticks');
       const cmlMin = document.getElementById('cml-min');
@@ -3462,10 +3511,14 @@ export function generateViewerHtml(
         else if (metric === 'rent') cmlTitle.textContent = 'Ø Nettokaltmiete';
         else if (metric === 'accidents') cmlTitle.textContent = 'Fahrradunfälle je 10.000 Einw.';
         else if (metric === 'commuters') cmlTitle.textContent = 'Pendlersaldo';
-        else cmlTitle.textContent = 'Radinfra je km Straße';
+        else cmlTitle.textContent = 'Radinfrastruktur';
       }
       const cmlDef = document.getElementById('cml-def');
-      if (cmlDef) cmlDef.hidden = metric !== 'bikeShare';
+      if (cmlDef) {
+        // The scale's numbers carry no unit; this line says what they count.
+        cmlDef.hidden = metric !== 'bikeShare' && metric !== 'modelGap';
+        cmlDef.textContent = metric === 'modelGap' ? 'Differenz, km je 100 km Straße' : 'km je 100 km Straße';
+      }
 
       if (choroplethTitle) {
         if (simple) choroplethTitle.textContent = 'Flächenfarbe (' + simple.title + ')';
@@ -3474,7 +3527,7 @@ export function generateViewerHtml(
         else if (metric === 'rent') choroplethTitle.textContent = 'Flächenfarbe (Ø Nettokaltmiete)';
         else if (metric === 'accidents') choroplethTitle.textContent = 'Flächenfarbe (Fahrradunfälle / 10.000 Einw.)';
         else if (metric === 'commuters') choroplethTitle.textContent = 'Flächenfarbe (Pendlersaldo)';
-        else choroplethTitle.textContent = 'Flächenfarbe (Radinfra je km Straße)';
+        else choroplethTitle.textContent = 'Flächenfarbe (km Radinfra je 100 km Straße)';
       }
 
       if (metricDef) {
@@ -3485,10 +3538,10 @@ export function generateViewerHtml(
             'Differenz tatsächlicher Ausbau minus struktureller Erwartungswert. ' +
             '<strong>Grün</strong> = darüber, <strong>Rot</strong> = darunter. ' +
             'Blasse Töne liegen innerhalb der typischen Abweichung auf dieser Ebene (±' +
-            formatUiPct(lastModelBandPct) +
-            ' %-Punkte), volle Farbe erst jenseits der doppelten (±' +
-            formatUiPct(2 * lastModelBandPct) +
-            ' %-Punkte, etwa die äußersten 5 %). Landkreise und Bezirke: Summe ihrer Gemeinden; für Länder kein Wert. ' +
+            formatShare(lastModelBandPct) +
+            '), volle Farbe erst jenseits der doppelten (±' +
+            formatShare(2 * lastModelBandPct) +
+            ', etwa die äußersten 5 %). Landkreise und Bezirke: Summe ihrer Gemeinden; für Länder kein Wert. ' +
             '<strong>Grau</strong> = kein Wert.';
         } else if (metric === 'cars') {
           metricDef.textContent =
@@ -3516,21 +3569,23 @@ export function generateViewerHtml(
       const simpleTick = (v) => simple.tick(simple.log ? Math.pow(10, v) : v);
       if (cmlMin) {
         if (simple) cmlMin.textContent = simpleTick(min);
-        else if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min) + ' %';
+        else if (metric === 'modelGap') cmlMin.textContent = (min > 0 ? '+' : '') + formatUiPct(min);
         else if (metric === 'cars') cmlMin.textContent = deNumber(Math.round(min), 0);
         else if (metric === 'rent') cmlMin.textContent = deNumber(min, 1) + ' €';
         else if (metric === 'accidents') cmlMin.textContent = deNumber(min, 1);
         else if (metric === 'commuters') cmlMin.textContent = (min > 0 ? '+' : '') + deNumber(Math.round(min), 0);
-        else cmlMin.textContent = formatUiPct(min) + ' %';
+        else cmlMin.textContent = formatUiPct(min);
+        if (lowCapped) cmlMin.textContent = '≤ ' + cmlMin.textContent;
       }
       if (cmlMax) {
         if (simple) cmlMax.textContent = simpleTick(max) + simple.unit;
-        else if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max) + ' %';
+        else if (metric === 'modelGap') cmlMax.textContent = (max > 0 ? '+' : '') + formatUiPct(max);
         else if (metric === 'cars') cmlMax.textContent = deNumber(Math.round(max), 0) + ' Pkw';
         else if (metric === 'rent') cmlMax.textContent = deNumber(max, 1) + ' €/m²';
         else if (metric === 'accidents') cmlMax.textContent = deNumber(max, 1);
         else if (metric === 'commuters') cmlMax.textContent = (max > 0 ? '+' : '') + deNumber(Math.round(max), 0);
-        else cmlMax.textContent = formatUiPct(max) + ' %';
+        else cmlMax.textContent = formatUiPct(max);
+        if (highCapped) cmlMax.textContent = '≥ ' + cmlMax.textContent;
       }
 
       if (!labels) return;
@@ -3546,7 +3601,7 @@ export function generateViewerHtml(
         if (simple) {
           text = simpleTick(val) + (i === count - 1 ? simple.unit : '');
         } else if (metric === 'modelGap') {
-          text = (val > 0 ? '+' : '') + formatUiPct(val) + (i === count - 1 ? ' %' : '');
+          text = (val > 0 ? '+' : '') + formatUiPct(val);
         } else if (metric === 'cars') {
           text = deNumber(Math.round(val), 0) + (i === count - 1 ? ' Pkw' : '');
         } else if (metric === 'rent') {
@@ -3556,8 +3611,10 @@ export function generateViewerHtml(
         } else if (metric === 'commuters') {
           text = (val > 0 ? '+' : '') + deNumber(Math.round(val), 0);
         } else {
-          text = formatUiPct(val) + (i === count - 1 ? ' %' : '');
+          text = formatUiPct(val);
         }
+        if (i === 0 && lowCapped) text = '≤ ' + text;
+        if (i === count - 1 && highCapped) text = '≥ ' + text;
         el.textContent = text;
         if (i === 0) {
           el.className = 'legend-label--start';
@@ -3585,10 +3642,10 @@ export function generateViewerHtml(
       const details = [];
       if (range.scaleCapped) {
         const robust = range.robustApplied && !getScaleCapSettings().enabled;
-        const endPct = robust ? formatUiPct(range.max) : String(range.capPct);
-        metaText += ' · höhere Werte als ' + endPct + ' % gleich gefärbt';
+        const endPct = robust ? formatUiPct(range.max) : formatUiPct(range.capPct);
+        metaText += ' · Werte über ' + endPct + ' gleich gefärbt';
         if (range.dataMax > range.max || !robust) {
-          details.push('Höchster Wert: ' + formatUiPct(range.dataMax) + ' %');
+          details.push('Höchster Wert: ' + formatShare(range.dataMax));
         }
         if (robust && range.outlierCount > 0) {
           details.push(
@@ -3622,7 +3679,7 @@ export function generateViewerHtml(
         return;
       }
       el.textContent =
-        'Bundesweit: ' + formatUiPct(p.bikeSharePct) + ' % Radinfrastruktur im Verhältnis zum Straßennetz';
+        'Bundesweit: ' + formatShare(p.bikeSharePct) + ' Straße';
       el.hidden = false;
     }
 
@@ -3633,7 +3690,7 @@ export function generateViewerHtml(
       const activeRange = colorScaleRangeForMetric(currentMapMetric, filtered);
       const { min, max } = activeRange;
       lastPctRange = { min, max, scaleCapped: activeRange.scaleCapped, dataMax: activeRange.dataMax };
-      updateLegendRange(min, max, currentMapMetric);
+      updateLegendRange(min, max, currentMapMetric, activeRange);
       lastRankingFeatures = filtered;
       updateRanking(filtered, activeRange.min, activeRange.max);
       updateViewMetaText(filtered, activeRange);
@@ -4037,7 +4094,9 @@ export function generateViewerHtml(
         const selectedLi = selectedFeatureId
           ? list.querySelector('li[data-ranking-id="' + selectedFeatureId + '"]')
           : null;
-        if (selectedLi) selectedLi.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        // Instant, not smooth: a ranking rebuild right after the selection restores the panel's
+        // scrollTop and would cancel a scroll that is still animating.
+        if (selectedLi) selectedLi.scrollIntoView({ block: 'nearest' });
       }
     }
 
@@ -4269,8 +4328,8 @@ export function generateViewerHtml(
           label +
           ', ' +
           (val > 0 ? '+' : '') +
-          formatUiPct(val) +
-          ' Prozentpunkte Modell-Abweichung'
+          formatShare(val) +
+          ' Modell-Abweichung'
         );
       }
       if (metric === 'cars') {
@@ -4302,18 +4361,18 @@ export function generateViewerHtml(
           ' Pendlersaldo'
         );
       }
-      return 'Platz ' + rank + ', ' + label + ', ' + formatUiPct(val) + ' Prozent Radinfrastruktur';
+      return 'Platz ' + rank + ', ' + label + ', ' + formatShare(val) + ' Straße Radinfrastruktur';
     }
 
     function rankingSummaryMetricLabel(metric) {
       metric = metric || currentMapMetric || 'bikeShare';
       if (simpleMapMetric(metric)) return simpleMapMetric(metric).summaryLabel;
-      if (metric === 'modelGap') return 'Modell-Abweichung in dieser Ansicht';
+      if (metric === 'modelGap') return 'Modell-Abweichung in km je 100 km Straße';
       if (metric === 'cars') return 'Pkw je 1.000 EW in dieser Ansicht';
       if (metric === 'rent') return 'Nettokaltmiete in dieser Ansicht';
       if (metric === 'accidents') return 'Radunfälle je 10.000 EW in dieser Ansicht';
       if (metric === 'commuters') return 'Pendlersaldo in dieser Ansicht';
-      return 'Anteil in dieser Ansicht';
+      return 'km Radinfra je 100 km Straße';
     }
 
     function rankingMetricRankLabel(metric) {
@@ -5491,7 +5550,7 @@ export function generateViewerHtml(
       const table = document.createElement('table');
       table.className = 'ra-table';
       const head = table.insertRow();
-      for (const text of ['Baulastträger', 'Straße', 'mit Radinfra']) {
+      for (const text of ['Baulastträger', 'Straße', 'Radinfra je 100 km']) {
         const th = document.createElement('th');
         th.textContent = text;
         head.appendChild(th);
@@ -5502,7 +5561,7 @@ export function generateViewerHtml(
         const tr = table.insertRow();
         tr.insertCell().textContent = TildaStats.ROAD_AUTHORITY_LABELS[row.authority];
         tr.insertCell().textContent = km(row.roadKm, TildaStats.STAT_KM_ROAD_UI_DECIMALS) + ' km';
-        tr.insertCell().textContent = formatUiPct(row.pct) + ' %';
+        tr.insertCell().textContent = formatUiPct(row.pct) + ' km';
       }
       const note = document.createElement('p');
       note.className = 'ra-note';
@@ -5574,11 +5633,11 @@ export function generateViewerHtml(
         if (counted && p.roadSumKm > 0) {
           const conservative = ((p.bikelaneSumKm - q.unclearKm) / p.roadSumKm) * 100;
           text +=
-            ' Ohne diese Wege läge der Anteil bei ' +
-            formatUiPct(Math.max(0, conservative)) +
-            ' % statt ' +
+            ' Ohne diese Wege läge der Wert bei ' +
+            formatShare(Math.max(0, conservative)) +
+            ' Straße statt ' +
             formatUiPct(p.bikeSharePct) +
-            ' %.';
+            '.';
         }
       }
       regionDetailQuality.append(head, document.createTextNode(text));
@@ -5612,8 +5671,7 @@ export function generateViewerHtml(
       headline.textContent =
         (rankInfo ? 'Platz ' + rankInfo.rank + ' von ' + rankInfo.total + ' · ' : '') +
         'Median ' +
-        formatUiPct(g.medianPct) +
-        ' %';
+        formatShare(g.medianPct);
       regionDetailGap.appendChild(headline);
       if (g.behind) {
         appendGapText(
@@ -5630,7 +5688,7 @@ export function generateViewerHtml(
       if (g.leaderName && g.leaderPct > g.medianPct + 0.05) {
         regionDetailGap.appendChild(
           document.createTextNode(
-            ' Spitze: ' + g.leaderName + ' mit ' + formatUiPct(g.leaderPct) + ' %.',
+            ' Spitze: ' + g.leaderName + ' mit ' + formatShare(g.leaderPct) + '.',
           ),
         );
       }
@@ -5762,8 +5820,8 @@ export function generateViewerHtml(
             : s.atMedian
               ? ' Im Median der Gruppe ('
               : ' Über dem Median der Gruppe (') +
-            formatUiPct(s.medianPct) +
-            (s.behind ? ' %.' : ' %).'),
+            formatShare(s.medianPct) +
+            (s.behind ? '.' : ').'),
         ),
       );
       if (s.roleModel) {
@@ -5781,8 +5839,8 @@ export function generateViewerHtml(
           ' (' +
             Math.max(1, Math.round(s.roleModel.km)) +
             ' km entfernt, gleiche Vergleichsgruppe): ' +
-            formatUiPct(s.roleModel.pct) +
-            ' %.',
+            formatShare(s.roleModel.pct) +
+            '.',
         );
         regionDetailPeerGap.appendChild(line);
       }
@@ -5830,8 +5888,7 @@ export function generateViewerHtml(
       headline.className = 'region-detail-gap-headline';
       headline.textContent =
         'Erwartet: ' +
-        formatUiPct(m.expectedPct) +
-        ' %' +
+        formatShare(m.expectedPct) +
         (aggregated
           ? ' · aus den erwarteten Kilometern von ' + deNumber(m.gemeindeCount, 0) + ' Gemeinden'
           : '');
@@ -5850,9 +5907,9 @@ export function generateViewerHtml(
       statusText.className = 'model-status';
       // Only percentage points here: the one missing-km figure on the card is the gap to the
       // median above; a second and third km figure from the model was quoted interchangeably.
-      const diffPctStr = formatUiPct(Math.abs(m.diffPct)) + ' %-Punkte';
-      const bandStr = bandLabel + formatUiPct(m.residualStdErrorPct) + ' %-Punkte';
-      const actualStr = 'Tatsächlich ' + formatUiPct(m.actualPct) + ' % · ';
+      const diffPctStr = formatShare(Math.abs(m.diffPct));
+      const bandStr = bandLabel + formatShare(m.residualStdErrorPct);
+      const actualStr = 'Tatsächlich ' + formatShare(m.actualPct) + ' · ';
 
       if (m.isWithin1Se) {
         const sign = m.diffPct > 0 ? '+' : '';
@@ -5860,8 +5917,8 @@ export function generateViewerHtml(
           actualStr +
           'im üblichen Bereich (' +
           sign +
-          formatUiPct(m.diffPct) +
-          ' %-Punkte; ' +
+          formatShare(m.diffPct) +
+          '; ' +
           bandStr +
           ').';
       } else {
@@ -5879,7 +5936,7 @@ export function generateViewerHtml(
         const clampNote = document.createElement('span');
         clampNote.className = 'model-breakdown-note';
         clampNote.textContent =
-          'Das Modell ergibt hier rechnerisch weniger als 0 %; als Erwartung gilt 0 %. ' +
+          'Das Modell ergibt hier rechnerisch weniger als 0 km je 100 km; als Erwartung gilt 0. ' +
           'Die Abweichung ist deshalb eine Untergrenze.';
         regionDetailModelGap.appendChild(clampNote);
       }
@@ -5908,10 +5965,10 @@ export function generateViewerHtml(
       const table = document.createElement('table');
       table.className = 'model-breakdown-table';
       table.innerHTML =
-        '<thead><tr><th>Faktor</th><th>Beitrag</th><th>Messwert</th></tr></thead>';
+        '<thead><tr><th>Faktor</th><th>Beitrag je 100 km Straße</th><th>Messwert</th></tr></thead>';
       const tbody = document.createElement('tbody');
 
-      const formatDelta = (d) => (d > 0 ? '+' : '') + formatUiPct(d) + ' %-Pkt.';
+      const formatDelta = (d) => (d > 0 ? '+' : '') + formatUiPct(d) + ' km';
 
       const addRow = (label, note, delta, measVal, rowClass) => {
         const tr = document.createElement('tr');
@@ -5945,11 +6002,11 @@ export function generateViewerHtml(
         RankingDisplay.factorEffectIsClear(delta, m.factorSe?.[key]) ? null : 'model-row-unclear';
       const factorNote = (key, text) => {
         const se = m.factorSe?.[key];
-        const band = typeof se === 'number' && se >= 0.05 ? '±' + formatUiPct(se) + ' %-Pkt. Unsicherheit' : null;
+        const band = typeof se === 'number' && se >= 0.05 ? '±' + formatUiPct(se) + ' km Unsicherheit' : null;
         return [text, band].filter(Boolean).join(' · ') || null;
       };
 
-      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gemeinden (nach Netzlänge gewichtet)', formatUiPct(m.baselinePct) + ' %', '');
+      addRow('Bundesweiter Basiswert', 'Durchschnitt aller Gemeinden (nach Netzlänge gewichtet)', formatUiPct(m.baselinePct) + ' km', '');
 
       if (m.deltaLand != null && Math.abs(m.deltaLand) >= 0.01) {
         const landName = p.bundesland_id ? regionIndex?.byId.get(p.bundesland_id)?.properties?.name : null;
@@ -6044,7 +6101,7 @@ export function generateViewerHtml(
       addRow(
         'Struktureller Erwartungswert',
         'Summe der Zeilen darüber',
-        formatUiPct(m.expectedPct) + ' %',
+        formatUiPct(m.expectedPct) + ' km',
         '',
         'model-row-total',
       );
@@ -6052,7 +6109,7 @@ export function generateViewerHtml(
       addRow(
         'Tatsächlicher Radinfra-Ausbau',
         'Laut OpenStreetMap-Erfassung',
-        formatUiPct(m.actualPct) + ' %',
+        formatUiPct(m.actualPct) + ' km',
         deNumber(m.actualKm, m.actualKm < 10 ? 1 : 0) + ' km',
         'model-row-actual',
       );
@@ -6070,7 +6127,11 @@ export function generateViewerHtml(
       );
 
       table.appendChild(tbody);
-      details.appendChild(table);
+      // Large text sizes make the three columns wider than a phone; scroll the table, not the page.
+      const tableScroll = document.createElement('div');
+      tableScroll.className = 'model-breakdown-scroll';
+      tableScroll.appendChild(table);
+      details.appendChild(tableScroll);
 
       const note = document.createElement('p');
       note.className = 'model-breakdown-note';
@@ -6829,7 +6890,7 @@ export function generateViewerHtml(
           regionDetailExtra.appendChild(caption);
           const hint = document.createElement('p');
           hint.className = 'ctx-hint';
-          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit dem Radinfra je km Straße aller Vergleichsgebiete';
+          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit der Radinfra je 100 km Straße aller Vergleichsgebiete';
           regionDetailExtra.appendChild(hint);
         }
         // A heading before the first row of each group that has a value here.
@@ -7025,7 +7086,7 @@ export function generateViewerHtml(
       strong.textContent = metric.label;
       title.append(
         strong,
-        ' und Radinfra je km Straße · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
+        ' und Radinfra je 100 km Straße · ' + deNumber(n, 0) + ' Gebiete · Korrelation r = ' + deNumber(r, 2),
       );
       const chart = document.createElement('div');
       chart.className = 'ctx-plot-chart';
@@ -7095,7 +7156,7 @@ export function generateViewerHtml(
       for (const t of yTicks) {
         const y = scaleY(t);
         svg.appendChild(el('line', { x1: m.left, x2: m.left + plotW, y1: y, y2: y, class: 'grid' }));
-        svg.appendChild(el('text', { x: m.left - 4, y: y + 3, 'text-anchor': 'end' }, tickLabel(t, yTicks) + ' %'));
+        svg.appendChild(el('text', { x: m.left - 4, y: y + 3, 'text-anchor': 'end' }, tickLabel(t, yTicks)));
       }
       svg.appendChild(
         el(
@@ -7104,7 +7165,7 @@ export function generateViewerHtml(
           metric.label + (xUnit ? ' (' + xUnit + ')' : ''),
         ),
       );
-      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra je km Straße'));
+      svg.appendChild(el('text', { x: 0, y: 10, class: 'axis-title' }, 'Radinfra, km je 100 km Straße'));
 
       let selected = null;
       // Scale dot opacity inversely with point density so dense areas don't collapse into a
@@ -7126,7 +7187,7 @@ export function generateViewerHtml(
         }
         const pt = el('circle', { cx: scaleX(e.v), cy: scaleY(e.bikeSharePct), r: 2 });
         pt.appendChild(
-          el('title', {}, e.name + '\\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\\nAnteil: ' + formatUiPct(e.bikeSharePct) + ' %'),
+          el('title', {}, e.name + '\\n' + metric.label + ': ' + metric.format(e.v, e.id) + '\\nRadinfra: ' + formatShare(e.bikeSharePct)),
         );
         dots.appendChild(pt);
       }
@@ -7182,7 +7243,7 @@ export function generateViewerHtml(
           el(
             'text',
             { x: sx + (onRight ? 8 : -8), y: sy - 7, 'text-anchor': onRight ? 'start' : 'end', class: 'selected-label' },
-            selected.name + ' (' + formatUiPct(selected.bikeSharePct) + ' %)',
+            selected.name + ' (' + formatUiPct(selected.bikeSharePct) + ')',
           ),
         );
       }
@@ -7240,7 +7301,7 @@ export function generateViewerHtml(
             : 'Kein Rang (ohne Daten in dieser Ansicht)';
       const rankLine =
         currentMapMetric === 'bikeShare' && p.lowRoad && p.roadSumKm > 0
-          ? 'Kein Rang (weniger als 5 km Straße – der Prozentwert ist hier nicht aussagekräftig)'
+          ? 'Kein Rang (weniger als 5 km Straße – der Wert ist hier nicht aussagekräftig)'
           : rankInfo && regionGapSummary(p)
             ? '' // the view callout below carries the rank
             : rankText;
@@ -7273,8 +7334,8 @@ export function generateViewerHtml(
         const line = document.createElement('span');
         line.className = 'region-detail-main-road';
         const strong = document.createElement('strong');
-        strong.textContent = formatUiPct(mainRoads.pct) + ' %';
-        line.append('Hauptverkehrsstraßen: ', strong, ' mit Radinfrastruktur (je Fahrtrichtung)');
+        strong.textContent = formatUiPct(mainRoads.pct) + ' km';
+        line.append('Hauptverkehrsstraßen: ', strong, ' Radinfrastruktur je 100 km (je Fahrtrichtung)');
         regionDetailMeta.appendChild(line);
       }
       renderRegionHistory(p);
@@ -7416,18 +7477,33 @@ export function generateViewerHtml(
       updateMapHighlights();
       if (previousId !== id) rebuildRankingForFocus();
       if (id) probeSharePreviewPage(id);
-      syncRankingRowHighlights();
+      // Desktop: a region picked on the map or in the search may be far down the list; bring
+      // its row into view ('nearest' leaves an already visible row, e.g. the one clicked, alone).
+      // Not on the phone, where the card sits at the top of the same scrolling sheet.
+      syncRankingRowHighlights({ scrollIntoView: Boolean(id) && !sheetEnabled() });
       updatePanelSummaryPreview();
       syncExportDialogState();
       // A selection is a step the Back button should be able to undo.
       scheduleUrlSync(implicitSelectionClear ? undefined : 'push');
     }
 
+    const shortLandscapeMq = window.matchMedia('${SHORT_LANDSCAPE_MEDIA}');
+    /** Phone held sideways with the sheet open: it is a full-height panel on the left. */
+    function sheetIsSidePanel() {
+      if (typeof sheetEnabled !== 'function' || !sheetEnabled()) return false;
+      const st = typeof sheetState === 'function' ? sheetState() : 'peek';
+      return st !== 'peek' && shortLandscapeMq.matches;
+    }
+    /** Pixels of the map hidden on the left by the sideways sheet (0 otherwise). */
+    function mapLeftInset() {
+      if (!sheetIsSidePanel()) return 0;
+      return Math.round(Math.min(400, window.innerWidth * 0.55));
+    }
     /** Pixels of the map hidden by the bottom sheet at its target state (0 on desktop / full). */
     function mapBottomInset() {
       if (typeof sheetEnabled !== 'function' || !sheetEnabled()) return 0;
       const st = typeof sheetState === 'function' ? sheetState() : 'peek';
-      if (st === 'full') return 0;
+      if (st === 'full' || sheetIsSidePanel()) return 0;
       const vph =
         parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--vph')) ||
         window.innerHeight / 100;
@@ -7527,6 +7603,7 @@ export function generateViewerHtml(
       let targetPadding = { top: 0, right: 0, bottom: 0, left: 0 };
       if (isMobile) {
         targetPadding.bottom = mapBottomInset();
+        targetPadding.left = mapLeftInset();
       } else {
         const desk = desktopMapPadding();
         if (desk) targetPadding = desk;
@@ -7539,9 +7616,20 @@ export function generateViewerHtml(
         Math.abs((currentPadding.left || 0) - targetPadding.left) >= 2 ||
         Math.abs((currentPadding.right || 0) - targetPadding.right) >= 2;
 
-      if (paddingChanged) map.setPadding(targetPadding);
-
       const shouldAnimate = Boolean(animate) && !prefersReducedMotion();
+      // Desktop, nothing selected (the card just closed): keep the map where it is on screen.
+      // Changing only the padding moves its centre, so the map jumped sideways by half the
+      // card's width; aim the camera at the point that is already in the new free centre.
+      if (paddingChanged && !selected && !isMobile && typeof map.unproject === 'function') {
+        const box = map.getContainer();
+        const center = map.unproject([
+          (targetPadding.left + box.clientWidth - targetPadding.right) / 2,
+          (targetPadding.top + box.clientHeight - targetPadding.bottom) / 2,
+        ]);
+        map.jumpTo({ center, padding: targetPadding });
+        return;
+      }
+      if (paddingChanged) map.setPadding(targetPadding);
 
       if (selected) {
         // The padding above may just have moved the free part of the map (card or sheet opened).
@@ -7692,8 +7780,18 @@ export function generateViewerHtml(
         }
         const hits = map.queryRenderedFeatures(e.point, { layers: ['regions-fill'] });
         const f = hits[0];
-        if (f?.properties?.id) selectRegionById(f.properties.id, f);
-        else clearRegionSelection();
+        const id = f?.properties?.id;
+        if (!id) {
+          clearRegionSelection();
+          return;
+        }
+        // A click into the region that is already selected keeps it (selectRegionById would
+        // toggle it off); on the phone it brings the lowered card back up.
+        if (selectedFeatureId && (selectedFeatureId === id || selectionHighlightIds().includes(id))) {
+          if (sheetEnabled() && sheetState() === 'peek') setSheetState('half');
+          return;
+        }
+        selectRegionById(id, f);
       });
       // Double-click goes one level deeper — the map twin of the breadcrumb — for regions that
       // have sub-areas. Anywhere else it still zooms in, which is what the map's own
@@ -7879,7 +7977,150 @@ export function generateViewerHtml(
 
     // ==== The map ====
 
-    const map = new maplibregl.Map({
+    // Without WebGL (hardware acceleration off, some VMs and remote desktops) MapLibre throws in
+    // its constructor, and the whole page used to die with "Bitte neu laden", which never helps.
+    // The search, ranking and region card don't need the map, so they run against a stand-in
+    // that draws nothing, and the map area says what is actually missing.
+    function browserHasWebGl() {
+      try {
+        const probe = document.createElement('canvas');
+        return Boolean(probe.getContext('webgl2') || probe.getContext('webgl'));
+      } catch {
+        return false;
+      }
+    }
+    function createHeadlessMap(options) {
+      const handlers = {};
+      const sources = new Map();
+      const layers = new Map();
+      let padding = { top: 0, right: 0, bottom: 0, left: 0 };
+      let center = { lng: options.center[0], lat: options.center[1] };
+      let zoom = options.zoom;
+      const container = document.getElementById(options.container);
+      const canvas = document.createElement('canvas');
+      const handler = () => ({ enable() {}, disable() {}, isEnabled: () => false });
+      const fire = (type) => {
+        for (const h of (handlers[type] || []).slice()) {
+          try {
+            h({ type, target: headless });
+          } catch (err) {
+            console.error('[radinfra-viewer]', err);
+          }
+        }
+      };
+      const lngLat = () => ({ lng: center.lng, lat: center.lat, toArray: () => [center.lng, center.lat] });
+      const base = {
+        on(type, a, b) {
+          (handlers[type] ||= []).push(b || a);
+          return headless;
+        },
+        once(type, a, b) {
+          const f = b || a;
+          const wrapped = (...args) => {
+            base.off(type, wrapped);
+            f(...args);
+          };
+          return base.on(type, wrapped);
+        },
+        off(type, f) {
+          handlers[type] = (handlers[type] || []).filter((h) => h !== f);
+          return headless;
+        },
+        isStyleLoaded: () => true,
+        loaded: () => true,
+        areTilesLoaded: () => true,
+        getSource: (id) => sources.get(id),
+        addSource(id, src) {
+          sources.set(id, { ...src, setData() {}, getData: async () => src.data });
+        },
+        removeSource: (id) => void sources.delete(id),
+        getLayer: (id) => layers.get(id),
+        addLayer: (layer) => void layers.set(layer.id, layer),
+        removeLayer: (id) => void layers.delete(id),
+        getStyle: () => ({ layers: [...layers.values()], sources: {} }),
+        getCanvas: () => canvas,
+        getCanvasContainer: () => container,
+        getContainer: () => container,
+        getCenter: lngLat,
+        getZoom: () => zoom,
+        getBearing: () => 0,
+        getPitch: () => 0,
+        getMinZoom: () => 0,
+        getMaxZoom: () => 22,
+        getPadding: () => padding,
+        setPadding(p) {
+          padding = { ...padding, ...p };
+          return headless;
+        },
+        getBounds: () => ({
+          getWest: () => 5.8,
+          getEast: () => 15.1,
+          getSouth: () => 47.2,
+          getNorth: () => 55.1,
+          toArray: () => [[5.8, 47.2], [15.1, 55.1]],
+          contains: () => true,
+        }),
+        fitBounds(b) {
+          center = { lng: (b[0][0] + b[1][0]) / 2, lat: (b[0][1] + b[1][1]) / 2 };
+          setTimeout(() => fire('moveend'), 0);
+          return headless;
+        },
+        jumpTo(o) {
+          if (o?.center) center = o.center.lng != null ? { ...o.center } : { lng: o.center[0], lat: o.center[1] };
+          if (o?.zoom != null) zoom = o.zoom;
+          return headless;
+        },
+        project: () => ({ x: 0, y: 0 }),
+        unproject: lngLat,
+        queryRenderedFeatures: () => [],
+        querySourceFeatures: () => [],
+        cameraForBounds: () => ({ center: [center.lng, center.lat], zoom }),
+        hasImage: () => false,
+        setStyle() {
+          setTimeout(() => {
+            fire('style.load');
+            fire('idle');
+          }, 0);
+          return headless;
+        },
+        triggerRepaint() {
+          setTimeout(() => fire('idle'), 0);
+        },
+        scrollZoom: handler(),
+        boxZoom: handler(),
+        dragRotate: handler(),
+        dragPan: handler(),
+        keyboard: handler(),
+        doubleClickZoom: handler(),
+        touchZoomRotate: handler(),
+        touchPitch: handler(),
+        cooperativeGestures: handler(),
+      };
+      // Everything else (easeTo, addControl, setFilter, setPaintProperty, …) is a no-op.
+      const headless = new Proxy(base, {
+        get: (target, key) => (key in target ? target[key] : () => headless),
+      });
+      setTimeout(() => {
+        fire('style.load');
+        fire('load');
+        fire('idle');
+      }, 0);
+      return headless;
+    }
+    function showNoWebGlNotice() {
+      document.body.dataset.noWebgl = '';
+      const mapEl = document.getElementById('map');
+      if (!mapEl) return;
+      const note = document.createElement('p');
+      note.className = 'no-webgl-notice';
+      note.setAttribute('role', 'status');
+      note.textContent =
+        'Die Karte braucht WebGL (Hardwarebeschleunigung), das dieser Browser gerade nicht bereitstellt. ' +
+        'Suche, Rangliste und Gebietsdaten funktionieren trotzdem. Abhilfe: Hardwarebeschleunigung in den ' +
+        'Browser-Einstellungen einschalten oder einen anderen Browser verwenden.';
+      mapEl.appendChild(note);
+    }
+    const mapOptions = {
       container: 'map',
       style: CONFIG.basemapStyles[CONFIG.basemap],
       center: initialMapPos ? initialMapPos.center : [11.5, 48.9],
@@ -7896,7 +8137,19 @@ export function generateViewerHtml(
         'ScaleControl.Meters': 'm',
         'ScaleControl.Kilometers': 'km',
       },
-    });
+    };
+    let map;
+    if (browserHasWebGl()) {
+      try {
+        map = new maplibregl.Map(mapOptions);
+      } catch (err) {
+        console.error('[radinfra-viewer] map unavailable', err);
+      }
+    }
+    if (!map) {
+      map = createHeadlessMap(mapOptions);
+      showNoWebGlNotice();
+    }
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.addControl(
       new maplibregl.ScaleControl({ maxWidth: 100, unit: 'metric' }),
@@ -7915,7 +8168,7 @@ export function generateViewerHtml(
           const name = p.name || p.id || '';
           const pct =
             typeof p.bikeSharePct === 'number' && p.roadSumKm > 0
-              ? formatUiPct(p.bikeSharePct) + ' %'
+              ? formatShare(p.bikeSharePct)
               : '';
           if (name && pct) {
             panelSummaryPreview.textContent = name + ' · ' + pct;
@@ -8063,6 +8316,7 @@ export function generateViewerHtml(
         // always on screen (at least at peek height), so without this the view's southern
         // edge can render behind it and become untappable.
         const inset = mapBottomInset();
+        const leftInset = mapLeftInset();
         const have = respectMapPadding && map.getPadding ? map.getPadding() : null;
         const top = (n) => Math.max(0, n - ((have && have.top) || 0));
         map.fitBounds([[bbox[0], bbox[1]], [bbox[2], bbox[3]]], {
@@ -8070,7 +8324,7 @@ export function generateViewerHtml(
             top: top(48),
             right: Math.max(0, 48 - ((have && have.right) || 0)),
             bottom: Math.max(0, 48 + inset - ((have && have.bottom) || 0)),
-            left: Math.max(0, 48 - ((have && have.left) || 0)),
+            left: Math.max(0, 48 + leftInset - ((have && have.left) || 0)),
           },
           duration: 0,
         });
@@ -8620,6 +8874,11 @@ export function generateViewerHtml(
       });
 
       panelMobileMq.addEventListener('change', applyPanelViewportMode);
+      // Turning the phone moves the open sheet between the bottom and the left side.
+      shortLandscapeMq.addEventListener('change', () => {
+        notifyMapResize();
+        syncMapViewport(false);
+      });
       applyPanelViewportMode();
 
       panelMain.addEventListener('dblclick', (event) => {
@@ -9025,7 +9284,7 @@ export function generateViewerHtml(
 
     let copyViewLinkFeedbackTimer = null;
 
-    function showCopyViewLinkFeedback(message, isError) {
+    function showCopyViewLinkFeedback(message, isError, durationMs) {
       if (copyViewLinkFeedback) {
         copyViewLinkFeedback.textContent = message;
         copyViewLinkFeedback.hidden = false;
@@ -9046,7 +9305,39 @@ export function generateViewerHtml(
           exportDialogFeedback.hidden = true;
           exportDialogFeedback.classList.remove('is-error');
         }
-      }, 2500);
+      }, durationMs || 2500);
+    }
+
+    /**
+     * A shared link whose gebiet, darstellung or region doesn't exist (a typo, an id from an
+     * older data version) used to fall back to Deutschland silently and keep the bad parameters
+     * in the address bar, so the broken link got passed on. Say so, and clean the address.
+     */
+    function reportInvalidUrlParams() {
+      const params = urlParams();
+      if (params.get('focus')) return;
+      const invalid = [];
+      const gebiet = params.get('gebiet');
+      if (gebiet && RegionNav.parseGebietParam(gebiet, regionIndex) !== decodeURIComponent(gebiet)) {
+        invalid.push('Gebiet');
+      }
+      const untergebiet = params.get('untergebiet');
+      if (untergebiet && currentViewScope.untergebiet !== decodeURIComponent(untergebiet)) {
+        invalid.push('Untergebiet');
+      }
+      const darstellung = params.get('darstellung');
+      if (darstellung && currentViewScope.darstellung !== decodeURIComponent(darstellung)) {
+        invalid.push('Darstellung');
+      }
+      const region = params.get('region');
+      if (region && selectedFeatureId !== region) invalid.push('Region');
+      if (!invalid.length) return;
+      showCopyViewLinkFeedback(
+        'Der Link enthält Unbekanntes (' + invalid.join(', ') + '). Gezeigt wird die Ansicht ohne diese Angabe.',
+        true,
+        6000,
+      );
+      history.replaceState(null, '', currentStateUrl());
     }
 
     function copyTextFallback(text) {
@@ -9957,7 +10248,7 @@ export function generateViewerHtml(
       lastBikeShareRange = bikeRange;
       const activeRange = colorScaleRangeForMetric(currentMapMetric, filtered);
       const { min, max } = activeRange;
-      updateLegendRange(min, max, currentMapMetric);
+      updateLegendRange(min, max, currentMapMetric, activeRange);
       lastRankingFeatures = filtered;
       updateRankingVisibility();
       updateScaleCapHint();
@@ -10135,6 +10426,24 @@ export function generateViewerHtml(
       regionSearchResults.style.maxHeight = '';
       regionSearchResults.replaceChildren();
       regionSearchInput?.setAttribute('aria-expanded', 'false');
+      regionSearchInput?.removeAttribute('aria-activedescendant');
+      regionSearchActiveIndex = -1;
+    }
+    // Combobox pattern: focus stays in the input, ArrowUp/Down move a highlight
+    // (aria-activedescendant), Enter picks the highlighted option or, failing that, the first.
+    let regionSearchActiveIndex = -1;
+    let regionSearchMatchIds = [];
+    function regionSearchOptions() {
+      return regionSearchResults ? [...regionSearchResults.querySelectorAll('li[role="option"]')] : [];
+    }
+    function setRegionSearchActive(index) {
+      const options = regionSearchOptions();
+      if (!options.length) return;
+      regionSearchActiveIndex = (index + options.length) % options.length;
+      options.forEach((li, i) => li.setAttribute('aria-selected', String(i === regionSearchActiveIndex)));
+      const active = options[regionSearchActiveIndex];
+      regionSearchInput?.setAttribute('aria-activedescendant', active.id);
+      active.scrollIntoView({ block: 'nearest' });
     }
     function updateSearchResultsPosition() {
       if (!regionSearchResults || regionSearchResults.hidden || !regionSearchInput) return;
@@ -10155,7 +10464,7 @@ export function generateViewerHtml(
       exitNeighborView();
       writeViewScopeToSelects(scope);
       updateScaleCapDefaultForView();
-      void applyScopeChange().then(() => {
+      return applyScopeChange().then(() => {
         // The sibling scope always contains the searched region, so this always opens its card —
         // and keeps showing the whole area it sits in: the card and sheet now cover part of the
         // map, so re-fit the scope into what is left instead of zooming into the region.
@@ -10176,6 +10485,8 @@ export function generateViewerHtml(
       }
       const matches = RegionSearch.rankRegionSearchMatches(regionSearchEntries, query);
       regionSearchResults.replaceChildren();
+      regionSearchActiveIndex = -1;
+      regionSearchInput?.removeAttribute('aria-activedescendant');
       if (!matches.length) {
         const none = document.createElement('li');
         none.className = 'region-search-empty';
@@ -10188,10 +10499,12 @@ export function generateViewerHtml(
         return;
       }
       setSearchStatus(matches.length === 1 ? '1 Treffer' : matches.length + ' Treffer');
-      for (const m of matches) {
+      regionSearchMatchIds = matches.map((m) => m.id);
+      matches.forEach((m, i) => {
         const li = document.createElement('li');
-        li.tabIndex = 0;
+        li.id = 'region-search-option-' + i;
         li.setAttribute('role', 'option');
+        li.setAttribute('aria-selected', 'false');
         li.append(m.name + ' ');
         const level = document.createElement('span');
         level.className = 'region-search-result-level';
@@ -10202,22 +10515,31 @@ export function generateViewerHtml(
         ].filter(Boolean);
         level.textContent = '(' + context.join(', ') + ')';
         li.appendChild(level);
-        const pick = () => {
-          hideRegionSearchResults();
-          regionSearchInput.value = '';
-          regionSearchInput.blur();
-          jumpToRegionBySearch(m.id);
-        };
         li.addEventListener('mousedown', (e) => e.preventDefault()); // keep focus, avoid blur-hide racing the click
-        li.addEventListener('click', pick);
-        li.addEventListener('keydown', (e) => {
-          if (e.key === 'Enter') pick();
-        });
+        li.addEventListener('click', () => pickRegionSearchResult(m.id));
         regionSearchResults.appendChild(li);
-      }
+      });
       regionSearchResults.hidden = false;
       regionSearchInput?.setAttribute('aria-expanded', 'true');
       updateSearchResultsPosition();
+    }
+    function pickRegionSearchResult(id, fromKeyboard) {
+      hideRegionSearchResults();
+      regionSearchInput.value = '';
+      regionSearchInput.blur();
+      const jumped = jumpToRegionBySearch(id);
+      // A keyboard pick continues in the card it opened rather than on <body>.
+      if (fromKeyboard && jumped) {
+        void jumped.then(() => {
+          const title = document.getElementById('region-detail-title');
+          if (title && !regionDetailEl.hidden) title.focus({ preventScroll: true });
+        });
+      }
+    }
+    function regionSearchOptionId(li) {
+      const options = regionSearchOptions();
+      const i = options.indexOf(li);
+      return i >= 0 ? regionSearchMatchIds[i] : null;
     }
     function setSearchStatus(text) {
       const status = document.getElementById('region-search-status');
@@ -10315,8 +10637,24 @@ export function generateViewerHtml(
         if (e.key === 'Escape') {
           regionSearchInput.value = '';
           hideRegionSearchResults();
-        } else if (e.key === 'ArrowDown' && !regionSearchResults.hidden) {
-          regionSearchResults.querySelector('li')?.focus();
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          if (regionSearchResults.hidden) renderRegionSearchResults(regionSearchInput.value.trim());
+          if (!regionSearchOptions().length) return;
+          e.preventDefault();
+          const step = e.key === 'ArrowDown' ? 1 : -1;
+          setRegionSearchActive(
+            regionSearchActiveIndex < 0 ? (step > 0 ? 0 : -1) : regionSearchActiveIndex + step,
+          );
+          return;
+        }
+        if (e.key === 'Enter') {
+          const options = regionSearchOptions();
+          if (!options.length) return;
+          e.preventDefault();
+          const id = regionSearchOptionId(options[Math.max(0, regionSearchActiveIndex)]);
+          if (id) pickRegionSearchResult(id, true);
         }
       });
     }
@@ -10695,6 +11033,7 @@ export function generateViewerHtml(
         applyUrlOptions();
         await applyCurrentView();
         applySelectedRegionFromUrl();
+        reportInvalidUrlParams();
         explicitMapPositionPending = false;
         urlSyncEnabled = true;
         urlSyncBaseline = currentStateUrl();

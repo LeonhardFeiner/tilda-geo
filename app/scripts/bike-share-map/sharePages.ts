@@ -241,7 +241,7 @@ export function shareDescription(s: ShareRegionSummary, dataDateLabel: string) {
   const median = formatStatPctUi(s.medianPct)
   const mainRoads =
     typeof s.mainRoadPct === 'number'
-      ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} % (je Fahrtrichtung).`
+      ? ` An Hauptverkehrsstraßen: ${formatStatPctUi(s.mainRoadPct)} km je 100 km (je Fahrtrichtung).`
       : ''
   const base = `In ${s.name} kommen auf 100 km Straße ${pct} km Radinfrastruktur (${shareRankPhrase(s)} ${groupLocationPhrase(s)}).${mainRoads}`
   const peerSentence = peerGroupSentence(s)
@@ -408,7 +408,7 @@ export function shareOgSvg(s: ShareRegionSummary) {
   <text x="60" y="280" font-family="Arial, sans-serif" font-size="150" font-weight="800" fill="${accent}">${pct} km</text>
   <text x="60" y="330" font-family="Arial, sans-serif" font-size="28" fill="#ffffff">Radinfrastruktur je 100 km Straße${
     typeof s.mainRoadPct === 'number'
-      ? ` · an Hauptverkehrsstraßen: ${escapeHtml(formatStatPctUi(s.mainRoadPct))} %`
+      ? ` · an Hauptverkehrsstraßen: ${escapeHtml(formatStatPctUi(s.mainRoadPct))} km`
       : ''
   }</text>
   <text x="60" y="410" font-family="Arial, sans-serif" font-size="${rankSize}" font-weight="600" fill="#ffffff">${rankLine}</text>

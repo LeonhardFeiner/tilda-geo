@@ -122,7 +122,7 @@ function regioStarBetaList() {
     .map((k) => {
       const se = STD_MODEL.betaSe?.[k]
       const unclear = se != null && Math.abs(STD_MODEL.betas[k]) < 2 * se
-      return `${names[k]} ${beta(STD_MODEL.betas[k])}${se != null ? ` ± ${de(se, 2)}` : ''}&nbsp;%-Punkte${unclear ? ' (kein klarer Effekt)' : ''}`
+      return `${names[k]} ${beta(STD_MODEL.betas[k])}${se != null ? ` ± ${de(se, 2)}` : ''}&nbsp;km${unclear ? ' (kein klarer Effekt)' : ''}`
     })
     .join(', ')
 }
@@ -166,7 +166,7 @@ function landBaselineList() {
   entries.push(['Bundesmittel', STD_MODEL.baselinePct])
   return entries
     .sort((a, b) => b[1] - a[1])
-    .map(([name, v]) => `${name} ${de(v)}&nbsp;%`)
+    .map(([name, v]) => `${name} ${de(v)}&nbsp;km`)
     .join(', ')
 }
 
@@ -317,11 +317,12 @@ ${siteIconHeadLinks()}
   ${nationalBlock}
 
   <h2>Was zeigt die Karte?</h2>
-  <p>Für jede Verwaltungseinheit das Verhältnis <strong>Kilometer Radinfrastruktur je Kilometer
-  Straße</strong>, in Prozent. Ein Wert von 20&nbsp;% heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
+  <p>Für jede Verwaltungseinheit die <strong>Kilometer Radinfrastruktur je 100&nbsp;km
+  Straße</strong>. Ein Wert von 20 heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
   Radwege, Schutzstreifen, Fahrradstraßen o.&nbsp;Ä. Mitgezählt werden auch eigenständige Radwege
-  abseits von Straßen; der Wert ist daher kein reiner Anteil der Straßen mit Radweg, sondern ein
-  Maß dafür, wie viel Radinfrastruktur es im Verhältnis zum Straßennetz gibt.</p>
+  abseits von Straßen; der Wert ist daher kein Anteil der Straßen mit Radweg (und wird deshalb
+  nicht in Prozent angegeben), sondern ein Maß dafür, wie viel Radinfrastruktur es im Verhältnis
+  zum Straßennetz gibt. Legende und Rangliste zeigen die Zahl ohne Einheit.</p>
   <p>Der Anteil misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
   den Zählfilter lassen sich einzelne Kategorien (z.&nbsp;B. nur baulich getrennte Radwege) ein-
   und ausschließen.</p>
@@ -363,8 +364,8 @@ ${siteIconHeadLinks()}
   unklar getaggte Wege zählen ohne Tag doppelt. Die Regel gilt überall gleich; für eine einzelne
   Gemeinde kann sie den Wert aber spürbar verschieben, denn ein nachgetragenes
   <code>oneway=no</code> verdoppelt die gezählte Länge eines solchen Wegs.
-  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%; zwei
-  Zweirichtungsradwege, einer auf jeder Seite, entsprechen 200&nbsp;%. Werte über 100&nbsp;% kommen
+  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr ergibt so 100&nbsp;km je 100&nbsp;km
+  Straße; zwei Zweirichtungsradwege, einer auf jeder Seite, ergeben 200. Werte über 100 kommen
   deshalb vor, vor allem bei sehr kleinen Straßennetzen; in der CSV sind sie mit
   <code>hinweise=anteil_ueber_100</code> gekennzeichnet.
   Ein Weg, der über eine Gemeinde- oder Kreisgrenze führt, zählt auf jeder Seite mit dem Teil seiner
@@ -373,15 +374,15 @@ ${siteIconHeadLinks()}
   <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
   <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
   die angenehmere Verbindung. Ergänzend zeigt die Detailkarte, wie gut die
-  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: den Anteil der Hauptverkehrsstraßen (OSM <code>trunk</code>, <code>primary</code>,
-  <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
+  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: die Kilometer Radinfrastruktur je 100&nbsp;km Hauptverkehrsstraße (OSM <code>trunk</code>, <code>primary</code>,
+  <code>secondary</code>, <code>tertiary</code>), gezählt wird Radinfrastruktur daneben oder darauf. Dafür wird
   jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
   Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa
   30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht. Auch hier wird je Fahrtrichtung
-  gezählt: Ein Zweirichtungsradweg auf nur einer Seite einer Straße mit Gegenverkehr ergibt 50&nbsp;%,
-  solange er in OpenStreetMap nicht mit <code>oneway=no</code> erfasst ist; 100&nbsp;% heißt
+  gezählt: Ein Zweirichtungsradweg auf nur einer Seite einer Straße mit Gegenverkehr ergibt 50&nbsp;km je 100&nbsp;km,
+  solange er in OpenStreetMap nicht mit <code>oneway=no</code> erfasst ist; 100 heißt
   Radinfrastruktur für beide Fahrtrichtungen. Die Karte und die Rangliste verwenden
-  immer den Wert über alle Straßen; der Anteil der Hauptverkehrsstraßen steht als Zusatzangabe in der
+  immer den Wert über alle Straßen; der Wert der Hauptverkehrsstraßen steht als Zusatzangabe in der
   Detailkarte und im Datenblatt. Die eigene Zählung aus den Einstellungen gilt nur für den Hauptwert.</p>
   <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
   L/S/St → Land, K oder Kreiskürzel (z.&nbsp;B. „RO&nbsp;35“) → Landkreis, ohne Nummer → Gemeinde.
@@ -450,10 +451,10 @@ ${siteIconHeadLinks()}
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;%</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;km je 100&nbsp;km Straße</strong>.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;km</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;km</strong>, je 100&nbsp;km Hauptverkehrsstraße). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
-    <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
+    <li><strong>Untergrenze 0:</strong> Ein lineares Modell kann rechnerisch unter 0 liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0 als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Innerhalb der typischen Abweichung (±1 Residualstandardfehler) bleiben die Töne blass, volle Farbe gibt es erst jenseits der doppelten – das sind etwa die äußersten 5&nbsp;%. Grau bedeutet: kein Wert.</li>
     <li><strong>Unsicherheit der Faktoren:</strong> Die Standardfehler der Koeffizienten sind cluster-robust nach Landkreisen geschätzt (${STD_MODEL.clusterCount ?? '–'} Landkreise und kreisfreie Städte), weil benachbarte Gemeinden sich in Kartierung, Verwaltung und Gelände ähneln und ihre Abweichungen nicht unabhängig sind. In der Faktoren-Zerlegung der Detailkarte heißt ein Beitrag nur dann „senkt“ oder „hebt“, wenn er mindestens zwei Standardfehler von null entfernt ist; sonst steht dort grau „kein klarer Effekt“.</li>
@@ -469,7 +470,7 @@ ${siteIconHeadLinks()}
       <tr>
         <th>Einflussfaktor</th>
         <th>Beschreibung / Quelle</th>
-        <th class="num">Koeffizient (β ± Standardfehler)</th>
+        <th class="num">Koeffizient (β ± Standardfehler), km je 100&nbsp;km Straße</th>
       </tr>
     </thead>
     <tbody>

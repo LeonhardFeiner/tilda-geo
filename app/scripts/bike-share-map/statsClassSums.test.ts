@@ -154,7 +154,7 @@ describe('formatters', () => {
   })
   test('map metric values carry their unit', () => {
     expect(formatMapMetricValue(null, 'bikeShare')).toBe('–')
-    expect(formatMapMetricValue(2.5, 'modelGap')).toMatch(/^\+2,5\d* %p$/)
+    expect(formatMapMetricValue(2.5, 'modelGap')).toMatch(/^\+2,5\d*$/)
     expect(formatMapMetricValue(648.7, 'cars')).toBe('649 Pkw')
     expect(formatMapMetricValue(6.191, 'rent')).toBe('6,19 €/m²')
     expect(formatMapMetricValue(-1200, 'commuters')).toBe('-1.200')

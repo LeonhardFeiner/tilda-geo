@@ -695,7 +695,8 @@ export type MapMetric =
 export function formatMapMetricValue(val: number | null | undefined, metric: MapMetric) {
   if (val == null || typeof val !== 'number' || !Number.isFinite(val)) return '–'
   const sign = val > 0 ? '+' : ''
-  if (metric === 'modelGap') return `${sign}${formatStatPctUi(val)} %p`
+  // bikeShare and modelGap are km per 100 km of road; the ranking/legend heading names the unit.
+  if (metric === 'modelGap') return `${sign}${formatStatPctUi(val)}`
   if (metric === 'cars') return `${Math.round(val)} Pkw`
   if (metric === 'rent') return `${val.toFixed(2).replace('.', ',')} €/m²`
   if (metric === 'accidents') return `${formatStatPctUi(val)} / 10k`
@@ -704,5 +705,5 @@ export function formatMapMetricValue(val: number | null | undefined, metric: Map
     return `${formatDeNumber(val, 0)} %`
   if (metric === 'density') return `${formatDeNumber(Math.round(val), 0)} /km²`
   if (metric === 'stationBike') return formatMinutes(val)
-  return `${formatStatPctUi(val)} %`
+  return formatStatPctUi(val)
 }

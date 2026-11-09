@@ -151,7 +151,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   })
 
   test('authority table renders Baulastträger columns without fehlt column', () => {
-    expect(html).toContain("for (const text of ['Baulastträger', 'Straße', 'mit Radinfra'])")
+    expect(html).toContain("for (const text of ['Baulastträger', 'Straße', 'Radinfra je 100 km'])")
     expect(html).not.toContain("gap ? 'fehlt' : ''")
     expect(html).not.toContain('id="scorecard-dialog"')
   })
@@ -246,7 +246,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     )
     expect(html).toContain('<h2 class="settings-heading">Was zählt als Radinfrastruktur?</h2>')
     expect(html).toContain('<h2 class="settings-heading">Karte</h2>')
-    expect(html).toContain('<h2 id="region-detail-title"></h2>')
+    expect(html).toContain('<h2 id="region-detail-title" tabindex="-1"></h2>')
     expect(html).toContain('<h2 id="methodology-title">Methodik &amp; Datenquellen</h2>')
     expect(html).toContain('aria-labelledby="methodology-title"')
     expect(html).not.toContain('<h3')

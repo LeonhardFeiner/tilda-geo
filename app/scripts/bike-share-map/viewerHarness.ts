@@ -195,6 +195,8 @@ type BootOptions = {
   geolocation?: { lng: number; lat: number }
   /** Make every Gemeinde polygon file fail with a 404. */
   failGemeindeGeometry?: boolean
+  /** Whether a canvas hands out a WebGL context (the page probes before creating the map). Default true. */
+  webgl?: boolean
 }
 
 export async function bootViewer(query = '', options: BootOptions = {}): Promise<ViewerPage> {
@@ -293,6 +295,11 @@ export async function bootPage(
     print: () => {},
   })
   window.Element.prototype.scrollIntoView = () => {}
+  const getContext = window.HTMLCanvasElement.prototype.getContext
+  window.HTMLCanvasElement.prototype.getContext = function (this: HTMLCanvasElement, type: string) {
+    if (/webgl/.test(type)) return options.webgl === false ? null : {}
+    return getContext.call(this, type as '2d')
+  } as typeof getContext
   window.scrollTo = () => {}
   Object.defineProperty(window.navigator, 'clipboard', {
     value: { writeText: async (text: string) => void window.__clipboard.push(text) },

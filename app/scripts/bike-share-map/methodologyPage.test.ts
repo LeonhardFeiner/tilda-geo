@@ -64,8 +64,8 @@ describe('version and citation', () => {
 })
 
 describe('wording', () => {
-  test('explains per-direction counting above 100 %', () => {
-    expect(html).toContain('entsprechen 200&nbsp;%')
+  test('explains per-direction counting above 100', () => {
+    expect(html).toContain('ergeben 200. Werte über 100 kommen')
     expect(html).toContain('<code>hinweise=anteil_ueber_100</code>')
   })
 

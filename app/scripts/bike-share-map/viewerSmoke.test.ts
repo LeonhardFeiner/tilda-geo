@@ -30,7 +30,9 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       page = await bootViewer()
       expect(page.errors).toEqual([])
       expect(page.qAll('#ranking-list li[data-ranking-id]').length).toBeGreaterThan(10)
-      expect(page.q('#national-context').textContent).toMatch(/Bundesweit: \d+,\d %/)
+      expect(page.q('#national-context').textContent).toMatch(
+        /Bundesweit: \d+,\d km je 100 km Straße/,
+      )
       expect(page.q('#region-breadcrumb').textContent).toContain('Deutschland')
     },
     TIMEOUT,
@@ -147,7 +149,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       )
       const text = page.q('#region-detail-model-gap').textContent ?? ''
       expect(text).toMatch(/aus den erwarteten Kilometern von \d+ Gemeinden/)
-      expect(text).toMatch(/Erwartet: \d+,\d %/)
+      expect(text).toMatch(/Erwartet: \d+,\d km je 100 km/)
       // A Kreis mixes RegioStaR types: the breakdown names none.
       expect(text).toContain('Raumtyp (RegioStaR)gemischt')
       expect(page.errors).toEqual([])
@@ -723,6 +725,166 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       await q.waitFor(() => !q.q('#region-detail').hidden, 'the region card')
       expect(q.window.document.getElementById('region-detail-detour')).toBeNull()
       expect(q.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'the search is a combobox: arrows move a highlight, Enter picks, focus stays in the field',
+    async () => {
+      page = await bootViewer()
+      const p = page
+      const { window } = p
+      const doc = window.document
+      const input = p.q<HTMLInputElement>('#region-search-input')
+      const key = (k: string) =>
+        input.dispatchEvent(
+          new window.KeyboardEvent('keydown', { key: k, bubbles: true, cancelable: true }),
+        )
+      const type = (text: string) => {
+        input.focus()
+        input.value = text
+        input.dispatchEvent(new window.Event('input', { bubbles: true }))
+      }
+      type('Schweitenk')
+      await p.waitFor(
+        () => p.qAll('#region-search-results li[role="option"]').length > 0,
+        'results',
+      )
+
+      key('ArrowDown')
+      const first = p.qAll('#region-search-results li[role="option"]')[0]!
+      expect(doc.activeElement).toBe(input)
+      expect(input.getAttribute('aria-activedescendant')).toBe(first.id)
+      expect(first.getAttribute('aria-selected')).toBe('true')
+
+      key('Escape')
+      expect(input.value).toBe('')
+      expect(p.q('#region-search-results').hidden).toBe(true)
+      expect(input.hasAttribute('aria-activedescendant')).toBe(false)
+
+      // Enter with nothing highlighted takes the first (here: the only) suggestion.
+      type('Schweitenk')
+      await p.waitFor(
+        () => p.qAll('#region-search-results li[role="option"]').length > 0,
+        'results',
+      )
+      key('Enter')
+      await p.waitFor(() => doc.body.dataset.regionDetail === '1', 'the region card')
+      expect(p.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+      expect(doc.activeElement).not.toBe(doc.body)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'without WebGL the page says so and search, ranking and region card still work',
+    async () => {
+      page = await bootViewer('', { webgl: false })
+      const p = page
+      const { window } = p
+      expect(p.q('.no-webgl-notice').textContent).toContain('WebGL')
+      expect(p.q('#load-error').textContent).toBe('')
+      expect(p.qAll('#ranking-list li[data-ranking-id]').length).toBeGreaterThan(10)
+      const input = p.q<HTMLInputElement>('#region-search-input')
+      input.value = 'Schweitenkirchen'
+      input.dispatchEvent(new window.Event('input', { bubbles: true }))
+      await p.waitFor(
+        () => p.qAll('#region-search-results li[role="option"]').length > 0,
+        'results',
+      )
+      p.qAll('#region-search-results li[role="option"]')[0]!.click()
+      await p.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+      expect(p.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'a deep link with unknown parameters says so and cleans the address',
+    async () => {
+      page = await bootViewer('?gebiet=relation/999999999&darstellung=quatsch&region=relation/1')
+      const p = page
+      const feedback = p.q('#copy-view-link-feedback')
+      expect(feedback.hidden).toBe(false)
+      expect(feedback.textContent).toContain('Gebiet')
+      expect(feedback.textContent).toContain('Darstellung')
+      expect(feedback.textContent).toContain('Region')
+      expect(p.window.location.search).not.toMatch(/gebiet|darstellung|region/)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'a valid deep link raises no notice',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      expect(p.q('#copy-view-link-feedback').hidden).toBe(true)
+      expect(p.window.location.search).toContain('region=')
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'clicking the selected region on the map again keeps it selected',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const p = page
+      const { window } = p
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      const map = window.__map as unknown as {
+        fire: (t: string, e?: object) => void
+        queryRenderedFeatures: () => unknown[]
+      }
+      map.queryRenderedFeatures = () => [{ properties: { id: SCHWEITENKIRCHEN } }]
+      map.fire('click', { point: { x: 10, y: 10 }, originalEvent: { detail: 1 } })
+      await new Promise((r) => setTimeout(r, 50))
+      expect(window.document.body.dataset.regionDetail).toBe('1')
+      expect(p.q('#region-detail').hidden).toBe(false)
+      // A click on empty map still clears it.
+      map.queryRenderedFeatures = () => []
+      map.fire('click', { point: { x: 10, y: 10 }, originalEvent: { detail: 1 } })
+      await p.waitFor(() => !window.document.body.dataset.regionDetail, 'the card to close')
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'a scale that stops short of the data says so at its end',
+    async () => {
+      page = await bootViewer()
+      const p = page
+      // The Deutschland view clips its colours at a percentile; the city states lie above.
+      expect(p.q('#legend-labels .legend-label--end').textContent).toMatch(/^≥ \d/)
+      expect(p.q('#cml-max').textContent).toMatch(/^≥ \d/)
+      expect(p.q('#legend-labels .legend-label--start').textContent).not.toMatch(/^[≤≥]/)
+    },
+    TIMEOUT,
+  )
+  test(
+    'the main metric reads km je 100 km everywhere, never %',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS)
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      const noPercent = (selector: string) => {
+        const text = p.q(selector).textContent ?? ''
+        expect(text, selector).not.toContain('%')
+        return text
+      }
+      noPercent('#legend-labels')
+      noPercent('#cml-max')
+      expect(noPercent('#cml-def')).toBe('km je 100 km Straße')
+      noPercent('#ranking-list')
+      expect(noPercent('#region-detail-meta')).toContain('je 100 km')
+      noPercent('#region-detail-gap')
+      expect(p.errors).toEqual([])
     },
     TIMEOUT,
   )

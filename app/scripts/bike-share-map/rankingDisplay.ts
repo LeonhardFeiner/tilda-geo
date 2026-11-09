@@ -18,8 +18,8 @@ export const PORTRAIT_EXPORT = {
   padding: 56,
 } as const
 
-export const RANKING_WINDOW_CHECK_N = 11
-export const RANKING_TOP_N_IN_WINDOW = 11
+export const RANKING_WINDOW_CHECK_N = 10
+export const RANKING_TOP_N_IN_WINDOW = 10
 export const RANKING_TOP_N_OUTSIDE_WINDOW = 8
 export const RANKING_EXPORT_ALLE_MAX_ROWS = 23
 

@@ -34,25 +34,25 @@ const parents = new Map([
 ])
 
 describe('rankingDisplay', () => {
-  test('uses top 8 only when focus chain is outside top and flop 11', () => {
+  test('uses top 8 only when focus chain is outside top and flop 10', () => {
     expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: ['r14'] })).toBe(
       8,
     )
     expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: ['r3'] })).toBe(
-      11,
+      10,
     )
     expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: ['r26'] })).toBe(
-      11,
+      10,
     )
-    expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: [] })).toBe(11)
+    expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: [] })).toBe(10)
     expect(effectiveRankingTopN({ mode: 'all', items: items(), focusChainIds: ['r14'] })).toBeNull()
   })
 
-  test('parent in top 11 keeps top 11 display', () => {
+  test('parent in top 10 keeps top 10 display', () => {
     const chain = focusChainFromParentMap('r14', parents)
     expect(chain).toEqual(['r14', 'r4', 'r1'])
-    expect(isFocusChainInTopOrFlopWindow(items(), chain, 11)).toBe(true)
-    expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: chain })).toBe(11)
+    expect(isFocusChainInTopOrFlopWindow(items(), chain, 10)).toBe(true)
+    expect(effectiveRankingTopN({ mode: 'topflop', items: items(), focusChainIds: chain })).toBe(10)
   })
 
   test('merge focus chains preserves order', () => {
