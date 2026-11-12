@@ -89,6 +89,7 @@ export function generateViewerHtml(
     assetVersions: {
       gemeindeGeometry: versionOf(GEMEINDE_GEOMETRY_DIR),
       neighborsBuildWorker: versionOf('neighborsBuild.worker.js'),
+      methodik: versionOf('methodik.html'),
       neighborsWorker: versionOf('neighbors.worker.js'),
     },
     basemap: DEFAULT_BASEMAP,
@@ -1008,7 +1009,8 @@ export function generateViewerHtml(
       background: #fff; border: 1px solid #cbd5e1; border-radius: 8px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.12); color: #1e293b; font-size: 0.875rem; line-height: 1.45;
     }
-    #load-status { color: #555; font-size: 0.8125rem; margin: 0 0 8px; display: none; }
+    #load-status { color: #555; font-size: 0.8125rem; margin: 0 0 8px; }
+    #load-status:empty { display: none; }
     body.ui-minimal #panel-main, body.ui-minimal #search-fab { display: none !important; }
     .region-nav { margin-bottom: 4px; }
     .region-nav[hidden] { display: none !important; }
@@ -3669,7 +3671,7 @@ export function generateViewerHtml(
         updateRegionColors(min, max);
         map.triggerRepaint();
       } else if (rawLoaded) {
-        void applyCurrentView();
+        void applyCurrentView({ keepCamera: true });
       }
     }
 
@@ -3720,13 +3722,23 @@ export function generateViewerHtml(
 
     function onScaleCapChange() {
       syncScaleCapInputState();
-      if (rawLoaded) void applyCurrentView();
+      if (rawLoaded) void applyCurrentView({ keepCamera: true });
+    }
+    // Typing in the percent field re-colours live, but only once the typing pauses: each
+    // re-render is a full pass over the view.
+    let scaleCapInputTimer = null;
+    function onScaleCapInput() {
+      clearTimeout(scaleCapInputTimer);
+      scaleCapInputTimer = setTimeout(onScaleCapChange, 300);
     }
 
     scaleRobustEnabledCb?.addEventListener('change', onScaleCapChange);
     scaleCapEnabledCb?.addEventListener('change', onScaleCapChange);
-    scaleCapPctInput?.addEventListener('change', onScaleCapChange);
-    scaleCapPctInput?.addEventListener('input', onScaleCapChange);
+    scaleCapPctInput?.addEventListener('change', () => {
+      clearTimeout(scaleCapInputTimer);
+      onScaleCapChange();
+    });
+    scaleCapPctInput?.addEventListener('input', onScaleCapInput);
 
     function colorScaleRange(features) {
       const { enabled, capPct, robustEnabled } = getScaleCapSettings();
@@ -8826,11 +8838,14 @@ export function generateViewerHtml(
         }
       });
       document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') return;
+        if (event.key !== 'Escape' || event.defaultPrevented) return;
         if (typeof closeMethodologyModal === 'function' && methodologyDialog?.open) {
           closeMethodologyModal();
           return;
         }
+        // Escape inside a dialog closes the dialog (natively); it must not also drop the
+        // selected region or collapse the sheet behind it.
+        if (exportDialog?.open || event.target?.closest?.('dialog')) return;
         if (sheetEnabled()) {
           if (sheetState() === 'full') setSheetState('half');
           else if (sheetState() === 'half') setSheetState('peek');
@@ -9164,7 +9179,7 @@ export function generateViewerHtml(
     // memory. Selections and view changes push a history entry (Back undoes that one step);
     // option tweaks only replace it, so the history doesn't fill up with colour changes.
     let urlSyncEnabled = false;
-    let applyingUrlState = false;
+    let applyingUrlState = 0; // nested/overlapping applyStateFromUrl calls (popstate bursts)
     let urlSyncTimer = null;
     let urlSyncPushPending = false;
     // The state the page loaded with. Until something actually changes, the address bar is left
@@ -9204,7 +9219,7 @@ export function generateViewerHtml(
     async function applyStateFromUrl() {
       if (!regionIndex) return;
       cancelPendingUrlSync();
-      applyingUrlState = true;
+      applyingUrlState += 1;
       try {
         applyUiModeClass();
         applyUrlOptions({ live: true });
@@ -9227,7 +9242,7 @@ export function generateViewerHtml(
           });
         }
       } finally {
-        applyingUrlState = false;
+        applyingUrlState -= 1;
       }
     }
 
@@ -10159,7 +10174,17 @@ export function generateViewerHtml(
       );
     }
 
-    async function applyCurrentView() {
+    // Each call gets a number; after every await a call that is no longer the latest stops, so
+    // a slow view (Deutschland, Gemeinden: ~300 polygon files) can't paint over a faster one
+    // picked meanwhile.
+    let applyGeneration = 0;
+    /**
+     * Render the current view. keepCamera: a passive re-render (colour cap, basemap swap,
+     * neighbour index arrived) that must not move the map.
+     */
+    async function applyCurrentView({ keepCamera = false } = {}) {
+      const generation = ++applyGeneration;
+      const stale = () => generation !== applyGeneration;
       const refitScope = refitScopeOnNextApply;
       refitScopeOnNextApply = false;
       syncViewScopeFromUi();
@@ -10171,6 +10196,7 @@ export function generateViewerHtml(
           showLoadError(err, 'Die Gemeinden konnten nicht geladen werden.');
         }
         setLoadStatus('');
+        if (stale()) return;
       }
       // The neighbour index (~1.3 MB) is only fetched once a view could use it: a neighbour
       // view, or a single Landkreis in the scope, whose Zeige select can then offer "Nachbarn".
@@ -10194,6 +10220,7 @@ export function generateViewerHtml(
           );
         }
         setLoadStatus('');
+        if (stale()) return;
       }
       if (currentMapMetric !== 'bikeShare') {
         if (!regionExtraIndexesPromise) {
@@ -10201,6 +10228,7 @@ export function generateViewerHtml(
         } else {
           await regionExtraIndexesPromise;
         }
+        if (stale()) return;
       }
       const viewFeatures = filteredFeaturesForCurrentView();
       try {
@@ -10209,6 +10237,7 @@ export function generateViewerHtml(
         showLoadError(err, 'Die Gemeindegrenzen konnten nicht geladen werden.');
         return;
       }
+      if (stale()) return;
       // Enrich only now: an enriched copy takes the geometry it finds.
       const filtered = viewFeatures.map(enrichFeature);
       const bikeRange = colorScaleRange(filtered);
@@ -10232,6 +10261,7 @@ export function generateViewerHtml(
       const labelMinZoom = labelMinZoomForView();
 
       const run = () => {
+        if (stale()) return;
         addRegionLayers(geojson, min, max, labelMinZoom);
         // A region can be selected while this reruns for an unrelated reason (the neighbour view
         // re-applies the view once its neighbor index finishes loading, a basemap swap
@@ -10243,6 +10273,8 @@ export function generateViewerHtml(
           // Handled by applyStateFromUrl easing to explicit camera coordinates
         } else if (refitScope) {
           fitMapToCurrentView(true);
+        } else if (keepCamera) {
+          // the visitor's camera stays
         } else if (document.body.dataset.regionDetail) {
           syncMapViewport(false);
         } else {
@@ -10253,22 +10285,23 @@ export function generateViewerHtml(
         run();
         return;
       }
+      // The style is still loading: draw on 'load', or after 2.5 s regardless (a basemap that
+      // never answers must not block the regions). Exactly once — the timer used to fire again
+      // after a normal 'load' and re-fit the camera, undoing what the visitor had done meanwhile.
       await new Promise((resolve) => {
-        const done = () => {
-          map.off('load', done);
-          map.off('error', onError);
+        let settled = false;
+        const finish = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          map.off('load', finish);
+          map.off('error', finish);
           run();
           resolve();
         };
-        const onError = () => {
-          map.off('load', done);
-          map.off('error', onError);
-          run();
-          resolve();
-        };
-        map.once('load', done);
-        map.once('error', onError);
-        setTimeout(done, 2500);
+        map.once('load', finish);
+        map.once('error', finish);
+        const timer = setTimeout(finish, 2500);
       });
     }
 
@@ -10282,7 +10315,7 @@ export function generateViewerHtml(
       map.once('idle', () => {
         map.jumpTo({ center, zoom, bearing, pitch });
         overlaysBound = false;
-        void applyCurrentView();
+        void applyCurrentView({ keepCamera: true });
       });
       const meta = CONFIG.basemapOptions.find((b) => b.id === id);
       basemapHint.textContent = meta?.description || '';
@@ -10602,6 +10635,7 @@ export function generateViewerHtml(
       });
       regionSearchInput.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
+          e.stopPropagation(); // clears the search only, not the selected region
           regionSearchInput.value = '';
           hideRegionSearchResults();
           return;
@@ -10640,24 +10674,52 @@ export function generateViewerHtml(
     const methodologyClose = document.getElementById('methodology-close');
     let methodologyLoaded = false;
 
-    async function openMethodologyModal() {
+    /** The loaded page lives in a shadow root so it keeps its own stylesheet (tables, boxes). */
+    let methodologyRoot = null;
+    function scrollMethodologyTo(hash) {
+      if (!hash || !methodologyRoot) return;
+      const target = methodologyRoot.querySelector('#' + CSS.escape(hash));
+      if (target && typeof target.scrollIntoView === 'function') target.scrollIntoView();
+    }
+    async function openMethodologyModal(hash) {
       if (!methodologyDialog) return;
       if (typeof methodologyDialog.showModal === 'function') {
         methodologyDialog.showModal();
       } else {
         methodologyDialog.hidden = false;
       }
+      if (methodologyLoaded) {
+        scrollMethodologyTo(hash);
+        return;
+      }
       if (!methodologyLoaded) {
         try {
-          const resp = await fetch('./methodik.html');
+          const resp = await fetch('./methodik.html?v=' + CONFIG.assetVersions.methodik);
           if (resp.ok) {
             const text = await resp.text();
             const doc = new DOMParser().parseFromString(text, 'text/html');
             const main = doc.querySelector('main');
-            if (main) {
+            if (main && methodologyBody) {
               main.querySelector('.back')?.remove();
-              methodologyBody?.replaceChildren(main);
+              main.querySelector('h1')?.remove(); // the dialog has its own title
+              main.querySelector('.sub')?.remove();
+              const root =
+                typeof methodologyBody.attachShadow === 'function'
+                  ? methodologyBody.shadowRoot || methodologyBody.attachShadow({ mode: 'open' })
+                  : null;
+              if (root) {
+                const style = document.createElement('style');
+                style.textContent =
+                  (doc.querySelector('style')?.textContent || '') +
+                  ' main { max-width: none; padding: 0; } h2:first-child { border-top: none; padding-top: 0; margin-top: 0; }';
+                root.replaceChildren(style, main);
+                methodologyRoot = root;
+              } else {
+                methodologyBody.replaceChildren(main);
+                methodologyRoot = methodologyBody;
+              }
               methodologyLoaded = true;
+              scrollMethodologyTo(hash);
               return;
             }
           }
@@ -10692,10 +10754,12 @@ export function generateViewerHtml(
     });
 
     document.addEventListener('click', (e) => {
-      const link = e.target.closest('a[href$="methodik.html"]');
+      // A modified click (new tab, new window) keeps the browser's behaviour.
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      const link = e.target.closest('a[href^="./methodik.html"]:not([target])');
       if (link) {
         e.preventDefault();
-        openMethodologyModal();
+        void openMethodologyModal((link.getAttribute('href').split('#')[1] || '').trim());
       }
     });
     const panelOptions = document.getElementById('panel-options');
@@ -10835,7 +10899,7 @@ export function generateViewerHtml(
       for (const resolve of waiting) resolve();
       // The "Nachbarn" options of the Zeige select can only be offered once the index is known.
       populateDarstellungSelect();
-      if (isNeighborView()) void applyCurrentView();
+      if (isNeighborView()) void applyCurrentView({ keepCamera: true });
     }
 
     function onNeighborsFileLoaded(file) {

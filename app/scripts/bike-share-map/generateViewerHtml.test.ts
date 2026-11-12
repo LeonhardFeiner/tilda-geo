@@ -172,7 +172,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
   test('methodology link opens an inline accessible dialog modal preserving map state', () => {
     expect(html).toContain('id="methodology-dialog"')
     expect(html).toContain('openMethodologyModal')
-    expect(html).toContain('a[href$="methodik.html"]')
+    expect(html).toContain('a[href^="./methodik.html"]:not([target])')
   })
 
   test('parses exact map position, bearing, and pitch from URL hash and parameters', () => {
