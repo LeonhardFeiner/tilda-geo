@@ -2,6 +2,15 @@ name: Publish Bike Share Viewer (GitHub Pages)
 
 on:
   workflow_dispatch:
+    inputs:
+      mirror:
+        description: 'Also deploy this build to radweg.bfschweitenkirchen.de (a release)'
+        type: boolean
+        default: false
+  # Publishing a GitHub Release on the fork is "a release": it deploys to github.io and the BFS
+  # subdomain. Every other run only updates github.io.
+  release:
+    types: [published]
   push:
     branches: [local]
     paths:
@@ -112,7 +121,12 @@ jobs:
   # canonical/og:* tags (SHARE_PAGE_BASE_URL, HTML only) is swapped. Skipped until the
   # MIRROR_DEPLOY_KEY secret exists (private half of a deploy key with write access on MIRROR_REPO).
   # Runs independently of `deploy`, so a failure here never blocks the github.io site.
+  #
+  # Only on a release: a published GitHub Release, or a manual run with `mirror` ticked
+  # (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). Pushes to `local` leave the
+  # subdomain alone, so github.io is the place to debug a build before the public address sees it.
   mirror:
+    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.mirror)
     runs-on: ubuntu-latest
     timeout-minutes: 20
     needs: build

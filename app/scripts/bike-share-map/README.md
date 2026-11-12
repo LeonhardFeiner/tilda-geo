@@ -54,7 +54,10 @@ current export, so run the export first.
 5. **Refit the model**: `bun run bike-share-map:fit-model`, then `bun run format`, then build again.
    `fitExtendedModel.test.ts` fails while the committed configs don't match the data.
 6. **Check and commit**: `bunx vitest run scripts/bike-share-map`, commit `output/**` and the
-   generated config, push to `local`. CI tests, builds and deploys (about 12 minutes). The
+   generated config, push to `local`. CI tests, builds and deploys to github.io (about 12
+   minutes). The BFS subdomain (`radweg.bfschweitenkirchen.de`) only changes on a release:
+   publish a GitHub Release on the fork, or run the workflow by hand with `mirror` ticked
+   (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). Debug on github.io first. The
    workflow fails before uploading if the deploy folder exceeds 900 MB (GitHub Pages allows 1 GB;
    it is ~570 MB now), and the built `output/viewer/manifest.json` adds a `datasets` field with
    each context dataset's `fetchedAt`/`osmDataFrom`/`source` stamps next to the export's fields.
