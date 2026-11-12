@@ -31,7 +31,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       expect(page.errors).toEqual([])
       expect(page.qAll('#ranking-list li[data-ranking-id]').length).toBeGreaterThan(10)
       expect(page.q('#national-context').textContent).toMatch(
-        /Bundesweit: \d+,\d km je 100 km Straße/,
+        /Bundesweit: \d+,\d[  ]km je 100[  ]km Straße/,
       )
       expect(page.q('#region-breadcrumb').textContent).toContain('Deutschland')
     },
@@ -149,7 +149,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       )
       const text = page.q('#region-detail-model-gap').textContent ?? ''
       expect(text).toMatch(/aus den erwarteten Kilometern von \d+ Gemeinden/)
-      expect(text).toMatch(/Erwartet: \d+,\d km je 100 km/)
+      expect(text).toMatch(/Erwartet: \d+,\d[  ]km je 100[  ]km/)
       // A Kreis mixes RegioStaR types: the breakdown names none.
       expect(text).toContain('Raumtyp (RegioStaR)gemischt')
       expect(page.errors).toEqual([])

@@ -324,9 +324,14 @@ export function shareStubHtml(s: ShareRegionSummary, opts: ShareStubOptions) {
 <link rel="canonical" href="${canonical}" />
 ${siteIconHeadLinks(opts.baseUrl)}
 <meta property="og:type" content="website" />
+<meta property="og:site_name" content="Radinfra-Vergleich" />
+<meta property="og:locale" content="de_DE" />
 <meta property="og:title" content="${headline}" />
 <meta property="og:description" content="${description}" />
 <meta property="og:image" content="${ogImageUrl}" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="${headline}" />
 <meta property="og:url" content="${canonical}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${headline}" />

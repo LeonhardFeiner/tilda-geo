@@ -469,7 +469,7 @@ export function generateViewerHtml(
       font-size: 0.75rem; font-weight: 600; color: #555; margin: 8px 0 3px;
     }
     .panel label[hidden], .panel select[hidden] { display: none !important; }
-    .panel select { width: 100%; font-size: 0.8125rem; padding: 4px 6px; border-radius: 4px; border: 1px solid #ccc; }
+    .panel select { width: 100%; font-size: 0.8125rem; padding: 4px 6px; border-radius: 4px; border: 1px solid #8c8c8c; }
     .panel .row { display: flex; flex-wrap: wrap; gap: 12px 16px; margin-top: 8px; }
     .panel .row label { display: flex; align-items: center; gap: 6px; font-weight: normal; margin: 0; cursor: pointer; }
     .hint { font-size: 0.75rem; color: #475569; margin-top: 4px; }
@@ -499,7 +499,7 @@ export function generateViewerHtml(
     .counting-state--custom #counting-state-label { color: #8a4b00; }
     #counting-reset {
       font: inherit; font-size: 0.75rem; font-weight: 600; padding: 3px 10px; cursor: pointer;
-      border: 1px solid #ccc; border-radius: 4px; background: #fff; color: #1565c0;
+      border: 1px solid #8c8c8c; border-radius: 4px; background: #fff; color: #1565c0;
     }
     #counting-reset[hidden] { display: none !important; }
     #counting-reset:hover { background: #f2f6fb; }
@@ -540,7 +540,7 @@ export function generateViewerHtml(
       display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: 0.75rem;
     }
     .scale-cap-value input[type="number"] {
-      width: 4.5em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
+      width: 4.5em; padding: 3px 6px; border: 1px solid #8c8c8c; border-radius: 4px;
     }
     .scale-cap-value input:disabled { opacity: 0.5; background: #f5f5f5; }
     .overlay-display-controls,
@@ -557,7 +557,7 @@ export function generateViewerHtml(
       flex: 1; font-size: 0.75rem; font-weight: normal; margin: 0;
     }
     .overlay-color-row input[type="color"] {
-      width: 2.75rem; height: 1.75rem; padding: 2px; border: 1px solid #ccc;
+      width: 2.75rem; height: 1.75rem; padding: 2px; border: 1px solid #8c8c8c;
       border-radius: 4px; cursor: pointer; background: #fff;
     }
     .overlay-layer-block { margin-bottom: 10px; }
@@ -569,7 +569,7 @@ export function generateViewerHtml(
       flex: 1; font-size: 0.75rem; font-weight: normal; margin: 0;
     }
     .overlay-minzoom-row input[type="number"] {
-      width: 4em; padding: 3px 6px; border: 1px solid #ccc; border-radius: 4px;
+      width: 4em; padding: 3px 6px; border: 1px solid #8c8c8c; border-radius: 4px;
     }
     .overlay-layer-hint { margin: 2px 0 0; }
     .choropleth-legend { margin: 0; }
@@ -682,7 +682,7 @@ export function generateViewerHtml(
       margin-bottom: 6px;
     }
     .ranking-mode {
-      display: flex; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
+      display: flex; border: 1px solid #8c8c8c; border-radius: 4px; overflow: hidden;
     }
     .ranking-mode[hidden] { display: none; }
     .ranking-mode-btn {
@@ -704,7 +704,7 @@ export function generateViewerHtml(
       margin-left: auto;
     }
     .ranking-toolbar .view-csv-btn {
-      border: 1px solid #ccc;
+      border: 1px solid #8c8c8c;
       border-radius: 4px;
       background: #fff;
       color: #1565c0;
@@ -752,7 +752,7 @@ export function generateViewerHtml(
       max-height: min(52vh, 420px);
       overflow: auto;
       background: rgba(255, 255, 255, 0.97);
-      border: 1px solid #ccc;
+      border: 1px solid #8c8c8c;
       border-radius: 8px;
       box-shadow: 0 4px 18px rgba(0, 0, 0, 0.15);
       padding: 10px 12px 12px;
@@ -1009,7 +1009,7 @@ export function generateViewerHtml(
       border-radius: 3px; margin-left: 5px; vertical-align: 1px;
     }
     .detail-mode {
-      display: inline-flex; margin: 6px 0 0; border: 1px solid #ccc; border-radius: 4px; overflow: hidden;
+      display: inline-flex; margin: 6px 0 0; border: 1px solid #8c8c8c; border-radius: 4px; overflow: hidden;
     }
     .detail-mode-btn {
       font: inherit; font-size: 0.75rem; padding: 3px 9px; border: none; background: #f5f5f5;
@@ -1098,7 +1098,7 @@ export function generateViewerHtml(
     .region-search-results {
       position: absolute; z-index: 6; top: 100%; left: 0; right: 0; margin: 2px 0 0;
       padding: 4px 0; list-style: none;
-      background: #fff; border: 1px solid #ccc; border-radius: 6px;
+      background: #fff; border: 1px solid #8c8c8c; border-radius: 6px;
       box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
       max-height: 220px; overflow-y: auto;
       overscroll-behavior: contain;
@@ -1113,6 +1113,14 @@ export function generateViewerHtml(
     .region-search-results li[aria-selected="true"] { background: #eef4fc; }
     .region-search-results li:focus-visible { outline: 2px solid #1565c0; outline-offset: -2px; }
     .region-search-results li .region-search-result-level { color: #475569; font-size: 0.75rem; }
+    /* Keyboard users land on the map's own controls first; this jumps to the search. */
+    .skip-link {
+      position: absolute; left: -9999px; top: 8px; z-index: 1000;
+      background: #fff; color: #1565c0; padding: 8px 12px; border-radius: 6px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25); font-weight: 600;
+    }
+    .skip-link:focus { left: 8px; }
+    .legend-ends { display: flex; justify-content: space-between; font-size: 0.75rem; color: #475569; margin-top: 2px; }
     .visually-hidden {
       position: absolute !important; width: 1px; height: 1px; margin: -1px; padding: 0;
       overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
@@ -1612,6 +1620,10 @@ export function generateViewerHtml(
       .panel select, #region-search-input {
         min-height: 44px; font-size: 1rem;
       }
+      .region-breadcrumb button { min-height: 44px; padding: 0 4px; }
+      .region-detail-drill { padding: 11px 12px; }
+      #counting-reset { min-height: 44px; }
+      .class-filters label { min-height: 44px; align-items: center; }
       .panel input[type="checkbox"], .panel input[type="radio"] { width: 20px; height: 20px; }
       .panel .row label { min-height: 44px; }
       .panel-body summary { padding-top: 12px; padding-bottom: 12px; }
@@ -1644,7 +1656,8 @@ export function generateViewerHtml(
     </p>
   </noscript>
   <main id="app-root">
-    <div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur"></div>
+    <a class="skip-link" href="#region-search-input">Zur Suche springen</a>
+    <div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur" aria-describedby="legend-sr"></div>
     <div id="sheet-scrim" aria-hidden="true"></div>
   <button type="button" id="share-fab" class="share-fab" title="Teilen &amp; Exportieren" aria-label="Ansicht teilen und exportieren" aria-haspopup="dialog">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.6 7.7 6.9l1.4 1.4L11 6.4V15h2V6.4l1.9 1.9 1.4-1.4L12 2.6z"/><path d="M5 11v9a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-9h-2v9H7v-9H5z"/></svg>
@@ -1713,7 +1726,7 @@ export function generateViewerHtml(
         <label for="map-metric-select">Karte zeigt</label>
         <select id="map-metric-select">
           <optgroup label="Radinfrastruktur">
-            <option value="bikeShare">Radinfra je 100 km Straße</option>
+            <option value="bikeShare">km Radinfra je 100 km Straße</option>
             <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
             <option value="busyFederalCovered">Vielbefahrene Bundesstraßen mit Radweg (%)</option>
           </optgroup>
@@ -1802,7 +1815,7 @@ export function generateViewerHtml(
               value="${DEFAULT_OVERLAY_BIKELANE_MIN_ZOOM}"
             />
           </div>
-          <p class="hint overlay-layer-hint">Radwege erst nach starkem Zoom sichtbar.</p>
+          <p class="hint overlay-layer-hint">Radinfrastruktur erst nach starkem Zoom sichtbar.</p>
         <div class="overlay-minzoom-row">
             <label for="overlay-road-minzoom-major">Straßen – ab Zoomstufe (Hauptstraßen)</label>
             <input
@@ -1831,7 +1844,7 @@ export function generateViewerHtml(
       <div class="overlay-color-controls">
         <span class="overlay-section-title">Linienfarbe (Vordergrund)</span>
         <div class="overlay-color-row">
-          <label for="overlay-bikelane-color">Radwege</label>
+          <label for="overlay-bikelane-color">Radinfrastruktur</label>
           <input type="color" id="overlay-bikelane-color" value="${defaultColorScale.bikelaneColor}" />
         </div>
         <div class="overlay-color-row">
@@ -1854,9 +1867,11 @@ export function generateViewerHtml(
             <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
             <a href="./methodik.html">So wird gezählt</a>
           </p>
-          <div class="legend-bar" id="legend-bar"></div>
+          <div class="legend-bar" id="legend-bar" role="img" aria-labelledby="legend-sr"></div>
           <div class="legend-ticks" id="legend-ticks"></div>
           <div class="legend-labels" id="legend-labels"></div>
+          <div class="legend-ends" aria-hidden="true"><span>weniger</span><span>mehr</span></div>
+          <p class="visually-hidden" id="legend-sr"></p>
           <label class="legend-cvd-toggle">
             <input type="checkbox" id="legend-cvd-toggle" />
             Farben für Rot-Grün-Sehschwäche
@@ -2670,6 +2685,9 @@ export function generateViewerHtml(
       } else if (regionDetailEl.parentNode !== regionDetailAnchor.parentNode) {
         regionDetailAnchor.parentNode.insertBefore(regionDetailEl, regionDetailAnchor);
       }
+      // In the sheet the button reads "Zurück zur Karte" (CSS); its name must say the same.
+      const closeBtn = document.getElementById('region-detail-close');
+      if (closeBtn) closeBtn.setAttribute('aria-label', inSheet ? 'Zurück zur Karte' : 'Schließen');
     }
 
     for (const opt of CONFIG.basemapOptions) {
@@ -3285,7 +3303,7 @@ export function generateViewerHtml(
     // percentage reads as "share of roads with a path", which it is not (both directions of a
     // road count, and so do paths away from roads). Numerically it is the same number.
     function formatShare(value) {
-      return formatUiPct(value) + ' km je 100 km';
+      return formatUiPct(value) + '\u00a0km je 100\u00a0km'; // no break between number and unit
     }
 
     const csvEscape = (value) => TildaStats.csvField(value, CSV_SEP);
@@ -3684,6 +3702,14 @@ export function generateViewerHtml(
           }
         }
         labels.appendChild(el);
+      }
+      // What the colours mean, in words (screen readers; the bar itself is a gradient).
+      const legendSr = document.getElementById('legend-sr');
+      if (legendSr) {
+        const title = choroplethTitle ? choroplethTitle.textContent.replace(/^Flächenfarbe \\((.*)\\)$/, '$1') : '';
+        const fmt = (v) => (typeof v === 'number' && Number.isFinite(v) ? deNumber(v, 1) : String(v));
+        legendSr.textContent =
+          'Farbskala ' + title + ': von ' + fmt(min) + ' (wenig) bis ' + fmt(max) + ' (viel). Grau: keine Daten.';
       }
     }
 

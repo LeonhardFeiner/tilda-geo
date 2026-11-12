@@ -242,7 +242,7 @@ describe('generateViewerHtml mobile zoom prevention and redirection', () => {
     expect(html).toContain('<main id="app-root">')
     expect(html).toContain('</main>')
     expect(html).toContain(
-      '<div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur">',
+      '<div id="map" role="region" aria-label="Interaktive Karte der Radinfrastruktur" aria-describedby="legend-sr">',
     )
     expect(html).toContain('<h2 class="settings-heading">Was zählt als Radinfrastruktur?</h2>')
     expect(html).toContain('<h2 class="settings-heading">Karte</h2>')

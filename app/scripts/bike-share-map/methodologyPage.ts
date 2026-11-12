@@ -223,7 +223,7 @@ export function methodologyPageHtml(input: MethodologyPageInput): string {
 
   const peerSection =
     input.peerGemeindeCount > 0
-      ? `<h2>Vergleich mit ähnlichen Gemeinden</h2>
+      ? `<h2 id="vergleich">Vergleich mit ähnlichen Gemeinden</h2>
 <p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit Gemeinden mit ähnlichen
 Voraussetzungen nebeneinanderstehen, wird jede Gemeinde zusätzlich bundesweit mit Gemeinden
 <em>derselben Größenklasse und Verstädterung</em> verglichen:</p>
@@ -240,7 +240,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>`
       : ''
 
   const downloadSection = input.dataDownload
-    ? `<h2>Daten herunterladen</h2>
+    ? `<h2 id="download">Daten herunterladen</h2>
 <p><a href="${input.dataDownload.href}" download><strong>Alle Gebiete als CSV</strong></a>
 (${input.dataDownload.rowCount.toLocaleString('de-DE')} Zeilen, Stand der OpenStreetMap-Daten:
 ${input.dataDateLabel}) · <a href="${input.dataDownload.excelHref}" download>Variante für Excel</a>.
@@ -306,6 +306,14 @@ ${siteIconHeadLinks()}
   table.model-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   table.model-table th.num { text-align: right; }
   footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid #e2e4e0; color: #5c6560; font-size: 0.9rem; }
+  .toc { font-size: 0.9rem; line-height: 1.9; margin: 0 0 20px; color: #5c6560; }
+  h2 { scroll-margin-top: 16px; }
+  @media print {
+    .back, .toc { display: none; }
+    a { color: inherit; text-decoration: none; }
+    h2 { break-after: avoid; }
+    table, .lead, .caveat { break-inside: avoid; }
+  }
 </style>
 </head>
 <body>
@@ -313,21 +321,29 @@ ${siteIconHeadLinks()}
   <a class="back" href="${input.viewerHref}">&larr; Zur Karte</a>
   <h1>Methodik &amp; Datenquellen</h1>
   <p class="sub">Was die Zahlen sagen – und was nicht.</p>
+  <nav class="toc" aria-label="Inhalt">
+    <a href="#karte">Was zeigt die Karte?</a> · <a href="#daten">Datenquellen</a> ·
+    <a href="#zaehlung">Zählung</a> · <a href="#hauptverkehr">Hauptverkehrsstraßen</a> ·
+    <a href="#zeit">Veränderung</a> · <a href="#landstrassen">Landstraßen</a> ·
+    <a href="#modell">Erwartungswert-Modell</a> · <a href="#umweg">Umwege</a> ·
+    <a href="#grenzen">Grenzen der Aussagekraft</a> · <a href="#autor">Wer steht dahinter?</a> ·
+    <a href="#version">Version und Zitierweise</a>
+  </nav>
 
   ${nationalBlock}
 
-  <h2>Was zeigt die Karte?</h2>
+  <h2 id="karte">Was zeigt die Karte?</h2>
   <p>Für jede Verwaltungseinheit die <strong>Kilometer Radinfrastruktur je 100&nbsp;km
   Straße</strong>. Ein Wert von 20 heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
   Radwege, Schutzstreifen, Fahrradstraßen o.&nbsp;Ä. Mitgezählt werden auch eigenständige Radwege
   abseits von Straßen; der Wert ist daher kein Anteil der Straßen mit Radweg (und wird deshalb
   nicht in Prozent angegeben), sondern ein Maß dafür, wie viel Radinfrastruktur es im Verhältnis
   zum Straßennetz gibt. Legende und Rangliste zeigen die Zahl ohne Einheit.</p>
-  <p>Der Anteil misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
+  <p>Der Wert misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
   den Zählfilter lassen sich einzelne Kategorien (z.&nbsp;B. nur baulich getrennte Radwege) ein-
   und ausschließen.</p>
 
-  <h2>Datenquellen</h2>
+  <h2 id="daten">Datenquellen</h2>
   ${li([
     `<strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="${input.sourceRepoUrl}">tilda-geo</a> / <a href="${TILDA_URL}">TILDA</a>. Stand der hier verwendeten Auswertung: ${input.dataDateLabel}.`,
     `<strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.`,
@@ -341,13 +357,13 @@ ${siteIconHeadLinks()}
     `<strong>Siehe auch:</strong> die <a href="${RADINFRA_STATS_URL}">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.`,
   ])}
 
-  <h2>Wie werden Straßen gezählt?</h2>
+  <h2 id="strassen">Wie werden Straßen gezählt?</h2>
   <p>Aus den OSM-Straßentypen (<code>highway=*</code>) werden vier Gruppen gebildet:</p>
   ${roadClassList()}
   <p>Reine Fuß- und Radwege ohne begleitende Fahrbahn zählen <strong>nicht</strong> zur
   Straßenlänge – sonst würde ein gut ausgebautes Radnetz den eigenen Nenner vergrößern.</p>
 
-  <h2>Wie wird Radinfrastruktur gezählt?</h2>
+  <h2 id="zaehlung">Wie wird Radinfrastruktur gezählt?</h2>
   <p>Die Klassifizierung folgt dem Schema von <a href="${RADINFRA_URL}">radinfra.de</a> bzw. TILDA
   (<a href="${OSM_TAGGING_URL}">OSM-Radverkehrs-Tagging</a>). Gezählt wird die Länge aller Wege
   dieser Kategorien:</p>
@@ -371,7 +387,7 @@ ${siteIconHeadLinks()}
   Ein Weg, der über eine Gemeinde- oder Kreisgrenze führt, zählt auf jeder Seite mit dem Teil seiner
   Länge, der dort liegt.</p>
 
-  <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
+  <h2 id="hauptverkehr">Hauptverkehrsstraßen und Zuständigkeit</h2>
   <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
   die angenehmere Verbindung. Ergänzend zeigt die Detailkarte, wie gut die
   <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: die Kilometer Radinfrastruktur je 100&nbsp;km Hauptverkehrsstraße (OSM <code>trunk</code>, <code>primary</code>,
@@ -391,7 +407,7 @@ ${siteIconHeadLinks()}
 
   ${peerSection}
 
-  <h2>Veränderung über die Zeit</h2>
+  <h2 id="zeit">Veränderung über die Zeit</h2>
   <p>Mit jeder Datenaktualisierung wird ein Stand aller Gebiete gespeichert. Sobald ein Stand
   vorliegt, der mindestens zwei Wochen älter ist, zeigt die Detailkarte, wie viel Radinfrastruktur
   seitdem hinzugekommen ist – „neu erfasst oder gebaut“, denn OpenStreetMap unterscheidet nicht
@@ -399,7 +415,7 @@ ${siteIconHeadLinks()}
   Stände, die nach denselben Regeln gezählt wurden; ändert sich die Zählweise, beginnt die Reihe
   neu. Die Angabe gilt für den Standard-Zählfilter.</p>
 
-  <h2>Vielbefahrene Landstraßen</h2>
+  <h2 id="landstrassen">Vielbefahrene Landstraßen</h2>
   <p>Ob eine Landstraße einen eigenen Radweg braucht, hängt nach den <strong>Empfehlungen für
   Radverkehrsanlagen (ERA 2010)</strong> von Verkehrsmenge und Tempo ab. Für regionale Landstraßen
   (Kategorie LS&nbsp;III) gilt ein fahrbahnbegleitender Radweg als <em>sinnvoll</em> ab einem
@@ -432,8 +448,8 @@ ${siteIconHeadLinks()}
   gezählten Bundes-, Staats- und Kreisstraßen angewandt. Ein parallel verlaufender Weg in bis zu
   20&nbsp;m Abstand zählt als vorhanden, auch wenn er nicht durchgehend nutzbar ist.</p>
 
-  <h2>Strukturelles Erwartungswert-Modell</h2>
-  <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Anteil zusammen:
+  <h2 id="modell">Strukturelles Erwartungswert-Modell</h2>
+  <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Wert (km je 100 km Straße) zusammen:
   Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen hat andere Voraussetzungen als eine flache
   Küstengemeinde in Schleswig-Holstein. Damit Gemeinden unter ähnlichen Bedingungen vergleichbar
   werden, schätzt ein <strong>multivariates Regressionsmodell</strong> für jede Gemeinde einen
@@ -582,7 +598,7 @@ ${siteIconHeadLinks()}
   kann die Strecke zum Ortsrand deutlich kürzer sein. Wege außerhalb des Landkreises werden bis etwa
   2,5&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
 
-  <h2>Grenzen der Aussagekraft</h2>
+  <h2 id="grenzen">Grenzen der Aussagekraft</h2>
   <div class="caveat">
   ${li([
     `<strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein. Als Hinweis zeigt die Detailkarte die <em>Kartierungstiefe</em>: den Anteil der Straßenlänge (ohne Zufahrts-/Service-Wege und Autobahnen), für den Tempolimit, Belag und Beleuchtung erfasst sind – Merkmale, die wie Radwege vor Ort erhoben werden, aber nichts darüber sagen, ob es einen Radweg gibt. Ist sie im Vergleich gering, kann auch Radinfrastruktur fehlen. Auf dem Land ist sie von Natur aus etwas niedriger (unbeleuchtete Landstraßen, Tempo 100 ohne Schild), daher am besten mit ähnlichen Gemeinden vergleichen.`,
@@ -590,7 +606,7 @@ ${siteIconHeadLinks()}
     `<strong>Kaum Radinfrastruktur erfasst:</strong> Bei einem Straßennetz ab 20&nbsp;km mit weniger als 0,5&nbsp;km erfasster Radinfrastruktur lässt sich nicht unterscheiden, ob es keine gibt oder ob sie in OpenStreetMap fehlt. Solche Gebiete sind als „kaum erfasst“ markiert.`,
     `<strong>Kleines Straßennetz:</strong> Bei Gemeinden mit sehr wenig erfasstem Straßennetz ist der Prozentwert instabil (wenige Kilometer verschieben ihn stark). Gebiete mit weniger als 5&nbsp;km erfasster Straße bekommen deshalb keinen Rang und fließen weder in die Farbskala noch in Median und Spitzenwert der Vergleiche ein; auf der Karte und in der Detailkarte sind sie weiterhin zu sehen.`,
     `<strong>Momentaufnahme:</strong> Die Karte zeigt den Stand eines Datenabzugs, keine Live-Daten. Neu eingetragene Radwege erscheinen erst mit der nächsten Aktualisierung.`,
-    `<strong>Anteil ≠ Qualität:</strong> Ein Schutzstreifen zählt wie ein baulich getrennter Radweg, solange er nicht über den Filter ausgeschlossen wird.`,
+    `<strong>Kilometer ≠ Qualität:</strong> Ein Schutzstreifen zählt wie ein baulich getrennter Radweg, solange er nicht über den Filter ausgeschlossen wird.`,
     `<strong>Verwaltungsgrenzen aus OSM</strong> können in Einzelfällen von der amtlichen Abgrenzung abweichen.`,
   ])}
   </div>
@@ -618,7 +634,7 @@ ${siteIconHeadLinks()}
     ),
   )}
 
-  <h2>Fehler gefunden? Mitmachen.</h2>
+  <h2 id="mitmachen">Fehler gefunden? Mitmachen.</h2>
   <p>Wenn ein Radweg fehlt oder eine Straße falsch erfasst ist, lässt sich das direkt in
   OpenStreetMap korrigieren – die Karte übernimmt die Änderung bei der nächsten Aktualisierung.
   Ein guter Einstieg ist der <a href="https://www.openstreetmap.org/edit">OSM-Editor</a> oder die
