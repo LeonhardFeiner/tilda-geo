@@ -1,3 +1,4 @@
+import { Script } from 'node:vm'
 import { describe, expect, test } from 'vitest'
 import { generateViewerHtml } from './generateViewerHtml'
 import { minifyInlineScripts } from './minifyPageHtml'
@@ -19,10 +20,8 @@ describe('minifyInlineScripts', () => {
     expect(scripts).toHaveLength(2)
     expect(scripts[0]).not.toContain('comment')
     expect(scripts[0]).toContain('<\\/script')
-    for (const s of scripts) expect(() => new Function(s)).not.toThrow()
     const window: Record<string, unknown> = {}
-    new Function('window', scripts[0]!)(window)
-    new Function('window', scripts[1]!)(window)
+    for (const s of scripts) new Script(s).runInNewContext({ window })
     expect(window).toEqual({ __x: '</script>', __y: 3 })
   })
 
@@ -43,7 +42,7 @@ describe('minifyInlineScripts', () => {
       (m) => m[1] ?? '',
     )
     const controller = scripts.sort((a, b) => b.length - a.length)[0]!
-    expect(() => new Function(controller)).not.toThrow()
+    expect(() => new Script(controller)).not.toThrow() // compiles only; nothing runs
     expect(controller).toContain('__viewerBooted')
     expect(out).toContain('<script src="./statsMsgpack.js?v=')
   })

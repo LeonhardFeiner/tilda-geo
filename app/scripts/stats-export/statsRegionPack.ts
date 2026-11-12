@@ -358,7 +358,7 @@ function decodeV3(pack: PackV3): StatsFeature[] {
     TOPOLOGY_COORD_SCALE,
   )
   const noProps = new Set(pack.noProps ?? [])
-  const features: StatsFeature[] = new Array(n)
+  const features: StatsFeature[] = Array.from({ length: n })
   for (let i = 0; i < n; i++) {
     const properties: Record<string, unknown> = {}
     for (const key of STRING_PROP_KEYS) {
