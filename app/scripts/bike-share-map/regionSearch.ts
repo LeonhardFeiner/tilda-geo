@@ -21,6 +21,8 @@ export type RegionSearchEntry = {
   parentName: string
   /** Total road length as a size proxy, to break ties towards the region people likely meant. */
   size: number
+  /** regionSearchKeys(name), precomputed; entries built elsewhere may leave it out. */
+  keys?: string[]
 }
 
 export type RankedRegionMatch = RegionSearchEntry & { score: number }
@@ -121,6 +123,7 @@ export function buildRegionSearchEntries(features: StatsFeature[], index: Region
       level,
       parentName: parentNameFor(f, index),
       size: sumLengthRecord(props.road_length),
+      keys: regionSearchKeys(name),
     })
   }
   return [...byId.values()]
@@ -159,7 +162,9 @@ export function rankRegionSearchMatches(
 
   const scored: RankedRegionMatch[] = []
   for (const entry of entries) {
-    const score = scoreRegionMatch(regionSearchKeys(entry.name), queryKeys)
+    // keys are computed once per entry (buildRegionSearchEntries): 11k names per keystroke
+    // would otherwise be normalised again and again
+    const score = scoreRegionMatch(entry.keys ?? regionSearchKeys(entry.name), queryKeys)
     if (score === MATCH_NONE) continue
     scored.push({ ...entry, score })
   }

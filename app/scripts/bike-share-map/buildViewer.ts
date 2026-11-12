@@ -21,6 +21,7 @@ import {
   splitGemeindeGeometry,
   splitStatsFeaturesByLevel,
 } from '../stats-export/statsRegionPack'
+import { splitContextDataset } from './compactContextDataset'
 import {
   GEMEINDE_GEOMETRY_DIR,
   PROJECT_LEAD,
@@ -29,7 +30,7 @@ import {
   STATION_AREAS_PAGE_STEM,
   VIEWER_SOURCE_REPO_URL,
 } from './constants'
-import { VIEWER_FILES, VIEWER_PASS_THROUGH_DATASETS } from './constants'
+import { contextExtraFile, VIEWER_FILES, VIEWER_PASS_THROUGH_DATASETS } from './constants'
 import { readDataDateLabel } from './dataDate'
 import {
   buildDataDownloadRow,
@@ -114,10 +115,18 @@ function recordDatasetStamp(fileName: string, data: unknown) {
 // front: stats-core.msgpack (admin levels most visits actually browse) and stats-extra.msgpack
 // (Gemeindeverbände/Stadtbezirke, ~40% of the combined size, behind two niche Darstellung
 // options) — fetched lazily only once one of those is selected. See splitStatsFeaturesByLevel.
+// Which regions the context datasets may carry: those of the packs every visit loads, and those
+// of stats-extra (served separately, see splitContextDataset).
+let mainPackIds: Set<string> | null = null
+let extraPackIds: Set<string> | null = null
 if (existsSync(msgpackPath)) {
   const packBytes = new Uint8Array(await Bun.file(msgpackPath).arrayBuffer())
   const fullFeatures = decodeStatsRegionPack(packBytes)
   const { core, extra } = splitStatsFeaturesByLevel(fullFeatures)
+  const idsOf = (features: typeof fullFeatures) =>
+    new Set(features.map((f) => String(f.properties?.id ?? '')).filter(Boolean))
+  mainPackIds = idsOf(core)
+  extraPackIds = idsOf(extra)
   // The Gemeinde polygons are over half of the first download and the default view never draws
   // one: keep them out of stats-core and write one small file per Landkreis the page fetches
   // when a view needs them.
@@ -263,15 +272,18 @@ if (existsSync(demographicsPath) && geoFeatures.length) {
     process.stdout.write(
       `Peer groups: ${peerGemeindeCount} Gemeinden + ${peerKreisCount} Kreise in ${Object.keys(peers.groups).length} buckets → ${viewerDir}/${VIEWER_FILES.peers}\n`,
     )
-    writeFileSync(join(viewerDir, VIEWER_FILES.density), JSON.stringify({ byId: densityById }))
-    process.stdout.write(
-      `Density: ${Object.keys(densityById).length} regions → ${viewerDir}/${VIEWER_FILES.density}\n`,
-    )
-    if (transitById) {
-      writeFileSync(join(viewerDir, VIEWER_FILES.transit), JSON.stringify({ byId: transitById }))
+    const writeContext = (file: string, byId: Record<string, unknown>, label: string) => {
+      const split = splitContextDataset(byId, mainPackIds, extraPackIds)
+      writeFileSync(join(viewerDir, file), JSON.stringify({ byId: split.main }))
+      writeFileSync(join(viewerDir, contextExtraFile(file)), JSON.stringify({ byId: split.extra }))
       process.stdout.write(
-        `Transit & highway access: ${Object.keys(transitById).length} regions → ${viewerDir}/${VIEWER_FILES.transit}\n`,
+        `${label}: ${Object.keys(split.main).length} regions → ${viewerDir}/${file}` +
+          ` (+${Object.keys(split.extra).length} in ${contextExtraFile(file)}, ${split.dropped} outside the packs dropped)\n`,
       )
+    }
+    writeContext(VIEWER_FILES.density, densityById, 'Density')
+    if (transitById) {
+      writeContext(VIEWER_FILES.transit, transitById, 'Transit & highway access')
     } else {
       skipDataset([VIEWER_FILES.transit], 'no transit, station-access or highway-access input')
     }
@@ -299,9 +311,13 @@ for (const dataset of VIEWER_PASS_THROUGH_DATASETS) {
       byId?: Record<string, unknown>
     }
     recordDatasetStamp(dataset.source, data)
-    writeFileSync(join(viewerDir, target), JSON.stringify({ byId: data.byId ?? {} }))
+    const split = splitContextDataset(data.byId ?? {}, mainPackIds, extraPackIds)
+    writeFileSync(join(viewerDir, target), JSON.stringify({ byId: split.main }))
+    // Always written (possibly empty) so the page's fetch after stats-extra never 404s.
+    writeFileSync(join(viewerDir, contextExtraFile(target)), JSON.stringify({ byId: split.extra }))
     process.stdout.write(
-      `${dataset.label}: ${Object.keys(data.byId ?? {}).length} regions → ${viewerDir}/${target}\n`,
+      `${dataset.label}: ${Object.keys(split.main).length} regions → ${viewerDir}/${target}` +
+        ` (+${Object.keys(split.extra).length} in ${contextExtraFile(target)}, ${split.dropped} outside the packs dropped)\n`,
     )
   } catch (err) {
     skipDataset([target], err)

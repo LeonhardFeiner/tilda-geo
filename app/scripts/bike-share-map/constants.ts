@@ -106,6 +106,9 @@ export const VIEWER_FILES = {
  * Context datasets copied from output/<source> into output/viewer/<VIEWER_FILES[key]> as
  * {byId}. Each is optional: absent until its fetch script has run, and the page then omits it.
  */
+/** The sibling file with a context dataset's Gemeindeverbände/Stadtbezirke entries. */
+export const contextExtraFile = (file: string) => file.replace(/\.json$/, '-extra.json')
+
 export const VIEWER_PASS_THROUGH_DATASETS = [
   { key: 'terrain', source: 'terrain-flatness.json', label: 'Terrain' },
   {

@@ -17,6 +17,7 @@ import {
   TILDA_BIKELANES_TILES,
   TILDA_ROADS_TILES,
   UNFALLATLAS_YEAR,
+  contextExtraFile,
   VIEWER_FILES,
 } from './constants'
 import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
@@ -44,6 +45,23 @@ const DESKTOP_MEDIA =
   '(min-width: 1025px) and (min-height: 501px), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: fine), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: none)'
+
+/** The context datasets the page loads by region id (gemeinde-*.json). */
+const CONTEXT_DATASET_KEYS = [
+  'density',
+  'transit',
+  'terrain',
+  'zensus',
+  'cars',
+  'calmed',
+  'accidents',
+  'commuters',
+  'mapping',
+  'traffic',
+  'trafficFederal',
+  'regiostar',
+  'atlas',
+] as const
 
 export function generateViewerHtml(
   generatedAt: string,
@@ -109,6 +127,14 @@ export function generateViewerHtml(
     neighborsMsgpackUrl: v(`./${VIEWER_FILES.neighborsMsgpack}`),
     neighborsUrl: v(`./${VIEWER_FILES.neighborsJson}`),
     peersUrl: v(`./${VIEWER_FILES.peers}`),
+    // context dataset url → url of its Gemeindeverbände/Stadtbezirke entries (see
+    // compactContextDataset.ts); fetched once stats-extra is loaded
+    contextExtraUrls: Object.fromEntries(
+      CONTEXT_DATASET_KEYS.map((key) => [
+        v(`./${VIEWER_FILES[key]}`),
+        v(`./${contextExtraFile(VIEWER_FILES[key])}`),
+      ]),
+    ),
     densityUrl: v(`./${VIEWER_FILES.density}`),
     transitUrl: v(`./${VIEWER_FILES.transit}`),
     terrainUrl: v(`./${VIEWER_FILES.terrain}`),
@@ -2016,14 +2042,21 @@ export function generateViewerHtml(
       if (!res.ok) throw new Error('stats-core.msgpack: HTTP ' + res.status);
       return await res.arrayBuffer();
     });
-    // The Gemeinden (stats-gemeinden.msgpack) start downloading once stats-core is in, so the two
-    // don't share the bandwidth the first map is waiting for.
-    const gemeindenDataPromise = statsDataPromise.then(() =>
-      fetch(CONFIG.statsGemeindenMsgpackUrl).then(async (res) => {
-        if (!res.ok) throw new Error('stats-gemeinden.msgpack: HTTP ' + res.status);
-        return await res.arrayBuffer();
-      }),
-    );
+    // The Gemeinden (stats-gemeinden.msgpack, ~740 KB) are not part of the first download: the
+    // landing page (Landkreise of Germany) draws none. They come when a view, the search, a
+    // selection or an export needs them — and otherwise a few idle seconds after boot, so a
+    // visitor who stays has them before they look for their Gemeinde. Never before stats-core
+    // is in: the two must not share the bandwidth the first map is waiting for.
+    let gemeindenDataPromise = null;
+    function startGemeindenDownload() {
+      gemeindenDataPromise ??= statsDataPromise.then(() =>
+        fetch(CONFIG.statsGemeindenMsgpackUrl).then(async (res) => {
+          if (!res.ok) throw new Error('stats-gemeinden.msgpack: HTTP ' + res.status);
+          return await res.arrayBuffer();
+        }),
+      );
+      return gemeindenDataPromise;
+    }
     // Only the plain landing page (Landkreise of Germany, nothing selected) may draw before the
     // Gemeinden are in. Any URL that picks an area, a level, a region or a metric waits for them.
     const VIEW_PARAMS = ['region', 'focus', 'simple', 'gebiet', 'untergebiet', 'darstellung', 'metrik'];
@@ -2217,11 +2250,30 @@ export function generateViewerHtml(
       const max = Math.max(m.log ? at(0.98) : Math.ceil(at(0.98)), min + (m.log ? 0.5 : 5));
       return { min, max, dataMin, dataMax, scaleCapped: min > dataMin || max < dataMax };
     }
+    // The context files hold the regions of the packs every visit loads; the entries for
+    // Gemeindeverbände and Stadtbezirke sit in a sibling file, merged in once stats-extra is in.
+    const contextIndexes = []; // { url, data, extraMerged }
+    async function mergeContextExtra(entry) {
+      const extraUrl = CONFIG.contextExtraUrls[entry.url];
+      if (!extraUrl || entry.extraMerged) return;
+      entry.extraMerged = true;
+      try {
+        const res = await fetch(extraUrl);
+        const data = res.ok ? await res.json() : null;
+        if (data && data.byId) Object.assign(entry.data.byId, data.byId);
+      } catch (e) {
+        entry.extraMerged = false; // the next stats-extra consumer retries
+      }
+    }
     const loadIndex = (url, assign) =>
       fetch(url)
         .then((res) => (res.ok ? res.json() : null))
-        .then((data) => {
-          if (data && data.byId) assign(data);
+        .then(async (data) => {
+          if (!data || !data.byId) return;
+          const entry = { url, data, extraMerged: false };
+          contextIndexes.push(entry);
+          if (extraLevelsLoaded) await mergeContextExtra(entry);
+          assign(data);
         })
         .catch(() => {});
     function rerenderSelectedRegionContext() {
@@ -2361,12 +2413,15 @@ export function generateViewerHtml(
       if (extraLevelsLoaded) return Promise.resolve();
       if (extraLevelsPromise) return extraLevelsPromise;
       extraLevelsPromise = loadRegionFeatures(CONFIG.statsExtraMsgpackUrl)
-        .then((extraFeatures) => {
+        .then(async (extraFeatures) => {
           allFeatures = allFeatures.concat(extraFeatures);
           rebuildRegionIndex();
           extraLevelsLoaded = true;
           // The Gemeindeverbände/Stadtbezirke options may only now have become selectable.
           if (typeof populateDarstellungSelect === 'function') populateDarstellungSelect();
+          // Their context figures, for the indexes already loaded.
+          await Promise.all(contextIndexes.map(mergeContextExtra));
+          rerenderSelectedRegionContext();
         })
         .catch((err) => {
           extraLevelsPromise = null; // let the next call retry instead of failing forever
@@ -2429,19 +2484,50 @@ export function generateViewerHtml(
 
     let gemeindenLoaded = false;
     let gemeindenPromise = null;
+    /** Gemeinden wanted, nobody waiting: a failure is shown, not thrown. */
+    function loadGemeindenInBackground() {
+      if (gemeindenLoaded) return;
+      ensureGemeindenLoaded().catch((err) =>
+        showLoadError(err, 'Die Gemeinden konnten nicht geladen werden.'),
+      );
+    }
+    /**
+     * The Gemeinden arrived after the page was up: the level list, the Untergebiet list (a Kreis
+     * counts as kreisfrei while none of its Gemeinden are known), the card (a Kreis's model gap
+     * is the sum of its Gemeinden) and anything typed into the search before they came.
+     */
+    function onGemeindenArrivedAfterBoot() {
+      populateDarstellungSelect();
+      const before = untergebietSelect.value;
+      populateUntergebietSelect();
+      const sameRegion = before.replace(/^(lk|kreisfrei):/, '');
+      const match = [...untergebietSelect.options].find(
+        (o) => o.value === before || (sameRegion && o.value === 'lk:' + sameRegion) || (sameRegion && o.value === 'kreisfrei:' + sameRegion),
+      );
+      untergebietSelect.value = match ? match.value : before;
+      if (untergebietSelect.value !== before) {
+        syncViewScopeFromUi();
+        scheduleUrlSync();
+      }
+      refreshSelectedRegionIfNeeded();
+      const input = document.getElementById('region-search-input');
+      if (input && input.value.trim()) input.dispatchEvent(new Event('input', { bubbles: true }));
+    }
     /** Resolves once the Gemeinden are part of allFeatures (and the indexes are rebuilt). */
     function ensureGemeindenLoaded() {
       if (gemeindenLoaded) return Promise.resolve();
       if (gemeindenPromise) return gemeindenPromise;
-      gemeindenPromise = gemeindenDataPromise
+      gemeindenPromise = startGemeindenDownload()
         .then((bytes) => decodeStatsPack(bytes))
         .then((features) => {
           allFeatures = allFeatures.concat(features);
           rebuildRegionIndex();
           gemeindenLoaded = true;
+          if (window.__viewerBooted) onGemeindenArrivedAfterBoot();
         })
         .catch((err) => {
           gemeindenPromise = null;
+          gemeindenDataPromise = null; // a failed download is retried on the next need
           throw err;
         });
       return gemeindenPromise;
@@ -4171,63 +4257,73 @@ export function generateViewerHtml(
 
     let hoveredRegionId = null;
 
-    function hoverHighlightGeojson() {
-      if (!hoveredRegionId || hoveredRegionId === selectedFeatureId) {
-        return { type: 'FeatureCollection', features: [] };
-      }
-      return highlightGeojsonForIds([hoveredRegionId], lastRankingFeatures);
+    // The hover highlight is drawn from the 'regions' source itself (promoteId: 'id') through
+    // feature-state: moving across polygons flips a flag instead of sending the hovered
+    // polygon's geometry to the map worker on every boundary crossing.
+    const HOVER_ON = ['boolean', ['feature-state', 'hover'], false];
+    function ensureHoverHighlightLayer() {
+      if (map.getLayer('regions-hover-fill')) return;
+      const beforeId = highlightLayerBeforeId();
+      map.addLayer(
+        {
+          id: 'regions-hover-fill',
+          type: 'fill',
+          source: 'regions',
+          paint: { 'fill-color': '#1565c0', 'fill-opacity': ['case', HOVER_ON, 0.14, 0] },
+        },
+        beforeId,
+      );
+      map.addLayer(
+        {
+          id: 'regions-hover-outline',
+          type: 'line',
+          source: 'regions',
+          paint: {
+            'line-color': '#0d47a1',
+            'line-opacity': ['case', HOVER_ON, 1, 0],
+            'line-width': ['interpolate', ['linear'], ['zoom'], 6, 2, 9, 3, 11, 4, 13, 5],
+          },
+        },
+        beforeId,
+      );
     }
 
-    function ensureHoverHighlightLayer() {
-      const beforeId = highlightLayerBeforeId();
-      const data = hoverHighlightGeojson();
-      if (!map.getSource('regions-hover')) {
-        map.addSource('regions-hover', { type: 'geojson', data });
-        map.addLayer(
-          {
-            id: 'regions-hover-fill',
-            type: 'fill',
-            source: 'regions-hover',
-            paint: { 'fill-color': '#1565c0', 'fill-opacity': 0.14 },
-          },
-          beforeId,
-        );
-        map.addLayer(
-          {
-            id: 'regions-hover-outline',
-            type: 'line',
-            source: 'regions-hover',
-            paint: {
-              'line-color': '#0d47a1',
-              'line-width': ['interpolate', ['linear'], ['zoom'], 6, 2, 9, 3, 11, 4, 13, 5],
-            },
-          },
-          beforeId,
-        );
-      } else {
-        map.getSource('regions-hover').setData(data);
+    function setHoverFeatureState(id, hover) {
+      if (!id || !map?.getSource('regions')) return;
+      try {
+        map.setFeatureState({ source: 'regions', id }, { hover });
+      } catch (e) {
+        /* the source was just replaced */
       }
     }
 
     function setHoveredRegionId(id) {
       if (hoveredRegionId === id) return;
+      setHoverFeatureState(hoveredRegionId, false);
       hoveredRegionId = id;
-      if (map?.getSource('regions-hover')) {
-        map.getSource('regions-hover').setData(hoverHighlightGeojson());
-      }
+      // the selected region has its own, stronger outline
+      if (id && id !== selectedFeatureId) setHoverFeatureState(id, true);
       syncRankingRowHover();
     }
 
+    let hoveredRankingRow = null;
     function syncRankingRowHover() {
       const list = document.getElementById('ranking-list');
       if (!list) return;
-      for (const li of list.querySelectorAll('li[data-ranking-id]')) {
-        const isHover = li.dataset.rankingId === hoveredRegionId;
-        li.classList.toggle('ranking-row-hovered', isHover);
-        if (isHover && !li.matches(':hover')) {
-          li.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
-        }
+      if (
+        hoveredRankingRow &&
+        (!hoveredRankingRow.isConnected || hoveredRankingRow.dataset.rankingId !== hoveredRegionId)
+      ) {
+        hoveredRankingRow.classList.remove('ranking-row-hovered');
+        hoveredRankingRow = null;
       }
+      if (!hoveredRegionId || hoveredRankingRow) return;
+      // one lookup instead of a pass over every row (11k in the "Alle" list)
+      const li = list.querySelector('li[data-ranking-id="' + CSS.escape(hoveredRegionId) + '"]');
+      if (!li) return;
+      li.classList.add('ranking-row-hovered');
+      hoveredRankingRow = li;
+      if (!li.matches(':hover')) li.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
     }
 
     function updateMapHighlights() {
@@ -4235,6 +4331,8 @@ export function generateViewerHtml(
       ensureSimpleFocusHighlightLayer();
       ensureSelectedHighlightLayer();
       ensureHoverHighlightLayer();
+      // a hovered region that just got selected keeps only the selection outline
+      if (hoveredRegionId && hoveredRegionId === selectedFeatureId) setHoverFeatureState(hoveredRegionId, false);
     }
 
     // ==== Map metrics and the ranking list ====
@@ -4273,6 +4371,9 @@ export function generateViewerHtml(
       return true;
     }
 
+    // One collator for every name comparison: localeCompare(…, 'de') builds one per call, which
+    // made a ranking sort of 11k Gemeinden take hundreds of milliseconds in Safari.
+    const DE_COLLATOR = new Intl.Collator('de');
     function compareByActiveMetric(a, b) {
       const metric = currentMapMetric || 'bikeShare';
       const av = getFeatureMetricValue(a, metric);
@@ -4280,12 +4381,12 @@ export function generateViewerHtml(
       const aValid = typeof av === 'number' && Number.isFinite(av);
       const bValid = typeof bv === 'number' && Number.isFinite(bv);
       if (!aValid && !bValid) {
-        return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
+        return DE_COLLATOR.compare(String(a.properties?.name ?? ''), String(b.properties?.name ?? ''));
       }
       if (!aValid) return 1;
       if (!bValid) return -1;
       if (bv !== av) return simpleMapMetric(metric)?.ascending ? av - bv : bv - av;
-      return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
+      return DE_COLLATOR.compare(String(a.properties?.name ?? ''), String(b.properties?.name ?? ''));
     }
 
     function formatRankingMetricValue(val, metric) {
@@ -4495,7 +4596,7 @@ export function generateViewerHtml(
       const ap = a.properties?.bikeSharePct;
       const bp = b.properties?.bikeSharePct;
       if (typeof ap !== 'number' && typeof bp !== 'number') {
-        return String(a.properties?.name ?? '').localeCompare(String(b.properties?.name ?? ''), 'de');
+        return DE_COLLATOR.compare(String(a.properties?.name ?? ''), String(b.properties?.name ?? ''));
       }
       if (typeof ap !== 'number') return 1;
       if (typeof bp !== 'number') return -1;
@@ -4597,11 +4698,9 @@ export function generateViewerHtml(
       return typeof f.properties?.bikeSharePct === 'number' && !f.properties?.lowRoad;
     }
 
-    function rebuildRankIndex(features) {
+    /** withMetric: the ranked features, already sorted by the active metric (updateRanking). */
+    function rebuildRankIndex(withMetric) {
       rankByFeatureId.clear();
-      const withMetric = [...features]
-        .filter((f) => isRankedActiveMetric(f, currentMapMetric))
-        .sort(compareByActiveMetric);
       withMetric.forEach((f, i) => {
         const id = f.properties?.id;
         if (id) rankByFeatureId.set(id, { rank: i + 1, total: withMetric.length });
@@ -7824,7 +7923,7 @@ export function generateViewerHtml(
       rankingBarBounds = RankingDisplay.rankingBarBounds(
         withMetric.map((f) => getFeatureMetricValue(f, currentMapMetric || 'bikeShare')),
       );
-      rebuildRankIndex(sorted);
+      rebuildRankIndex(withMetric);
 
       const topN = currentRankingTopN() ?? DEFAULT_RANKING_TOP_N;
       // Top & Flop and Alle show the same rows for a short list, so the switch would do nothing.
@@ -10624,7 +10723,12 @@ export function generateViewerHtml(
       });
     });
     if (regionSearchInput) {
+      // Looking for a place means a Gemeinde most of the time: fetch them at the first sign.
+      regionSearchInput.addEventListener('focus', () => {
+        if (rawLoaded) loadGemeindenInBackground();
+      });
       regionSearchInput.addEventListener('input', () => {
+        if (rawLoaded) loadGemeindenInBackground();
         renderRegionSearchResults(regionSearchInput.value.trim());
       });
       regionSearchInput.addEventListener('search', () => {
@@ -10955,8 +11059,10 @@ export function generateViewerHtml(
 
     function ensureNeighborsLoaded() {
       if (!rawLoaded || !regionIndex || !allFeatures.length || neighborIndex) return;
+      // The precomputed index is fetched once; building it in a worker (a copy of every
+      // feature with its geometry) is the fallback for a failed fetch (onNeighborsLoadFailed),
+      // not for a second call while the fetch is still in flight.
       if (!neighborsFetchStarted) startNeighborsBackgroundLoad();
-      else if (!neighborsBuildStarted) buildNeighborsInWorker();
     }
 
     async function loadPrecomputedNeighborsOnMain() {
@@ -11070,16 +11176,11 @@ export function generateViewerHtml(
         urlSyncBaseline = currentStateUrl();
         window.__viewerBooted = true;
         if (!gemeindenLoaded) {
-          ensureGemeindenLoaded()
-            .then(() => {
-              // New regions: the level list, the search, the card (a Kreis's model gap is the
-              // sum of its Gemeinden) and anything typed into the search before they came.
-              populateDarstellungSelect();
-              refreshSelectedRegionIfNeeded();
-              const input = document.getElementById('region-search-input');
-              if (input && input.value.trim()) input.dispatchEvent(new Event('input', { bubbles: true }));
-            })
-            .catch((err) => showLoadError(err, 'Die Gemeinden konnten nicht geladen werden.'));
+          const idle = (fn) =>
+            typeof requestIdleCallback === 'function'
+              ? requestIdleCallback(fn, { timeout: 8000 })
+              : setTimeout(fn, 4000);
+          setTimeout(() => idle(loadGemeindenInBackground), 3000);
         }
       } catch (e) {
         showLoadError(e, 'Die Karte konnte nicht vollständig geladen werden.');
