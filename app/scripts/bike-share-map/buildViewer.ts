@@ -47,6 +47,7 @@ import { generateSharePages } from './generateSharePages'
 import { generateViewerHtml } from './generateViewerHtml'
 import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
+import { minifyInlineScripts } from './minifyPageHtml'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
 import { writeSiteIcons } from './siteIcon'
@@ -500,11 +501,7 @@ for (const target of bundleTargets) {
   }
 }
 
-for (const workerEntry of [
-  'neighbors.worker.ts',
-  'neighborsBuild.worker.ts',
-  'statsDecode.worker.ts',
-] as const) {
+for (const workerEntry of ['neighbors.worker.ts', 'neighborsBuild.worker.ts'] as const) {
   const workerBundle = await Bun.build({
     entrypoints: [join(scriptDir, workerEntry)],
     outdir: viewerDir,
@@ -639,6 +636,22 @@ if (skippedDatasets.length) {
 }
 
 process.stdout.write(`Viewer: ${viewerDir}/index.html\n`)
+
+// Last: the pages are generated readable (and tested that way); what gets served is minified.
+for (const page of [
+  'index.html',
+  'methodik.html',
+  'impressum.html',
+  `${STATION_AREAS_PAGE_STEM}.html`,
+  `${DETOUR_PAGE_STEM}.html`,
+]) {
+  const path = join(viewerDir, page)
+  if (!existsSync(path)) continue
+  const html = readFileSync(path, 'utf8')
+  const minified = await minifyInlineScripts(html)
+  writeFileSync(path, minified, 'utf8')
+  process.stdout.write(`Minified ${page}: ${html.length} → ${minified.length} bytes\n`)
+}
 process.stdout.write(`Needs:  ${msgpackPath} (bun run bike-share-map:export-stats-geojson)\n`)
 process.stdout.write(`Open:   cd ${viewerDir} && python3 -m http.server 8766\n`)
 process.stdout.write(`URL params (all optional):\n`)

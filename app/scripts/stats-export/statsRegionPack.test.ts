@@ -1,4 +1,4 @@
-import { encode } from '@msgpack/msgpack'
+import { decode, encode } from '@msgpack/msgpack'
 import { describe, expect, test } from 'vitest'
 import {
   decodeStatsRegionPack,
@@ -7,6 +7,47 @@ import {
   splitGemeindeGeometry,
   splitStatsFeaturesByLevel,
 } from './statsRegionPack'
+
+/** Reads the arc count at the head of a v3 arc stream. */
+class VarintCount {
+  arcs: number
+  constructor(bytes: Uint8Array) {
+    let z = 0
+    let mul = 1
+    let i = 0
+    for (;;) {
+      const b = bytes[i++]!
+      z += (b & 0x7f) * mul
+      if (!(b & 0x80)) break
+      mul *= 0x80
+    }
+    this.arcs = z
+  }
+}
+
+/** A v2 coordinate line: zigzag varints of 1e-5° deltas. */
+function v2Line(positions: number[][]) {
+  const out: number[] = []
+  const push = (n: number) => {
+    let z = n < 0 ? -2 * n - 1 : 2 * n
+    while (z >= 0x80) {
+      out.push((z % 0x80) | 0x80)
+      z = Math.floor(z / 0x80)
+    }
+    out.push(z)
+  }
+  let px = 0
+  let py = 0
+  for (const [lng, lat] of positions) {
+    const x = Math.round(lng! * 1e5)
+    const y = Math.round(lat! * 1e5)
+    push(x - px)
+    push(y - py)
+    px = x
+    py = y
+  }
+  return Uint8Array.from(out)
+}
 
 describe('statsRegionPack', () => {
   test('round-trips feature collection', () => {
@@ -23,7 +64,7 @@ describe('statsRegionPack', () => {
     expect(decoded[0]?.properties?.id).toBe('relation/1')
   })
 
-  test('keeps polygon and multipolygon coordinates to ~1 m', () => {
+  test('keeps polygon and multipolygon coordinates to ~10 m (1e-4°)', () => {
     const ring = [
       [10.123456789, 48.987654321],
       [10.2, 48.9],
@@ -47,13 +88,13 @@ describe('statsRegionPack', () => {
     expect(poly.type).toBe('Polygon')
     expect(poly.coordinates[0]).toHaveLength(4)
     poly.coordinates[0]!.forEach(([x, y], i) => {
-      expect(x).toBeCloseTo(ring[i]![0]!, 5)
-      expect(y).toBeCloseTo(ring[i]![1]!, 5)
+      expect(Math.abs(x! - ring[i]![0]!)).toBeLessThanOrEqual(0.5e-4)
+      expect(Math.abs(y! - ring[i]![1]!)).toBeLessThanOrEqual(0.5e-4)
     })
     expect(poly.coordinates[0]![0]).toEqual(poly.coordinates[0]![3])
     const multi = decoded[1]?.geometry as { coordinates: number[][][][] }
     expect(multi.coordinates.map((p) => p.length)).toEqual([2, 1])
-    expect(multi.coordinates[0]![1]![1]![0]).toBeCloseTo(-0.5, 5)
+    expect(multi.coordinates[0]![1]![1]![0]).toBeCloseTo(-0.5, 4)
   })
 
   test('stores lengths to the metre and leaves other props alone', () => {
@@ -76,6 +117,170 @@ describe('statsRegionPack', () => {
     expect(p?.road_length).toEqual({ secondary: 13.017 })
     expect(p?.bikelane_length).toEqual({ needsClarification: 2.896 })
     expect(p?.name).toBe('A')
+  })
+
+  test('neighbours share their border: it is stored once, and both get it back unchanged', () => {
+    // two squares side by side, the right one drawn the other way round
+    const left = [
+      [10, 48],
+      [11, 48],
+      [11, 49],
+      [10, 49],
+      [10, 48],
+    ]
+    const right = [
+      [11, 48],
+      [11, 49],
+      [12, 49],
+      [12, 48],
+      [11, 48],
+    ]
+    const features = [
+      {
+        type: 'Feature',
+        properties: { id: 'l' },
+        geometry: { type: 'Polygon', coordinates: [left] },
+      },
+      {
+        type: 'Feature',
+        properties: { id: 'r' },
+        geometry: { type: 'Polygon', coordinates: [right] },
+      },
+      {
+        type: 'Feature',
+        properties: { id: 'both' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [10, 48],
+              [11, 48],
+              [12, 48],
+              [12, 49],
+              [11, 49],
+              [10, 49],
+              [10, 48],
+            ],
+          ],
+        },
+      },
+    ]
+    const bytes = encodeStatsRegionPack(features)
+    const pack = decode(bytes) as { topology: { arcs: Uint8Array; geometries: unknown[] } }
+    // the shared border 11,48–11,49 is one arc; the outer halves of left and right are two
+    // more, and the outline of 'both' is made of exactly those two — no new arc for it
+    expect(new VarintCount(pack.topology.arcs).arcs).toBe(3)
+    const decoded = decodeStatsRegionPack(bytes)
+    expect(decoded.map((f) => f.geometry)).toEqual(features.map((f) => f.geometry))
+  })
+
+  test("an enclave is its host's hole: one arc for both", () => {
+    const inner = [
+      [10.2, 48.2],
+      [10.4, 48.2],
+      [10.4, 48.4],
+      [10.2, 48.4],
+      [10.2, 48.2],
+    ]
+    const outer = [
+      [10, 48],
+      [11, 48],
+      [11, 49],
+      [10, 49],
+      [10, 48],
+    ]
+    const features = [
+      {
+        type: 'Feature',
+        properties: { id: 'host' },
+        geometry: { type: 'Polygon', coordinates: [outer, inner.slice().reverse()] },
+      },
+      {
+        type: 'Feature',
+        properties: { id: 'enclave' },
+        geometry: { type: 'Polygon', coordinates: [inner] },
+      },
+    ]
+    const bytes = encodeStatsRegionPack(features)
+    expect(
+      new VarintCount((decode(bytes) as { topology: { arcs: Uint8Array } }).topology.arcs).arcs,
+    ).toBe(2)
+    expect(decodeStatsRegionPack(bytes).map((f) => f.geometry)).toEqual(
+      features.map((f) => f.geometry),
+    )
+  })
+
+  test('simplifyMetres thins borders but keeps neighbours identical along them', () => {
+    const wiggly = (x0: number) => {
+      const pts: number[][] = [[x0, 48]]
+      for (let i = 1; i < 20; i++) pts.push([x0 + 0.5 + (i % 2) * 0.0005, 48 + i * 0.05])
+      pts.push([x0 + 0.5, 49], [x0, 49], [x0, 48])
+      return pts
+    }
+    const a = wiggly(10)
+    const b = a.map(([x, y]) => [x! + 0.5, y!]) // shares a's right side as its left side
+    const features = [
+      { type: 'Feature', properties: { id: 'a' }, geometry: { type: 'Polygon', coordinates: [a] } },
+      {
+        type: 'Feature',
+        properties: { id: 'b' },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              a[1]!,
+              ...b.slice(1, 21).map(([x, y]) => [x! - 0.5 + 0.5, y!]),
+              [10.5, 49],
+              a[22]!,
+              a[1]!,
+            ],
+          ],
+        },
+      },
+    ]
+    const plain = decodeStatsRegionPack(encodeStatsRegionPack(features))
+    const thin = decodeStatsRegionPack(encodeStatsRegionPack(features, { simplifyMetres: 200 }))
+    const ringOf = (f: { geometry?: unknown }) =>
+      (f.geometry as { coordinates: number[][][] }).coordinates[0]!
+    expect(ringOf(thin[0]!).length).toBeLessThan(ringOf(plain[0]!).length)
+    expect(ringOf(thin[0]!).length).toBeGreaterThanOrEqual(4)
+    // every point of the thinned shared side is on both polygons
+    const keys = (r: number[][]) => new Set(r.map((p) => p.join(',')))
+    const sideA = ringOf(thin[0]!).filter(([x]) => Math.abs(x! - 10.5) < 0.001)
+    expect(sideA.length).toBeGreaterThan(0)
+    const bKeys = keys(ringOf(thin[1]!))
+    for (const p of sideA) expect(bKeys.has(p.join(','))).toBe(true)
+  })
+
+  test('still reads v2 packs', () => {
+    const features = [
+      {
+        type: 'Feature',
+        properties: { id: 'a', road_length: { primary: 1.234 } },
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [10, 48],
+              [11, 48],
+              [11, 49],
+              [10, 48],
+            ],
+          ],
+        },
+      },
+    ]
+    const v2 = encode({
+      version: 2,
+      features: [
+        {
+          ...features[0],
+          properties: { id: 'a', road_length: { primary: 1234 } },
+          geometry: { type: 'Polygon', lines: [v2Line(features[0]!.geometry.coordinates[0]!)] },
+        },
+      ],
+    })
+    expect(decodeStatsRegionPack(v2)).toEqual(features)
   })
 
   test('still reads v1 packs', () => {

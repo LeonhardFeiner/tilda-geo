@@ -90,7 +90,6 @@ export function generateViewerHtml(
       gemeindeGeometry: versionOf(GEMEINDE_GEOMETRY_DIR),
       neighborsBuildWorker: versionOf('neighborsBuild.worker.js'),
       neighborsWorker: versionOf('neighbors.worker.js'),
-      statsDecodeWorker: versionOf('statsDecode.worker.js'),
     },
     basemap: DEFAULT_BASEMAP,
     basemapStyles,
@@ -2418,44 +2417,12 @@ export function generateViewerHtml(
     }
 
     /**
-     * Decode a stats pack in a worker (statsDecode.worker.js) so the page stays responsive while
-     * ~11k regions unpack; the bytes are transferred, not copied. Falls back to decoding here
-     * when workers are unavailable or the worker fails.
+     * Decode a stats pack. The v3 packs (statsRegionPack.ts) are flat columns and shared-border
+     * arcs: ~30 ms for the core pack and ~60 ms for the Gemeinden on a desktop, so this runs here;
+     * the worker it used to go through spent longer serialising the result than this takes.
      */
     function decodeStatsPack(bytes) {
-      const local = () => StatsPack.decodeRegionFeatures(new Uint8Array(bytes));
-      if (typeof Worker !== 'function') return Promise.resolve(local());
-      return new Promise((resolve) => {
-        let worker;
-        try {
-          worker = new Worker('./statsDecode.worker.js?v=' + CONFIG.assetVersions.statsDecodeWorker, {
-            type: 'module',
-          });
-        } catch (e) {
-          resolve(local());
-          return;
-        }
-        // Keep a copy for the fallback: transferring empties the original buffer.
-        const copy = bytes.slice(0);
-        const fallback = () => {
-          worker.terminate();
-          resolve(StatsPack.decodeRegionFeatures(new Uint8Array(copy)));
-        };
-        worker.onmessage = (event) => {
-          if (event.data?.type !== 'ok') {
-            fallback();
-            return;
-          }
-          worker.terminate();
-          try {
-            resolve(JSON.parse(event.data.json));
-          } catch (e) {
-            fallback();
-          }
-        };
-        worker.onerror = fallback;
-        worker.postMessage({ type: 'decode', bytes }, [bytes]);
-      });
+      return Promise.resolve().then(() => StatsPack.decodeRegionFeatures(new Uint8Array(bytes)));
     }
 
     let gemeindenLoaded = false;

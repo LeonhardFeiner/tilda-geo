@@ -1,14 +1,24 @@
 import { decode, encode } from '@msgpack/msgpack'
 import type { StatsFeature } from '../bike-share-map/regionNavigation'
+import {
+  buildTopology,
+  TOPOLOGY_COORD_SCALE,
+  topologyToGeometries,
+  type Topology,
+} from './statsTopology'
 
 /**
  * v1: plain GeoJSON features.
- * v2: same features, but each coordinate ring is a zigzag-varint byte string of 1e-5° deltas
- *     (~1 m, finer than the boundary simplification) and the km maps in `LENGTH_PROP_KEYS` are
- *     whole metres. Roughly a third of v1's size — this is the viewer's first-load download.
- * Decoding accepts both, so packs written before v2 still load.
+ * v2: same features, but each coordinate ring is a zigzag-varint byte string of 1e-5° deltas and
+ *     the km maps in `LENGTH_PROP_KEYS` are whole metres. Roughly a third of v1's size.
+ * v3: columns instead of 11k small objects, and polygons as a shared-border topology
+ *     (statsTopology.ts, 1e-4°). The four length maps become one class dictionary plus a varint
+ *     stream per key — the string keys repeated per feature were most of the Gemeinden pack — and
+ *     borders between two regions are stored once instead of twice (a third of the core pack's
+ *     bytes were copies). Decoding is a few loops over flat arrays, no object graph to walk.
+ * Decoding accepts all three, so packs written before v3 still load.
  */
-export const STATS_REGION_PACK_VERSION = 2
+export const STATS_REGION_PACK_VERSION = 3
 
 export type StatsRegionPack = {
   version: 1 | 2
@@ -21,6 +31,16 @@ const LENGTH_PROP_KEYS = [
   'bikelane_length',
   'road_length_by_authority',
   'bikelane_length_by_road',
+] as const
+/** The string-valued properties the export writes; anything else goes to the `rest` column. */
+const STRING_PROP_KEYS = [
+  'id',
+  'name',
+  'level',
+  'regionalschluessel',
+  'parent_id',
+  'bundesland_id',
+  'landkreis_id',
 ] as const
 /** Nesting depth of the position arrays per geometry type (Point is stored as a 1-point line). */
 const LINE_DEPTH: Record<string, number> = {
@@ -35,27 +55,61 @@ const LINE_DEPTH: Record<string, number> = {
 type Position = number[]
 type PackedGeometry = { type: string; lines: unknown }
 
-function encodeLine(positions: Position[]) {
-  const out: number[] = []
-  const push = (n: number) => {
-    let z = n < 0 ? -2 * n - 1 : 2 * n
+// ---- varint streams --------------------------------------------------------------------------
+
+class VarintWriter {
+  private out: number[] = []
+  /** Unsigned. */
+  push(n: number) {
+    let z = n
     while (z >= 0x80) {
-      out.push((z % 0x80) | 0x80)
+      this.out.push((z % 0x80) | 0x80)
       z = Math.floor(z / 0x80)
     }
-    out.push(z)
+    this.out.push(z)
   }
+  /** Signed (zigzag). */
+  pushSigned(n: number) {
+    this.push(n < 0 ? -2 * n - 1 : 2 * n)
+  }
+  bytes() {
+    return Uint8Array.from(this.out)
+  }
+}
+
+class VarintReader {
+  private pos = 0
+  constructor(private readonly bytes: Uint8Array) {}
+  next() {
+    let z = 0
+    let mul = 1
+    for (;;) {
+      const b = this.bytes[this.pos++]
+      if (b === undefined) throw new Error('Ungültiges stats.msgpack (Varint-Strom endet zu früh)')
+      z += (b & 0x7f) * mul
+      if (!(b & 0x80)) return z
+      mul *= 0x80
+    }
+  }
+  nextSigned() {
+    const z = this.next()
+    return z % 2 ? -(z + 1) / 2 : z / 2
+  }
+}
+
+function encodeLine(positions: Position[]) {
+  const w = new VarintWriter()
   let px = 0
   let py = 0
   for (const [lng, lat] of positions) {
     const x = Math.round((lng ?? 0) * COORD_SCALE)
     const y = Math.round((lat ?? 0) * COORD_SCALE)
-    push(x - px)
-    push(y - py)
+    w.pushSigned(x - px)
+    w.pushSigned(y - py)
     px = x
     py = y
   }
-  return Uint8Array.from(out)
+  return w.bytes()
 }
 
 function decodeLine(bytes: Uint8Array) {
@@ -88,6 +142,7 @@ function mapDepth(value: unknown, depth: number, fn: (line: never) => unknown): 
   return (value as unknown[]).map((v) => mapDepth(v, depth - 1, fn))
 }
 
+/** v2 line packing; v3 still uses it for the geometry types the topology does not cover. */
 function packGeometry(geometry: unknown) {
   const g = geometry as { type?: string; coordinates?: unknown } | null | undefined
   const type = g?.type
@@ -119,22 +174,230 @@ function mapLengthProps(props: StatsFeature['properties'], fn: (v: number) => nu
   return out as StatsFeature['properties']
 }
 
-export function encodeStatsRegionPack(features: StatsFeature[]) {
-  const packed = features.map((f) => ({
-    ...f,
-    geometry: packGeometry(f.geometry),
-    properties: mapLengthProps(f.properties, (km) => Math.round(km * 1000)),
-  }))
-  return encode({ version: STATS_REGION_PACK_VERSION, features: packed })
+// ---- v3 --------------------------------------------------------------------------------------
+
+type LengthColumn = {
+  /** Class names; `cls` indexes into it. */
+  dict: string[]
+  /** Varint stream: per feature the number of entries, or 0 when the map is absent. */
+  counts: Uint8Array
+  /** Varint stream: dictionary index per entry. */
+  cls: Uint8Array
+  /** Varint stream: whole metres per entry. */
+  metres: Uint8Array
 }
 
-export function decodeStatsRegionPack(bytes: Uint8Array) {
-  const data = decode(bytes) as Partial<StatsRegionPack>
+/** Topology arcs as one varint stream: per arc its point count, then zigzag deltas. */
+function encodeArcs(arcs: number[][]) {
+  const w = new VarintWriter()
+  w.push(arcs.length)
+  for (const arc of arcs) {
+    const n = arc.length / 2
+    w.push(n)
+    let px = 0
+    let py = 0
+    for (let i = 0; i < n; i++) {
+      const x = arc[2 * i]!
+      const y = arc[2 * i + 1]!
+      w.pushSigned(x - px)
+      w.pushSigned(y - py)
+      px = x
+      py = y
+    }
+  }
+  return w.bytes()
+}
+
+function decodeArcs(bytes: Uint8Array) {
+  const r = new VarintReader(bytes)
+  const count = r.next()
+  const arcs: number[][] = []
+  for (let a = 0; a < count; a++) {
+    const n = r.next()
+    const arc: number[] = []
+    let x = 0
+    let y = 0
+    for (let i = 0; i < n; i++) {
+      x += r.nextSigned()
+      y += r.nextSigned()
+      arc.push(x, y)
+    }
+    arcs.push(arc)
+  }
+  return arcs
+}
+
+type PackV3 = {
+  version: 3
+  n: number
+  /** 'Feature' for all, or one type per feature. */
+  types: string | string[]
+  /** Only the keys at least one feature has; `null` where a feature lacks the key. */
+  strings: Partial<Record<(typeof STRING_PROP_KEYS)[number], (string | null)[]>>
+  lengths: Partial<Record<(typeof LENGTH_PROP_KEYS)[number], LengthColumn>>
+  /** `[lng, lat]` to 1e-4 as integers, or null. Only present when some feature has a centre. */
+  centers?: ([number, number] | null)[]
+  /** Properties outside the known columns, per feature; only present when any exist. */
+  rest?: (Record<string, unknown> | null)[]
+  /** Features with no properties at all. Only present when there are any. */
+  noProps?: number[]
+  topology: { arcs: Uint8Array; geometries: Topology['geometries'] }
+  /** Geometries the topology does not cover (points, lines), v2-packed, per feature; sparse. */
+  otherGeometry?: Record<number, unknown>
+}
+
+export type EncodeOptions = {
+  /** Simplify the polygon borders by this tolerance (Douglas–Peucker on shared arcs). */
+  simplifyMetres?: number
+}
+
+export function encodeStatsRegionPack(features: StatsFeature[], options: EncodeOptions = {}) {
+  const n = features.length
+  const types = features.map((f) => f.type)
+  const strings: PackV3['strings'] = {}
+  for (const key of STRING_PROP_KEYS) {
+    const column = features.map((f) => {
+      const v = f.properties?.[key]
+      return typeof v === 'string' ? v : v == null ? null : String(v)
+    })
+    if (column.some((v) => v !== null)) strings[key] = column
+  }
+  const lengths: PackV3['lengths'] = {}
+  for (const key of LENGTH_PROP_KEYS) {
+    const dict: string[] = []
+    const dictIndex = new Map<string, number>()
+    const counts = new VarintWriter()
+    const cls = new VarintWriter()
+    const metres = new VarintWriter()
+    let any = false
+    for (const f of features) {
+      const map = (f.properties as Record<string, unknown> | undefined)?.[key]
+      if (!map || typeof map !== 'object') {
+        counts.push(0)
+        continue
+      }
+      any = true
+      const entries = Object.entries(map as Record<string, unknown>)
+      counts.push(entries.length)
+      for (const [c, v] of entries) {
+        let index = dictIndex.get(c)
+        if (index === undefined) {
+          index = dict.length
+          dict.push(c)
+          dictIndex.set(c, index)
+        }
+        cls.push(index)
+        metres.push(
+          typeof v === 'number' && Number.isFinite(v) ? Math.max(0, Math.round(v * 1000)) : 0,
+        )
+      }
+    }
+    if (any)
+      lengths[key] = { dict, counts: counts.bytes(), cls: cls.bytes(), metres: metres.bytes() }
+  }
+  const centers = features.map((f) => {
+    const c = f.properties?.center
+    return Array.isArray(c) && c.length === 2
+      ? ([Math.round(c[0] * 1e4), Math.round(c[1] * 1e4)] as [number, number])
+      : null
+  })
+  const known = new Set<string>([...STRING_PROP_KEYS, ...LENGTH_PROP_KEYS, 'center'])
+  const rest = features.map((f) => {
+    if (!f.properties) return null
+    const extra: Record<string, unknown> = {}
+    let any = false
+    for (const [k, v] of Object.entries(f.properties)) {
+      if (known.has(k)) continue
+      extra[k] = v
+      any = true
+    }
+    return any ? extra : null
+  })
+  const noProps = features.flatMap((f, i) => (f.properties ? [] : [i]))
+  const topology = buildTopology(
+    features.map((f) => f.geometry),
+    { simplifyMetres: options.simplifyMetres },
+  )
+  const otherGeometry: Record<number, unknown> = {}
+  features.forEach((f, i) => {
+    const type = (f.geometry as { type?: string } | null | undefined)?.type
+    if (f.geometry && type !== 'Polygon' && type !== 'MultiPolygon') {
+      otherGeometry[i] = packGeometry(f.geometry)
+    }
+  })
+  const pack: PackV3 = {
+    version: 3,
+    n,
+    types: types.every((t) => t === 'Feature') ? 'Feature' : types,
+    strings,
+    lengths,
+    ...(centers.some((c) => c) && { centers }),
+    ...(rest.some((r) => r) && { rest }),
+    ...(noProps.length && { noProps }),
+    topology: { arcs: encodeArcs(topology.arcs), geometries: topology.geometries },
+    ...(Object.keys(otherGeometry).length && { otherGeometry }),
+  }
+  return encode(pack)
+}
+
+function decodeV3(pack: PackV3): StatsFeature[] {
+  const n = pack.n
+  const strings = pack.strings ?? {}
+  const lengthReaders = Object.entries(pack.lengths ?? {}).map(([key, column]) => ({
+    key,
+    dict: column.dict,
+    counts: new VarintReader(column.counts),
+    cls: new VarintReader(column.cls),
+    metres: new VarintReader(column.metres),
+  }))
+  const geometries = topologyToGeometries(
+    {
+      arcs: decodeArcs(pack.topology.arcs),
+      geometries: pack.topology.geometries,
+    },
+    TOPOLOGY_COORD_SCALE,
+  )
+  const noProps = new Set(pack.noProps ?? [])
+  const features: StatsFeature[] = new Array(n)
+  for (let i = 0; i < n; i++) {
+    const properties: Record<string, unknown> = {}
+    for (const key of STRING_PROP_KEYS) {
+      const v = strings[key]?.[i]
+      if (v != null) properties[key] = v
+    }
+    for (const reader of lengthReaders) {
+      const count = reader.counts.next()
+      if (!count) continue
+      const map: Record<string, number> = {}
+      for (let k = 0; k < count; k++) {
+        map[reader.dict[reader.cls.next()]!] = reader.metres.next() / 1000
+      }
+      properties[reader.key] = map
+    }
+    const center = pack.centers?.[i]
+    if (center) properties.center = [center[0] / 1e4, center[1] / 1e4]
+    const rest = pack.rest?.[i]
+    if (rest) Object.assign(properties, rest)
+    const other = pack.otherGeometry?.[i]
+    const geometry = other !== undefined ? unpackGeometry(other) : geometries[i]
+    features[i] = {
+      type: typeof pack.types === 'string' ? pack.types : pack.types[i]!,
+      ...(noProps.has(i) ? {} : { properties }),
+      geometry: geometry ?? null,
+    }
+  }
+  return features
+}
+
+export function decodeStatsRegionPack(bytes: Uint8Array): StatsFeature[] {
+  const data = decode(bytes) as { version?: number; features?: unknown }
+  if (data.version === 3) return decodeV3(data as unknown as PackV3)
   if ((data.version !== 1 && data.version !== 2) || !Array.isArray(data.features)) {
     throw new Error('Ungültiges stats.msgpack (Version oder features fehlen)')
   }
-  if (data.version === 1) return data.features
-  return data.features.map((f) => ({
+  const features = data.features as StatsFeature[]
+  if (data.version === 1) return features
+  return features.map((f) => ({
     ...f,
     geometry: unpackGeometry(f.geometry),
     properties: mapLengthProps(f.properties, (m) => m / 1000),

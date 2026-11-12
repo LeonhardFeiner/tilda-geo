@@ -8,19 +8,21 @@ Everything here runs from `app/` (`bun run bike-share-map:<script>`).
 
 ## Layout
 
-| Path                                           | What it is                                                                                  |
-| ---------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `buildViewer.ts`                               | The build: reads `output/*`, writes the site to `output/viewer/`. CI runs this.             |
-| `generateViewerHtml.ts`                        | `index.html`: markup, CSS and the inline page script (sections marked `// ====`).           |
-| `*.bundle.ts`                                  | Typed modules exposed to the page as globals (`TildaStats`, `RankingDisplay`, …).           |
-| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `naechste-station.html`. |
-| `fetch*.ts`, `populateRegionContextMetrics.ts` | Context datasets, each written to `output/<name>.json` through `fetchCommon.writeDataset`.  |
-| `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                    |
-| `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).            |
-| `fetchDetourGraph.ts`, `detour*.ts`            | Detour map `umweg.html`: per-Landkreis routing graph, browser routing, page (see below).    |
-| `vendor/`                                      | MapLibre and d3-delaunay, served from our own origin.                                       |
-| `siteIcon.ts`                                  | Favicon, touch icon, header logo (BFS/SPD/Grüne chevrons + bike); `icon.svg` by build.      |
-| `constants.ts`                                 | `VIEWER_FILES` (output file names) and `VIEWER_PASS_THROUGH_DATASETS`.                      |
+| Path                                           | What it is                                                                                                 |
+| ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `buildViewer.ts`                               | The build: reads `output/*`, writes the site to `output/viewer/`. CI runs this.                            |
+| `generateViewerHtml.ts`                        | `index.html`: markup, CSS and the inline page script (sections marked `// ====`).                          |
+| `*.bundle.ts`                                  | Typed modules exposed to the page as globals (`TildaStats`, `RankingDisplay`, …).                          |
+| `minifyPageHtml.ts`                            | The build's last step: minifies the inline scripts of the served pages (`BIKE_SHARE_NO_MINIFY=1` to skip). |
+| `../stats-export/statsRegionPack.ts`           | The `stats-*.msgpack` format (v3: columns + shared-border topology in `statsTopology.ts`).                 |
+| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `naechste-station.html`.                |
+| `fetch*.ts`, `populateRegionContextMetrics.ts` | Context datasets, each written to `output/<name>.json` through `fetchCommon.writeDataset`.                 |
+| `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                                   |
+| `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).                           |
+| `fetchDetourGraph.ts`, `detour*.ts`            | Detour map `umweg.html`: per-Landkreis routing graph, browser routing, page (see below).                   |
+| `vendor/`                                      | MapLibre and d3-delaunay, served from our own origin.                                                      |
+| `siteIcon.ts`                                  | Favicon, touch icon, header logo (BFS/SPD/Grüne chevrons + bike); `icon.svg` by build.                     |
+| `constants.ts`                                 | `VIEWER_FILES` (output file names) and `VIEWER_PASS_THROUGH_DATASETS`.                                     |
 
 `output/` is committed except `output/stats.geojson`, `output/viewer/r/`, `output/viewer/daten/`
 and `output/viewer/vendor/`, which the build regenerates.
