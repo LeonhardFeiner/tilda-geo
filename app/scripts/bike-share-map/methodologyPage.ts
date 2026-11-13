@@ -459,6 +459,14 @@ ${siteIconHeadLinks()}
   diesen Daten unbekannt, nicht gering. Städte und Landkreise können eigene Zählungen haben. Außerhalb Bayerns liegen nur Zählungen für Bundesstraßen vor, deshalb fehlt dort diese
   Markierung. Gezählt wurde 2021, als der Verkehr wegen der Corona-Pandemie teils geringer war als
   üblich.</p>
+  <p><strong>Radweg je Verkehrsmenge:</strong> Für Länder, Regierungsbezirke und Landkreise zeigt die
+  Detailkarte unter „Mehr Zahlen“, wie viele Kilometer gezählter Straße außerorts in jede Klasse
+  der Ebene „Verkehrsmenge“ fallen und welcher Anteil davon einen Radweg daneben hat – in Bayern
+  für Bundes-, Staats- und Kreisstraßen, sonst nur für Bundesstraßen. Gezählt werden alle
+  Abschnitte der freien Strecke, auch die unter der ERA-Schwelle; Ortsdurchfahrten nicht. Für
+  Gemeinden entfällt die Tabelle: wenige Kilometer je Klasse ergeben keinen belastbaren Anteil.
+  Bei den höchsten Verkehrsmengen ist der Anteil oft niedriger als in den Klassen darunter; dort
+  liegen auch Straßen, auf denen Radverkehr nicht zugelassen ist oder anders geführt wird.</p>
 
   <h2 id="modell">Strukturelles Erwartungswert-Modell</h2>
   <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Wert (km je 100 km Straße) zusammen:

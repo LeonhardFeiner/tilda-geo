@@ -14,6 +14,7 @@ export const MAP_METRICS = [
   'modelGap',
   'mappingDepth',
   'busyFederalCovered',
+  'busyRoadsCovered',
   'cars',
   'rent',
   'density',

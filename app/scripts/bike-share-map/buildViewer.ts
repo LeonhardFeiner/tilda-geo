@@ -692,6 +692,8 @@ process.stdout.write(`  basemap          blank | de | light | muted | osm\n`)
 process.stdout.write(`  radwege          1 | 0\n`)
 process.stdout.write(`  strassen         1 | 0\n`)
 process.stdout.write(`  verkehr          1 | 0 (busy rural roads above the ERA threshold)\n`)
-process.stdout.write(`  zaehlung         1 | 0 (traffic counts 2021, uncounted numbered roads in Bavaria)\n`)
+process.stdout.write(
+  `  zaehlung         1 | 0 (traffic counts 2021, uncounted numbered roads in Bavaria)\n`,
+)
 process.stdout.write(`  ranking          1 | 0\n`)
 process.stdout.write(`  colors           traffic (default) | green | colorblind\n`)

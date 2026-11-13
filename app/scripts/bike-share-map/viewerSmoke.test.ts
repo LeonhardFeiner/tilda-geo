@@ -296,6 +296,61 @@ describe('viewer smoke test (page from source, jsdom)', () => {
     TIMEOUT,
   )
 
+  test('Mehr Zahlen shows a Landkreis the bike-path share per traffic class, a Gemeinde not', async () => {
+    page = await bootViewer(
+      '?gebiet=relation/2145268&darstellung=landkreis_kreisfrei&region=relation/62371',
+    )
+    const { window } = page
+    await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
+    const more = page.q('#region-detail-more') as HTMLDetailsElement
+    more.open = true
+    more.dispatchEvent(new window.Event('toggle'))
+    // The Bundesstraßen file comes with the model inputs, the Bavarian one with the fold: the
+    // table may first show Bundesstraßen only and is re-rendered with all three classes.
+    await page.waitFor(
+      () =>
+        !!page!
+          .qAll('#region-detail-extra .ctx-dtv-caption')
+          .find((c) => c.textContent?.includes('Bundes-, Staats- und Kreisstraßen außerorts')),
+      'the traffic-class table with Staats- and Kreisstraßen',
+    )
+    const table = page.q('#region-detail-extra .ctx-dtv')
+    // The table closes the busy-roads group.
+    expect(table.previousElementSibling?.classList.contains('ctx-row')).toBe(true)
+    expect(table.nextElementSibling?.classList.contains('ctx-group')).toBe(true)
+    const rows = Array.from(table.querySelectorAll('tbody tr')).map((tr) =>
+      Array.from(tr.querySelectorAll('td')).map((td) => td.textContent),
+    )
+    // Landkreis Pfaffenhofen a.d. Ilm, Zählung 2021 (fetchTrafficVolumes.ts, byDtv).
+    expect(rows).toEqual([
+      ['unter 1.000', '49 km', '9 %'],
+      ['1.000–2.500', '109 km', '19 %'],
+      ['2.500–5.000', '118 km', '38 %'],
+      ['5.000–10.000', '61 km', '35 %'],
+      ['über 10.000', '47 km', '11 %'],
+    ])
+
+    page.close()
+    page = await bootViewer(IN_LANDKREIS)
+    await page.waitFor(
+      () => page!.window.document.body.dataset.regionDetail === '1',
+      'the region card',
+    )
+    const more2 = page.q('#region-detail-more') as HTMLDetailsElement
+    more2.open = true
+    more2.dispatchEvent(new page.window.Event('toggle'))
+    await page.waitFor(
+      () =>
+        page!
+          .qAll('#region-detail-extra .ctx-row')
+          .some((r) =>
+            r.querySelector('.ctx-label')?.textContent?.startsWith('Vielbefahrene Landstraßen'),
+          ),
+      'the busy-road rows',
+    )
+    expect(page.qAll('#region-detail-extra .ctx-dtv')).toHaveLength(0)
+  })
+
   test(
     'Mehr Zahlen lists age, ownership and building age with bars, and the RegioStaR type without',
     async () => {

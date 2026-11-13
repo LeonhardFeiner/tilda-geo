@@ -954,6 +954,13 @@ export function generateViewerHtml(
       font-size: 0.7rem; font-weight: 700; color: #334155;
     }
     .ctx-hint { margin: 0 0 4px; font-size: 0.75rem; color: #475569; }
+    .ctx-dtv { margin: 4px 0 6px; font-size: 0.75rem; }
+    .ctx-dtv-caption { margin: 0 0 2px; color: #475569; }
+    .ctx-dtv table { border-collapse: collapse; width: 100%; }
+    .ctx-dtv th, .ctx-dtv td { padding: 1px 4px; text-align: right; font-weight: 400; white-space: nowrap; }
+    .ctx-dtv th { color: #475569; }
+    .ctx-dtv th:first-child, .ctx-dtv td:first-child { text-align: left; }
+    .ctx-dtv .swatch { display: inline-block; width: 10px; height: 10px; margin-right: 4px; vertical-align: -1px; border-radius: 2px; }
     /* Rows that unfold a scatter: a disclosure arrow and a hover state say they open something. */
     .ctx-row--plot { cursor: pointer; margin: 0 -4px; padding: 3px 4px; border-radius: 4px; }
     .ctx-row--plot:hover { background: #eef3fa; }
@@ -1747,6 +1754,7 @@ export function generateViewerHtml(
             <option value="bikeShare">km Radinfra je 100 km Straße</option>
             <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
             <option value="busyFederalCovered">Vielbefahrene Bundesstraßen mit Radweg (%)</option>
+            <option value="busyRoadsCovered">Vielbefahrene Landstraßen mit Radweg (%, Bayern)</option>
           </optgroup>
           <optgroup label="Datenlage">
             <option value="mappingDepth">Kartierungstiefe (OSM)</option>
@@ -2210,6 +2218,35 @@ export function generateViewerHtml(
         },
         aria: (v) => deNumber(v, 0) + ' Prozent der vielbefahrenen Bundesstraßen mit Radweg',
         noData: 'Keine vielbefahrene Bundesstraße außerorts',
+      },
+      busyRoadsCovered: {
+        // Bavaria only (BAYSIS counts B, St and K); gemeinde-traffic.json has every Bavarian region.
+        prop: 'busyRoadsCoveredPct',
+        get: (id) => finiteOrNull(trafficIndex?.byId[id]?.coveredPct),
+        rankable: (id) => (trafficIndex?.byId[id]?.needKm ?? 0) >= 1,
+        unrankedNote: 'keine Daten oder unter 1 km vielbefahrene Landstraße',
+        title: 'Landstraßen mit Radweg (Bayern)',
+        rankLabel: 'Landstraßen mit Radweg',
+        summaryLabel: 'Anteil mit Radweg in dieser Ansicht',
+        definition:
+          'Anteil der vielbefahrenen Bundes-, Staats- und Kreisstraßen außerorts in Bayern (Verkehrszählung 2021, ' +
+          'über der ERA-Schwelle für einen Radweg), der einen Radweg hat. Nur Bayern: andere Länder zählen ' +
+          'Staats- und Kreisstraßen nicht vergleichbar. <strong>Grau</strong> = keine solche Straße im Gebiet ' +
+          'oder außerhalb Bayerns. Gebiete mit weniger als 1 km haben keinen Rang.',
+        colors: HIGH_IS_GOOD,
+        range: [0, 100],
+        tick: (v) => deNumber(Math.round(v), 0),
+        unit: ' %',
+        tooltip: (v, id) => {
+          const t = trafficIndex?.byId[id];
+          return (
+            deNumber(v, 0) +
+            ' % der vielbefahrenen Landstraßen mit Radweg' +
+            (t ? '\\n(' + deNumber(t.coveredKm, 1) + ' von ' + deNumber(t.needKm, 1) + ' km)' : '')
+          );
+        },
+        aria: (v) => deNumber(v, 0) + ' Prozent der vielbefahrenen Landstraßen mit Radweg',
+        noData: 'Keine vielbefahrene Landstraße außerorts oder außerhalb Bayerns',
       },
       density: {
         prop: 'densityPerKm2',
@@ -6366,6 +6403,56 @@ export function generateViewerHtml(
       ),
     );
 
+    /**
+     * Open-road km with a path per traffic class of the count layer (fetchTrafficVolumes.ts, byDtv;
+     * Länder, Regierungsbezirke and Kreise). Bavaria: B, St and K; elsewhere Bundesstraßen only.
+     */
+    function trafficClassTable(id) {
+      const bavarian = trafficIndex?.byId[id]?.byDtv;
+      const rows = bavarian || trafficFederalIndex?.byId[id]?.byDtv;
+      if (!Array.isArray(rows) || !rows.some((r) => r && r.km > 0)) return null;
+      const wrap = document.createElement('div');
+      wrap.className = 'ctx-dtv';
+      const caption = document.createElement('p');
+      caption.className = 'ctx-dtv-caption';
+      caption.textContent =
+        'Radweg je Verkehrsmenge, ' +
+        (bavarian ? 'Bundes-, Staats- und Kreisstraßen' : 'Bundesstraßen') +
+        ' außerorts (Zählung 2021, alle gezählten Abschnitte)';
+      wrap.appendChild(caption);
+      const table = document.createElement('table');
+      const thead = document.createElement('thead');
+      const headRow = document.createElement('tr');
+      for (const text of ['Kfz je Tag', 'km', 'mit Radweg']) {
+        const th = document.createElement('th');
+        th.scope = 'col';
+        th.textContent = text;
+        headRow.appendChild(th);
+      }
+      thead.appendChild(headRow);
+      table.appendChild(thead);
+      const tbody = document.createElement('tbody');
+      CONFIG.trafficCountClasses.forEach((cls, i) => {
+        const r = rows[i];
+        if (!r || !(r.km > 0)) return;
+        const tr = document.createElement('tr');
+        const name = document.createElement('td');
+        const swatch = document.createElement('span');
+        swatch.className = 'swatch';
+        swatch.style.background = cls.color;
+        name.append(swatch, cls.label);
+        const km = document.createElement('td');
+        km.textContent = deNumber(r.km, 0) + ' km';
+        const pct = document.createElement('td');
+        pct.textContent = deNumber((r.coveredKm / r.km) * 100, 0) + ' %';
+        tr.append(name, km, pct);
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      wrap.appendChild(table);
+      return wrap;
+    }
+
     /** The card's context metrics in the order of CONTEXT_METRIC_GROUPS, each tagged with its group. */
     function contextMetrics() {
       return contextMetricsUnsorted()
@@ -6995,6 +7082,15 @@ export function generateViewerHtml(
       const scope = scopes.find((sc) => sc.type === contextScopeChoice) || scopes[0];
       regionDetailExtra.replaceChildren();
       let lastGroupTitle = null;
+      // The traffic-class table closes the busy-roads group (after its last row, before the next heading).
+      const busyGroupTitle = CONTEXT_GROUP_OF.get('busyRoadsKm')?.title;
+      let trafficTableDone = false;
+      const appendTrafficTable = () => {
+        if (trafficTableDone || lastGroupTitle !== busyGroupTitle) return;
+        trafficTableDone = true;
+        const table = trafficClassTable(p.id);
+        if (table) regionDetailExtra.appendChild(table);
+      };
       for (const metric of contextMetrics()) {
         const value = metric.get(p.id);
         if (value == null || !Number.isFinite(value)) continue;
@@ -7029,6 +7125,7 @@ export function generateViewerHtml(
         }
         // A heading before the first row of each group that has a value here.
         if (metric.group.title && metric.group.title !== lastGroupTitle) {
+          appendTrafficTable();
           const heading = document.createElement('p');
           heading.className = 'ctx-group';
           heading.textContent = metric.group.title;
@@ -7119,6 +7216,7 @@ export function generateViewerHtml(
         }
         regionDetailExtra.appendChild(row);
       }
+      appendTrafficTable();
       // A heading whose rows are all folded away goes too.
       for (const heading of regionDetailExtra.querySelectorAll('.ctx-group')) {
         let el = heading.nextElementSibling;

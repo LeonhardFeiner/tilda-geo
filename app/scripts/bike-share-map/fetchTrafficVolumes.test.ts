@@ -1,6 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import {
+  aggregateTrafficClasses,
   aggregateTrafficRegions,
+  withTrafficClasses,
   eraDtvThreshold,
   isCountedRoadRef,
   parseBastRows,
@@ -99,6 +101,32 @@ describe('aggregateTrafficRegions', () => {
       },
     )
     expect(byId.r).toEqual({ needKm: 4, coveredKm: 1, coveredPct: 25 })
+  })
+})
+
+describe('aggregateTrafficClasses', () => {
+  test('sums km and covered km per traffic class, one slot per class of the map layer', () => {
+    const byId = aggregateTrafficClasses([
+      { region: 'r', dtv_class: 0, km: 3, covered_km: 1 },
+      { region: 'r', dtv_class: 0, km: 2, covered_km: 0.5 },
+      { region: 'r', dtv_class: 4, km: 1, covered_km: 1 },
+    ])
+    expect(byId.r).toEqual([
+      { km: 5, coveredKm: 1.5 },
+      { km: 0, coveredKm: 0 },
+      { km: 0, coveredKm: 0 },
+      { km: 0, coveredKm: 0 },
+      { km: 1, coveredKm: 1 },
+    ])
+  })
+
+  test('attaches the split only to regions that have one', () => {
+    const out = withTrafficClasses(
+      { a: { needKm: 1, coveredKm: 0 }, b: { needKm: 0, coveredKm: 0 } },
+      { a: [{ km: 1, coveredKm: 0 }] },
+    )
+    expect(out.a?.byDtv).toEqual([{ km: 1, coveredKm: 0 }])
+    expect(out.b?.byDtv).toBeUndefined()
   })
 })
 

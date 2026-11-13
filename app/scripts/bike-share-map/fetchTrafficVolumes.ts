@@ -52,7 +52,7 @@ import { decode } from '@msgpack/msgpack'
 import { Client } from 'pg'
 import { read, utils } from 'xlsx'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
-import { BAST_SVZ_PAGE, BAYERN_ID } from './constants'
+import { BAST_SVZ_PAGE, BAYERN_ID, TRAFFIC_COUNT_CLASSES } from './constants'
 import { downloadCachePath, writeDataset } from './fetchCommon'
 import * as TildaStats from './statsClassSums'
 
@@ -312,6 +312,44 @@ async function sampleSections(client: Client) {
 }
 
 /**
+ * Every counted open-road section (B, St, K; Autobahnen are not loaded) by region and traffic
+ * class: km and km with a path. Only Länder, Regierungsbezirke and Kreise — a Gemeinde has too
+ * few km per class for a share to mean anything.
+ */
+async function regionClassSums(client: Client) {
+  const { rows } = await client.query<{
+    region: string
+    klasse: string
+    bavaria: boolean
+    dtv_class: number
+    km: number
+    covered_km: number
+  }>(
+    `
+    WITH bayern AS (SELECT geom FROM public.aggregated_lengths WHERE id = $3),
+    areas AS (
+      SELECT al.id, al.level,
+        ST_Intersects(bayern.geom, ST_PointOnSurface(al.geom)) AS in_bayern,
+        ST_Subdivide(ST_MakeValid(al.geom), 255) AS g
+      FROM public.aggregated_lengths al, bayern
+      WHERE al.level IN ('4', '5', '6')
+    )
+    SELECT a.id AS region, s.klasse, a.in_bayern AND s.id < $2 AS bavaria,
+      width_bucket(s.dtv, $1::float8[]) AS dtv_class,
+      SUM(e.w) / 1000 AS km,
+      COALESCE(SUM(e.w) FILTER (WHERE e.covered), 0) / 1000 AS covered_km
+    FROM pts_eval e
+    JOIN svz s ON s.id = e.id
+    JOIN areas a ON ST_Intersects(a.g, e.pt)
+    WHERE s.fsod = 'FS'
+    GROUP BY a.id, s.klasse, a.in_bayern AND s.id < $2, width_bucket(s.dtv, $1::float8[])
+    `,
+    [TRAFFIC_CLASS_EDGES, BAST_ID_OFFSET, BAYERN_ID],
+  )
+  return rows
+}
+
+/**
  * Map lines for the sections above the ERA threshold: per section, the stretches with and
  * without bike infrastructure. Consecutive samples (50 m apart) are joined into short lines that
  * take the first sample's status, then merged per status and simplified to ~10 m.
@@ -503,6 +541,44 @@ export type TrafficRegion = {
   /** needKm as % of the region's road network in road km (default counting filter, per-direction
    * km halved); absent without roads. */
   sharePct?: number
+  /** Open-road km and km with a path per traffic class of TRAFFIC_COUNT_CLASSES (same index),
+   * every counted section whatever its volume; Länder, Regierungsbezirke and Kreise only. */
+  byDtv?: TrafficClassKm[]
+}
+
+export type TrafficClassKm = { km: number; coveredKm: number }
+
+/** Lower edges of the traffic classes after the first (width_bucket thresholds). */
+const TRAFFIC_CLASS_EDGES = TRAFFIC_COUNT_CLASSES.slice(1).map((c) => c.min)
+
+/** Per region: open-road km and km with a path per traffic class (index into TRAFFIC_COUNT_CLASSES). */
+export function aggregateTrafficClasses(
+  rows: Array<{ region: string; dtv_class: number; km: number; covered_km: number }>,
+) {
+  const byId: Record<string, TrafficClassKm[]> = {}
+  for (const row of rows) {
+    const classes = (byId[row.region] ??= TRAFFIC_COUNT_CLASSES.map(() => ({
+      km: 0,
+      coveredKm: 0,
+    })))
+    const cls = classes[row.dtv_class]
+    if (!cls) continue
+    cls.km = r1(cls.km + Number(row.km))
+    cls.coveredKm = r1(cls.coveredKm + Number(row.covered_km))
+  }
+  return byId
+}
+
+/** byDtv added to every region of `byId` that has a class split. */
+export function withTrafficClasses(
+  byId: Record<string, TrafficRegion>,
+  classes: Record<string, TrafficClassKm[]>,
+) {
+  const out: Record<string, TrafficRegion> = {}
+  for (const [id, entry] of Object.entries(byId)) {
+    out[id] = classes[id] ? { ...entry, byDtv: classes[id] } : entry
+  }
+  return out
 }
 
 const r1 = (v: number) => Number(v.toFixed(1))
@@ -609,6 +685,7 @@ if (import.meta.main) {
   await client.connect()
   let sections: SectionRow[]
   let regions: Awaited<ReturnType<typeof regionSums>>
+  let classRows: Awaited<ReturnType<typeof regionClassSums>>
   let lines: Awaited<ReturnType<typeof needLines>>
   let counted: Awaited<ReturnType<typeof countLines>>
   let uncounted: Awaited<ReturnType<typeof uncountedRoads>>
@@ -629,6 +706,7 @@ if (import.meta.main) {
       )
       .map((s) => s.id)
     regions = await regionSums(client, needIds)
+    classRows = await regionClassSums(client)
     lines = await needLines(client, needIds)
     counted = await countLines(client)
     uncounted = await uncountedRoads(client)
@@ -637,16 +715,22 @@ if (import.meta.main) {
   }
 
   const regionRoads = readRegionRoads()
-  const byId = withRoadShares(
-    aggregateTrafficRegions(regions.filter((row) => row.bavaria)),
-    regionRoads.filter((r) => r.bundeslandId === BAYERN_ID || r.id === BAYERN_ID),
-  )
-  const federalById = withRoadShares(
-    aggregateTrafficRegions(
-      regions.filter((row) => row.klasse === 'B'),
-      { withClasses: false },
+  const byId = withTrafficClasses(
+    withRoadShares(
+      aggregateTrafficRegions(regions.filter((row) => row.bavaria)),
+      regionRoads.filter((r) => r.bundeslandId === BAYERN_ID || r.id === BAYERN_ID),
     ),
-    regionRoads,
+    aggregateTrafficClasses(classRows.filter((row) => row.bavaria)),
+  )
+  const federalById = withTrafficClasses(
+    withRoadShares(
+      aggregateTrafficRegions(
+        regions.filter((row) => row.klasse === 'B'),
+        { withClasses: false },
+      ),
+      regionRoads,
+    ),
+    aggregateTrafficClasses(classRows.filter((row) => row.klasse === 'B')),
   )
 
   const meta = {

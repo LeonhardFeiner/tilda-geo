@@ -684,6 +684,7 @@ export type MapMetric =
   | 'modelGap'
   | 'mappingDepth'
   | 'busyFederalCovered'
+  | 'busyRoadsCovered'
   | 'cars'
   | 'rent'
   | 'density'
@@ -701,7 +702,7 @@ export function formatMapMetricValue(val: number | null | undefined, metric: Map
   if (metric === 'rent') return `${val.toFixed(2).replace('.', ',')} €/m²`
   if (metric === 'accidents') return `${formatStatPctUi(val)} / 10k`
   if (metric === 'commuters') return `${sign}${val.toLocaleString('de-DE')}`
-  if (metric === 'mappingDepth' || metric === 'busyFederalCovered')
+  if (metric === 'mappingDepth' || metric === 'busyFederalCovered' || metric === 'busyRoadsCovered')
     return `${formatDeNumber(val, 0)} %`
   if (metric === 'density') return `${formatDeNumber(Math.round(val), 0)} /km²`
   if (metric === 'stationBike') return formatMinutes(val)
