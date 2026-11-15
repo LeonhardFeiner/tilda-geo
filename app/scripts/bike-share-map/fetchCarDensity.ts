@@ -16,7 +16,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
 import { KBA_FZ3_YEAR } from './constants'
-import { downloadCachePath, writeDataset } from './fetchCommon'
+import { downloadCachePath, readStatsFeatures, writeDataset } from './fetchCommon'
 
 export const KBA_FZ3_URL = `https://www.kba.de/SharedDocs/Downloads/DE/Statistik/Fahrzeuge/FZ3/fz3_${KBA_FZ3_YEAR}.xlsx?__blob=publicationFile`
 const CACHE_XLSX_PATH = downloadCachePath(`fz3_${KBA_FZ3_YEAR}.xlsx`)
@@ -165,12 +165,7 @@ if (import.meta.main) {
   const byCode: Record<string, CarDensityMetrics> = {}
 
   if (existsSync(statsMsgpackPath)) {
-    const { decode } = await import('@msgpack/msgpack')
-    const statsData = decode(readFileSync(statsMsgpackPath)) as {
-      features?: Array<{
-        properties?: { id?: string; level?: string; regionalschluessel?: string; name?: string }
-      }>
-    }
+    const statsData = { features: readStatsFeatures() }
 
     // Population per Kreis and Land
     const popByKreisCode = new Map<string, number>()

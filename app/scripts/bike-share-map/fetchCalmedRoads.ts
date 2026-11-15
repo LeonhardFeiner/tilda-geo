@@ -15,10 +15,9 @@
  *
  * Output: output/calmed-roads.json
  */
-import { existsSync, mkdirSync, readFileSync } from 'node:fs'
+import { existsSync, mkdirSync } from 'node:fs'
 import { join } from 'node:path'
-import { decode } from '@msgpack/msgpack'
-import { writeDataset } from './fetchCommon'
+import { readStatsFeatures, writeDataset } from './fetchCommon'
 
 export type CalmedRoadMetrics = {
   totalRoadKm: number
@@ -120,19 +119,15 @@ export async function fetchCalmedRoads(): Promise<CalmedRoadsOutput> {
   if (!loadedFromDb) {
     const statsPackPath = join(import.meta.dir, 'output', 'stats.msgpack')
     if (existsSync(statsPackPath)) {
-      const buf = readFileSync(statsPackPath)
-      const data = decode(buf) as {
-        features?: Array<{ properties?: { id?: string; road_length?: Record<string, number> } }>
-      }
+      const data = { features: readStatsFeatures() }
       if (Array.isArray(data.features)) {
         for (const f of data.features) {
           const id = f.properties?.id
           const rl = f.properties?.road_length
           if (!id || !rl) continue
-          // Note: In stats.msgpack v2, road_length values are in whole meters
           const kmRecord: Record<string, number> = {}
           for (const [k, v] of Object.entries(rl)) {
-            kmRecord[k] = (typeof v === 'number' ? v : Number(v)) / 1000
+            kmRecord[k] = typeof v === 'number' ? v : Number(v)
           }
           const metrics = computeCalmedMetricsFromRoadLength(kmRecord)
           if (metrics) {

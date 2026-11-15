@@ -24,7 +24,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import * as XLSX from 'xlsx'
-import { downloadCachePath, writeDataset } from './fetchCommon'
+import { downloadCachePath, readStatsFeatures, writeDataset } from './fetchCommon'
 
 export const BA_COMMUTER_2025_XLSX_URL =
   'https://statistik.arbeitsagentur.de/Statistikdaten/Detail/202506/iiia6/beschaeftigung-sozbe-gemband/gemband-dlk-0-202506-xlsx.xlsx?__blob=publicationFile&v=1'
@@ -244,12 +244,7 @@ if (import.meta.main) {
   const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   if (existsSync(statsMsgpackPath)) {
-    const { decode } = await import('@msgpack/msgpack')
-    const statsData = decode(readFileSync(statsMsgpackPath)) as {
-      features?: Array<{
-        properties?: { id?: string; level?: string; regionalschluessel?: string }
-      }>
-    }
+    const statsData = { features: readStatsFeatures() }
 
     for (const f of statsData.features || []) {
       const p = f.properties || {}

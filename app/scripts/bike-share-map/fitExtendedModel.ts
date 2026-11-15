@@ -1,20 +1,17 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { decode } from '@msgpack/msgpack'
 import { VIEWER_FILES } from './constants'
+import { readStatsFeatures } from './fetchCommon'
 import { REGIOSTAR_DUMMIES, regioStarDummies, type RegioStarDummy } from './rankingDisplay'
 import * as TildaStats from './statsClassSums'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 const dir = join(scriptDir, 'output', 'viewer')
-const statsPackPath = join(scriptDir, 'output', 'stats.msgpack')
 const quiet = !import.meta.main
 const console = quiet ? { log: () => {} } : globalThis.console
 
-const stats = decode(readFileSync(statsPackPath)) as {
-  features: Array<{ properties?: Record<string, unknown> }>
-}
+const stats = { features: readStatsFeatures() }
 const density = (
   JSON.parse(readFileSync(join(dir, VIEWER_FILES.density), 'utf8')) as {
     byId: Record<string, number>
@@ -142,13 +139,11 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
     if (!isModelGemeinde(p)) continue
     const id = String(p.id ?? '')
 
-    const { roadKm: roadM, bikeKm: bikeM } = TildaStats.computeFilteredLengths(
+    const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
       p.road_length,
       p.bikelane_length,
       filter,
     )
-    const roadKm = roadM / 1000
-    const bikeKm = bikeM / 1000
     if (roadKm < minRoadKm) continue
 
     const y = (bikeKm / roadKm) * 100

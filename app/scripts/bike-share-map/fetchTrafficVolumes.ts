@@ -48,12 +48,11 @@
  */
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { decode } from '@msgpack/msgpack'
 import { Client } from 'pg'
 import { read, utils } from 'xlsx'
 import { getBaseDatabaseUrl } from '@/server/database-url.server'
 import { BAST_SVZ_PAGE, BAYERN_ID, TRAFFIC_COUNT_CLASSES } from './constants'
-import { downloadCachePath, writeDataset } from './fetchCommon'
+import { downloadCachePath, readStatsFeatures, writeDataset } from './fetchCommon'
 import * as TildaStats from './statsClassSums'
 
 const BAST_XLSX_URL =
@@ -312,7 +311,8 @@ async function sampleSections(client: Client) {
 }
 
 /**
- * Every counted open-road section (B, St, K; Autobahnen are not loaded) by region and traffic
+ * Every counted open-road section (B, St, K; BAYSIS also delivers Autobahnen, which are skipped
+ * like in the count map) by region and traffic
  * class: km and km with a path. Only Länder, Regierungsbezirke and Kreise — a Gemeinde has too
  * few km per class for a share to mean anything.
  */
@@ -341,10 +341,10 @@ async function regionClassSums(client: Client) {
     FROM pts_eval e
     JOIN svz s ON s.id = e.id
     JOIN areas a ON ST_Intersects(a.g, e.pt)
-    WHERE s.fsod = 'FS'
+    WHERE s.fsod = 'FS' AND s.klasse = ANY ($4::text[])
     GROUP BY a.id, s.klasse, a.in_bayern AND s.id < $2, width_bucket(s.dtv, $1::float8[])
     `,
-    [TRAFFIC_CLASS_EDGES, BAST_ID_OFFSET, BAYERN_ID],
+    [TRAFFIC_CLASS_EDGES, BAST_ID_OFFSET, BAYERN_ID, NEED_ROAD_CLASSES as unknown as string[]],
   )
   return rows
 }
@@ -633,10 +633,7 @@ export function withRoadShares(byId: Record<string, TrafficRegion>, regions: Reg
 
 /** Every exported region with its road km under the default counting filter. */
 function readRegionRoads(): RegionRoad[] {
-  const stats = decode(readFileSync(join(import.meta.dir, 'output', 'stats.msgpack'))) as {
-    features: Array<{ properties?: Record<string, unknown> }>
-  }
-  return stats.features.flatMap((f) => {
+  return readStatsFeatures().flatMap((f) => {
     const p = f.properties ?? {}
     if (!p.id) return []
     const { roadKm } = TildaStats.computeFilteredLengths(
@@ -647,7 +644,7 @@ function readRegionRoads(): RegionRoad[] {
     return [
       {
         id: String(p.id),
-        roadKm: roadKm / 1000,
+        roadKm,
         bundeslandId: p.bundesland_id ? String(p.bundesland_id) : null,
       },
     ]

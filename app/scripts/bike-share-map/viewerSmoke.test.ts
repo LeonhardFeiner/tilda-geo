@@ -324,10 +324,10 @@ describe('viewer smoke test (page from source, jsdom)', () => {
     // Landkreis Pfaffenhofen a.d. Ilm, Zählung 2021 (fetchTrafficVolumes.ts, byDtv).
     expect(rows).toEqual([
       ['unter 1.000', '49 km', '9 %'],
-      ['1.000–2.500', '109 km', '19 %'],
-      ['2.500–5.000', '118 km', '38 %'],
-      ['5.000–10.000', '61 km', '35 %'],
-      ['über 10.000', '47 km', '11 %'],
+      ['1.000–2.500', '110 km', '20 %'],
+      ['2.500–5.000', '118 km', '37 %'],
+      ['5.000–10.000', '61 km', '36 %'],
+      ['über 10.000', '48 km', '11 %'],
     ])
 
     page.close()

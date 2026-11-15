@@ -37,6 +37,14 @@
   table.model-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
   table.model-table th.num { text-align: right; }
   footer { margin-top: 40px; padding-top: 18px; border-top: 1px solid #e2e4e0; color: #5c6560; font-size: 0.9rem; }
+  .toc { font-size: 0.9rem; line-height: 1.9; margin: 0 0 20px; color: #5c6560; }
+  h2 { scroll-margin-top: 16px; }
+  @media print {
+    .back, .toc { display: none; }
+    a { color: inherit; text-decoration: none; }
+    h2 { break-after: avoid; }
+    table, .lead, .caveat { break-inside: avoid; }
+  }
 </style>
 </head>
 <body>
@@ -44,29 +52,38 @@
   <a class="back" href="./index.html">&larr; Zur Karte</a>
   <h1>Methodik &amp; Datenquellen</h1>
   <p class="sub">Was die Zahlen sagen – und was nicht.</p>
+  <nav class="toc" aria-label="Inhalt">
+    <a href="#karte">Was zeigt die Karte?</a> · <a href="#daten">Datenquellen</a> ·
+    <a href="#zaehlung">Zählung</a> · <a href="#hauptverkehr">Hauptverkehrsstraßen</a> ·
+    <a href="#zeit">Veränderung</a> · <a href="#landstrassen">Landstraßen</a> ·
+    <a href="#modell">Erwartungswert-Modell</a> · <a href="#umweg">Umwege</a> ·
+    <a href="#grenzen">Grenzen der Aussagekraft</a> · <a href="#autor">Wer steht dahinter?</a> ·
+    <a href="#version">Version und Zitierweise</a>
+  </nav>
 
-  <p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>12,2&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: 20.10.2026.</p>
+  <p class="lead">Bundesweit kommen auf 100&nbsp;km Straße rund <strong>12,2&nbsp;km</strong> Radinfrastruktur – Radwege und Radstreifen an der Straße ebenso wie eigenständige Wege abseits davon. Stand der OpenStreetMap-Daten: 14.11.2026.</p>
 
-  <h2>Was zeigt die Karte?</h2>
-  <p>Für jede Verwaltungseinheit das Verhältnis <strong>Kilometer Radinfrastruktur je Kilometer
-  Straße</strong>, in Prozent. Ein Wert von 20&nbsp;% heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
+  <h2 id="karte">Was zeigt die Karte?</h2>
+  <p>Für jede Verwaltungseinheit die <strong>Kilometer Radinfrastruktur je 100&nbsp;km
+  Straße</strong>. Ein Wert von 20 heißt: Auf 100&nbsp;km Straße kommen 20&nbsp;km
   Radwege, Schutzstreifen, Fahrradstraßen o.&nbsp;Ä. Mitgezählt werden auch eigenständige Radwege
-  abseits von Straßen; der Wert ist daher kein reiner Anteil der Straßen mit Radweg, sondern ein
-  Maß dafür, wie viel Radinfrastruktur es im Verhältnis zum Straßennetz gibt.</p>
-  <p>Der Anteil misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
+  abseits von Straßen; der Wert ist daher kein Anteil der Straßen mit Radweg (und wird deshalb
+  nicht in Prozent angegeben), sondern ein Maß dafür, wie viel Radinfrastruktur es im Verhältnis
+  zum Straßennetz gibt. Legende und Rangliste zeigen die Zahl ohne Einheit.</p>
+  <p>Der Wert misst <em>Vorhandensein</em>, nicht Qualität, Breite oder Netzzusammenhang. Über
   den Zählfilter lassen sich einzelne Kategorien (z.&nbsp;B. nur baulich getrennte Radwege) ein-
   und ausschließen.</p>
 
-  <h2>Datenquellen</h2>
-  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 20.10.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.</li><li><strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.</li><li><strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zur nächsten Haltestelle). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.</li><li><strong>Gemeindefinanzen, Bevölkerungsentwicklung, Pendeln, Erreichbarkeit:</strong> <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> des Bundes – Steuereinnahmekraft je Einwohner (2024), Bevölkerungsentwicklung 2019–2024, mittlere Pendeldistanz und Anteil der Einwohner an Haltestellen mit mindestens 20 Abfahrten am Tag (beide je Gemeindeverband) sowie Pkw-Fahrzeiten zur nächsten Grundschule, weiterführenden Schule und zum Supermarkt (Thünen-Erreichbarkeitsmodell). Kreise und Länder: einwohnergewichtetes Mittel ihrer Gemeinden.</li><li><strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.</li><li><strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (2025), Statistik der Bundesagentur für Arbeit. Radunfälle mit Personenschaden werden je 10.000 Einwohner angegeben; das ist kein Risikomaß, weil das Radverkehrsaufkommen unbekannt ist – wo mehr Rad gefahren wird, gibt es bei gleichem Risiko mehr Unfälle.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
+  <h2 id="daten">Datenquellen</h2>
+  <ul><li><strong>Straßen und Radinfrastruktur:</strong> <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> (ODbL), aufbereitet mit <a href="https://github.com/LeonhardFeiner/tilda-geo">tilda-geo</a> / <a href="https://tilda-geo.de">TILDA</a>. Stand der hier verwendeten Auswertung: 14.11.2026.</li><li><strong>Verwaltungsgrenzen:</strong> OpenStreetMap-Relationen (<code>boundary=administrative</code>) auf den Ebenen Land, Regierungsbezirk, (Land-)Kreis und Gemeinde.</li><li><strong>Einwohnerzahl &amp; Verstädterung:</strong> <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis</a> des Statistischen Bundesamts, über den amtlichen Regionalschlüssel mit den OSM-Gemeinden verknüpft.</li><li><strong>Verkehrsmengen (nur Bayern):</strong> <a href="https://www.baysis.bayern.de/internet/verdat/svz/">Straßenverkehrszählung 2021</a> der Bayerischen Straßenbauverwaltung (BAYSIS, CC BY 4.0) – durchschnittlicher täglicher Kfz-Verkehr (DTV) je Zählabschnitt von Bundes-, Staats- und Kreisstraßen.</li><li><strong>Verkehrsmengen auf Bundesstraßen (bundesweit):</strong> <a href="https://www.bast.de/DE/Publikationen/Statistik/Verkehrsdaten/Manuelle-Zaehlung.html">Straßenverkehrszählung 2021</a> der Bundesanstalt für Straßenwesen (BASt) – fließt auch in das Erwartungsmodell ein.</li><li><strong>Miete, Altersstruktur, Eigentümerquote, Baualter, Einwohnerverteilung:</strong> Zensus 2022 (Gemeindeergebnisse und 100-m-Gitterzellen für die Entfernung zum nächsten Bahn-/Tramhalt). Baualter: Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später.</li><li><strong>Gemeindefinanzen, Bevölkerungsentwicklung, Pendeln, Erreichbarkeit:</strong> <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> des Bundes – Steuereinnahmekraft je Einwohner (2024), Bevölkerungsentwicklung 2019–2024, mittlere Pendeldistanz und Anteil der Einwohner an Haltestellen mit mindestens 20 Abfahrten am Tag (beide je Gemeindeverband) sowie Pkw-Fahrzeiten zur nächsten Grundschule, weiterführenden Schule und zum Supermarkt (Thünen-Erreichbarkeitsmodell). Kreise und Länder: einwohnergewichtetes Mittel ihrer Gemeinden.</li><li><strong>Raumtyp:</strong> <a href="https://bmdv.bund.de/SharedDocs/DE/Artikel/G/regionalstatistische-raumtypologie.html">Regionalstatistische Raumtypologie (RegioStaR 7)</a> des BMDV, Gebietsstand 2020 – ordnet jede Gemeinde nach ihrer Größe und Funktion und nach der Region um sie herum ein. Gemeinden, die seit 2020 fusioniert wurden, haben keinen Typ.</li><li><strong>Pkw-Dichte, Radunfälle, Pendler:</strong> Kraftfahrt-Bundesamt (FZ 3), Unfallatlas der Statistischen Ämter (2025), Statistik der Bundesagentur für Arbeit. Radunfälle mit Personenschaden werden je 10.000 Einwohner angegeben; das ist kein Risikomaß, weil das Radverkehrsaufkommen unbekannt ist – wo mehr Rad gefahren wird, gibt es bei gleichem Risiko mehr Unfälle.</li><li><strong>Siehe auch:</strong> die <a href="https://radinfra.de/statistik/">Statistik von radinfra.de</a>, auf deren Zählschema diese Auswertung aufbaut.</li></ul>
 
-  <h2>Wie werden Straßen gezählt?</h2>
+  <h2 id="strassen">Wie werden Straßen gezählt?</h2>
   <p>Aus den OSM-Straßentypen (<code>highway=*</code>) werden vier Gruppen gebildet:</p>
   <ul><li><strong>Autobahnen</strong> – Autobahnen und ihre Zu-/Abfahrten (OSM <code>motorway</code>)</li><li><strong>Hauptverkehrsstraßen (Bundes-, Landes-, Kreisstraßen)</strong> – Bundes-, Land- und Kreisstraßen sowie wichtige innerörtliche Straßen, einschließlich autobahnähnlich ausgebauter Bundesstraßen (OSM <code>trunk</code>–<code>tertiary</code>)</li><li><strong>Sonstige Straßen und Zufahrten</strong> – nicht klassifizierte und Erschließungswege (OSM <code>unclassified</code>, <code>service</code>)</li><li><strong>Wohn- und Erschließungsstraßen</strong> – Wohn-, Spiel- und Fahrradstraßen, Fußgängerzonen mit Kfz-Verkehr</li></ul>
   <p>Reine Fuß- und Radwege ohne begleitende Fahrbahn zählen <strong>nicht</strong> zur
   Straßenlänge – sonst würde ein gut ausgebautes Radnetz den eigenen Nenner vergrößern.</p>
 
-  <h2>Wie wird Radinfrastruktur gezählt?</h2>
+  <h2 id="zaehlung">Wie wird Radinfrastruktur gezählt?</h2>
   <p>Die Klassifizierung folgt dem Schema von <a href="https://radinfra.de">radinfra.de</a> bzw. TILDA
   (<a href="https://wiki.openstreetmap.org/wiki/DE:Fahrradinfrastruktur">OSM-Radverkehrs-Tagging</a>). Gezählt wird die Länge aller Wege
   dieser Kategorien:</p>
@@ -74,36 +91,47 @@
   <p>Der Hauptwert setzt die <strong>gesamte</strong> Länge der Radinfrastruktur ins Verhältnis zur
   Straßenlänge – auch selbstständige Wege abseits von Straßen (z.&nbsp;B. durch Felder oder Parks)
   zählen mit. Längen werden je Fahrtrichtung gezählt: Eine Straße mit Gegenverkehr zählt doppelt,
-  ebenso ein Zweirichtungsradweg; ein Radfahrstreifen auf jeder Seite zählt je Seite einfach.
-  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr entspricht so 100&nbsp;%; zwei
-  Zweirichtungsradwege, einer auf jeder Seite, entsprechen 200&nbsp;%. Werte über 100&nbsp;% kommen
+  eine Einbahnstraße und jede Fahrbahn einer Autobahn einfach; ein Radfahrstreifen auf jeder Seite
+  zählt je Seite einfach. Bei Wegen entscheidet das OpenStreetMap-Tag <code>oneway</code>: Mit
+  <code>oneway=no</code> zählt ein Weg doppelt, mit <code>oneway=yes</code> einfach. Fehlt das Tag,
+  gilt die TILDA-Regel: Gemeinsame und getrennte Geh- und Radwege sowie Gehwege mit „Rad frei“, die
+  neben einer Straße verlaufen könnten, zählen <strong>einfach</strong> – auch wenn sie in beide
+  Richtungen befahren werden dürfen. Reine Radwege (Zeichen 237), Wege abseits von Straßen und
+  unklar getaggte Wege zählen ohne Tag doppelt. Die Regel gilt überall gleich; für eine einzelne
+  Gemeinde kann sie den Wert aber spürbar verschieben, denn ein nachgetragenes
+  <code>oneway=no</code> verdoppelt die gezählte Länge eines solchen Wegs.
+  Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr ergibt so 100&nbsp;km je 100&nbsp;km
+  Straße; zwei Zweirichtungsradwege, einer auf jeder Seite, ergeben 200. Werte über 100 kommen
   deshalb vor, vor allem bei sehr kleinen Straßennetzen; in der CSV sind sie mit
   <code>hinweise=anteil_ueber_100</code> gekennzeichnet.
   Ein Weg, der über eine Gemeinde- oder Kreisgrenze führt, zählt auf jeder Seite mit dem Teil seiner
   Länge, der dort liegt.</p>
 
-  <h2>Hauptverkehrsstraßen und Zuständigkeit</h2>
+  <h2 id="hauptverkehr">Hauptverkehrsstraßen und Zuständigkeit</h2>
   <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
   die angenehmere Verbindung. Ergänzend zeigt die Detailkarte, wie gut die
-  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: den Anteil der Hauptverkehrsstraßen (OSM <code>trunk</code>, <code>primary</code>,
-  <code>secondary</code>, <code>tertiary</code>) mit Radinfrastruktur daneben oder darauf. Dafür wird
+  <strong>Hauptverkehrsstraßen</strong> selbst ausgestattet sind: die Kilometer Radinfrastruktur je 100&nbsp;km Hauptverkehrsstraße (OSM <code>trunk</code>, <code>primary</code>,
+  <code>secondary</code>, <code>tertiary</code>), gezählt wird Radinfrastruktur daneben oder darauf. Dafür wird
   jeder Radweg der Straße zugeordnet, an der er verläuft: Radfahrstreifen auf der Fahrbahn über ihre
   Straße, eigenständig erfasste straßenbegleitende Wege über die nächste Straße im Umkreis von etwa
-  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht. Die Karte und die Rangliste verwenden
-  immer den Wert über alle Straßen; der Anteil der Hauptverkehrsstraßen steht als Zusatzangabe in der
+  30&nbsp;m. Wege ohne Straße in der Nähe zählen hier nicht. Auch hier wird je Fahrtrichtung
+  gezählt: Ein Zweirichtungsradweg auf nur einer Seite einer Straße mit Gegenverkehr ergibt 50&nbsp;km je 100&nbsp;km,
+  solange er in OpenStreetMap nicht mit <code>oneway=no</code> erfasst ist; 100 heißt
+  Radinfrastruktur für beide Fahrtrichtungen. Die Karte und die Rangliste verwenden
+  immer den Wert über alle Straßen; der Wert der Hauptverkehrsstraßen steht als Zusatzangabe in der
   Detailkarte und im Datenblatt. Die eigene Zählung aus den Einstellungen gilt nur für den Hauptwert.</p>
   <p>Die Zuständigkeit (Baulastträger) wird aus der Straßennummer abgeleitet: B → Bund,
   L/S/St → Land, K oder Kreiskürzel (z.&nbsp;B. „RO&nbsp;35“) → Landkreis, ohne Nummer → Gemeinde.
   Das ist eine Näherung: Ortsdurchfahrten von Bundes- und Landesstraßen liegen in größeren Städten
   meist in der Baulast der Stadt, und fehlende Nummern in OpenStreetMap landen bei der Gemeinde.</p>
 
-  <h2>Vergleich mit ähnlichen Gemeinden</h2>
-<p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit „wir sind halt ländlich“ nicht
-als Erklärung reicht, wird jede Gemeinde zusätzlich bundesweit mit Gemeinden <em>derselben
-Größenklasse und Verstädterung</em> verglichen:</p>
+  <h2 id="vergleich">Vergleich mit ähnlichen Gemeinden</h2>
+<p>Ein Landkreis mischt die Kreisstadt mit ihren Dörfern. Damit Gemeinden mit ähnlichen
+Voraussetzungen nebeneinanderstehen, wird jede Gemeinde zusätzlich bundesweit mit Gemeinden
+<em>derselben Größenklasse und Verstädterung</em> verglichen:</p>
 <ul><li><strong>Einwohnerzahl</strong> in 9 Klassen: unter 1.000 · 1.000–2.000 · 2.000–3.000 · 3.000–5.000 · 5.000–10.000 · 10.000–20.000 · 20.000–50.000 · 50.000–100.000 · über 100.000</li><li><strong>Grad der Verstädterung</strong> (Destatis / <a href="https://ec.europa.eu/eurostat/de/web/degree-of-urbanisation">Eurostat DEGURBA</a>): städtisch geprägt, mittlere Bevölkerungsdichte, ländlich geprägt</li></ul>
 <p>Grundlage ist das <a href="https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html">Gemeindeverzeichnis des Statistischen Bundesamts</a>
-(vierteljährlich). Der Vergleich erscheint für 10.830
+(vierteljährlich). Der Vergleich erscheint für 10.826
 Gemeinden; sehr kleine Vergleichsgruppen (unter vier) werden nicht gezeigt.</p>
 <p>Landkreise und kreisfreie Städte (398) werden ebenso
 bundesweit in Gruppen verglichen: Kreisfreie Großstädte (ab 100.000 Einw.), Kreisfreie Städte (unter 100.000 Einw.), Städtisch geprägte Landkreise (über 200 Einw./km²), Ländliche Landkreise (100–200 Einw./km²), Dünn besiedelte ländliche Landkreise (unter 100 Einw./km²). Grundlage sind
@@ -112,7 +140,7 @@ Einwohnerzahl und Fläche aus demselben Gemeindeverzeichnis.</p>
 Vorschau-Seiten wird der Standard-Zählfilter verwendet, in der interaktiven Karte der gerade
 eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
 
-  <h2>Veränderung über die Zeit</h2>
+  <h2 id="zeit">Veränderung über die Zeit</h2>
   <p>Mit jeder Datenaktualisierung wird ein Stand aller Gebiete gespeichert. Sobald ein Stand
   vorliegt, der mindestens zwei Wochen älter ist, zeigt die Detailkarte, wie viel Radinfrastruktur
   seitdem hinzugekommen ist – „neu erfasst oder gebaut“, denn OpenStreetMap unterscheidet nicht
@@ -120,7 +148,7 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   Stände, die nach denselben Regeln gezählt wurden; ändert sich die Zählweise, beginnt die Reihe
   neu. Die Angabe gilt für den Standard-Zählfilter.</p>
 
-  <h2>Vielbefahrene Landstraßen</h2>
+  <h2 id="landstrassen">Vielbefahrene Landstraßen</h2>
   <p>Ob eine Landstraße einen eigenen Radweg braucht, hängt nach den <strong>Empfehlungen für
   Radverkehrsanlagen (ERA 2010)</strong> von Verkehrsmenge und Tempo ab. Für regionale Landstraßen
   (Kategorie LS&nbsp;III) gilt ein fahrbahnbegleitender Radweg als <em>sinnvoll</em> ab einem
@@ -143,6 +171,8 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   Die Karte zeigt beide Quellen; ein Klick auf eine Linie nennt die Quelle.</p>
   <p><strong>Länge und Anteil:</strong> Neben dem Anteil mit Radweg nennt die Detailkarte die
   Kilometer über der Schwelle und ihren Anteil am gesamten Straßennetz des Gebiets (Standard-Zählfilter).
+  Beide sind in Straßenkilometern gerechnet: Das Straßennetz, das sonst je Fahrtrichtung zählt, geht
+  dafür mit der halben Länge ein.
   Ein Gebiet ohne vielbefahrene Außerortsstrecke hat dabei 0&nbsp;km und 0&nbsp;%, nicht „keine
   Daten“. Der bundesweite Anteil der Bundesstraßen geht als Merkmal in das Erwartungswert-Modell ein.</p>
   <p><strong>Einschränkungen:</strong> Ortsdurchfahrten (hier gelten andere Regeln) und
@@ -150,9 +180,29 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   Straßenkategorie (LS&nbsp;II–IV) ist in den Daten nicht angegeben; die Schwelle wird auf alle
   gezählten Bundes-, Staats- und Kreisstraßen angewandt. Ein parallel verlaufender Weg in bis zu
   20&nbsp;m Abstand zählt als vorhanden, auch wenn er nicht durchgehend nutzbar ist.</p>
+  <p><strong>Ebene „Verkehrsmenge“:</strong> Auf Wunsch zeigt die Karte alle gezählten Abschnitte
+  (außer Autobahnen) unabhängig von der Schwelle, eingefärbt nach Kfz pro Tag – auch
+  Ortsdurchfahrten und Abschnitte knapp unter der Schwelle. In Bayern sind zusätzlich grau
+  gestrichelt die Straßen mit Straßennummer (Bundes-, Staats- und Kreisstraßen laut OpenStreetMap)
+  markiert, für die es keine Zählung 2021 gibt: Ein OpenStreetMap-Weg gilt als nicht gezählt, wenn
+  im Umkreis von etwa 60&nbsp;m um seine Mitte kein Zählabschnitt mit derselben Straßennummer liegt.
+  Ein Weg, der auf ganzer Länge neben einem Zählabschnitt mit anderer Nummer liegt, gilt als
+  gezählt (Straßen, die seit 2021 umgestuft wurden). Die bayerische Straßenbauverwaltung zählt nicht
+  alle Kreisstraßen und nicht die Straßen in Baulast größerer Städte; dort ist die Verkehrsmenge in
+  diesen Daten unbekannt, nicht gering. Städte und Landkreise können eigene Zählungen haben. Außerhalb Bayerns liegen nur Zählungen für Bundesstraßen vor, deshalb fehlt dort diese
+  Markierung. Gezählt wurde 2021, als der Verkehr wegen der Corona-Pandemie teils geringer war als
+  üblich.</p>
+  <p><strong>Radweg je Verkehrsmenge:</strong> Für Länder, Regierungsbezirke und Landkreise zeigt die
+  Detailkarte unter „Mehr Zahlen“, wie viele Kilometer gezählter Straße außerorts in jede Klasse
+  der Ebene „Verkehrsmenge“ fallen und welcher Anteil davon einen Radweg daneben hat – in Bayern
+  für Bundes-, Staats- und Kreisstraßen, sonst nur für Bundesstraßen. Gezählt werden alle
+  Abschnitte der freien Strecke, auch die unter der ERA-Schwelle; Ortsdurchfahrten nicht. Für
+  Gemeinden entfällt die Tabelle: wenige Kilometer je Klasse ergeben keinen belastbaren Anteil.
+  Bei den höchsten Verkehrsmengen ist der Anteil oft niedriger als in den Klassen darunter; dort
+  liegen auch Straßen, auf denen Radverkehr nicht zugelassen ist oder anders geführt wird.</p>
 
-  <h2>Strukturelles Erwartungswert-Modell</h2>
-  <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Anteil zusammen:
+  <h2 id="modell">Strukturelles Erwartungswert-Modell</h2>
+  <p>Topografie, Siedlungsdichte und Bundesland hängen deutlich mit dem Radinfra-Wert (km je 100 km Straße) zusammen:
   Eine hügelige Mittelgebirgsgemeinde im ländlichen Hessen hat andere Voraussetzungen als eine flache
   Küstengemeinde in Schleswig-Holstein. Damit Gemeinden unter ähnlichen Bedingungen vergleichbar
   werden, schätzt ein <strong>multivariates Regressionsmodell</strong> für jede Gemeinde einen
@@ -162,24 +212,25 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
   Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
   Normvorgabe für eine verkehrswendegerechte Infrastruktur. Eine positive Abweichung („über Erwartungswert“)
-  bedeutet, dass vor Ort mehr Radinfrastruktur erfasst ist, als bei Gemeinden mit ähnlicher Topografie,
-  Dichte, Miete und im selben Bundesland im Mittel zu erwarten wäre. Eine Abweichung kann auf lokale
+  bedeutet, dass vor Ort mehr Radinfrastruktur erfasst ist, als bei Gemeinden mit ähnlichen Voraussetzungen
+  (Bundesland, Raumtyp, Gelände, Dichte, Bahnanbindung, Miete, Pkw-Dichte, Spielstraßen, vielbefahrene
+  Bundesstraßen) im Mittel zu erwarten wäre. Eine Abweichung kann auf lokale
   Entscheidungen zurückgehen, aber ebenso auf Merkmale, die das Modell nicht kennt, oder auf die
   Datenlage in OpenStreetMap.</p>
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.500</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = 63,6&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = 62,4&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±5,59&nbsp;%-Punkte</strong>.</li>
-    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.417</code>, <strong>R² = 68,9&nbsp;%</strong>, <strong>R²_cv = 67,6&nbsp;%</strong>, Basiswert <strong>41,4&nbsp;%</strong>, <strong>SE = ±23,2&nbsp;%-Punkte</strong>). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100&nbsp;%.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = 10.496</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = 63,7&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = 62,4&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±5,59&nbsp;km je 100&nbsp;km Straße</strong>.</li>
+    <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = 10.413</code>, <strong>R² = 69,0&nbsp;%</strong>, <strong>R²_cv = 67,7&nbsp;%</strong>, Basiswert <strong>41,6&nbsp;km</strong>, <strong>SE = ±23,2&nbsp;km</strong>, je 100&nbsp;km Hauptverkehrsstraße). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
-    <li><strong>Untergrenze 0&nbsp;%:</strong> Ein lineares Modell kann rechnerisch unter 0&nbsp;% liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0&nbsp;% als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
+    <li><strong>Untergrenze 0:</strong> Ein lineares Modell kann rechnerisch unter 0 liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0 als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
     <li><strong>Dynamische Anpassung bei freien Zählfiltern:</strong> Werden Straßen- oder Radwegetypen individuell abgewählt (z.&nbsp;B. ohne Autobahnen oder nur bauliche Radwege), passen sich Bundes- und Landesbaselines sowie das Streuband dynamisch an das tatsächliche Niveau des gewählten Filters an, um Verzerrungen durch reine Nenner-Verschiebungen zu verhindern. Das ist eine Näherung: Die übrigen Koeffizienten werden nur proportional mitskaliert, nicht für den gewählten Filter neu geschätzt.</li>
     <li><strong>Modellunsicherheit:</strong> Die Karte färbt die Abweichung stufenlos (grün darüber, rot darunter). Innerhalb der typischen Abweichung (±1 Residualstandardfehler) bleiben die Töne blass, volle Farbe gibt es erst jenseits der doppelten – das sind etwa die äußersten 5&nbsp;%. Grau bedeutet: kein Wert.</li>
     <li><strong>Unsicherheit der Faktoren:</strong> Die Standardfehler der Koeffizienten sind cluster-robust nach Landkreisen geschätzt (397 Landkreise und kreisfreie Städte), weil benachbarte Gemeinden sich in Kartierung, Verwaltung und Gelände ähneln und ihre Abweichungen nicht unabhängig sind. In der Faktoren-Zerlegung der Detailkarte heißt ein Beitrag nur dann „senkt“ oder „hebt“, wenn er mindestens zwei Standardfehler von null entfernt ist; sonst steht dort grau „kein klarer Effekt“.</li>
     <li><strong>Kreisfreie Städte</strong> sind Gemeinden, in OpenStreetMap aber nur als Kreisgrenze erfasst. Sie werden im Modell wie Gemeinden behandelt und sind in der Schätzung enthalten – ohne sie hätte das Modell keine Großstadt gesehen und deren Erwartungswert deutlich unterschätzt.</li>
-    <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (gewichtete mittlere Abweichung aller Gebiete der Ebene) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
-    <li><strong>Prüfung auf Kartierungslücken:</strong> Wohlhabendere und dichtere Gemeinden könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
-    <li><strong>Weitere geprüfte Merkmale (Stand November 2026):</strong> Eigentümerquote, Alters- und Baualtersstruktur, Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz und Pendlerquoten, Haltestellen mit dichtem Takt sowie die Fahrzeiten zu Schule und Supermarkt verbessern die kreuzvalidierte Vorhersage jeweils um höchstens 0,6&nbsp;Prozentpunkte R², sobald der Raumtyp im Modell ist. Sie stehen deshalb nur als Vergleichszahlen in der Detailkarte und in der CSV. Jedes weitere Merkmal macht die Faktoren-Zerlegung schwerer lesbar; die Pendlerquoten fehlen zudem für rund 5&nbsp;% der Gemeinden, die dann keinen Erwartungswert mehr hätten.</li>
+    <li><strong>Landkreise und Bezirke:</strong> Das Modell ist auf Gemeindeebene geschätzt. Für größere Gebiete werden die erwarteten Kilometer ihrer Gemeinden addiert und durch deren Straßenkilometer geteilt; die Faktoren-Zerlegung ist entsprechend nach Straßenlänge gewichtet. Verglichen wird mit dem tatsächlichen Anteil des ganzen Gebiets. Weil sich Abweichungen einzelner Gemeinden teilweise ausgleichen, ist das Streuband für jede Ebene eigens bestimmt (nach Straßenlänge gewichtete Wurzel aus der mittleren quadratischen Abweichung aller Gebiete der Ebene – dasselbe Maß wie der Residualstandardfehler der Gemeinden) und damit schmaler als bei Gemeinden. <strong>Für Bundesländer gibt es keinen Wert:</strong> Das Modell enthält für jedes Land einen eigenen Basiswert, deshalb gleichen sich die Abweichungen seiner Gemeinden im Mittel praktisch auf null aus – ein Landeswert wäre nichtssagend.</li>
+    <li><strong>Prüfung auf Kartierungslücken:</strong> Gemeinden mit höheren Mieten und höherer Dichte könnten auch gründlicher in OpenStreetMap erfasst sein. Nimmt man die Kartierungstiefe (siehe „Grenzen der Aussagekraft“) testweise ins Modell auf, sinkt der Koeffizient der Miete um gut ein Viertel und der der Dichte um gut ein Zehntel; die übrigen Faktoren bleiben praktisch unverändert. Ein Teil des Mietzusammenhangs geht also auf die Datenlage zurück, der größte Teil nicht. Im Modell der Karte ist die Kartierungstiefe bewusst nicht enthalten: Wo viel kartiert wird, gibt es oft auch eine aktive Radverkehrs-Community – das Modell würde sonst einen Teil echter Unterschiede wegrechnen.</li>
+    <li><strong>Weitere geprüfte Merkmale (Stand 15.11.2026):</strong> Eigentümerquote, Alters- und Baualtersstruktur, Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz und Pendlerquoten, Haltestellen mit dichtem Takt sowie die Fahrzeiten zu Schule und Supermarkt verbessern die kreuzvalidierte Vorhersage jeweils um höchstens 0,6&nbsp;Prozentpunkte R², sobald der Raumtyp im Modell ist. Sie stehen deshalb nur als Vergleichszahlen in der Detailkarte und in der CSV. Jedes weitere Merkmal macht die Faktoren-Zerlegung schwerer lesbar; die Pendlerquoten fehlen zudem für rund 5&nbsp;% der Gemeinden, die dann keinen Erwartungswert mehr hätten.</li>
   </ul>
 
   <div class="table-scroll">
@@ -188,19 +239,19 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <th>Einflussfaktor</th>
         <th>Beschreibung / Quelle</th>
-        <th class="num">Koeffizient (β ± Standardfehler)</th>
+        <th class="num">Koeffizient (β ± Standardfehler), km je 100&nbsp;km Straße</th>
       </tr>
     </thead>
     <tbody>
       <tr>
         <td><strong>Bundesland-Baselines (α_L)</strong></td>
-        <td>Feste Effekte je Bundesland: fassen alles zusammen, was einem Land gemeinsam ist (etwa Förderprogramme, Planungsrichtlinien, Kartierungsaktivität), ohne es aufzuteilen (Niedersachsen 17,8&nbsp;%, Schleswig-Holstein 17,2&nbsp;%, Brandenburg 15,6&nbsp;%, Mecklenburg-Vorpommern 15,1&nbsp;%, Sachsen-Anhalt 12,6&nbsp;%, NRW 12,0&nbsp;%, Bundesmittel 12,0&nbsp;%, Bayern 10,6&nbsp;%, Sachsen 10,4&nbsp;%, Saarland 10,1&nbsp;%, Thüringen 9,1&nbsp;%, Baden-Württemberg 8,6&nbsp;%, Rheinland-Pfalz 7,9&nbsp;%, Hessen 7,8&nbsp;%)</td>
+        <td>Feste Effekte je Bundesland: fassen alles zusammen, was einem Land gemeinsam ist (etwa Förderprogramme, Planungsrichtlinien, Kartierungsaktivität), ohne es aufzuteilen (Niedersachsen 17,8&nbsp;km, Schleswig-Holstein 17,2&nbsp;km, Brandenburg 15,6&nbsp;km, Mecklenburg-Vorpommern 15,0&nbsp;km, Sachsen-Anhalt 12,6&nbsp;km, NRW 12,0&nbsp;km, Bundesmittel 12,0&nbsp;km, Bayern 10,8&nbsp;km, Sachsen 10,4&nbsp;km, Saarland 10,2&nbsp;km, Thüringen 9,1&nbsp;km, Baden-Württemberg 8,7&nbsp;km, Rheinland-Pfalz 8,0&nbsp;km, Hessen 7,9&nbsp;km)</td>
         <td class="num">Basis</td>
       </tr>
       <tr>
         <td><strong>Mittlere Straßensteigung</strong></td>
         <td>Mittlere Geländeneigung entlang des Straßennetzes in % (Mapzen/AWS Terrain Tiles)</td>
-        <td class="num">−0,4638 ± 0,0595 / %</td>
+        <td class="num">−0,4677 ± 0,0599 / %</td>
       </tr>
       <tr>
         <td><strong>Mittlere Geländehöhe</strong></td>
@@ -210,17 +261,17 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Siedlungsdichte (log10)</strong></td>
         <td>Einwohner je km² Fläche (Destatis), logarithmische Skalierung</td>
-        <td class="num">+4,3994 ± 0,5214 / Dekade</td>
+        <td class="num">+4,4143 ± 0,5233 / Dekade</td>
       </tr>
       <tr>
         <td><strong>Entfernung zu Bahn &amp; Tram</strong></td>
         <td>Einwohnergewichtete Luftlinie zur nächsten Bahn-, Tram- oder Fährstation in km</td>
-        <td class="num">+0,0055 ± 0,0337<br /><small>kein klarer Effekt</small> / km</td>
+        <td class="num">+0,0003 ± 0,0333<br /><small>kein klarer Effekt</small> / km</td>
       </tr>
       <tr>
         <td><strong>Mietniveau</strong></td>
         <td>Ø Nettokaltmiete in €/m² (Zensus 2022)</td>
-        <td class="num">+1,2372 ± 0,2119 / (€/m²)</td>
+        <td class="num">+1,2260 ± 0,2112 / (€/m²)</td>
       </tr>
       <tr>
         <td><strong>Pkw-Dichte</strong></td>
@@ -230,16 +281,16 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
       <tr>
         <td><strong>Verkehrsberuhigung</strong></td>
         <td>Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz in %. Fahrradstraßen und Fußgängerzonen zählen nicht dazu, weil sie schon im Radinfra-Anteil stecken.</td>
-        <td class="num">+0,4104 ± 0,0615 / %-Punkt</td>
+        <td class="num">+0,4093 ± 0,0608 / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Vielbefahrene Bundesstraßen</strong></td>
-        <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in %, bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
-        <td class="num">+0,2847 ± 0,0404 / %-Punkt</td>
+        <td>Anteil der Außerorts-Bundesstraßen über der ERA-Schwelle (siehe „Vielbefahrene Landstraßen“) am Straßennetz in % (Straßennetz in Straßenkilometern, siehe oben), bundesweit aus der Straßenverkehrszählung 2021; 0 %, wo es keine gibt. Staats- und Kreisstraßen fehlen, weil sie nur für Bayern vorliegen.</td>
+        <td class="num">+0,1422 ± 0,0203 / %-Punkt</td>
       </tr>
       <tr>
         <td><strong>Raumtyp (RegioStaR 7)</strong></td>
-        <td>Regionalstatistische Raumtypologie des BMDV: ordnet jede Gemeinde nach Größe und zentraler Funktion und nach der Region um sie herum ein (Stadtregion oder ländliche Region). Erfasst, was die Dichte allein nicht zeigt – etwa ob ein Ort Zentrum für sein Umland ist. Je Typ ein eigener Wert, verglichen mit „ländliche Region, kleinstädtischer, dörflicher Raum“: Metropole, Regiopole und Großstadt +5,9572 ± 0,82&nbsp;%-Punkte, Stadtregion, Mittelstadt und städtischer Raum −0,2562 ± 0,45&nbsp;%-Punkte (kein klarer Effekt), Stadtregion, kleinstädtisch, dörflich −0,8815 ± 0,43&nbsp;%-Punkte, ländliche Region, zentrale Stadt +4,0402 ± 0,63&nbsp;%-Punkte, ländliche Region, städtischer Raum +0,1312 ± 0,28&nbsp;%-Punkte (kein klarer Effekt). Gemeinden, die seit 2020 fusioniert oder umgeschlüsselt wurden, erhalten den Typ ihrer Vorgängergemeinde.</td>
+        <td>Regionalstatistische Raumtypologie des BMDV: ordnet jede Gemeinde nach Größe und zentraler Funktion und nach der Region um sie herum ein (Stadtregion oder ländliche Region). Erfasst, was die Dichte allein nicht zeigt – etwa ob ein Ort Zentrum für sein Umland ist. Je Typ ein eigener Wert, verglichen mit „ländliche Region, kleinstädtischer, dörflicher Raum“: Metropole, Regiopole und Großstadt +5,9544 ± 0,82&nbsp;km, Stadtregion, Mittelstadt und städtischer Raum −0,2610 ± 0,45&nbsp;km (kein klarer Effekt), Stadtregion, kleinstädtisch, dörflich −0,9056 ± 0,43&nbsp;km, ländliche Region, zentrale Stadt +4,1106 ± 0,63&nbsp;km, ländliche Region, städtischer Raum +0,1284 ± 0,28&nbsp;km (kein klarer Effekt). Gemeinden, die seit 2020 fusioniert oder umgeschlüsselt wurden, erhalten den Typ ihrer Vorgängergemeinde.</td>
         <td class="num">je Typ</td>
       </tr>
     </tbody>
@@ -248,14 +299,17 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
 
   <h2 id="umweg">Umwege per Rad</h2>
   <p>Die Umweg-Karte (aus der Detailkarte einer Gemeinde verlinkt, sofern für ihren Landkreis
-  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises die schnellste Autostrecke mit
-  einer Radroute zu allen anderen Orten: wie viele Kilometer, Höhenmeter bergauf und Minuten die
-  Radroute mehr oder weniger braucht. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
+  Routing-Daten vorliegen) vergleicht für jeden Ort des Landkreises eine verkehrsarme Radroute zu
+  allen anderen Orten mit der schnellsten Radroute oder der üblichen Autostrecke: wie viele Kilometer,
+  Höhenmeter bergauf und Minuten sie mehr oder weniger braucht, und woraus beide Routen bestehen. Orte sind die in OpenStreetMap als Stadt, Dorf oder Weiler
   (<code>place=town/village/hamlet</code>) eingetragenen Ortspunkte, jeweils an den nächsten Punkt
   des Rad- bzw. Straßennetzes angebunden (höchstens 400&nbsp;m entfernt).</p>
   <p><strong>Radnetz:</strong> alle Wege, die TILDA als für Räder befahrbar einstuft, mit ihrer
-  Radinfrastruktur-Kategorie. Angenommen werden etwa 18&nbsp;km/h, langsamer auf Feldwegen und
-  unbefestigtem Belag, Schieben auf Gehwegen ohne Freigabe und gegen Einbahnstraßen. Jeder Abschnitt
+  Radinfrastruktur-Kategorie. Angenommen werden etwa 18&nbsp;km/h, auch auf Radwegen, gemeinsamen
+  Geh- und Radwegen und asphaltierten Feldwegen. Langsamer: Feld- und Waldwege ohne Angabe zum Belag
+  (15&nbsp;km/h), erfasster unbefestigter Belag oder Pflaster (je nach Belag 50–90&nbsp;% des Tempos),
+  verkehrsberuhigte Bereiche (12&nbsp;km/h); geschoben wird auf Gehwegen ohne Freigabe und gegen
+  Einbahnstraßen. Jeder Abschnitt
   bekommt eine Belastung zwischen 0 und 1: 0 auf Radwegen, gemeinsamen Geh- und Radwegen,
   Fahrradstraßen, verkehrsberuhigten Bereichen und Wegen ohne Autoverkehr; im Mischverkehr steigt sie
   mit dem Tempolimit (30&nbsp;km/h: 0,1; 50&nbsp;km/h: 0,35; 70&nbsp;km/h: 0,7; ab 100&nbsp;km/h: 1).
@@ -267,25 +321,45 @@ eingestellte – beide Werte können daher leicht voneinander abweichen.</p>
   Wege. Ab 80&nbsp;% werden Abschnitte ab Belastung
   0,7 (Mischverkehr ab etwa 70&nbsp;km/h) gar nicht genutzt; ein Ort, der nur
   über solche Straßen erreichbar ist, gilt dann als nicht erreichbar.</p>
-  <p><strong>Auto:</strong> Tempolimit (sonst typischer Wert je Straßenart) mit Abschlag für Kreuzungen
-  und Kurven, Einbahnstraßen, keine Feld- und Waldwege. Kein Verkehr, keine Ampeln.</p>
+  <p><strong>Auto:</strong> Durchschnittstempo aus dem Tempolimit (sonst typischer Wert je Straßenart),
+  mit Abschlag für Kreuzungen, Kurven und Ortsdurchfahrten: etwa 35&nbsp;km/h bei 50, 55&nbsp;km/h bei 70,
+  75&nbsp;km/h bei 100 und 110&nbsp;km/h auf der Autobahn. Einbahnstraßen und getrennte Richtungsfahrbahnen
+  nur in Fahrtrichtung, keine Feld- und Waldwege.
+  Gewählt wird die Route mit der kleinsten Summe aus Fahrzeit und 30&nbsp;Sekunden je
+  Kilometer, wie bei üblichen Routenplanern: Eine Autobahnschleife, die viele Kilometer mehr fährt, um
+  eine Minute zu sparen, gilt nicht als Autostrecke. Kein Verkehr, keine Ampeln.</p>
+  <p><strong>Vergleich mit der schnellsten Radroute (Standard):</strong> Die Radroute wird mit der
+  schnellsten Radroute verglichen (Regler ganz links), wahlweise mit dem Auto. Dann zeigen die Zahlen, was das
+  Meiden von Verkehr kostet: wie viele Kilometer, Höhenmeter und Minuten eine verkehrsarme Route
+  gegenüber der schnellsten mehr braucht. Langsamer ist sie nie, kürzer kann sie sein, etwa über
+  einen direkten, aber langsameren Feldweg. Ist ein Ort nur über gesperrte Straßen erreichbar, gilt
+  er wie beim Auto-Vergleich als nicht erreichbar.</p>
+  <p><strong>Woraus eine Route besteht:</strong> Für jede Route wird die Länge aufgeteilt in
+  Radwege und Radstreifen (TILDA-Kategorien mit Radinfrastruktur), Feld- und Wirtschaftswege
+  (<code>highway=track</code>), sonstige ruhige Wege und Straßen (Belastung unter 0,2, etwa Tempo-30-Straßen
+  und Fußwege mit Radfreigabe), Straßen mit Verkehr (Belastung 0,2 bis unter 0,7, etwa Tempo 50, auch
+  wenig befahrene Gemeindeverbindungsstraßen) und Straßen mit Tempo 70–100 ohne Radweg (Belastung ab
+  0,7, also genau die Abschnitte, die der Regler ab 80&nbsp;% sperrt). Zusätzlich ausgewiesen: Abschnitte mit in OSM
+  erfasstem unbefestigtem Belag (Schotter, Erde, Gras u.&nbsp;Ä.; ohne Angabe gilt ein Weg nicht als
+  unbefestigt) und Abschnitte, auf denen geschoben wird. Die Übersicht nennt jeweils den Median über alle
+  angezeigten Orte.</p>
   <p><strong>Höhenmeter:</strong> Summe der Anstiege entlang der Route, aus den Mapzen/AWS Terrain
   Tiles (etwa 13&nbsp;m Auflösung) alle 25&nbsp;m abgetastet und leicht geglättet. Die Höhenmeter werden
   berichtet, aber bei der Routenwahl nicht vermieden. „Mehr Höhenmeter“ vergleicht mit dem Anstieg
-  der Autostrecke. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
+  der Vergleichsroute. Brücken und Einschnitte können das Höhenmodell um einige Meter verfälschen.</p>
   <p><strong>Einschränkungen:</strong> Ein Ortspunkt ist nicht jede Adresse des Orts; bei großen Orten
   kann die Strecke zum Ortsrand deutlich kürzer sein. Wege außerhalb des Landkreises werden bis etwa
-  4&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
+  2,5&nbsp;km jenseits der Grenze berücksichtigt. Die Zeiten sind grobe Schätzungen.</p>
 
-  <h2>Grenzen der Aussagekraft</h2>
+  <h2 id="grenzen">Grenzen der Aussagekraft</h2>
   <div class="caveat">
-  <ul><li><strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein. Als Hinweis zeigt die Detailkarte die <em>Kartierungstiefe</em>: den Anteil der Straßenlänge (ohne Zufahrts-/Service-Wege und Autobahnen), für den Tempolimit, Belag und Beleuchtung erfasst sind – Merkmale, die wie Radwege vor Ort erhoben werden, aber nichts darüber sagen, ob es einen Radweg gibt. Ist sie im Vergleich gering, kann auch Radinfrastruktur fehlen. Auf dem Land ist sie von Natur aus etwas niedriger (unbeleuchtete Landstraßen, Tempo 100 ohne Schild), daher am besten mit ähnlichen Gemeinden vergleichen.</li><li><strong>Unklar getaggte Radwege:</strong> Manche Wege sind in OpenStreetMap als Radinfrastruktur erkennbar, aber so getaggt, dass sich nicht sagen lässt, um welche Art es sich handelt („Klärung nötig“). Sie zählen im Radinfra.de-Standard mit. Die Karte zeigt je Gebiet, wie groß dieser Anteil ist (Datenlage <em>gut</em> unter 15&nbsp;%, <em>mittel</em> bis 40&nbsp;%, <em>unsicher</em> darüber) und nennt bei <em>mittel</em> und <em>unsicher</em> den Anteil ohne diese Wege. Der wahre Wert liegt dann dazwischen. „Gut“ heißt dabei nur, dass die erfassten Wege eindeutig getaggt sind – nicht, dass alle Radwege erfasst sind; dafür steht die Kartierungstiefe.</li><li><strong>Kaum Radinfrastruktur erfasst:</strong> Bei einem Straßennetz ab 20&nbsp;km mit weniger als 0,5&nbsp;km erfasster Radinfrastruktur lässt sich nicht unterscheiden, ob es keine gibt oder ob sie in OpenStreetMap fehlt. Solche Gebiete sind als „kaum erfasst“ markiert.</li><li><strong>Kleines Straßennetz:</strong> Bei Gemeinden mit sehr wenig erfasstem Straßennetz ist der Prozentwert instabil (wenige Kilometer verschieben ihn stark). Gebiete mit weniger als 5&nbsp;km erfasster Straße bekommen deshalb keinen Rang und fließen weder in die Farbskala noch in Median und Spitzenwert der Vergleiche ein; auf der Karte und in der Detailkarte sind sie weiterhin zu sehen.</li><li><strong>Momentaufnahme:</strong> Die Karte zeigt den Stand eines Datenabzugs, keine Live-Daten. Neu eingetragene Radwege erscheinen erst mit der nächsten Aktualisierung.</li><li><strong>Anteil ≠ Qualität:</strong> Ein Schutzstreifen zählt wie ein baulich getrennter Radweg, solange er nicht über den Filter ausgeschlossen wird.</li><li><strong>Verwaltungsgrenzen aus OSM</strong> können in Einzelfällen von der amtlichen Abgrenzung abweichen.</li></ul>
+  <ul><li><strong>OpenStreetMap ist nicht überall gleich vollständig.</strong> In gut kartierten Regionen sind sowohl Straßen als auch Radwege genauer erfasst. Wo wenig kartiert ist, kann der Anteil in beide Richtungen verzerrt sein. Als Hinweis zeigt die Detailkarte die <em>Kartierungstiefe</em>: den Anteil der Straßenlänge (ohne Zufahrts-/Service-Wege und Autobahnen), für den Tempolimit, Belag und Beleuchtung erfasst sind – Merkmale, die wie Radwege vor Ort erhoben werden, aber nichts darüber sagen, ob es einen Radweg gibt. Ist sie im Vergleich gering, kann auch Radinfrastruktur fehlen. Auf dem Land ist sie von Natur aus etwas niedriger (unbeleuchtete Landstraßen, Tempo 100 ohne Schild), daher am besten mit ähnlichen Gemeinden vergleichen.</li><li><strong>Unklar getaggte Radwege:</strong> Manche Wege sind in OpenStreetMap als Radinfrastruktur erkennbar, aber so getaggt, dass sich nicht sagen lässt, um welche Art es sich handelt („Klärung nötig“). Sie zählen im Radinfra.de-Standard mit. Die Karte zeigt je Gebiet, wie groß dieser Anteil ist (Datenlage <em>gut</em> unter 15&nbsp;%, <em>mittel</em> bis 40&nbsp;%, <em>unsicher</em> darüber) und nennt bei <em>mittel</em> und <em>unsicher</em> den Anteil ohne diese Wege. Der wahre Wert liegt dann dazwischen. „Gut“ heißt dabei nur, dass die erfassten Wege eindeutig getaggt sind – nicht, dass alle Radwege erfasst sind; dafür steht die Kartierungstiefe.</li><li><strong>Kaum Radinfrastruktur erfasst:</strong> Bei einem Straßennetz ab 20&nbsp;km mit weniger als 0,5&nbsp;km erfasster Radinfrastruktur lässt sich nicht unterscheiden, ob es keine gibt oder ob sie in OpenStreetMap fehlt. Solche Gebiete sind als „kaum erfasst“ markiert.</li><li><strong>Kleines Straßennetz:</strong> Bei Gemeinden mit sehr wenig erfasstem Straßennetz ist der Prozentwert instabil (wenige Kilometer verschieben ihn stark). Gebiete mit weniger als 5&nbsp;km erfasster Straße bekommen deshalb keinen Rang und fließen weder in die Farbskala noch in Median und Spitzenwert der Vergleiche ein; auf der Karte und in der Detailkarte sind sie weiterhin zu sehen.</li><li><strong>Momentaufnahme:</strong> Die Karte zeigt den Stand eines Datenabzugs, keine Live-Daten. Neu eingetragene Radwege erscheinen erst mit der nächsten Aktualisierung.</li><li><strong>Kilometer ≠ Qualität:</strong> Ein Schutzstreifen zählt wie ein baulich getrennter Radweg, solange er nicht über den Filter ausgeschlossen wird.</li><li><strong>Verwaltungsgrenzen aus OSM</strong> können in Einzelfällen von der amtlichen Abgrenzung abweichen.</li></ul>
   </div>
 
-  <h2>Daten herunterladen</h2>
-<p><a href="./daten/radinfra-regionen-2026-10-20.csv" download><strong>Alle Gebiete als CSV</strong></a>
+  <h2 id="download">Daten herunterladen</h2>
+<p><a href="./daten/radinfra-regionen-2026-11-14.csv" download><strong>Alle Gebiete als CSV</strong></a>
 (22.997 Zeilen, Stand der OpenStreetMap-Daten:
-20.10.2026) · <a href="./daten/radinfra-regionen-2026-10-20-excel.csv" download>Variante für Excel</a>.
+14.11.2026) · <a href="./daten/radinfra-regionen-2026-11-14-excel.csv" download>Variante für Excel</a>.
 Eine Zeile je Verwaltungseinheit vom Bund bis zum Stadtbezirk, gerechnet
 mit dem Standard-Zählfilter – dieselben Werte wie in der Karte mit Standard-Einstellungen.
 Komma-getrennt, Dezimalpunkt, UTF-8; die Excel-Variante ist mit Semikolon und Dezimalkomma
@@ -293,22 +367,32 @@ geschrieben und öffnet sich per Doppelklick. Leere Felder bedeuten „kein Wert
 Datum des OSM-Datenstands. Mit der nächsten Aktualisierung wird die Datei ersetzt – wer die Zahlen
 zitiert, speichert sich bitte eine eigene Kopie.</p>
 <details><summary>Spalten</summary>
-<ul><li><code>osm_id</code> – OpenStreetMap-Relation der Verwaltungsgrenze (relation/…)</li><li><code>name</code> – Name laut OpenStreetMap</li><li><code>admin_level</code> – OSM admin_level: 2 Bund, 4 Land, 5 Regierungsbezirk, 6 Kreis, 7 Gemeindeverband, 8 Gemeinde, 9 Stadtbezirk</li><li><code>regionalschluessel</code> – Amtlicher Regionalschlüssel (de:regionalschluessel), sofern in OSM eingetragen</li><li><code>bundesland</code> – Name des Bundeslands</li><li><code>kreis</code> – Name des Kreises bzw. der kreisfreien Stadt</li><li><code>bundesland_id</code> – OSM-Relation des Bundeslands</li><li><code>landkreis_id</code> – OSM-Relation des Kreises</li><li><code>strassen_km</code> – Straßennetz in km (Standard-Zählfilter)</li><li><code>radinfra_km</code> – Radinfrastruktur in km (Standard-Zählfilter)</li><li><code>radinfra_anteil_pct</code> – radinfra_km / strassen_km in %</li><li><code>radinfra_unklar_km</code> – Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km</li><li><code>datenlage</code> – gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra. Bewertet nur, wie eindeutig die erfasste Radinfrastruktur getaggt ist, nicht ob sie vollständig erfasst ist (dafür: kartierungstiefe_pct)</li><li><code>kartierungstiefe_pct</code> – Mittel der drei folgenden Anteile: wie vollständig das Straßennetz in OSM attributiert ist (ohne Zufahrts- / Service-Wege und Autobahnen), %</li><li><code>kartiert_tempo_pct</code> – Anteil der Straßenlänge mit erfasstem Tempolimit (maxspeed- oder Zonen-Tag), %</li><li><code>kartiert_belag_pct</code> – Anteil der Straßenlänge mit erfasstem Belag (surface), %</li><li><code>kartiert_licht_pct</code> – Anteil der Straßenlänge mit erfasster Beleuchtung (lit), %</li><li><code>unabhaengig_km</code> – Radinfrastruktur abseits von Straßen (Wege durch Feld, Wald, Park), km</li><li><code>hauptstr_km</code> – Hauptverkehrsstraßen (OSM trunk, primary, secondary, tertiary) in km</li><li><code>hauptstr_radinfra_pct</code> – Anteil der Hauptverkehrsstraßen mit Radinfrastruktur, %</li><li><code>hauptstr_bund_pct</code> – dito, Baulastträger Bund</li><li><code>hauptstr_land_pct</code> – dito, Baulastträger Land</li><li><code>hauptstr_kreis_pct</code> – dito, Baulastträger Kreis</li><li><code>hauptstr_gemeinde_pct</code> – dito, Baulastträger Gemeinde</li><li><code>vielbefahren_km</code> – Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße</li><li><code>vielbefahren_anteil_pct</code> – vielbefahren_km / strassen_km (Standard-Zählfilter), %; 0 = keine</li><li><code>vielbefahren_mit_radweg_km</code> – davon mit Radinfrastruktur daneben (innerhalb ~20 m), km</li><li><code>vielbefahren_mit_radweg_pct</code> – vielbefahren_mit_radweg_km / vielbefahren_km, %</li><li><code>bundesstr_vielbefahren_km</code> – Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße; 0 = keine</li><li><code>bundesstr_vielbefahren_anteil_pct</code> – bundesstr_vielbefahren_km / strassen_km (Standard-Zählfilter), %; geht ins Modell ein</li><li><code>bundesstr_vielbefahren_mit_radweg_km</code> – davon mit Radinfrastruktur daneben (innerhalb ~20 m), km</li><li><code>bundesstr_vielbefahren_mit_radweg_pct</code> – bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %</li><li><code>einwohner_je_km2</code> – Bevölkerungsdichte, Einwohner je km² (Destatis Gemeindeverzeichnis)</li><li><code>miete_eur_m2</code> – Ø Nettokaltmiete (Zensus 2022), € je m²</li><li><code>ab_67_pct</code> – Ältere (ab 67 Jahre): Anteil an der Bevölkerung (Zensus 2022), %</li><li><code>eigentuemerquote_pct</code> – Eigentümerquote (Zensus 2022): vom Eigentümer bewohnte Wohnungen, %</li><li><code>neubau_ab_2000_pct</code> – Wohnungen in Neubauten (ab 2000): Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später (Zensus 2022), %</li><li><code>raumtyp_regiostar7</code> – Raumtyp (RegioStaR 7) (BMDV/BBSR, Gebietsstand 2020): 71 Metropole, 72 Regiopole/Großstadt, 73 Mittelstadt/städtischer Raum, 74 kleinstädtisch/dörflich (alle Stadtregion); 75 zentrale Stadt, 76 städtischer Raum, 77 kleinstädtisch/dörflich (alle ländliche Region). Nur Gemeinden und kreisfreie Städte</li><li><code>steuereinnahmekraft_eur_je_ew</code> – Steuereinnahmekraft je Einwohner 2024, € (Realsteuervergleich, via Deutschlandatlas); Kreise und Länder: einwohnergewichtet</li><li><code>bevoelkerung_entwicklung_pct_jahr</code> – Bevölkerungsentwicklung: mittlere Veränderung der Einwohnerzahl 2019–2024, % pro Jahr (Deutschlandatlas)</li><li><code>pendeldistanz_km</code> – Ø Pendeldistanz der sozialversicherungspflichtig Beschäftigten am Wohnort 2024, km; Wert des Gemeindeverbands (Deutschlandatlas)</li><li><code>haltestelle_gut_bedient_pct</code> – Einwohner nahe gut bedienter Haltestelle: Anteil der Einwohner höchstens 600 m (Bahnhof 1.200 m) von einer Haltestelle mit ≥ 20 Abfahrten am Tag, %; Wert des Gemeindeverbands (Deutschlandatlas)</li><li><code>grundschule_pkw_min</code> – Fahrzeit zur Grundschule: mittlere Pkw-Fahrzeit zur nächsten Grundschule, min (Thünen-Erreichbarkeitsmodell, via Deutschlandatlas)</li><li><code>sek1_schule_pkw_min</code> – Fahrzeit zur weiterführenden Schule: mittlere Pkw-Fahrzeit zur nächsten Schule mit Sekundarstufe I, min (dito)</li><li><code>supermarkt_pkw_min</code> – Fahrzeit zum Supermarkt: mittlere Pkw-Fahrzeit zum nächsten Supermarkt oder Discounter, min (dito)</li><li><code>pkw_je_1000_ew</code> – Pkw-Dichte (KBA): Pkw je 1.000 Einwohner (Statistik FZ 3)</li><li><code>verkehrsberuhigt_pct</code> – Wohn- & Tempo-30-Netz: Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %</li><li><code>spielstrassen_pct</code> – Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz, %; geht ins Modell ein</li><li><code>beruhigt_fahrradstr_pct</code> – Spielstraßen, Fahrradstraßen & Fußgängerzonen: Anteil am Straßennetz, %</li><li><code>strassen_steigung_pct</code> – Mittlere Geländeneigung entlang des Straßennetzes (DGM-Stichproben), %</li><li><code>hoehe_mittel_m</code> – Höhenlage (Ø), m</li><li><code>bahnhof_distanz_km</code> – Einwohnergewichtete mittlere Luftlinie (Zensus-100-m-Gitter) zur nächsten Bahn-, Tram- oder Fährstation, km</li><li><code>rad_unfaelle</code> – Fahrradunfälle mit Personenschaden (Unfallatlas 2025; 0 = keine erfasst)</li><li><code>rad_unfaelle_schwer</code> – davon mit Getöteten oder Schwerverletzten</li><li><code>rad_unfaelle_je_10k_ew</code> – Fahrradunfälle je 10.000 Einw.</li><li><code>einpendler</code> – Sozialversicherungspflichtig Beschäftigte, Einpendler (BA)</li><li><code>auspendler</code> – Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)</li><li><code>arbeitsplatzzentralitaet</code> – Arbeitsplatzzentralität: Beschäftigte am Arbeitsort / am Wohnort</li><li><code>modell_erwartung_pct</code> – Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), %. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: Summe der Erwartungswerte ihrer Gemeinden (Länder: kein Wert, siehe Methodik)</li><li><code>modell_abweichung_pp</code> – radinfra_anteil_pct − modell_erwartung_pct, Prozentpunkte</li><li><code>modell_ausserhalb_1se</code> – 1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte kräftige Farbe), sonst 0</li><li><code>modell_begrenzt</code> – 1, wenn das lineare Modell rechnerisch unter 0 % lag und die Erwartung auf 0 % gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0</li><li><code>zaehlversion</code> – Zählversion der Längenmessung (siehe Methodik „Version und Zitierweise“); OSM-Datenstand = Datum im Dateinamen</li><li><code>hinweise</code> – Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt, das Straßennetz ist sehr klein)</li></ul>
+<ul><li><code>osm_id</code> – OpenStreetMap-Relation der Verwaltungsgrenze (relation/…)</li><li><code>name</code> – Name laut OpenStreetMap</li><li><code>admin_level</code> – OSM admin_level: 2 Bund, 4 Land, 5 Regierungsbezirk, 6 Kreis, 7 Gemeindeverband, 8 Gemeinde, 9 Stadtbezirk</li><li><code>regionalschluessel</code> – Amtlicher Regionalschlüssel (de:regionalschluessel), sofern in OSM eingetragen</li><li><code>bundesland</code> – Name des Bundeslands</li><li><code>kreis</code> – Name des Kreises bzw. der kreisfreien Stadt</li><li><code>bundesland_id</code> – OSM-Relation des Bundeslands</li><li><code>landkreis_id</code> – OSM-Relation des Kreises</li><li><code>strassen_km</code> – Straßennetz in km (Standard-Zählfilter)</li><li><code>radinfra_km</code> – Radinfrastruktur in km (Standard-Zählfilter)</li><li><code>radinfra_anteil_pct</code> – km Radinfrastruktur je 100 km Straße (radinfra_km / strassen_km × 100). Kein Anteil der Straßen mit Radweg: beide Fahrtrichtungen und Wege abseits von Straßen zählen</li><li><code>radinfra_unklar_km</code> – Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km</li><li><code>datenlage</code> – gut (< 15 % unklar), mittel (< 40 %), unsicher (≥ 40 %), kaum_erfasst (≥ 20 km Straße, < 0,5 km Radinfra); leer bei < 1 km Radinfra. Bewertet nur, wie eindeutig die erfasste Radinfrastruktur getaggt ist, nicht ob sie vollständig erfasst ist (dafür: kartierungstiefe_pct)</li><li><code>kartierungstiefe_pct</code> – Mittel der drei folgenden Anteile: wie vollständig das Straßennetz in OSM attributiert ist (ohne Zufahrts- / Service-Wege und Autobahnen), %</li><li><code>kartiert_tempo_pct</code> – Anteil der Straßenlänge mit erfasstem Tempolimit (maxspeed- oder Zonen-Tag), %</li><li><code>kartiert_belag_pct</code> – Anteil der Straßenlänge mit erfasstem Belag (surface), %</li><li><code>kartiert_licht_pct</code> – Anteil der Straßenlänge mit erfasster Beleuchtung (lit), %</li><li><code>unabhaengig_km</code> – Radinfrastruktur abseits von Straßen (Wege durch Feld, Wald, Park), km</li><li><code>hauptstr_km</code> – Hauptverkehrsstraßen (OSM trunk, primary, secondary, tertiary) in km</li><li><code>hauptstr_radinfra_pct</code> – Radinfrastruktur entlang der Hauptverkehrsstraßen in km je 100 km Hauptverkehrsstraße, je Fahrtrichtung gezählt (100 = für beide Richtungen)</li><li><code>hauptstr_bund_pct</code> – dito, Baulastträger Bund</li><li><code>hauptstr_land_pct</code> – dito, Baulastträger Land</li><li><code>hauptstr_kreis_pct</code> – dito, Baulastträger Kreis</li><li><code>hauptstr_gemeinde_pct</code> – dito, Baulastträger Gemeinde</li><li><code>vielbefahren_km</code> – Nur Bayern: Außerortsabschnitte von Bundes-, Staats- und Kreisstraßen über der ERA-2010-Schwelle (DTV > 2.500 Kfz/24h bei 100 km/h, > 4.000 bei 70 km/h; Zählung 2021), km Straße</li><li><code>vielbefahren_anteil_pct</code> – vielbefahren_km / (strassen_km / 2), % – strassen_km zählt je Fahrtrichtung, vielbefahren_km einfach; 0 = keine</li><li><code>vielbefahren_mit_radweg_km</code> – davon mit Radinfrastruktur daneben (innerhalb ~20 m), km</li><li><code>vielbefahren_mit_radweg_pct</code> – vielbefahren_mit_radweg_km / vielbefahren_km, %</li><li><code>bundesstr_vielbefahren_km</code> – Ganz Deutschland, nur Bundesstraßen: Außerortsabschnitte über der ERA-2010-Schwelle (Zählung 2021; außerhalb Bayerns BASt-Abschnitte, aus OSM genähert), km Straße; 0 = keine</li><li><code>bundesstr_vielbefahren_anteil_pct</code> – bundesstr_vielbefahren_km / (strassen_km / 2), % (strassen_km zählt je Fahrtrichtung); geht ins Modell ein</li><li><code>bundesstr_vielbefahren_mit_radweg_km</code> – davon mit Radinfrastruktur daneben (innerhalb ~20 m), km</li><li><code>bundesstr_vielbefahren_mit_radweg_pct</code> – bundesstr_vielbefahren_mit_radweg_km / bundesstr_vielbefahren_km, %</li><li><code>einwohner_je_km2</code> – Bevölkerungsdichte, Einwohner je km² (Destatis Gemeindeverzeichnis)</li><li><code>miete_eur_m2</code> – Ø Nettokaltmiete (Zensus 2022), € je m²</li><li><code>ab_67_pct</code> – Ältere (ab 67 Jahre): Anteil an der Bevölkerung (Zensus 2022), %</li><li><code>eigentuemerquote_pct</code> – Eigentümerquote (Zensus 2022): vom Eigentümer bewohnte Wohnungen, %</li><li><code>neubau_ab_2000_pct</code> – Wohnungen in Neubauten (ab 2000): Anteil der Wohnungen in Gebäuden mit Baujahr 2000 oder später (Zensus 2022), %</li><li><code>raumtyp_regiostar7</code> – Raumtyp (RegioStaR 7) (BMDV/BBSR, Gebietsstand 2020): 71 Metropole, 72 Regiopole/Großstadt, 73 Mittelstadt/städtischer Raum, 74 kleinstädtisch/dörflich (alle Stadtregion); 75 zentrale Stadt, 76 städtischer Raum, 77 kleinstädtisch/dörflich (alle ländliche Region). Nur Gemeinden und kreisfreie Städte</li><li><code>steuereinnahmekraft_eur_je_ew</code> – Steuereinnahmekraft je Einwohner 2024, € (Realsteuervergleich, via Deutschlandatlas); Kreise und Länder: einwohnergewichtet</li><li><code>bevoelkerung_entwicklung_pct_jahr</code> – Bevölkerungsentwicklung: mittlere Veränderung der Einwohnerzahl 2019–2024, % pro Jahr (Deutschlandatlas)</li><li><code>pendeldistanz_km</code> – Ø Pendeldistanz der sozialversicherungspflichtig Beschäftigten am Wohnort 2024, km; Wert des Gemeindeverbands (Deutschlandatlas)</li><li><code>haltestelle_gut_bedient_pct</code> – Einwohner nahe gut bedienter Haltestelle: Anteil der Einwohner höchstens 600 m (Bahnhof 1.200 m) von einer Haltestelle mit ≥ 20 Abfahrten am Tag, %; Wert des Gemeindeverbands (Deutschlandatlas)</li><li><code>grundschule_pkw_min</code> – Fahrzeit zur Grundschule: mittlere Pkw-Fahrzeit zur nächsten Grundschule, min (Thünen-Erreichbarkeitsmodell, via Deutschlandatlas)</li><li><code>sek1_schule_pkw_min</code> – Fahrzeit zur weiterführenden Schule: mittlere Pkw-Fahrzeit zur nächsten Schule mit Sekundarstufe I, min (dito)</li><li><code>supermarkt_pkw_min</code> – Fahrzeit zum Supermarkt: mittlere Pkw-Fahrzeit zum nächsten Supermarkt oder Discounter, min (dito)</li><li><code>pkw_je_1000_ew</code> – Pkw-Dichte (KBA): Pkw je 1.000 Einwohner (Statistik FZ 3)</li><li><code>verkehrsberuhigt_pct</code> – Wohn- & Tempo-30-Netz: Anteil von Wohn- und verkehrsberuhigten Straßen am Straßennetz (Näherung für Tempo-30-Zonen), %</li><li><code>spielstrassen_pct</code> – Anteil verkehrsberuhigter Bereiche (Spielstraßen) am Straßennetz, %; geht ins Modell ein</li><li><code>beruhigt_fahrradstr_pct</code> – Spielstraßen, Fahrradstraßen & Fußgängerzonen: Anteil am Straßennetz, %</li><li><code>strassen_steigung_pct</code> – Mittlere Geländeneigung entlang des Straßennetzes (DGM-Stichproben), %</li><li><code>hoehe_mittel_m</code> – Höhenlage (Ø), m</li><li><code>bahnhof_distanz_km</code> – Einwohnergewichtete mittlere Luftlinie (Zensus-100-m-Gitter) zur nächsten Bahn-, Tram- oder Fährstation, km</li><li><code>rad_unfaelle</code> – Fahrradunfälle mit Personenschaden (Unfallatlas 2025; 0 = keine erfasst)</li><li><code>rad_unfaelle_schwer</code> – davon mit Getöteten oder Schwerverletzten</li><li><code>rad_unfaelle_je_10k_ew</code> – Fahrradunfälle je 10.000 Einw.</li><li><code>einpendler</code> – Sozialversicherungspflichtig Beschäftigte, Einpendler (BA)</li><li><code>auspendler</code> – Sozialversicherungspflichtig Beschäftigte, Auspendler (BA)</li><li><code>arbeitsplatzzentralitaet</code> – Arbeitsplatzzentralität: Beschäftigte am Arbeitsort / am Wohnort</li><li><code>modell_erwartung_pct</code> – Struktureller Erwartungswert des Faktoren-Modells (siehe Methodik), km Radinfrastruktur je 100 km Straße. Gemeinden: Modell; Gemeindeverbände, Kreise, Bezirke: erwartete Kilometer ihrer Gemeinden summiert und durch deren Straßenkilometer geteilt (Länder: kein Wert, siehe Methodik)</li><li><code>modell_abweichung_pp</code> – radinfra_anteil_pct − modell_erwartung_pct, km je 100 km Straße</li><li><code>modell_ausserhalb_1se</code> – 1, wenn die Abweichung größer ist als die typische Abweichung der Ebene (Gemeinden: Residualstandardfehler; auf der Karte endet dort der blasse Bereich, kräftige Farbe erst ab der doppelten Abweichung), sonst 0</li><li><code>modell_begrenzt</code> – 1, wenn das lineare Modell rechnerisch unter 0 lag und die Erwartung auf 0 gesetzt wurde (die Abweichung ist dann eine Untergrenze; bei Kreisen: mindestens eine Gemeinde betroffen), sonst 0</li><li><code>zaehlversion</code> – Zählversion der Längenmessung (siehe Methodik „Version und Zitierweise“); OSM-Datenstand = Datum im Dateinamen</li><li><code>hinweise</code> – Mit „|“ getrennte Hinweise: anteil_ueber_100 = mehr Radinfra- als Straßen-km (Radwege werden je Fahrtrichtung gezählt; meist ist das Straßennetz sehr klein)</li></ul>
 </details>
 <p><strong>Quellen &amp; Lizenzen:</strong></p>
 <ul><li>Längen, Grenzen: © OpenStreetMap-Mitwirkende, <a href="https://opendatacommons.org/licenses/odbl/">ODbL</a> – die CSV ist damit eine Datenbank unter ODbL.</li><li>Bevölkerungsdichte, Miete, Alter, Eigentümerquote, Baualter, Radunfälle: © Statistisches Bundesamt (Destatis) bzw. Statistische Ämter des Bundes und der Länder (Gemeindeverzeichnis, Zensus 2022, Unfallatlas 2025), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.</li><li>Bevölkerungsverteilung: Zensus 2022, Gitterzellen 100&nbsp;m, © Statistische Ämter des Bundes und der Länder, <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.</li><li>Pkw-Dichte: Kraftfahrt-Bundesamt, Statistik FZ 3.</li><li>Steuereinnahmekraft, Bevölkerungsentwicklung, Pendeldistanz, Haltestellen mit dichtem Takt, Fahrzeiten zu Schule und Supermarkt: <a href="https://www.deutschlandatlas.bund.de">Deutschlandatlas</a> (BMWSB/BBSR; Daten: Statistische Ämter des Bundes und der Länder, BBSR-Raumbeobachtung, Bundesagentur für Arbeit, Thünen-Erreichbarkeitsmodell © OpenStreetMap-Mitwirkende).</li><li>Raumtyp: Regionalstatistische Raumtypologie (RegioStaR), © Bundesministerium für Verkehr (BMDV), <a href="https://www.govdata.de/dl-de/by-2-0">dl-de/by-2-0</a>.</li><li>Verkehrsmengen Bundesstraßen (bundesweit): Straßenverkehrszählung 2021, Quelle: Bundesanstalt für Straßenwesen (BASt).</li><li>Pendler: Statistik der Bundesagentur für Arbeit.</li><li>Verkehrsmengen (nur Bayern): Straßenverkehrszählung 2021, <a href="https://www.baysis.bayern.de/internet/verdat/svz/">BAYSIS</a>, © Bayerische Straßenbauverwaltung, <a href="https://creativecommons.org/licenses/by/4.0/deed.de">CC BY 4.0</a>.</li><li>Geländehöhe und -neigung, Höhenmeter der Umweg-Karte: <a href="https://github.com/tilezen/joerd/blob/master/docs/attribution.md">Mapzen/AWS Terrain Tiles</a> (u.&nbsp;a. SRTM, EU-DEM).</li></ul>
 
+  <h2 id="autor">Wer steht dahinter?</h2>
+  <p>Der Radinfra-Vergleich ist ein privates, nicht-kommerzielles Projekt von Leonhard Feiner.
+  Leonhard Feiner ist Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen; das Logo greift
+  deren Gestaltung auf. Damit die Zahlen trotzdem nachprüfbar bleiben, werden sie für alle Gemeinden in
+  Deutschland automatisch nach derselben Regel aus offenen Daten berechnet; Methodik, Quellen und
+  eine CSV mit allen Werten sind öffentlich.</p>
+  <p>Leonhard Feiner trägt selbst zu OpenStreetMap bei, auch in Schweitenkirchen (Benutzer
+  <a href="https://www.openstreetmap.org/user/LeonhardFeiner/history">LeonhardFeiner</a>). Jede dieser Änderungen ist dort mit Datum
+  öffentlich einsehbar; die Karte zeigt den OSM-Stand vom 14.11.2026.</p>
+
   <h2 id="version">Version und Zitierweise</h2>
   <p>Die Zahlen hängen von drei Ständen ab, die sich unabhängig voneinander ändern:</p>
-  <ul><li><strong>Zählversion:</strong> <code>share-2026-10</code> – wie Längen gemessen werden (siehe Änderungen unten).</li><li><strong>OpenStreetMap-Daten:</strong> Stand 20.10.2026.</li><li><strong>Erwartungswert-Modell:</strong> geschätzt am 04.11.2026 an den damals aktuellen Daten.</li></ul>
+  <ul><li><strong>Zählversion:</strong> <code>share-2026-10</code> – wie Längen gemessen werden (siehe Änderungen unten).</li><li><strong>OpenStreetMap-Daten:</strong> Stand 14.11.2026.</li><li><strong>Erwartungswert-Modell:</strong> geschätzt am 15.11.2026 an den damals aktuellen Daten.</li></ul>
   <p>Vorgeschlagene Zitierweise:</p>
-  <p><code>Radinfra-Vergleich, Zählversion share-2026-10, OSM-Daten vom 20.10.2026, Modell vom 04.11.2026, https://leonhardfeiner.github.io/tilda-geo/, abgerufen am [Datum].</code></p>
+  <p><code>Radinfra-Vergleich, Zählversion share-2026-10, OSM-Daten vom 14.11.2026, Modell vom 15.11.2026, https://leonhardfeiner.github.io/tilda-geo/, abgerufen am [Datum].</code></p>
   <p>Die Seite zeigt immer nur den aktuellen Stand; ältere Stände werden nicht vorgehalten. Wer Werte
   zitiert, speichert sich die CSV (Spalte <code>zaehlversion</code>) und notiert das Abrufdatum.</p>
   <h3>Änderungen</h3>
   <ul><li><code>share-2026-10</code> (Oktober 2026): Längen werden an Gemeinde- und Kreisgrenzen anteilig aufgeteilt (ein Weg zählt in jedem Gebiet mit dem Teil seiner Länge, der dort liegt) und nicht mehr auf ganze Kilometer gerundet. Zählschema wie radinfra.de, aber für alle Verwaltungsebenen. Zeitvergleiche werden nur zwischen Datenständen derselben Zählversion gezeigt.</li></ul>
 
-  <h2>Fehler gefunden? Mitmachen.</h2>
+  <h2 id="mitmachen">Fehler gefunden? Mitmachen.</h2>
   <p>Wenn ein Radweg fehlt oder eine Straße falsch erfasst ist, lässt sich das direkt in
   OpenStreetMap korrigieren – die Karte übernimmt die Änderung bei der nächsten Aktualisierung.
   Ein guter Einstieg ist der <a href="https://www.openstreetmap.org/edit">OSM-Editor</a> oder die

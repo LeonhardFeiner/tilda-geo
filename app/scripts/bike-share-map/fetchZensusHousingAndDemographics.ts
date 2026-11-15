@@ -19,7 +19,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
-import { downloadCachePath, writeDataset } from './fetchCommon'
+import { downloadCachePath, readStatsFeatures, writeDataset } from './fetchCommon'
 
 export const ZENSUS_HOUSING_URL =
   'https://www.destatis.de/static/DE/zensus/gitterdaten/Regionaltabelle_Gebaeude_Wohnungen.xlsx'
@@ -257,10 +257,7 @@ if (import.meta.main) {
 
   const byId: Record<string, ZensusHousingDemographics> = {}
   if (existsSync(statsMsgpackPath)) {
-    const { decode } = await import('@msgpack/msgpack')
-    const data = decode(readFileSync(statsMsgpackPath)) as {
-      features?: Array<{ properties?: { id?: string; regionalschluessel?: string } }>
-    }
+    const data = { features: readStatsFeatures() }
     for (const f of data.features || []) {
       const p = f.properties || {}
       const id = String(p.id ?? '')

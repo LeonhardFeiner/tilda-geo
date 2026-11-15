@@ -21,7 +21,7 @@ import { spawnSync } from 'node:child_process'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { UNFALLATLAS_YEAR } from './constants'
-import { downloadCachePath, writeDataset } from './fetchCommon'
+import { downloadCachePath, readStatsFeatures, writeDataset } from './fetchCommon'
 
 const ZIP_NAME = `Unfallorte${UNFALLATLAS_YEAR}_EPSG25832_CSV.zip`
 export const UNFALLATLAS_ZIP_URL = `https://www.opengeodata.nrw.de/produkte/transport_verkehr/unfallatlas/${ZIP_NAME}`
@@ -230,12 +230,7 @@ if (import.meta.main) {
   const statsMsgpackPath = join(outDir, 'stats.msgpack')
 
   if (existsSync(statsMsgpackPath)) {
-    const { decode } = await import('@msgpack/msgpack')
-    const statsData = decode(readFileSync(statsMsgpackPath)) as {
-      features?: Array<{
-        properties?: { id?: string; level?: string; regionalschluessel?: string }
-      }>
-    }
+    const statsData = { features: readStatsFeatures() }
 
     for (const f of statsData.features || []) {
       const p = f.properties || {}

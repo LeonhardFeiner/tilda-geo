@@ -8,10 +8,20 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { decodeStatsRegionPack } from '../stats-export/statsRegionPack'
+import type { StatsFeature } from './regionNavigation'
 
 const scriptDir = dirname(fileURLToPath(import.meta.url))
 
 export const OUTPUT_DIR = join(scriptDir, 'output')
+
+/**
+ * The current export (output/stats.msgpack, not the viewer's copy from the previous build),
+ * whatever pack version it is. Length maps are in km.
+ */
+export function readStatsFeatures(): StatsFeature[] {
+  return decodeStatsRegionPack(readFileSync(join(OUTPUT_DIR, 'stats.msgpack')))
+}
 
 /** Raw upstream downloads (xlsx, zip). Gitignored; survives reboots, unlike /tmp. */
 export const DOWNLOAD_CACHE_DIR = join(scriptDir, 'cache')

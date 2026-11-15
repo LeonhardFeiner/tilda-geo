@@ -22,7 +22,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { read, utils } from 'xlsx'
 import { REGIOSTAR7_LABELS } from './contextMetrics'
-import { downloadCachePath, OUTPUT_DIR, writeDataset } from './fetchCommon'
+import { downloadCachePath, OUTPUT_DIR, readStatsFeatures, writeDataset } from './fetchCommon'
 import { normalizeRs } from './fetchZensusHousingAndDemographics'
 
 export const REGIOSTAR_URL =
@@ -171,18 +171,7 @@ if (import.meta.main) {
   const byRsMap = parseRegioStarRows(utils.sheet_to_json<unknown[]>(sheet, { header: 1 }))
 
   // The export itself, not the viewer's copy: that one is from the previous build.
-  const { decode } = await import('@msgpack/msgpack')
-  const stats = decode(readFileSync(join(OUTPUT_DIR, 'stats.msgpack'))) as {
-    features?: Array<{
-      properties?: {
-        id?: string
-        level?: string
-        regionalschluessel?: string
-        name?: string
-        landkreis_id?: string
-      }
-    }>
-  }
+  const stats = { features: readStatsFeatures() }
   const kreiseWithGemeinden = new Set(
     (stats.features ?? []).flatMap((f) =>
       String(f.properties?.level) === '8' && f.properties?.landkreis_id

@@ -28,7 +28,7 @@
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { downloadCachePath, OUTPUT_DIR, writeDataset } from './fetchCommon'
+import { downloadCachePath, OUTPUT_DIR, readStatsFeatures, writeDataset } from './fetchCommon'
 import { normalizeRs } from './fetchZensusHousingAndDemographics'
 
 export const DEUTSCHLANDATLAS_RELEASE = 'HA26'
@@ -186,10 +186,7 @@ if (import.meta.main) {
   const population = new Map(demographics.gemeinden.map((g) => [normalizeRs(g.rs), g.population]))
 
   // The export itself, not the viewer's copy: that one is from the previous build.
-  const { decode } = await import('@msgpack/msgpack')
-  const stats = decode(readFileSync(join(OUTPUT_DIR, 'stats.msgpack'))) as {
-    features?: Array<{ properties?: { id?: string; level?: string; regionalschluessel?: string } }>
-  }
+  const stats = { features: readStatsFeatures() }
   const regions: AtlasRegion[] = (stats.features ?? []).flatMap((f) => {
     const p = f.properties ?? {}
     const rs = normalizeRs(p.regionalschluessel)

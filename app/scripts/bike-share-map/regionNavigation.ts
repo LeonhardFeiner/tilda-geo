@@ -94,6 +94,8 @@ export type RegionFeatureProps = {
   landkreis_id?: string
   /** `{ highway class: length }`; present on every level, and the only size proxy the stats carry. */
   road_length?: unknown
+  /** `{ bikelane category: km }`; present on every level. */
+  bikelane_length?: unknown
   /** `{ '<road key>|<authority>': km }`, authority from the road number (fork aggregation). */
   road_length_by_authority?: unknown
   /** Bike km by the road it runs along, same keys, plus 'independent' (not along a road). */
