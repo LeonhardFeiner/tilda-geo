@@ -1,10 +1,11 @@
 /**
- * MapTiler key, shared with the main app (`src/.../Map/utils/maptilerApiKey.const.ts`).
- * MapTiler hosts the Positron/Voyager styles that CARTO's free basemap CDN no longer serves
- * without a key. This value ships in the generated static HTML; lock it to the viewer's
- * domain(s) in the MapTiler dashboard (Account → Keys → HTTP referrers).
+ * MapTiler key of the viewer's own account (not the main app's key in
+ * `src/.../Map/utils/maptilerApiKey.const.ts`). MapTiler hosts the Positron/Voyager styles that
+ * CARTO's free basemap CDN no longer serves without a key. This value ships in the generated
+ * static HTML, so the key is locked to leonhardfeiner.github.io and radweg.bfschweitenkirchen.de
+ * in the MapTiler dashboard (API keys → Allowed HTTP Origins); other origins get 403.
  */
-const MAPTILER_KEY = 'ECOoUBmpqklzSCASXxcu'
+const MAPTILER_KEY = 'dqv1OYKsRa6PDhSk0rNV'
 
 export type BasemapId = 'blank' | 'de' | 'light' | 'muted' | 'osm'
 
