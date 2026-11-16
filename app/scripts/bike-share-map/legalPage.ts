@@ -78,8 +78,8 @@ ${siteIconHeadLinks()}
     verarbeitet GitHub technisch notwendige Daten wie die IP-Adresse, siehe die
     <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement">Datenschutzerklärung von GitHub</a>.</li>
     <li><strong>Hintergrundkarte:</strong> Die Kartenkacheln lädt Ihr Browser je nach gewählter
-    Hintergrundkarte direkt von <a href="https://www.maptiler.com/privacy-policy/">MapTiler</a>
-    (Schweiz), vom <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap-Kartenserver</a>
+    Hintergrundkarte direkt von <a href="https://openfreemap.org/">OpenFreeMap</a> (Standard),
+    von <a href="https://www.maptiler.com/privacy-policy/">MapTiler</a> (Schweiz), vom <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy">OpenStreetMap-Kartenserver</a>
     oder von <a href="https://www.openstreetmap.de/datenschutz.html">openstreetmap.de (FOSSGIS e.&nbsp;V.)</a>.
     Dabei werden Ihre IP-Adresse und der Kartenausschnitt an den jeweiligen Anbieter übertragen.
     Linien-Overlays kommen vom Kachelserver von <a href="https://tilda-geo.de">TILDA</a>.</li>

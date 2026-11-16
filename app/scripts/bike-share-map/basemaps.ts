@@ -1,11 +1,18 @@
+import OPENFREEMAP_POSITRON from './openfreemap-positron.style.json'
 /**
  * MapTiler key of the viewer's own account (not the main app's key in
- * `src/.../Map/utils/maptilerApiKey.const.ts`). MapTiler hosts the Positron/Voyager styles that
- * CARTO's free basemap CDN no longer serves without a key. This value ships in the generated
- * static HTML, so the key is locked to leonhardfeiner.github.io and radweg.bfschweitenkirchen.de
- * in the MapTiler dashboard (API keys → Allowed HTTP Origins); other origins get 403.
+ * `src/.../Map/utils/maptilerApiKey.const.ts`), used for the Voyager raster tiles only. This
+ * value ships in the generated static HTML, so the key is locked to leonhardfeiner.github.io and
+ * radweg.bfschweitenkirchen.de in the MapTiler dashboard (API keys → Allowed HTTP Origins); other
+ * origins get 403, and the key has a monthly quota.
  */
 const MAPTILER_KEY = 'dqv1OYKsRa6PDhSk0rNV'
+
+/**
+ * The default "Hell" basemap: the Positron style as vector tiles from OpenFreeMap — no key, no
+ * quota. Snapshot of https://tiles.openfreemap.org/styles/positron (tiles, glyphs and sprites
+ * stay on tiles.openfreemap.org); refresh the file to pick up upstream style changes.
+ */
 
 export type BasemapId = 'blank' | 'de' | 'light' | 'muted' | 'osm'
 
@@ -26,8 +33,8 @@ export const BASEMAP_OPTIONS: BasemapOption[] = [
   {
     id: 'light',
     label: 'Hell',
-    description: 'Positron (MapTiler) – wenig Straßenkontrast, Orientierung möglich (Standard)',
-    attribution: '© MapTiler © OpenStreetMap',
+    description: 'Positron (OpenFreeMap) – wenig Straßenkontrast, Orientierung möglich (Standard)',
+    attribution: '© OpenFreeMap © OpenMapTiles © OpenStreetMap',
   },
   {
     id: 'muted',
@@ -77,14 +84,17 @@ export function buildBasemapStyleJson(basemapId: BasemapId) {
     }
   }
 
+  if (basemapId === 'light') {
+    // A copy per call: the generated pages embed and may mutate it.
+    return JSON.parse(JSON.stringify(OPENFREEMAP_POSITRON)) as typeof OPENFREEMAP_POSITRON
+  }
+
   const tiles =
     basemapId === 'de'
       ? 'https://tile.openstreetmap.de/{z}/{x}/{y}.png'
-      : basemapId === 'light'
-        ? `https://api.maptiler.com/maps/positron/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
-        : basemapId === 'muted'
-          ? `https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
-          : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+      : basemapId === 'muted'
+        ? `https://api.maptiler.com/maps/voyager/256/{z}/{x}/{y}.png?key=${MAPTILER_KEY}`
+        : 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
 
   const attribution =
     basemapId === 'de'

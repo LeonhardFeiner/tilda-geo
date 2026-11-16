@@ -710,9 +710,15 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   test(
     'falls back to the neutral background when the keyed basemap stops answering',
     async () => {
-      page = await bootViewer()
+      page = await bootViewer('?basemap=muted')
       const { window } = page
-      const basemapStyles = () => window.__calls.filter((c) => c[0] === 'setStyle').map((c) => c[1])
+      // Only the styles set after boot (the URL's basemap is applied with one setStyle on boot).
+      const bootStyles = window.__calls.filter((c) => c[0] === 'setStyle').length
+      const basemapStyles = () =>
+        window.__calls
+          .filter((c) => c[0] === 'setStyle')
+          .slice(bootStyles)
+          .map((c) => c[1])
       const tileError = (status: number, sourceId = 'basemap') =>
         window.__map.fire('error', { sourceId, error: { status } })
 
@@ -729,7 +735,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       expect(basemapStyles()).toEqual(['background']) // the "blank" style
       expect(page.q('#basemap-hint').textContent).toContain('nicht erreichbar')
       // The visitor's choice (and so every share link) is left alone.
-      expect(page.q<HTMLSelectElement>('#basemap-select').value).toBe('light')
+      expect(page.q<HTMLSelectElement>('#basemap-select').value).toBe('muted')
       expect(page.errors).toEqual([])
     },
     TIMEOUT,

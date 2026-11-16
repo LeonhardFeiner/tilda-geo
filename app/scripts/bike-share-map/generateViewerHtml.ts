@@ -10756,12 +10756,12 @@ export function generateViewerHtml(
       basemapHint.textContent = meta?.description || '';
     }
 
-    // "Hell" and "Gedeckt" come from MapTiler: a key that is locked to this domain and has a
-    // quota. When it stops answering (401/403/429, but also 5xx, DNS or CORS failures, which
+    // "Gedeckt" comes from MapTiler: a key that is locked to this domain and has a quota
+    // ("Hell" is OpenFreeMap, keyless). When MapTiler stops answering (401/403/429, but also 5xx, DNS or CORS failures, which
     // carry no status) the tiles fail silently and the map shows gaps behind the colours. After a few such failures switch to the neutral background and
     // say so. Only the displayed style changes: the select and the share links keep the
     // visitor's choice, and picking a basemap again retries.
-    const KEYED_BASEMAPS = ['light', 'muted'];
+    const KEYED_BASEMAPS = ['muted'];
     let basemapAuthFailures = 0;
     let basemapFellBack = false;
     map.on('error', (event) => {
