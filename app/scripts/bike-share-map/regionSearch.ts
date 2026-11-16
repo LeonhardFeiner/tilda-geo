@@ -50,10 +50,7 @@ const WORD_BOUNDARY = /[\s\-–/(),.]/
 export function regionSearchKeys(value: string) {
   const lowered = value.toLowerCase().trim()
   const expanded = lowered.replace(/[äöüß]/g, (c) => UMLAUT_EXPANSIONS[c] ?? c)
-  const stripped = lowered
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/ß/g, 'ss')
+  const stripped = lowered.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/ß/g, 'ss')
   const spellings = [expanded, stripped]
   const keys = new Set(spellings)
   for (const key of spellings) {

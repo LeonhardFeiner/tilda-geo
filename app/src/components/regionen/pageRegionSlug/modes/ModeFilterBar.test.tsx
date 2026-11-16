@@ -1,6 +1,7 @@
 /** @vitest-environment jsdom */
 import { fireEvent, render, screen } from '@testing-library/react'
 import { beforeEach, describe, expect, test, vi } from 'vitest'
+import { DEFAULT_REVIEW_LIST_STATUS_STYLES } from '@/shared/reviewLists/reviewListStatusStyles'
 import { ModeFilterBar } from './ModeFilterBar'
 import { ModeFilterSelect, modeFilterIcons } from './ModeFilterSelect'
 import { NotesModeFilterBar } from './notes/NotesModeFilterBar'
@@ -11,8 +12,8 @@ import {
   notesAuthorFilterOptions,
   uniqueOsmNoteAuthorNames,
 } from './notes/notesModeFilters'
-import { QA_STATUS_FILTER_OPTIONS, QA_STATUS_SELECT_ALL } from './qa/qaConfigStyles'
-import { REVIEW_STATUS_FILTER_OPTIONS } from './reviewLists/reviewListsModeFilters'
+import { QA_DEFAULT_STATUS_KEYS } from './qa/qaConfigStyles'
+import { reviewStatusFilterOptions } from './reviewLists/reviewListsModeFilters'
 
 class ResizeObserverStub {
   observe() {}
@@ -90,11 +91,8 @@ describe('filter dropdown options', () => {
     ])
   })
 
-  test('QA status has no Aus; first option is the default status', () => {
-    const values = QA_STATUS_FILTER_OPTIONS.map((option) => option.value)
-    expect(values[0]).toBe('pending-needs-review')
-    expect(values).toContain(QA_STATUS_SELECT_ALL)
-    expect(values).toHaveLength(9)
+  test('QA status defaults to the Zu prüfen group', () => {
+    expect(QA_DEFAULT_STATUS_KEYS).toEqual(['pending-needs-review', 'pending-problematic'])
   })
 
   test('Hinweise Autor:in dropdown lists Alle, Meine, then OSM authors', () => {
@@ -132,7 +130,7 @@ describe('filter dropdown options', () => {
           label="Status"
           icon={modeFilterIcons.status}
           value="all"
-          options={REVIEW_STATUS_FILTER_OPTIONS}
+          options={reviewStatusFilterOptions(DEFAULT_REVIEW_LIST_STATUS_STYLES)}
           onChange={onStatus}
         />
       </ModeFilterBar>,

@@ -63,12 +63,23 @@ export async function registerGeneralizationFunctions() {
   )) {
     const typedTableName = tableName as TableId
     const functionName = generalizationFunctionIdentifier(typedTableName)
-    try {
-      // Partial processing (e.g. PROCESS_ONLY_TOPICS) may not create every public table yet.
-      const tileSpecification = await createTileSpecification(typedTableName)
 
-      await geoDataClient.$transaction(async (tx) => {
-        await tx.$executeRawUnsafe(`
+    // A table only exists after its topic ran once on this instance (e.g. weekend `landcover`
+    // tables right after a deploy). Skip it instead of failing, so the tables after it in the
+    // list still get their functions; the post-processing hook registers it after that run.
+    const existsRows = await geoDataClient.$queryRawUnsafe<{ exists: boolean }[]>(
+      `SELECT to_regclass('public."${tableName}"') IS NOT NULL AS exists;`,
+    )
+    if (!existsRows[0]?.exists) {
+      console.warn(`[generalization] Skipped ${functionName}: table public."${tableName}" missing`)
+      continue
+    }
+
+    // Gather meta information for the tile specification
+    const tileSpecification = await createTileSpecification(typedTableName)
+
+    await geoDataClient.$transaction(async (tx) => {
+      await tx.$executeRawUnsafe(`
             CREATE OR REPLACE
             FUNCTION public."${functionName}"(z integer, x integer, y integer)
             RETURNS bytea AS $$
@@ -100,15 +111,9 @@ export async function registerGeneralizationFunctions() {
             END
             $$ LANGUAGE plpgsql IMMUTABLE STRICT PARALLEL SAFE;
           `)
-        await tx.$executeRawUnsafe(`
+      await tx.$executeRawUnsafe(`
             COMMENT ON FUNCTION ${functionName} IS '${JSON.stringify(tileSpecification)}';
           `)
-      }, geoDataLongRunningTxOptions)
-    } catch (error) {
-      console.warn(
-        `[generalization] Skipping function for table "${tableName}":`,
-        error instanceof Error ? error.message : error,
-      )
-    }
+    }, geoDataLongRunningTxOptions)
   }
 }

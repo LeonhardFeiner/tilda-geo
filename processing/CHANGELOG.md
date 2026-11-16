@@ -2,7 +2,85 @@
 
 Manual and incomplete list of changes to processing output. Attribute documentation for all datasets lives in `topic-docs/` YAML (built into in-app docs via `topic-docs-build`); this file tracks schema and value-contract changes over time.
 
+## 2026-11
+
+### `bikelanes`: `category`
+
+- A cycleway with the footway as its own line on its **left** (`highway=cycleway` + `traffic_mode:left=foot`, no separation on the left) is `footAndCyclewaySegregated_*` now, like `traffic_mode:right=foot` before. Ways are drawn in the riding direction, so a one-way cycleway cannot be reversed to put the footway on its right. In Berlin 16 ways change from `cycleway_*` to `footAndCyclewaySegregated_*`.
+
+### `todos_lines` (bikelanes): `__mapillary` todos and priorities on lanes
+
+- Lanes, tracks and sidewalks tagged on the road (`cycleway:left|right|both`, `sidewalk:left|right|both`) use the road's `mapillary_coverage`. Before, they never got a `__mapillary` todo (e.g. `advisory_or_exclusive__mapillary`, `needs_clarification__mapillary`, `unexpected_bicycle_access_on_footway__mapillary`) and never priority 1 from coverage, also in the regular campaigns. The MapRoulette challenges of the `__mapillary` campaigns gain tasks for them.
+
+### `roads`, `roadsPathClasses`, `bikeSuitability`, `highwayAreas`, `bikelanes`: `description`
+
+- `description` is written by TILDA: hint codes first (`TILDA_<hint>` or `TILDA_<hint>=<value>`), then the OSM texts unchanged as ``OSM-`description`: <text>`` and ``OSM-`note`: <text>``, joined with `;`. Before, it was `description` or `note` plus German `TILDA-Hinweis: …` sentences, split at `;` and sorted. A `note` that repeats the `description` is left out. The codes and their texts are documented as values of `roads.description` in the topic docs; downloads show the codes.
+- The older hints are codes now: `TILDA_access_road`, `TILDA_shared_agricultural`, `TILDA_closed_construction`, `TILDA_closed_blocked`.
+
+### `roads`, `roadsPathClasses`, `bikeSuitability`: `surface`
+
+- Without a valid `surface`, the worst of `surface:bicycle*`, `surface:forward|backward` and `surface:left|right` (by derived smoothness) is the surface, with the new `surface_source=tag_directional`. Before, these ways had no surface.
+- Every other of these values is a hint: `TILDA_surface_bicycle`, `TILDA_surface_bicycle_right|left`, `TILDA_surface_right|left`, each `=<surface>`. Hints name sides only: `forward` is the right half, `backward` the left half; a side value wins over a direction value.
+
+### `bikelanes`: `surface`, `smoothness`
+
+- Fahrradstraßen, pedestrian areas and `sharedMotorVehicleLane` read `surface:bicycle` and `smoothness:bicycle` first; the hints `TILDA_surface_strip` and `TILDA_smoothness_strip` name the surface and smoothness of the rest of the road. Cycleways and foot/cycle paths use `surface:bicycle` as their surface without a hint.
+- These bikelanes also read `surface:forward|backward` and `surface:left|right` of their own way, like `roads`: without a valid `surface`, the worst value is the surface (`surface_source=tag_directional`, the tagged `smoothness` still applies); every other value is a hint `TILDA_surface_right|left` or `TILDA_surface_bicycle_right|left` (`forward` is the right half, `backward` the left half). Example: a shared foot/cycle path with `surface=paving_stones` and `surface:left=asphalt` gets `TILDA_surface_left=asphalt`.
+- Lanes and bus lanes without their own `cycleway:<side>:surface` take, from the road, `surface:bicycle`, then the bicycle, side or direction value of their half (`surface:<side>`, `surface:forward` for the right lane), then `surface`; new `surface_source=parent_highway_tag_directional`.
+
+### `roads`, `roadsPathClasses`, `bikelanes`: `lifecycle`
+
+- Bikelanes and sidewalks of a road with `temporary=yes` are `lifecycle=temporary` now (before only the road), like they already were for `construction`.
+- `construction:cycleway=*` without a side only makes the bikelanes `lifecycle=construction`, no longer the road.
+
+### `bikelanes`, `routing`, `todos_lines`: `oneway`, `offset`
+
+- `oneway=-1` (one-way against the drawing direction of the way) and `oneway=1` are explicit values now, also as `oneway:bicycle=-1` and `cycleway:<side>:oneway=-1`. They give `oneway=yes`. Before, `-1` counted as "not tagged" (`assumed_no` / `implicit_yes`). `routing` reverses the edge of own lines, now also for `oneway:bicycle=-1`.
+- `missing_oneway` only lists own geometries. Lanes and tracks tagged on the road are left out, because the campaign led to `cycleway:both:oneway=yes`, which is wrong for the left side of a two-way road. Without a tag, lanes stay `implicit_yes` and tracks `assumed_no`.
+- Lines of lanes and tracks tagged on the road point in the riding direction in `bikelanes` and `routing`, following `cycleway:<side>:oneway`. Without it, on a oneway road (also a roundabout) both sides run in the road direction; before, the left line always ran against the way. A contraflow lane needs `cycleway:<side>:oneway=-1`; `cycleway=opposite_lane|opposite_track` gets it. Two-way lanes keep left against and right with the way.
+- `bikelanes.offset` and `routing.offset` are signed relative to the line now (`+` left / `-` right of its direction), so most values are negative. Before, the sign was relative to the way.
+
+### `roads`, `bikelanes`, `parkings`, `routing`: `oneway=-1`, roundabouts
+
+- One-way tags (also `construction:*`) are cleaned once at the start of `roads_bikelanes` and `parking`: `1` and `true` become `yes`, a roundabout (also `junction=circular`) without `oneway` gets `oneway=yes`. Later steps only read `yes`, `-1` and `no`.
+- `roads.oneway`, `roads.oneway_bicycle` and `parkings.road_oneway` publish `oneway=-1` as `yes` (without the direction). Before, `-1` was `disallowed`. Roundabouts are `oneway=yes` now.
+- On `oneway=-1` roads the side rules follow the direction of travel: `cycleway=lane|track` without a side is the left side of the way (the right side is `not_expected`), `cycleway=opposite_lane|opposite_track` is the right side with `cycleway:right:oneway=yes`, and a cycleway with `oneway=-1` takes `traffic_sign:backward`. Before, these roads were handled like two-way roads.
+- Roundabouts count as one-way everywhere: `routing` carriageway edges of roundabouts are `oneway=yes` (before `no`), and so are `bikelanes` rows of the way itself.
+- The parking road width uses the oneway fallback for `oneway=-1` and roundabouts, so parking capacities there can change.
+
+### `bikelanes`, `routing`: `oneway` of `sharedMotorVehicleLane`
+
+- `cycleway=shared_lane` (also `cycleway:<side>=shared_lane`) without `cycleway:<side>:oneway` is `implicit_yes` now, before `assumed_no`. Each row is one side of the road, so it is the motor vehicle lane of that side and runs in one direction. The `routing` lane edges of these rows are `oneway=yes`; the carriageway edge is unchanged.
+
+### `roads`, `roadsPathClasses`, `bikelanes`, `parkings`, `routing`: `width`
+
+- `parse_length` reads the seven most used decimal commas (`0,3`, `0,5`, `0,6`, `1,5`, `2,2`, `2,5`, `2,50`), which were empty before. A negative length is empty now.
+- `width` and `width_effective` are empty for `0`: new helper `parse_width`. So `offset` and the parking road width use the highway fallback then. `buffer_*` keeps `0`.
+- New `todos_lines` id `unusual_width` for `roads` and `bikelanes`: a `width` we can't read, `0` or negative, or above 50 m (published as it is). Table-only. When the `bikelanes` row of the way itself has the todo, `roads` does not list it a second time. `check_date`, `check_date:width`, `survey:date`, `survey:date:width` or `survey_date` closes it, also on the road of a lane.
+
+### `routing`
+
+- Carriageway and path edges publish the sanitized values of `roads` / `roadsPathClasses` instead of raw OSM tags. `width` is a number in meters or empty (was the OSM text, e.g. `5,7`, which aborted the export). `surface` uses the same values as `roads` (e.g. `dirt` is now `ground`). `smoothness` is also derived from `surface` and other tags, like in `roads`.
+- `prefix`, `parent_road`, `adjoining_road`, `adjoining_maxspeed` no longer read an OSM tag of the same name. No change in the data: no way in Germany has these tags (2026-10).
+
 ## 2026-10
+
+### Summieren: `tilda_measure_sum`
+
+- New column `missing`: per metric, the number of features without a number for it (they are not in `sums`). Summieren shows them in a column of their own.
+
+### `bicycleParking_points`, `bicycleParking_areas`
+
+- New `kind` tag, the first key of the row: `bicycle_parking`, `cargo_bike_parking` (`cargo_bike=designated`, or only `capacity:cargo_bike` without normal spaces), `small_electric_vehicle_parking` (`small_electric_vehicle_parking`, `kick-scooter_parking`), `mobility_hub` and `bicycle_rental` (not `shop` or `virtual`). Multipolygon relations of these kinds are added as areas with a centroid point, so `bicycleParking_areas.geom` is a multipolygon now.
+- One row per kind. An OSM object with normal and cargo spaces (`capacity` and `capacity:cargo_bike`) gives two rows: `bicycle_parking` with `capacity` = total minus cargo spaces, and `cargo_bike_parking` with `capacity` = cargo spaces (`cargo_bike=designated` without cargo spaces gives one `cargo_bike_parking` with the total). The row ids: the first row keeps the object id (`way/123`), the others add the kind (`way/123/cargo_bike_parking`). `capacity:cargo_bike` is no longer a tag of the rows.
+- Removed `osm_capacity` and `osm_capacity:cargo_bike`. A `capacity` or `capacity:cargo_bike` that is not a number is reported in `bicycleParking_errors`.
+- Geometry of a split object is placed per kind, `tags.geometry_transform` says how: `area_split` (outline cut across its long axis by the length the stands need, a bicycle stand every 1.2 m and a cargo bike stand every 2.0 m, 2 bikes each; the bicycle part on the min end, each point on its part), `line_halves` (open way cut in the middle, each point in the middle of its half; the line is kept in the internal table `_bicycleParking_lines`) and `point_offset` (node: the bicycle part 1 m west, the cargo bike part 1 m east).
+- `bicycle_parking` (the type of stand) is renamed to `stand_type`, so it does not read like `kind`. It accepts more values of the wiki (e.g. `rack`, `safe_loops`, `building`, `floor`), which were logged as errors before.
+- New tags: `network`, `rental_type` (from `bicycle_rental`: `docking_station`, `dropoff_point`, `key_dispensing_machine`), `in_mobility_hub=yes` on the points and areas inside a mobility hub area.
+- `position` is read from `<amenity>:position` (e.g. `small_electric_vehicle_parking:position`) before `bicycle_parking:position` and `position`. New values: `shoulder`, `traffic_island`, `parklet`, `playground`, `driveway`, `public_property`.
+- `cargo_bike=designated` is kept as `access_cargo_bike` (before it was logged as an error). `access` allows `members` and `no`.
+- A parking without `capacity` has no `capacity`. There is no estimate.
+- Summieren: a mobility hub is not counted as a parking (the parkings inside it are). New amount `objects` (1 per row); a parking without `capacity` counts only there, no longer as 1 space. The cargo spaces of a split object are counted under `cargo_bike_parking`.
 
 ### `roads`, `roadsPathClasses`, `bikelanes`: `route_relations`
 

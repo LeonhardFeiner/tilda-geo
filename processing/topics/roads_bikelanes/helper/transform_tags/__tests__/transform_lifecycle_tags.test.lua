@@ -1,6 +1,8 @@
 describe('transform_lifecycle_tags', function()
   local transform_lifecycle_tags = require('topics.roads_bikelanes.helper.transform_tags.transform_lifecycle_tags')
   local maxspeed = require('topics.roads_bikelanes.maxspeed.maxspeed')
+  local DESC = require('topics.helper.tilda_description')
+  local extract_public_tags = require('topics.helper.extract_public_tags')
 
   describe('construction tags transformation', function()
     it('transforms highway=construction with valid construction tag', function()
@@ -45,12 +47,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'cycleway',
         lifecycle = 'construction_no_access',
         note = 'Baustelle',
-        description = 'TILDA-Hinweis: Weg gesperrt aufgrund einer Baustelle.',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_construction' })
 
       assert.are.same(unmodified_tags, {
         highway = 'construction',
@@ -69,11 +71,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'residential',
         lifecycle = 'construction_no_access',
-        description = 'TILDA-Hinweis: Weg gesperrt aufgrund einer Baustelle.;Weg gesperrt aufgrund einer Baustelle',
+        description = 'Weg gesperrt aufgrund einer Baustelle',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_construction' })
 
       assert.are.same(unmodified_tags, {
         access = 'no',
@@ -89,12 +92,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'cycleway',
         lifecycle = 'construction_no_access',
         ['access:reason'] = 'construction',
-        description = 'TILDA-Hinweis: Weg gesperrt aufgrund einer Baustelle.',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_construction' })
 
       assert.are.same(unmodified_tags, {
         bicycle = 'no',
@@ -110,12 +113,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'footway',
         lifecycle = 'construction_no_access',
         note = 'Baustelle',
-        description = 'TILDA-Hinweis: Weg gesperrt aufgrund einer Baustelle.',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_construction' })
 
       assert.are.same(unmodified_tags, {
         foot = 'no',
@@ -133,12 +136,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'residential',
         lifecycle = 'blocked',
-        description = 'TILDA-Hinweis: Weg gesperrt (Sperrung).',
         note = 'Sperrung „bis auf Weiteres” an israelischen Botschaft',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_blocked' })
 
       assert.are.same(unmodified_tags, {
         access = 'no',
@@ -154,11 +157,12 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'residential',
         lifecycle = 'blocked',
-        description = 'TILDA-Hinweis: Weg gesperrt (Sperrung).;Weg ist GESPERRT',
+        description = 'Weg ist GESPERRT',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_blocked' })
 
       assert.are.same(unmodified_tags, {
         access = 'no',
@@ -206,17 +210,61 @@ describe('transform_lifecycle_tags', function()
       }
       local unmodified_tags = transform_lifecycle_tags(tags)
 
-      assert.are.same(tags, {
+      assert.are.same(extract_public_tags(tags), {
         highway = 'residential',
         lifecycle = 'construction_no_access',
-        description = 'TILDA-Hinweis: Weg gesperrt aufgrund einer Baustelle.',
         note = 'Sperrung aufgrund einer Baustelle',
       })
+      assert.are.same(DESC.hints(tags), { 'TILDA_closed_construction' })
 
       assert.are.same(unmodified_tags, {
         access = 'no',
         lifecycle = nil,
       })
+    end)
+  end)
+
+  describe('temporary', function()
+    it('moves temporary=yes to lifecycle=temporary', function()
+      local tags = { highway = 'cycleway', temporary = 'yes' }
+      local unmodified_tags = transform_lifecycle_tags(tags)
+
+      assert.are.same(tags, { highway = 'cycleway', lifecycle = 'temporary' })
+      assert.are.same(unmodified_tags, { temporary = 'yes' })
+    end)
+
+    it('moves cycleway:SIDE:temporary=yes and sidewalk:SIDE:temporary=yes to the side lifecycle', function()
+      local tags = {
+        highway = 'residential',
+        ['cycleway:right'] = 'lane',
+        ['cycleway:right:temporary'] = 'yes',
+        ['cycleway:temporary'] = 'yes',
+        ['sidewalk:both:temporary'] = 'yes',
+      }
+      transform_lifecycle_tags(tags)
+
+      assert.are.same(tags, {
+        highway = 'residential',
+        ['cycleway:right'] = 'lane',
+        ['cycleway:right:lifecycle'] = 'temporary',
+        ['cycleway:lifecycle'] = 'temporary',
+        ['sidewalk:both:lifecycle'] = 'temporary',
+      })
+    end)
+
+    it('keeps an existing lifecycle', function()
+      local tags = { highway = 'construction', construction = 'cycleway', temporary = 'yes' }
+      transform_lifecycle_tags(tags)
+
+      assert.are.same(tags.lifecycle, 'construction')
+      assert.is_nil(tags.temporary)
+    end)
+
+    it('ignores temporary=no', function()
+      local tags = { highway = 'cycleway', temporary = 'no' }
+      transform_lifecycle_tags(tags)
+
+      assert.are.same(tags, { highway = 'cycleway', temporary = 'no' })
     end)
   end)
 

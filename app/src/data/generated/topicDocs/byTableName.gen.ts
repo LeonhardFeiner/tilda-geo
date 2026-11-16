@@ -10,7 +10,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -76,7 +76,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -267,24 +267,56 @@ const data = {
     topic: 'bicycleParking',
     tableName: 'bicycleParking_points',
     sourceIds: ['atlas_bicycleParking'],
-    title: 'Fahrradstellplätze',
+    title: 'Fahrrad- & Mikromobilitätsparken',
+    summary:
+      'Abstellanlagen für Fahrräder, Lastenräder, E-Scooter und andere Kleinstfahrzeuge sowie Bikesharing- und Mobilitätsstationen aus OpenStreetMap. Jedes Objekt ist eine Art (`kind`) mit der Anzahl ihrer Stellplätze.',
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
       {
-        key: 'capacity',
-        type: 'number',
-        label: 'Anzahl Fahrrad-Stellplätze',
-        values: [],
+        key: 'kind',
+        type: 'string',
+        label: 'Art',
+        values: [
+          {
+            value: 'bicycle_parking',
+            label: 'Fahrradstellplätze',
+            description: '`amenity=bicycle_parking`',
+          },
+          {
+            value: 'cargo_bike_parking',
+            label: 'Lastenrad-Stellplätze',
+            description:
+              '`amenity=bicycle_parking` mit `cargo_bike=designated` oder `capacity:cargo_bike`',
+            chapterRefs: ['aufgeteilte-objekte'],
+          },
+          {
+            value: 'small_electric_vehicle_parking',
+            label: 'E-Scooter- / Kleinstfahrzeug-Parkplätze',
+            description: '`amenity=small_electric_vehicle_parking`, `amenity=kick-scooter_parking`',
+          },
+          {
+            value: 'bicycle_rental',
+            label: 'Bikesharing-Stationen',
+            description: '`amenity=bicycle_rental`, ohne Fahrradverleih-Läden',
+          },
+          {
+            value: 'mobility_hub',
+            label: 'Mobilitätsstationen',
+            description:
+              '`amenity=mobility_hub`. Eine Fläche, in der Stellplätze und Verleihstationen liegen; beim Summieren zählt sie nicht mit.',
+          },
+        ],
       },
       {
-        key: 'capacity:cargo_bike',
+        key: 'capacity',
         type: 'number',
-        label: 'Anzahl Lastenfahrrad-Stellplätze',
+        label: 'Anzahl Stellplätze',
+        chapterRefs: ['aufgeteilte-objekte'],
         values: [],
       },
       {
@@ -301,12 +333,20 @@ const data = {
             label: 'Kund:innen',
           },
           {
+            value: 'members',
+            label: 'Mitglieder',
+          },
+          {
             value: 'permissive',
             label: 'Öffentliche Nutzung geduldet',
           },
           {
             value: 'private',
             label: 'Privat',
+          },
+          {
+            value: 'no',
+            label: 'Kein Zugang',
           },
         ],
       },
@@ -361,6 +401,10 @@ const data = {
             value: 'yes',
             label: 'Zugelassen',
           },
+          {
+            value: 'designated',
+            label: 'Nur Lastenräder',
+          },
         ],
       },
       {
@@ -379,9 +423,10 @@ const data = {
         ],
       },
       {
-        key: 'bicycle_parking',
+        key: 'stand_type',
         type: 'string',
-        label: 'Fahrradabstellanlage',
+        label: 'Art der Abstellanlage',
+        description: 'Aus `bicycle_parking=*`.',
         values: [
           {
             value: 'stands',
@@ -400,16 +445,119 @@ const data = {
             label: 'Wandhalter',
           },
           {
-            value: 'shed',
-            label: 'Unterstand',
+            value: 'rack',
+            label: 'Fahrradständer',
+          },
+          {
+            value: 'safe_loops',
+            label: 'Sicherheitsbügel',
+          },
+          {
+            value: 'ground_slots',
+            label: 'Bodenschlitze',
+          },
+          {
+            value: 'anchors',
+            label: 'Bodenanker',
+          },
+          {
+            value: 'lean_and_stick',
+            label: 'Anlehnhilfe',
+          },
+          {
+            value: 'handlebar_holder',
+            label: 'Lenkerhalter',
+          },
+          {
+            value: 'upright_stands',
+            label: 'Vertikalparker',
           },
           {
             value: 'two-tier',
             label: 'Doppelstockparker',
           },
           {
+            value: 'shed',
+            label: 'Unterstand',
+          },
+          {
+            value: 'building',
+            label: 'Fahrradparkhaus',
+          },
+          {
             value: 'lockers',
             label: 'Fahrradboxen',
+          },
+          {
+            value: 'streetpod',
+            label: 'Streetpod',
+          },
+          {
+            value: 'smart_dock',
+            label: 'Smart-Dock',
+          },
+          {
+            value: 'floor',
+            label: 'Abstellfläche ohne Halter',
+          },
+        ],
+      },
+      {
+        key: 'rental_type',
+        type: 'string',
+        label: 'Art der Verleihstation',
+        description: 'Aus `bicycle_rental=*`.',
+        values: [
+          {
+            value: 'docking_station',
+            label: 'Station mit Andockpunkten',
+          },
+          {
+            value: 'dropoff_point',
+            label: 'Abstellfläche (Free-Floating-Zone)',
+          },
+          {
+            value: 'key_dispensing_machine',
+            label: 'Schlüsselautomat',
+          },
+        ],
+      },
+      {
+        key: 'network',
+        type: 'sanitized_strings',
+        label: 'Netz / Verbund',
+        values: [],
+      },
+      {
+        key: 'in_mobility_hub',
+        type: 'string',
+        label: 'In Mobilitätsstation',
+        values: [
+          {
+            value: 'yes',
+            label: 'Innerhalb einer Mobilitätsstation',
+          },
+        ],
+      },
+      {
+        key: 'geometry_transform',
+        type: 'string',
+        label: 'Geometrie geschätzt',
+        description:
+          'Gesetzt, wenn ein OSM-Objekt nach Art aufgeteilt und die Lage der Teile geschätzt wurde.',
+        chapterRefs: ['aufgeteilte-objekte'],
+        values: [
+          {
+            value: 'area_split',
+            label: 'Fläche nach Stellplätzen geteilt',
+          },
+          {
+            value: 'line_halves',
+            label: 'Linie in der Mitte geteilt',
+          },
+          {
+            value: 'point_offset',
+            label: 'Nebeneinander gesetzt',
           },
         ],
       },
@@ -442,40 +590,64 @@ const data = {
             label: 'Grünstreifen',
           },
           {
-            value: 'lane',
-            label: 'Fahrbahn',
-          },
-          {
             value: 'kerb_extension',
             label: 'Gehwegvorstreckung',
-          },
-          {
-            value: 'parking_lot',
-            label: 'Parkplatz',
-          },
-          {
-            value: 'street_side',
-            label: 'Straßenrand',
-          },
-          {
-            value: 'school_ground',
-            label: 'Schulgelände',
-          },
-          {
-            value: 'private_property',
-            label: 'Privatgrund',
           },
           {
             value: 'pedestrian_area',
             label: 'Fußgängerbereich',
           },
           {
+            value: 'lane',
+            label: 'Fahrbahn',
+          },
+          {
+            value: 'street_side',
+            label: 'Straßenrand',
+          },
+          {
+            value: 'shoulder',
+            label: 'Seitenstreifen',
+          },
+          {
+            value: 'traffic_island',
+            label: 'Verkehrsinsel',
+          },
+          {
+            value: 'parklet',
+            label: 'Parklet',
+          },
+          {
             value: 'park',
             label: 'Park',
           },
           {
+            value: 'school_ground',
+            label: 'Schulgelände',
+          },
+          {
+            value: 'playground',
+            label: 'Spielplatz',
+          },
+          {
+            value: 'parking_lot',
+            label: 'Parkplatz',
+          },
+          {
             value: 'parking',
             label: 'Parkfläche',
+          },
+          {
+            value: 'driveway',
+            label: 'Zufahrt',
+          },
+          {
+            value: 'private_property',
+            label: 'Privatgrund',
+          },
+          {
+            value: 'public_property',
+            label: 'Öffentliches Gelände',
           },
         ],
       },
@@ -692,22 +864,15 @@ const data = {
         label: 'Maximaldauer',
         values: [],
       },
+    ],
+    chapters: [
       {
-        key: 'osm_capacity',
-        type: 'sanitized_strings',
-        label: 'OSM Kapazität (roh, Testdaten)',
-        purpose: 'qa',
-        values: [],
-      },
-      {
-        key: 'osm_capacity:cargo_bike',
-        type: 'sanitized_strings',
-        label: 'OSM Kapazität Lastenrad (roh, Testdaten)',
-        purpose: 'qa',
-        values: [],
+        id: 'aufgeteilte-objekte',
+        title: 'Aufgeteilte Objekte und geschätzte Geometrie',
+        markdown:
+          'In OpenStreetMap ist eine Abstellanlage manchmal als ein Objekt erfasst, obwohl sie Stellplätze verschiedener Art hat, zum Beispiel 10 Stellplätze, davon 2 für Lastenräder (`capacity=10`, `capacity:cargo_bike=2`). TILDA zeigt jede Art als eigenes Objekt mit eigener Anzahl: 8 Fahrradstellplätze und 2 Lastenrad-Stellplätze. Das zweite Objekt hat dieselbe OSM-ID mit der Art als Zusatz (`way/123/cargo_bike_parking`).\n\nWo die Lastenrad-Stellplätze genau stehen, steht nicht in OpenStreetMap. TILDA schätzt deshalb die Lage beider Teile:\n\n- **Fläche:** Die Fläche wird quer zu ihrer Längsachse geteilt. Dabei stehen die Bügel in einer Reihe, ein Fahrradbügel alle 1,2 m und ein Lastenradbügel alle 2 m, je 2 Räder pro Bügel; jeder Teil bekommt so viel von der Länge, wie seine Stellplätze brauchen.\n- **Linie:** Die Linie wird in der Mitte geteilt; jeder Teil liegt in der Mitte seiner Hälfte.\n- **Punkt:** Die beiden Teile werden in Ost–West-Richtung nebeneinander gesetzt.\n\nDas Merkmal `geometry_transform` nennt, welcher Fall angewendet wurde; im Inspektor erscheint dazu ein Hinweis. Genauer wird es, wenn die Lastenrad-Stellplätze in OpenStreetMap als eigenes Objekt erfasst werden.\n',
       },
     ],
-    chapters: [],
   },
   bikelanes: {
     topic: 'roads_bikelanes',
@@ -717,7 +882,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -1303,6 +1468,8 @@ const data = {
           {
             value: 'temporary',
             label: 'Temporärer Weg',
+            description:
+              'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
           },
         ],
       },
@@ -1342,6 +1509,7 @@ const data = {
           {
             value: 'yes',
             label: 'Eine Richtung',
+            description: 'Laut OSM-Daten nur in eine Richtung befahrbar.',
           },
           {
             value: 'no',
@@ -1355,13 +1523,13 @@ const data = {
             value: 'assumed_no',
             label: 'Wahrscheinlich beide Richtungen',
             description:
-              'Keine explizite OSM-Angabe zur Verkehrsrichtung vorhanden. Aus Führungsform und Umfeld wird hier beide Richtungen als wahrscheinlich angenommen.',
+              'Keine OSM-Angabe zur Verkehrsrichtung. Bei Radwegen und gemeinsamen Geh- und Radwegen nehmen wir beide Richtungen an. Außerorts sind straßenbegleitende Radwege oft in beide Richtungen freigegeben, ohne dass das in OSM steht; innerorts ist die Richtung meist angegeben.',
           },
           {
             value: 'implicit_yes',
             label: 'Eine Richtung (abgeleitet)',
             description:
-              'Keine explizite OSM-Angabe (`oneway` / `oneway:bicycle`). Aus der Führungsform abgeleitet (z. B. Schutzstreifen), nicht aus einem oneway-Tag gelesen.',
+              'Keine OSM-Angabe zur Verkehrsrichtung. Aus der Führungsform abgeleitet, denn Schutz- und Radfahrstreifen sowie gemeinsam mit dem Kfz-Verkehr genutzte Fahrstreifen sind fast immer nur in eine Richtung befahrbar.',
           },
         ],
       },
@@ -1782,8 +1950,58 @@ const data = {
       {
         key: 'description',
         type: 'sanitized_strings',
-        label: 'Hinweis aus OSM',
-        values: [],
+        label: 'Hinweise',
+        description:
+          'Hinweise zu diesem Weg: von TILDA ergänzte Hinweise, zum Beispiel zu abweichenden Oberflächen einzelner Straßenhälften oder zu Sperrungen, und die Beschreibung und Notiz aus OpenStreetMap (`description`, `note`). Die TILDA-Hinweise sind als Kürzel gespeichert, ihre Bedeutung steht in der Werteliste; `{value}` steht dort für die jeweilige Oberfläche oder Fahrqualität.',
+        values: [
+          {
+            value: 'TILDA_surface_bicycle',
+            label: 'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_right',
+            label:
+              'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_left',
+            label:
+              'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_right',
+            label: 'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_left',
+            label: 'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_strip',
+            label:
+              'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_smoothness_strip',
+            label: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          },
+          {
+            value: 'TILDA_access_road',
+            label: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          },
+          {
+            value: 'TILDA_shared_agricultural',
+            label: 'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          },
+          {
+            value: 'TILDA_closed_construction',
+            label: 'Weg gesperrt aufgrund einer Baustelle.',
+          },
+          {
+            value: 'TILDA_closed_blocked',
+            label: 'Weg gesperrt (Sperrung).',
+          },
+        ],
       },
       {
         key: 'operator_type',
@@ -1857,7 +2075,7 @@ const data = {
         label: 'Linien-Offset',
         purpose: 'rendering',
         description:
-          'Reiner Darstellungswert für den Kartenstil – empfohlener seitlicher Versatz in Metern. Die Geometrie bleibt auf der Straßen-Mittellinie; der Versatz wird ausschließlich visuell als `line-offset` angewendet und verändert die Daten nicht. Vorzeichen: positiv = links, negativ = rechts der Mittellinie. Der Betrag wird im Processing aus der halben Straßenbreite berechnet.',
+          'Reiner Darstellungswert für den Kartenstil – empfohlener seitlicher Versatz in Metern. Die Geometrie bleibt auf der Straßen-Mittellinie; der Versatz wird ausschließlich visuell als `line-offset` angewendet und verändert die Daten nicht. Vorzeichen bezogen auf die Richtung der Linie: positiv = links, negativ = rechts der Linie. Weil die Linien in Fahrtrichtung zeigen, ist der Wert bei Rechtsverkehr in der Regel negativ. Der Betrag wird im Processing aus der halben Straßenbreite berechnet.',
         chapterRefs: ['versetzte-geometrien'],
         values: [],
       },
@@ -2001,6 +2219,14 @@ const data = {
           {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
+          },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
           },
         ],
       },
@@ -2198,7 +2424,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -2210,7 +2436,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -2634,7 +2860,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -2646,7 +2872,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -2786,7 +3012,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -2978,6 +3204,8 @@ const data = {
           {
             value: 'temporary',
             label: 'Temporärer Weg',
+            description:
+              'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
           },
         ],
       },
@@ -3044,8 +3272,58 @@ const data = {
       {
         key: 'description',
         type: 'sanitized_strings',
-        label: 'Hinweis aus OSM',
-        values: [],
+        label: 'Hinweise',
+        description:
+          'Hinweise zu diesem Weg: von TILDA ergänzte Hinweise, zum Beispiel zu abweichenden Oberflächen einzelner Straßenhälften oder zu Sperrungen, und die Beschreibung und Notiz aus OpenStreetMap (`description`, `note`). Die TILDA-Hinweise sind als Kürzel gespeichert, ihre Bedeutung steht in der Werteliste; `{value}` steht dort für die jeweilige Oberfläche oder Fahrqualität.',
+        values: [
+          {
+            value: 'TILDA_surface_bicycle',
+            label: 'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_right',
+            label:
+              'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_left',
+            label:
+              'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_right',
+            label: 'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_left',
+            label: 'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_strip',
+            label:
+              'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_smoothness_strip',
+            label: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          },
+          {
+            value: 'TILDA_access_road',
+            label: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          },
+          {
+            value: 'TILDA_shared_agricultural',
+            label: 'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          },
+          {
+            value: 'TILDA_closed_construction',
+            label: 'Weg gesperrt aufgrund einer Baustelle.',
+          },
+          {
+            value: 'TILDA_closed_blocked',
+            label: 'Weg gesperrt (Sperrung).',
+          },
+        ],
       },
       {
         key: 'operator_type',
@@ -3258,7 +3536,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -3270,7 +3548,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -3675,6 +3953,8 @@ const data = {
           {
             value: 'temporary',
             label: 'Temporärer Weg',
+            description:
+              'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
           },
         ],
       },
@@ -3690,6 +3970,8 @@ const data = {
           {
             value: 'yes',
             label: 'Einbahnstraße',
+            description:
+              'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
           },
           {
             value: 'yes_dual_carriageway',
@@ -3775,8 +4057,58 @@ const data = {
       {
         key: 'description',
         type: 'sanitized_strings',
-        label: 'Hinweis aus OSM',
-        values: [],
+        label: 'Hinweise',
+        description:
+          'Hinweise zu diesem Weg: von TILDA ergänzte Hinweise, zum Beispiel zu abweichenden Oberflächen einzelner Straßenhälften oder zu Sperrungen, und die Beschreibung und Notiz aus OpenStreetMap (`description`, `note`). Die TILDA-Hinweise sind als Kürzel gespeichert, ihre Bedeutung steht in der Werteliste; `{value}` steht dort für die jeweilige Oberfläche oder Fahrqualität.',
+        values: [
+          {
+            value: 'TILDA_surface_bicycle',
+            label: 'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_right',
+            label:
+              'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_left',
+            label:
+              'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_right',
+            label: 'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_left',
+            label: 'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_strip',
+            label:
+              'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_smoothness_strip',
+            label: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          },
+          {
+            value: 'TILDA_access_road',
+            label: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          },
+          {
+            value: 'TILDA_shared_agricultural',
+            label: 'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          },
+          {
+            value: 'TILDA_closed_construction',
+            label: 'Weg gesperrt aufgrund einer Baustelle.',
+          },
+          {
+            value: 'TILDA_closed_blocked',
+            label: 'Weg gesperrt (Sperrung).',
+          },
+        ],
       },
       {
         key: 'operator_type',
@@ -4031,6 +4363,14 @@ const data = {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
           },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
+          },
         ],
       },
       {
@@ -4142,7 +4482,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -4233,7 +4573,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -5139,6 +5479,14 @@ const data = {
           {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
+          },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
           },
         ],
       },
@@ -6249,6 +6597,14 @@ const data = {
           {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
+          },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
           },
         ],
       },
@@ -9192,6 +9548,14 @@ const data = {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
           },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
+          },
         ],
       },
       {
@@ -9445,7 +9809,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -9539,7 +9903,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -10697,7 +11061,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -10785,7 +11149,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -11053,6 +11417,8 @@ const data = {
           {
             value: 'temporary',
             label: 'Temporärer Weg',
+            description:
+              'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
           },
         ],
       },
@@ -11096,6 +11462,8 @@ const data = {
           {
             value: 'yes',
             label: 'Einbahnstraße',
+            description:
+              'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
           },
           {
             value: 'yes_dual_carriageway',
@@ -11235,8 +11603,58 @@ const data = {
       {
         key: 'description',
         type: 'sanitized_strings',
-        label: 'Hinweis aus OSM',
-        values: [],
+        label: 'Hinweise',
+        description:
+          'Hinweise zu diesem Weg: von TILDA ergänzte Hinweise, zum Beispiel zu abweichenden Oberflächen einzelner Straßenhälften oder zu Sperrungen, und die Beschreibung und Notiz aus OpenStreetMap (`description`, `note`). Die TILDA-Hinweise sind als Kürzel gespeichert, ihre Bedeutung steht in der Werteliste; `{value}` steht dort für die jeweilige Oberfläche oder Fahrqualität.',
+        values: [
+          {
+            value: 'TILDA_surface_bicycle',
+            label: 'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_right',
+            label:
+              'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_left',
+            label:
+              'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_right',
+            label: 'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_left',
+            label: 'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_strip',
+            label:
+              'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_smoothness_strip',
+            label: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          },
+          {
+            value: 'TILDA_access_road',
+            label: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          },
+          {
+            value: 'TILDA_shared_agricultural',
+            label: 'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          },
+          {
+            value: 'TILDA_closed_construction',
+            label: 'Weg gesperrt aufgrund einer Baustelle.',
+          },
+          {
+            value: 'TILDA_closed_blocked',
+            label: 'Weg gesperrt (Sperrung).',
+          },
+        ],
       },
       {
         key: 'operator_type',
@@ -11918,6 +12336,14 @@ const data = {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
           },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
+          },
         ],
       },
       {
@@ -12073,7 +12499,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -12085,7 +12511,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -12254,6 +12680,8 @@ const data = {
           {
             value: 'temporary',
             label: 'Temporärer Weg',
+            description:
+              'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
           },
         ],
       },
@@ -12269,6 +12697,8 @@ const data = {
           {
             value: 'yes',
             label: 'Einbahnstraße',
+            description:
+              'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
           },
           {
             value: 'yes_dual_carriageway',
@@ -12362,8 +12792,58 @@ const data = {
       {
         key: 'description',
         type: 'sanitized_strings',
-        label: 'Hinweis aus OSM',
-        values: [],
+        label: 'Hinweise',
+        description:
+          'Hinweise zu diesem Weg: von TILDA ergänzte Hinweise, zum Beispiel zu abweichenden Oberflächen einzelner Straßenhälften oder zu Sperrungen, und die Beschreibung und Notiz aus OpenStreetMap (`description`, `note`). Die TILDA-Hinweise sind als Kürzel gespeichert, ihre Bedeutung steht in der Werteliste; `{value}` steht dort für die jeweilige Oberfläche oder Fahrqualität.',
+        values: [
+          {
+            value: 'TILDA_surface_bicycle',
+            label: 'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_right',
+            label:
+              'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_bicycle_left',
+            label:
+              'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          },
+          {
+            value: 'TILDA_surface_right',
+            label: 'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_left',
+            label: 'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_surface_strip',
+            label:
+              'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          },
+          {
+            value: 'TILDA_smoothness_strip',
+            label: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          },
+          {
+            value: 'TILDA_access_road',
+            label: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          },
+          {
+            value: 'TILDA_shared_agricultural',
+            label: 'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          },
+          {
+            value: 'TILDA_closed_construction',
+            label: 'Weg gesperrt aufgrund einer Baustelle.',
+          },
+          {
+            value: 'TILDA_closed_blocked',
+            label: 'Weg gesperrt (Sperrung).',
+          },
+        ],
       },
       {
         key: 'operator_type',
@@ -12593,6 +13073,14 @@ const data = {
           {
             value: 'parent_highway_tag_transformed',
             label: 'Von zugeordneter Straße, normalisiert',
+          },
+          {
+            value: 'tag_directional',
+            label: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          },
+          {
+            value: 'parent_highway_tag_directional',
+            label: 'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
           },
         ],
       },
@@ -13293,7 +13781,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -13871,7 +14359,7 @@ const data = {
         label: 'Linien-Offset',
         purpose: 'rendering',
         description:
-          'Wie `bikelanes.offset`: Geometrie bleibt auf der Mittellinie; der Wert ist nur für die Kartendarstellung (`line-offset`). Fehlt auf der Mittellinie (`self`). Sonst halbe Straßenbreite (`road_width`: OSM `width`/`est_width`, sonst Highway-Default), positiv = links, negativ = rechts. Bei Radinfrastruktur-Kanten (`source_table=bikelanes`) läuft die linke Linie gegen die OSM-Way-Richtung, die rechte mit ihr, analog zu `bikelanes`. Fahrbahn-Kanten haben keinen Versatz. Transformierte Bikelanes übernehmen den bereits berechneten Wert.',
+          'Wie `bikelanes.offset`: Geometrie bleibt auf der Mittellinie; der Wert ist nur für die Kartendarstellung (`line-offset`). Fehlt auf der Mittellinie (`self`). Sonst halbe Straßenbreite (`road_width`: OSM `width`/`est_width`, sonst Highway-Default), positiv = links, negativ = rechts der Linie. Radinfrastruktur-Kanten (`source_table=bikelanes`) haben dieselbe Linienrichtung wie `bikelanes` (Fahrtrichtung; bei beiden Richtungen links gegen und rechts mit dem OSM-Way). Fahrbahn-Kanten haben keinen Versatz. Transformierte Bikelanes übernehmen den bereits berechneten Wert.',
         chapterRefs: ['versetzte-geometrien'],
         values: [],
       },
@@ -14182,7 +14670,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -14196,7 +14684,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [
@@ -14246,7 +14734,7 @@ const data = {
         id: 'versetzte-geometrien',
         title: 'Versetzte Geometrien',
         markdown:
-          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Referenzlinie), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nDie Linienrichtung bleibt die Fahrtrichtung bei Rechtsverkehr. Rechte abgeleitete Geometrien laufen in OSM-Way-Richtung, linke werden umgekehrt (gegen die OSM-Way-Richtung). Richtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich weiter auf die OSM-Way-Richtung.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
+          'Ein Teil der Geometrien für Radinfrastruktur wird von der Straßen-Mittellinie abgeleitet (siehe Hinweise „Transformierte Geometrie“ im Inspektor in der Kartenansicht). Diese abgeleiteten Geometrien liegen in den Daten **auf der Straßen-Mittellinie** – sie werden nicht mehr nach links bzw. rechts verschoben. Das hält die Daten einfacher analysierbar, weil keine künstliche seitliche Verschiebung berücksichtigt werden muss.\n\nDen empfohlenen seitlichen Versatz stellt das Attribut `offset` bereit: ein vorzeichenbehafteter Wert in Metern (positiv = links, negativ = rechts der Linie, bezogen auf ihre Richtung), der im Processing aus der halben Straßenbreite berechnet wird. Der Versatz wird **rein visuell im Kartenstil** angewendet (`line-offset`), so dass die beiden Straßenseiten in der Karte weiterhin getrennt dargestellt werden.\n\nAbgeleitete Geometrien zeigen in Fahrtrichtung. Sie folgt [`cycleway:<Seite>:oneway`](https://wiki.openstreetmap.org/wiki/DE:Key:cycleway:right:oneway), das sich auf die Zeichenrichtung des OSM-Ways bezieht (`yes` = mit, `-1` = gegen den Way):\n\n- Ohne Angabe an einer Straße ohne Einbahnregelung (Rechtsverkehr): rechte Geometrien laufen in OSM-Way-Richtung, linke gegen sie.\n- Ohne Angabe an einer Einbahnstraße (auch Kreisverkehr): beide Seiten laufen in Fahrtrichtung der Straße. Ein Radfahrstreifen in Gegenrichtung braucht deshalb `cycleway:<Seite>:oneway=-1`. Die alte Schreibweise `cycleway=opposite_lane` / `opposite_track` gilt als Gegenrichtung.\n- Mit Angabe gilt die Angabe, auch wenn sie vom Standard abweicht (z. B. `cycleway:left:oneway=yes`).\n- Radinfrastruktur in beide Richtungen (`cycleway:<Seite>:oneway=no`) hat keine Fahrtrichtung. Hier laufen linke Geometrien gegen die OSM-Way-Richtung, rechte mit ihr.\n\nBei Rechtsverkehr liegt die Radinfrastruktur deshalb in der Regel rechts ihrer Linie (`offset` negativ), auch auf der linken Straßenseite, deren Linie gegen den OSM-Way läuft. Liegt sie links von ihrer Linie (z. B. linker Radfahrstreifen an einer Einbahnstraße in Fahrtrichtung), ist `offset` positiv.\n\nRichtungsabhängige Attribute (`mapillary_forward` / `mapillary_backward`, `traffic_sign_forward` / `traffic_sign_backward`) beziehen sich auf die Linienrichtung: Läuft die Linie gegen den OSM-Way, sind die Paare getauscht.\n\n**HINWEIS:** Der visuelle Versatz wirkt auf Linien-Ebenen und auf Beschriftungen und Icons entlang der Linie (Breite, Oberfläche, Brücke, Tunnel, Baustelle; sehr kurze Wege zeigen ihr Icon erst beim Hineinzoomen). Verkehrsschild-Beschriftungen liegen weiter auf der Mittellinie.\n',
       },
     ],
   },
@@ -14258,7 +14746,7 @@ const data = {
     groups: [
       {
         id: 'atlas',
-        label: 'Atlas Daten',
+        label: 'TILDA Daten',
       },
     ],
     attributes: [

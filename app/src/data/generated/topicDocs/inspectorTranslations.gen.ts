@@ -50,22 +50,16 @@ const data = {
   'atlas_barriers--waterway=river': 'Fluss',
   'atlas_barriers--waterway=stream': 'Bach',
   'atlas_bicycleParking--access_cargo_bike--key': 'Zugang Lastenrad',
+  'atlas_bicycleParking--access_cargo_bike=designated': 'Nur Lastenräder',
   'atlas_bicycleParking--access_cargo_bike=yes': 'Zugelassen',
   'atlas_bicycleParking--access--key': 'Zugang',
   'atlas_bicycleParking--access=customers': 'Kund:innen',
+  'atlas_bicycleParking--access=members': 'Mitglieder',
+  'atlas_bicycleParking--access=no': 'Kein Zugang',
   'atlas_bicycleParking--access=permissive': 'Öffentliche Nutzung geduldet',
   'atlas_bicycleParking--access=private': 'Privat',
   'atlas_bicycleParking--access=yes': 'Öffentlich',
-  'atlas_bicycleParking--bicycle_parking--key': 'Fahrradabstellanlage',
-  'atlas_bicycleParking--bicycle_parking=bollard': 'Poller',
-  'atlas_bicycleParking--bicycle_parking=lockers': 'Fahrradboxen',
-  'atlas_bicycleParking--bicycle_parking=shed': 'Unterstand',
-  'atlas_bicycleParking--bicycle_parking=stands': 'Anlehnbügel',
-  'atlas_bicycleParking--bicycle_parking=two-tier': 'Doppelstockparker',
-  'atlas_bicycleParking--bicycle_parking=wall_loops': 'Wandhalter',
-  'atlas_bicycleParking--bicycle_parking=wide_stands': 'Breite Anlehnbügel',
-  'atlas_bicycleParking--capacity--key': 'Anzahl Fahrrad-Stellplätze',
-  'atlas_bicycleParking--capacity:cargo_bike--key': 'Anzahl Lastenfahrrad-Stellplätze',
+  'atlas_bicycleParking--capacity--key': 'Anzahl Stellplätze',
   'atlas_bicycleParking--count--key': 'Anzahl Anlagen',
   'atlas_bicycleParking--covered--key': 'Überdacht',
   'atlas_bicycleParking--covered=implicit_no': 'Nicht überdacht (implizit)',
@@ -77,32 +71,82 @@ const data = {
   'atlas_bicycleParking--fee=implicit_no': 'Kostenfrei (implizit)',
   'atlas_bicycleParking--fee=no': 'Kostenfrei',
   'atlas_bicycleParking--fee=yes': 'Gebührenpflichtig',
+  'atlas_bicycleParking--geometry_transform--key': 'Geometrie geschätzt',
+  'atlas_bicycleParking--geometry_transform=area_split': 'Fläche nach Stellplätzen geteilt',
+  'atlas_bicycleParking--geometry_transform=line_halves': 'Linie in der Mitte geteilt',
+  'atlas_bicycleParking--geometry_transform=point_offset': 'Nebeneinander gesetzt',
+  'atlas_bicycleParking--in_mobility_hub--key': 'In Mobilitätsstation',
+  'atlas_bicycleParking--in_mobility_hub=yes': 'Innerhalb einer Mobilitätsstation',
   'atlas_bicycleParking--indoor--key': 'Innenraum',
   'atlas_bicycleParking--indoor=yes': 'Innen',
+  'atlas_bicycleParking--kind--key': 'Art',
+  'atlas_bicycleParking--kind=bicycle_parking': 'Fahrradstellplätze',
+  'atlas_bicycleParking--kind=bicycle_parking--description': '`amenity=bicycle_parking`',
+  'atlas_bicycleParking--kind=bicycle_rental': 'Bikesharing-Stationen',
+  'atlas_bicycleParking--kind=bicycle_rental--description':
+    '`amenity=bicycle_rental`, ohne Fahrradverleih-Läden',
+  'atlas_bicycleParking--kind=cargo_bike_parking': 'Lastenrad-Stellplätze',
+  'atlas_bicycleParking--kind=cargo_bike_parking--description':
+    '`amenity=bicycle_parking` mit `cargo_bike=designated` oder `capacity:cargo_bike`',
+  'atlas_bicycleParking--kind=mobility_hub': 'Mobilitätsstationen',
+  'atlas_bicycleParking--kind=mobility_hub--description':
+    '`amenity=mobility_hub`. Eine Fläche, in der Stellplätze und Verleihstationen liegen; beim Summieren zählt sie nicht mit.',
+  'atlas_bicycleParking--kind=small_electric_vehicle_parking':
+    'E-Scooter- / Kleinstfahrzeug-Parkplätze',
+  'atlas_bicycleParking--kind=small_electric_vehicle_parking--description':
+    '`amenity=small_electric_vehicle_parking`, `amenity=kick-scooter_parking`',
   'atlas_bicycleParking--lit--key': 'Beleuchtung',
   'atlas_bicycleParking--lit=no': 'Nicht beleuchtet',
   'atlas_bicycleParking--lit=yes': 'Beleuchtet',
   'atlas_bicycleParking--mapillary--key': 'Mapillary',
   'atlas_bicycleParking--maxstay--key': 'Maximaldauer',
   'atlas_bicycleParking--name--key': 'Name',
+  'atlas_bicycleParking--network--key': 'Netz / Verbund',
   'atlas_bicycleParking--operator_type--key': 'Betreibertyp',
   'atlas_bicycleParking--operator_type=private': 'Privat',
   'atlas_bicycleParking--operator_type=public': 'Öffentlich',
   'atlas_bicycleParking--operator--key': 'Betreiber',
-  'atlas_bicycleParking--osm_capacity--key': 'OSM Kapazität (roh, Testdaten)',
-  'atlas_bicycleParking--osm_capacity:cargo_bike--key': 'OSM Kapazität Lastenrad (roh, Testdaten)',
   'atlas_bicycleParking--position--key': 'Lage',
+  'atlas_bicycleParking--position=driveway': 'Zufahrt',
   'atlas_bicycleParking--position=grass_verge': 'Grünstreifen',
   'atlas_bicycleParking--position=kerb_extension': 'Gehwegvorstreckung',
   'atlas_bicycleParking--position=lane': 'Fahrbahn',
   'atlas_bicycleParking--position=park': 'Park',
   'atlas_bicycleParking--position=parking': 'Parkfläche',
   'atlas_bicycleParking--position=parking_lot': 'Parkplatz',
+  'atlas_bicycleParking--position=parklet': 'Parklet',
   'atlas_bicycleParking--position=pedestrian_area': 'Fußgängerbereich',
+  'atlas_bicycleParking--position=playground': 'Spielplatz',
   'atlas_bicycleParking--position=private_property': 'Privatgrund',
+  'atlas_bicycleParking--position=public_property': 'Öffentliches Gelände',
   'atlas_bicycleParking--position=school_ground': 'Schulgelände',
+  'atlas_bicycleParking--position=shoulder': 'Seitenstreifen',
   'atlas_bicycleParking--position=sidewalk': 'Gehweg',
   'atlas_bicycleParking--position=street_side': 'Straßenrand',
+  'atlas_bicycleParking--position=traffic_island': 'Verkehrsinsel',
+  'atlas_bicycleParking--rental_type--key': 'Art der Verleihstation',
+  'atlas_bicycleParking--rental_type=docking_station': 'Station mit Andockpunkten',
+  'atlas_bicycleParking--rental_type=dropoff_point': 'Abstellfläche (Free-Floating-Zone)',
+  'atlas_bicycleParking--rental_type=key_dispensing_machine': 'Schlüsselautomat',
+  'atlas_bicycleParking--stand_type--key': 'Art der Abstellanlage',
+  'atlas_bicycleParking--stand_type=anchors': 'Bodenanker',
+  'atlas_bicycleParking--stand_type=bollard': 'Poller',
+  'atlas_bicycleParking--stand_type=building': 'Fahrradparkhaus',
+  'atlas_bicycleParking--stand_type=floor': 'Abstellfläche ohne Halter',
+  'atlas_bicycleParking--stand_type=ground_slots': 'Bodenschlitze',
+  'atlas_bicycleParking--stand_type=handlebar_holder': 'Lenkerhalter',
+  'atlas_bicycleParking--stand_type=lean_and_stick': 'Anlehnhilfe',
+  'atlas_bicycleParking--stand_type=lockers': 'Fahrradboxen',
+  'atlas_bicycleParking--stand_type=rack': 'Fahrradständer',
+  'atlas_bicycleParking--stand_type=safe_loops': 'Sicherheitsbügel',
+  'atlas_bicycleParking--stand_type=shed': 'Unterstand',
+  'atlas_bicycleParking--stand_type=smart_dock': 'Smart-Dock',
+  'atlas_bicycleParking--stand_type=stands': 'Anlehnbügel',
+  'atlas_bicycleParking--stand_type=streetpod': 'Streetpod',
+  'atlas_bicycleParking--stand_type=two-tier': 'Doppelstockparker',
+  'atlas_bicycleParking--stand_type=upright_stands': 'Vertikalparker',
+  'atlas_bicycleParking--stand_type=wall_loops': 'Wandhalter',
+  'atlas_bicycleParking--stand_type=wide_stands': 'Breite Anlehnbügel',
   'atlas_bicycleParking--surface--key': 'Oberfläche',
   'atlas_bicycleParking--surface=asphalt': 'Asphalt',
   'atlas_bicycleParking--surface=bricks': 'Ziegel',
@@ -141,7 +185,7 @@ const data = {
   'atlas_bicycleParking--surveillance=traffic': 'Verkehrsüberwachung',
   'atlas_bicycleParking--surveillance=webcam': 'Webcam',
   'atlas_bicycleParking--surveillance=yes': 'Überwacht',
-  'atlas_bicycleParking--title': 'Fahrradstellplätze',
+  'atlas_bicycleParking--title': 'Fahrrad- & Mikromobilitätsparken',
   'atlas_bicycleParking--traffic_sign--key': 'Verkehrszeichen',
   'atlas_bikelanes--adjoining_maxspeed--key': 'Höchstgeschwindigkeit der angrenzenden Straße',
   'atlas_bikelanes--adjoining_road--key': 'Straßentyp der angrenzenden Straße',
@@ -230,7 +274,27 @@ const data = {
     'Vollständig überdachte Wege (`covered=yes`) und Arkaden (`covered=arcade`, zur Seite hin offen).',
   'atlas_bikelanes--covered=indoor': 'In einem Gebäude',
   'atlas_bikelanes--covered=partial': 'Teilweise überdacht',
-  'atlas_bikelanes--description--key': 'Hinweis aus OSM',
+  'atlas_bikelanes--description--key': 'Hinweise',
+  'atlas_bikelanes--description=TILDA_access_road': 'Radinfrastruktur auf einem Zufahrtsweg.',
+  'atlas_bikelanes--description=TILDA_closed_blocked': 'Weg gesperrt (Sperrung).',
+  'atlas_bikelanes--description=TILDA_closed_construction':
+    'Weg gesperrt aufgrund einer Baustelle.',
+  'atlas_bikelanes--description=TILDA_shared_agricultural':
+    'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+  'atlas_bikelanes--description=TILDA_smoothness_strip':
+    'Die übrige Straße hat die Fahrqualität `{value}`.',
+  'atlas_bikelanes--description=TILDA_surface_bicycle':
+    'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikelanes--description=TILDA_surface_bicycle_left':
+    'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikelanes--description=TILDA_surface_bicycle_right':
+    'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikelanes--description=TILDA_surface_left':
+    'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_bikelanes--description=TILDA_surface_right':
+    'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_bikelanes--description=TILDA_surface_strip':
+    'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
   'atlas_bikelanes--informal--key': 'Trampelpfad',
   'atlas_bikelanes--informal=yes': 'Weg als informeller Weg erfasst',
   'atlas_bikelanes--length--key': 'Länge',
@@ -239,6 +303,8 @@ const data = {
   'atlas_bikelanes--lifecycle=construction': 'In Bau',
   'atlas_bikelanes--lifecycle=construction_no_access': 'Gesperrt aufgrund einer Baustelle',
   'atlas_bikelanes--lifecycle=temporary': 'Temporärer Weg',
+  'atlas_bikelanes--lifecycle=temporary--description':
+    'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
   'atlas_bikelanes--lit--key': 'Beleuchtung',
   'atlas_bikelanes--lit=no': 'Nicht beleuchtet',
   'atlas_bikelanes--lit=special': 'Spezielle Angaben',
@@ -269,13 +335,14 @@ const data = {
   'atlas_bikelanes--oneway--key': 'Verkehrsrichtung',
   'atlas_bikelanes--oneway=assumed_no': 'Wahrscheinlich beide Richtungen',
   'atlas_bikelanes--oneway=assumed_no--description':
-    'Keine explizite OSM-Angabe zur Verkehrsrichtung vorhanden. Aus Führungsform und Umfeld wird hier beide Richtungen als wahrscheinlich angenommen.',
+    'Keine OSM-Angabe zur Verkehrsrichtung. Bei Radwegen und gemeinsamen Geh- und Radwegen nehmen wir beide Richtungen an. Außerorts sind straßenbegleitende Radwege oft in beide Richtungen freigegeben, ohne dass das in OSM steht; innerorts ist die Richtung meist angegeben.',
   'atlas_bikelanes--oneway=car_not_bike': 'Beide Richtungen für Fahrrad; Einbahnstraße für Kfz',
   'atlas_bikelanes--oneway=implicit_yes': 'Eine Richtung (abgeleitet)',
   'atlas_bikelanes--oneway=implicit_yes--description':
-    'Keine explizite OSM-Angabe (`oneway` / `oneway:bicycle`). Aus der Führungsform abgeleitet (z. B. Schutzstreifen), nicht aus einem oneway-Tag gelesen.',
+    'Keine OSM-Angabe zur Verkehrsrichtung. Aus der Führungsform abgeleitet, denn Schutz- und Radfahrstreifen sowie gemeinsam mit dem Kfz-Verkehr genutzte Fahrstreifen sind fast immer nur in eine Richtung befahrbar.',
   'atlas_bikelanes--oneway=no': 'Beide Richtungen',
   'atlas_bikelanes--oneway=yes': 'Eine Richtung',
+  'atlas_bikelanes--oneway=yes--description': 'Laut OSM-Daten nur in eine Richtung befahrbar.',
   'atlas_bikelanes--operator_type--key': 'Betreibertyp',
   'atlas_bikelanes--operator_type=private': 'Privat',
   'atlas_bikelanes--operator_type=public': 'Öffentlich',
@@ -431,9 +498,13 @@ const data = {
   'atlas_bikelanes--surface_confidence=medium': 'Mittel',
   'atlas_bikelanes--surface_source--key': 'Herkunft der Oberfläche',
   'atlas_bikelanes--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'atlas_bikelanes--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'atlas_bikelanes--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'atlas_bikelanes--surface_source=tag': 'Explizite Angabe aus OSM',
+  'atlas_bikelanes--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'atlas_bikelanes--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'atlas_bikelanes--surface--key': 'Oberfläche',
   'atlas_bikelanes--surface=asphalt': 'Asphalt',
@@ -692,7 +763,27 @@ const data = {
     'Vollständig überdachte Wege (`covered=yes`) und Arkaden (`covered=arcade`, zur Seite hin offen).',
   'atlas_bikeSuitability--covered=indoor': 'In einem Gebäude',
   'atlas_bikeSuitability--covered=partial': 'Teilweise überdacht',
-  'atlas_bikeSuitability--description--key': 'Hinweis aus OSM',
+  'atlas_bikeSuitability--description--key': 'Hinweise',
+  'atlas_bikeSuitability--description=TILDA_access_road': 'Radinfrastruktur auf einem Zufahrtsweg.',
+  'atlas_bikeSuitability--description=TILDA_closed_blocked': 'Weg gesperrt (Sperrung).',
+  'atlas_bikeSuitability--description=TILDA_closed_construction':
+    'Weg gesperrt aufgrund einer Baustelle.',
+  'atlas_bikeSuitability--description=TILDA_shared_agricultural':
+    'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+  'atlas_bikeSuitability--description=TILDA_smoothness_strip':
+    'Die übrige Straße hat die Fahrqualität `{value}`.',
+  'atlas_bikeSuitability--description=TILDA_surface_bicycle':
+    'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikeSuitability--description=TILDA_surface_bicycle_left':
+    'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikeSuitability--description=TILDA_surface_bicycle_right':
+    'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_bikeSuitability--description=TILDA_surface_left':
+    'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_bikeSuitability--description=TILDA_surface_right':
+    'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_bikeSuitability--description=TILDA_surface_strip':
+    'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
   'atlas_bikeSuitability--informal--key': 'Trampelpfad',
   'atlas_bikeSuitability--informal=yes': 'Weg als informeller Weg erfasst',
   'atlas_bikeSuitability--length--key': 'Länge',
@@ -701,6 +792,8 @@ const data = {
   'atlas_bikeSuitability--lifecycle=construction': 'In Bau',
   'atlas_bikeSuitability--lifecycle=construction_no_access': 'Gesperrt aufgrund einer Baustelle',
   'atlas_bikeSuitability--lifecycle=temporary': 'Temporärer Weg',
+  'atlas_bikeSuitability--lifecycle=temporary--description':
+    'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
   'atlas_bikeSuitability--mapillary_backward--key': 'Mapillary gegen Linienrichtung',
   'atlas_bikeSuitability--mapillary_coverage--key': 'Mapillary-Abdeckung',
   'atlas_bikeSuitability--mapillary_coverage=pano': 'Panorama-Aufnahmen',
@@ -1299,7 +1392,26 @@ const data = {
     'Vollständig überdachte Wege (`covered=yes`) und Arkaden (`covered=arcade`, zur Seite hin offen).',
   'atlas_roads--covered=indoor': 'In einem Gebäude',
   'atlas_roads--covered=partial': 'Teilweise überdacht',
-  'atlas_roads--description--key': 'Hinweis aus OSM',
+  'atlas_roads--description--key': 'Hinweise',
+  'atlas_roads--description=TILDA_access_road': 'Radinfrastruktur auf einem Zufahrtsweg.',
+  'atlas_roads--description=TILDA_closed_blocked': 'Weg gesperrt (Sperrung).',
+  'atlas_roads--description=TILDA_closed_construction': 'Weg gesperrt aufgrund einer Baustelle.',
+  'atlas_roads--description=TILDA_shared_agricultural':
+    'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+  'atlas_roads--description=TILDA_smoothness_strip':
+    'Die übrige Straße hat die Fahrqualität `{value}`.',
+  'atlas_roads--description=TILDA_surface_bicycle':
+    'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roads--description=TILDA_surface_bicycle_left':
+    'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roads--description=TILDA_surface_bicycle_right':
+    'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roads--description=TILDA_surface_left':
+    'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_roads--description=TILDA_surface_right':
+    'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_roads--description=TILDA_surface_strip':
+    'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
   'atlas_roads--highway--key': 'OSM-Straßentyp',
   'atlas_roads--highway=cycleway': 'Radweg',
   'atlas_roads--highway=footway': 'Fußweg',
@@ -1333,6 +1445,8 @@ const data = {
   'atlas_roads--lifecycle=construction': 'In Bau',
   'atlas_roads--lifecycle=construction_no_access': 'Gesperrt aufgrund einer Baustelle',
   'atlas_roads--lifecycle=temporary': 'Temporärer Weg',
+  'atlas_roads--lifecycle=temporary--description':
+    'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
   'atlas_roads--lit--key': 'Beleuchtung',
   'atlas_roads--lit=no': 'Nicht beleuchtet',
   'atlas_roads--lit=special': 'Spezielle Angaben',
@@ -1363,6 +1477,8 @@ const data = {
   'atlas_roads--oneway=no': 'Beide Richtungen',
   'atlas_roads--oneway=yes': 'Einbahnstraße',
   'atlas_roads--oneway=yes_dual_carriageway': 'Einbahnstraße da separate Geometrie pro Seite',
+  'atlas_roads--oneway=yes--description':
+    'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
   'atlas_roads--operator_type--key': 'Betreibertyp',
   'atlas_roads--operator_type=private': 'Privat',
   'atlas_roads--operator_type=public': 'Öffentlich',
@@ -1434,9 +1550,13 @@ const data = {
   'atlas_roads--surface_confidence=medium': 'Mittel',
   'atlas_roads--surface_source--key': 'Herkunft der Oberfläche',
   'atlas_roads--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'atlas_roads--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'atlas_roads--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'atlas_roads--surface_source=tag': 'Explizite Angabe aus OSM',
+  'atlas_roads--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'atlas_roads--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'atlas_roads--surface--key': 'Oberfläche',
   'atlas_roads--surface=asphalt': 'Asphalt',
@@ -1679,7 +1799,28 @@ const data = {
     'Vollständig überdachte Wege (`covered=yes`) und Arkaden (`covered=arcade`, zur Seite hin offen).',
   'atlas_roadsPathClasses--covered=indoor': 'In einem Gebäude',
   'atlas_roadsPathClasses--covered=partial': 'Teilweise überdacht',
-  'atlas_roadsPathClasses--description--key': 'Hinweis aus OSM',
+  'atlas_roadsPathClasses--description--key': 'Hinweise',
+  'atlas_roadsPathClasses--description=TILDA_access_road':
+    'Radinfrastruktur auf einem Zufahrtsweg.',
+  'atlas_roadsPathClasses--description=TILDA_closed_blocked': 'Weg gesperrt (Sperrung).',
+  'atlas_roadsPathClasses--description=TILDA_closed_construction':
+    'Weg gesperrt aufgrund einer Baustelle.',
+  'atlas_roadsPathClasses--description=TILDA_shared_agricultural':
+    'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+  'atlas_roadsPathClasses--description=TILDA_smoothness_strip':
+    'Die übrige Straße hat die Fahrqualität `{value}`.',
+  'atlas_roadsPathClasses--description=TILDA_surface_bicycle':
+    'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roadsPathClasses--description=TILDA_surface_bicycle_left':
+    'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roadsPathClasses--description=TILDA_surface_bicycle_right':
+    'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'atlas_roadsPathClasses--description=TILDA_surface_left':
+    'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_roadsPathClasses--description=TILDA_surface_right':
+    'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'atlas_roadsPathClasses--description=TILDA_surface_strip':
+    'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
   'atlas_roadsPathClasses--informal--key': 'Trampelpfad',
   'atlas_roadsPathClasses--informal=yes': 'Weg als informeller Weg erfasst',
   'atlas_roadsPathClasses--length--key': 'Länge',
@@ -1688,6 +1829,8 @@ const data = {
   'atlas_roadsPathClasses--lifecycle=construction': 'In Bau',
   'atlas_roadsPathClasses--lifecycle=construction_no_access': 'Gesperrt aufgrund einer Baustelle',
   'atlas_roadsPathClasses--lifecycle=temporary': 'Temporärer Weg',
+  'atlas_roadsPathClasses--lifecycle=temporary--description':
+    'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
   'atlas_roadsPathClasses--lit--key': 'Beleuchtung',
   'atlas_roadsPathClasses--lit=no': 'Nicht beleuchtet',
   'atlas_roadsPathClasses--lit=special': 'Spezielle Angaben',
@@ -1708,6 +1851,8 @@ const data = {
   'atlas_roadsPathClasses--oneway=yes': 'Einbahnstraße',
   'atlas_roadsPathClasses--oneway=yes_dual_carriageway':
     'Einbahnstraße da separate Geometrie pro Seite',
+  'atlas_roadsPathClasses--oneway=yes--description':
+    'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
   'atlas_roadsPathClasses--operator_type--key': 'Betreibertyp',
   'atlas_roadsPathClasses--operator_type=private': 'Privat',
   'atlas_roadsPathClasses--operator_type=public': 'Öffentlich',
@@ -1773,9 +1918,13 @@ const data = {
   'atlas_roadsPathClasses--surface_confidence=medium': 'Mittel',
   'atlas_roadsPathClasses--surface_source--key': 'Herkunft der Oberfläche',
   'atlas_roadsPathClasses--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'atlas_roadsPathClasses--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'atlas_roadsPathClasses--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'atlas_roadsPathClasses--surface_source=tag': 'Explizite Angabe aus OSM',
+  'atlas_roadsPathClasses--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'atlas_roadsPathClasses--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'atlas_roadsPathClasses--surface--key': 'Oberfläche',
   'atlas_roadsPathClasses--surface=asphalt': 'Asphalt',
@@ -1844,7 +1993,27 @@ const data = {
     'Vollständig überdachte Wege (`covered=yes`) und Arkaden (`covered=arcade`, zur Seite hin offen).',
   'tilda_highwayAreas--covered=indoor': 'In einem Gebäude',
   'tilda_highwayAreas--covered=partial': 'Teilweise überdacht',
-  'tilda_highwayAreas--description--key': 'Hinweis aus OSM',
+  'tilda_highwayAreas--description--key': 'Hinweise',
+  'tilda_highwayAreas--description=TILDA_access_road': 'Radinfrastruktur auf einem Zufahrtsweg.',
+  'tilda_highwayAreas--description=TILDA_closed_blocked': 'Weg gesperrt (Sperrung).',
+  'tilda_highwayAreas--description=TILDA_closed_construction':
+    'Weg gesperrt aufgrund einer Baustelle.',
+  'tilda_highwayAreas--description=TILDA_shared_agricultural':
+    'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+  'tilda_highwayAreas--description=TILDA_smoothness_strip':
+    'Die übrige Straße hat die Fahrqualität `{value}`.',
+  'tilda_highwayAreas--description=TILDA_surface_bicycle':
+    'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'tilda_highwayAreas--description=TILDA_surface_bicycle_left':
+    'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'tilda_highwayAreas--description=TILDA_surface_bicycle_right':
+    'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+  'tilda_highwayAreas--description=TILDA_surface_left':
+    'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'tilda_highwayAreas--description=TILDA_surface_right':
+    'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+  'tilda_highwayAreas--description=TILDA_surface_strip':
+    'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
   'tilda_highwayAreas--informal--key': 'Trampelpfad',
   'tilda_highwayAreas--informal=yes': 'Weg als informeller Weg erfasst',
   'tilda_highwayAreas--lifecycle--key': 'Status',
@@ -1852,6 +2021,8 @@ const data = {
   'tilda_highwayAreas--lifecycle=construction': 'In Bau',
   'tilda_highwayAreas--lifecycle=construction_no_access': 'Gesperrt aufgrund einer Baustelle',
   'tilda_highwayAreas--lifecycle=temporary': 'Temporärer Weg',
+  'tilda_highwayAreas--lifecycle=temporary--description':
+    'Aus `temporary=yes` am Weg oder `cycleway:<Seite>:temporary=yes` / `sidewalk:<Seite>:temporary=yes` für eine Seite. Radwege und Gehwege an einer temporären Straße sind ebenfalls temporär.',
   'tilda_highwayAreas--lit--key': 'Beleuchtung',
   'tilda_highwayAreas--lit=no': 'Nicht beleuchtet',
   'tilda_highwayAreas--lit=special': 'Spezielle Angaben',
@@ -1872,6 +2043,8 @@ const data = {
   'tilda_highwayAreas--oneway=yes': 'Einbahnstraße',
   'tilda_highwayAreas--oneway=yes_dual_carriageway':
     'Einbahnstraße da separate Geometrie pro Seite',
+  'tilda_highwayAreas--oneway=yes--description':
+    'Auch Kreisverkehre ohne eigene Angabe und Einbahnstraßen gegen die Zeichenrichtung des Weges (`oneway=-1`).',
   'tilda_highwayAreas--operator_type--key': 'Betreibertyp',
   'tilda_highwayAreas--operator_type=private': 'Privat',
   'tilda_highwayAreas--operator_type=public': 'Öffentlich',
@@ -1931,9 +2104,13 @@ const data = {
   'tilda_highwayAreas--surface_confidence=medium': 'Mittel',
   'tilda_highwayAreas--surface_source--key': 'Herkunft der Oberfläche',
   'tilda_highwayAreas--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'tilda_highwayAreas--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'tilda_highwayAreas--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'tilda_highwayAreas--surface_source=tag': 'Explizite Angabe aus OSM',
+  'tilda_highwayAreas--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'tilda_highwayAreas--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'tilda_highwayAreas--surface--key': 'Oberfläche',
   'tilda_highwayAreas--surface=asphalt': 'Asphalt',
@@ -2316,9 +2493,13 @@ const data = {
   'tilda_parkings_no--surface_confidence=medium': 'Mittel',
   'tilda_parkings_no--surface_source--key': 'Herkunft der Oberfläche',
   'tilda_parkings_no--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'tilda_parkings_no--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'tilda_parkings_no--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'tilda_parkings_no--surface_source=tag': 'Explizite Angabe aus OSM',
+  'tilda_parkings_no--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'tilda_parkings_no--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'tilda_parkings_no--surface--key': 'Oberfläche',
   'tilda_parkings_no--surface=asphalt': 'Asphalt',
@@ -2532,9 +2713,13 @@ const data = {
   'tilda_parkings_off_street--surface_confidence=medium': 'Mittel',
   'tilda_parkings_off_street--surface_source--key': 'Herkunft der Oberfläche',
   'tilda_parkings_off_street--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'tilda_parkings_off_street--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'tilda_parkings_off_street--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'tilda_parkings_off_street--surface_source=tag': 'Explizite Angabe aus OSM',
+  'tilda_parkings_off_street--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'tilda_parkings_off_street--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'tilda_parkings_off_street--surface--key': 'Oberfläche',
   'tilda_parkings_off_street--surface=asphalt': 'Asphalt',
@@ -3002,9 +3187,13 @@ const data = {
   'tilda_parkings--surface_right=woodchips': 'Hackschnitzel',
   'tilda_parkings--surface_source--key': 'Herkunft der Oberfläche',
   'tilda_parkings--surface_source=parent_highway_tag': 'Von zugeordneter Straße (OSM)',
+  'tilda_parkings--surface_source=parent_highway_tag_directional':
+    'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
   'tilda_parkings--surface_source=parent_highway_tag_transformed':
     'Von zugeordneter Straße, normalisiert',
   'tilda_parkings--surface_source=tag': 'Explizite Angabe aus OSM',
+  'tilda_parkings--surface_source=tag_directional':
+    'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
   'tilda_parkings--surface_source=tag_transformed': 'Aus OSM-Tag normalisiert',
   'tilda_parkings--surface--key': 'Oberfläche',
   'tilda_parkings--surface=asphalt': 'Asphalt',
@@ -3036,7 +3225,7 @@ const data = {
   'tilda_parkings--surface=wood': 'Holz',
   'tilda_parkings--surface=woodchips': 'Hackschnitzel',
   'tilda_parkings--tag_sources--key': 'Tag-Quellen',
-  'tilda_parkings--title': 'Straßenparken Kanten',
+  'tilda_parkings--title': 'Straßenparken',
   'tilda_parkings--traffic_sign--key': 'Verkehrszeichen',
   'tilda_parkings--way_ids--key': 'OSM-Way-IDs',
   'tilda_parkings--way_reversed--key': 'Way-Richtung',

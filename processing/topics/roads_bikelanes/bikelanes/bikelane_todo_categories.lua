@@ -1,8 +1,11 @@
+local has_mapillary_coverage = require('topics.roads_bikelanes.bikelanes.helper.has_mapillary_coverage')
 local contains_substring = require('topics.helper.contains_substring')
 local sanitize_traffic_sign = require('topics.helper.sanitize_traffic_sign')
 local SET = require('topics.helper.sets')
 local bikelane_categories = require('topics.roads_bikelanes.bikelanes.bikelane_categories')
 local has_tag_with_prefix = require('topics.helper.has_tag_with_prefix')
+local is_adjoining_of_vs_csv = require('topics.roads_bikelanes.pseudo_tags_sidepath.is_adjoining_of_vs_csv')
+local is_unusual_width = require('topics.roads_bikelanes.helper.is_unusual_width')
 -- local inspect = require('inspect')
 local BikelaneTodo = {}
 BikelaneTodo.__index = BikelaneTodo
@@ -46,7 +49,7 @@ local missing_traffic_sign_vehicle_destination = BikelaneTodo.new({
   desc = 'Expecting tag traffic_sign \'Anlieger frei\' `traffic_sign=DE:244.1,1020-30` or similar.',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, _)
@@ -61,7 +64,7 @@ local missing_traffic_sign_vehicle_destination__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_traffic_sign_vehicle_destination(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_traffic_sign_vehicle_destination(object_tags, result_tags)
   end
 })
 
@@ -71,7 +74,7 @@ local missing_traffic_sign_244 = BikelaneTodo.new({
   desc = 'Expecting tag `traffic_sign=DE:244.1` or similar.',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, _)
@@ -86,7 +89,7 @@ local missing_traffic_sign_244__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_traffic_sign_244(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_traffic_sign_244(object_tags, result_tags)
   end
 })
 
@@ -111,7 +114,7 @@ local malformed_traffic_sign = BikelaneTodo.new({
   desc = 'Traffic sign tag needs cleaning up.',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -131,7 +134,7 @@ local malformed_traffic_sign__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return 1 end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and malformed_traffic_sign(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and malformed_traffic_sign(object_tags, result_tags)
   end
 })
 
@@ -167,7 +170,7 @@ local missing_traffic_sign__mapillary = BikelaneTodo.new({
     return '3'
   end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_traffic_sign(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_traffic_sign(object_tags, result_tags)
   end
 })
 
@@ -177,17 +180,18 @@ local missing_access_tag_240 = BikelaneTodo.new({
   desc = 'Expected tag `bicycle=designated` and `foot=designated`.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, _)
     return (contains_substring(object_tags.traffic_sign, '240') or contains_substring(object_tags.traffic_sign, '241'))
-        and object_tags.bicycle ~= 'designated'
-        and object_tags.foot ~= 'designated'
+        and (object_tags.bicycle ~= 'designated' or object_tags.foot ~= 'designated')
         and object_tags.cycleway ~= 'track'
         and object_tags.cycleway ~= 'lane'
   end
 })
+
+local SEGREGATED_VALUES = SET.set({ 'yes', 'no' })
 
 -- TODO: If both bicycle=designated and foot=designated are present, check if the traffic_sign is 240 or 241.
 local missing_segregated = BikelaneTodo.new({
@@ -195,12 +199,12 @@ local missing_segregated = BikelaneTodo.new({
   desc = 'Expected tag `segregated=yes` or `segregated=no`.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
     return result_tags.category == 'needsClarification'
-        and (object_tags.segregated ~= 'yes' or object_tags.segregated ~= 'no')
+        and not SEGREGATED_VALUES[object_tags.segregated]
         and (
           (object_tags.bicycle == 'designated' and object_tags.foot == 'designated')
           or contains_substring( object_tags.traffic_sign, '240')
@@ -214,7 +218,7 @@ local missing_segregated__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_segregated(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_segregated(object_tags, result_tags)
   end
 })
 
@@ -225,7 +229,7 @@ local unexpected_bicycle_access_on_footway = BikelaneTodo.new({
     ' Add traffic_sign=none to specify unsigned path.',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -242,16 +246,16 @@ local unexpected_bicycle_access_on_footway__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and unexpected_bicycle_access_on_footway(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and unexpected_bicycle_access_on_footway(object_tags, result_tags)
   end
 })
 
 local unexpected_highway_path = BikelaneTodo.new({
   id = 'unexpected_highway_path',
-  desc = 'Expected `highway=cyclway` (unsigned/explicit DE:237)',
+  desc = 'Expected `highway=cycleway` (unsigned/explicit DE:237)',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -269,11 +273,11 @@ local unexpected_highway_path = BikelaneTodo.new({
 })
 local unexpected_highway_path__mapillary = BikelaneTodo.new({
   id = 'unexpected_highway_path__mapillary',
-  desc = 'Expected `highway=cyclway` (unsigned/explicit DE:237)',
+  desc = 'Expected `highway=cycleway` (unsigned/explicit DE:237)',
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and unexpected_highway_path(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and unexpected_highway_path(object_tags, result_tags)
   end
 })
 
@@ -283,7 +287,7 @@ local crossing_too_long = BikelaneTodo.new({
   desc = 'Crossing longer than 100 m, guidance form unclear. Please review and correct.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -299,7 +303,7 @@ local needs_clarification = BikelaneTodo.new({
   desc = 'Tagging insufficient to categorize the bike infrastructure.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -318,7 +322,7 @@ local needs_clarification__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and needs_clarification(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and needs_clarification(object_tags, result_tags)
   end
 })
 
@@ -329,7 +333,7 @@ local adjoining_or_isolated = BikelaneTodo.new({
   desc = 'Only for category=cycleway_adjoiningOrIsolated for now. Expected tag `is_sidepath=yes` or `is_sidepath=no`.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -342,7 +346,7 @@ local advisory_or_exclusive = BikelaneTodo.new({
   desc = 'Expected tag `cycleway:*:lane=advisory` or `exclusive`.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -355,7 +359,7 @@ local advisory_or_exclusive__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and advisory_or_exclusive(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and advisory_or_exclusive(object_tags, result_tags)
   end
 })
 
@@ -364,24 +368,23 @@ local needs_clarification_track = BikelaneTodo.new({
   desc = 'Tagging `cycleway=track` insufficient to categorize the bike infrastructure`.',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
     if result_tags.category == 'cyclewayOnHighwayProtected' then return false end
     if object_tags._parent == nil then return false end
 
-    -- Some cases are tagged sufficiently with `cycleway:SIDE:segregated` or `cycleway:SIDE:traffic_signs`
-    -- It is hard to check both sides propery. This will error on the side of caution.
-    local segregated = object_tags._parent['cycleway:both:segregated'] or object_tags._parent['cycleway:left:segregated'] or object_tags._parent['cycleway:right:segregated']
-    if segregated == 'yes' or segregated == 'no' then return false end
-    local traffic_sign = object_tags._parent['cycleway:both:traffic_sign'] or object_tags._parent['cycleway:left:traffic_sign'] or object_tags._parent['cycleway:right:traffic_sign']
-    if contains_substring(traffic_sign, '240') or contains_substring(traffic_sign, '241') then return false end
+    -- The side object already holds its own side's tags (`cycleway:SIDE:*` > `cycleway:both:*` > `cycleway:*`),
+    -- so `segregated` and `traffic_sign` here are the values of this side only.
+    if object_tags.segregated == 'yes' or object_tags.segregated == 'no' then return false end
+    local traffic_sign = object_tags.traffic_sign
+    -- A traffic sign settles what the track is, so `segregated` is not needed:
+    if contains_substring(traffic_sign, '237') then return false end -- DE:237 Radweg (bicycles only)
+    if contains_substring(traffic_sign, '240') then return false end -- DE:240 Gemeinsamer Geh- und Radweg (shared)
+    if contains_substring(traffic_sign, '241') then return false end -- DE:241 Getrennter Rad- und Gehweg (segregated)
 
-    return object_tags._parent['cycleway'] == 'track'
-      or object_tags._parent['cycleway:both'] == 'track'
-      or object_tags._parent['cycleway:left'] == 'track'
-      or object_tags._parent['cycleway:right'] == 'track'
+    return object_tags.cycleway == 'track'
   end
 })
 local needs_clarification_track__mapillary = BikelaneTodo.new({
@@ -390,7 +393,7 @@ local needs_clarification_track__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and needs_clarification_track(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and needs_clarification_track(object_tags, result_tags)
   end
 })
 
@@ -399,7 +402,7 @@ local mixed_cycleway_both = BikelaneTodo.new({
   desc = 'Mixed tagging of cycleway=* or cycleway:both=* with cycleway:SIDE',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, _)
@@ -415,7 +418,7 @@ local mixed_cycleway_both__mapillary = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and mixed_cycleway_both(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and mixed_cycleway_both(object_tags, result_tags)
   end
 })
 
@@ -426,8 +429,8 @@ local currentness_too_old = BikelaneTodo.new({
   desc = 'Infrastructure that has not been edited for about 10 years',
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
-    if object_tags.mapillary_coverage and result_tags._age_in_days >= days_in_year * 15 then return '1' end
-    if object_tags.mapillary_coverage and result_tags._age_in_days >= days_in_year * 12 then return '2' end
+    if has_mapillary_coverage(object_tags) and result_tags._age_in_days >= days_in_year * 15 then return '1' end
+    if has_mapillary_coverage(object_tags) and result_tags._age_in_days >= days_in_year * 12 then return '2' end
     return '3'
   end,
   conditions = function(object_tags, result_tags)
@@ -445,7 +448,7 @@ local currentness_too_old__mapillary = BikelaneTodo.new({
     return '3'
   end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and currentness_too_old(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and currentness_too_old(object_tags, result_tags)
   end
 })
 
@@ -454,8 +457,8 @@ local missing_width = BikelaneTodo.new({
   desc = 'Ways without `width`',
   todoTableOnly = true,
   priority =  function(object_tags, result_tags)
-    if object_tags.mapillary_coverage and result_tags.surface == 'sett' then return '1' end
-    if object_tags.mapillary_coverage and result_tags.surface ~= nil then return '2' end
+    if has_mapillary_coverage(object_tags) and result_tags.surface == 'sett' then return '1' end
+    if has_mapillary_coverage(object_tags) and result_tags.surface ~= nil then return '2' end
     return '3'
   end,
   conditions = function(object_tags, result_tags)
@@ -468,13 +471,23 @@ local missing_width = BikelaneTodo.new({
       and not contains_substring(result_tags.category, 'sharedBusLane')
   end
 })
+local unusual_width = BikelaneTodo.new({
+  id = 'unusual_width',
+  desc = 'Width that we cannot read or that is unusually high. Fix `width`, or confirm it with `check_date=*` or `check_date:width=*`.',
+  todoTableOnly = true,
+  priority = function(object_tags, _)
+    if has_mapillary_coverage(object_tags) then return '1' end
+    return '2'
+  end,
+  conditions = is_unusual_width,
+})
 local missing_width_surface_sett__mapillary = BikelaneTodo.new({
   id = 'missing_width_surface_sett__mapillary',
   desc = 'Ways without `width` but `surface=sett` to count stones',
   todoTableOnly = true,
   priority = function(_, _) return '1' end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage
+    return has_mapillary_coverage(object_tags)
       and missing_width(object_tags, result_tags)
       and result_tags.surface == 'sett' -- When surface=sett, one can count the stones to get the width
   end
@@ -486,7 +499,7 @@ local missing_surface = BikelaneTodo.new({
   todoTableOnly = true,
   priority = function(object_tags, result_tags)
     if result_tags.category == 'crossing' then return '3' end
-    if object_tags.mapillary_coverage then return '1' end
+    if has_mapillary_coverage(object_tags) then return '1' end
     return '2'
   end,
   conditions = function(object_tags, result_tags)
@@ -508,7 +521,7 @@ local missing_surface__mapillary = BikelaneTodo.new({
     return '1'
   end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_surface(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_surface(object_tags, result_tags)
   end
 })
 
@@ -517,14 +530,17 @@ local missing_oneway = BikelaneTodo.new({
   desc = 'Ways without explicit `oneway`',
   todoTableOnly = false,
   priority = function(object_tags, result_tags)
-    if result_tags.oneway == 'assumed_no' and object_tags.mapillary_coverage then return '1' end
-    if result_tags.oneway == 'assumed_no' or object_tags.mapillary_coverage then return '2' end
+    if result_tags.oneway == 'assumed_no' and has_mapillary_coverage(object_tags) then return '1' end
+    if result_tags.oneway == 'assumed_no' or has_mapillary_coverage(object_tags) then return '2' end
     return '3'
   end,
   conditions = function(object_tags, result_tags)
     -- Skip if the 'track' campaign is present
     if needs_clarification_track(object_tags, result_tags) then return false end
     if needs_clarification(object_tags, result_tags) then return false end
+    -- Lanes and tracks tagged on the road are left out: asking for the direction there led to
+    -- `cycleway:both:oneway=yes`, which is wrong for the left side of a two-way road.
+    if object_tags._parent ~= nil then return false end
     -- We rely on `_implicitOneWayConfidence` from `processing/topics/roads_bikelanes/bikelanes/BikelaneCategories.lua`
     -- But some infra it not relevant enough for now:
     if result_tags.category == 'crossing' then return false end
@@ -542,8 +558,17 @@ local missing_oneway__mapillary = BikelaneTodo.new({
     return '2'
   end,
   conditions = function(object_tags, result_tags)
-    return object_tags.mapillary_coverage and missing_oneway(object_tags, result_tags)
+    return has_mapillary_coverage(object_tags) and missing_oneway(object_tags, result_tags)
   end
+})
+
+-- === Adjoining road ===
+local adjoining_of_vs_csv = BikelaneTodo.new({
+  id = 'adjoining_of_vs_csv',
+  desc = 'OSM is_sidepath:of and the sidepath CSV name different road classes. Published adjoining_road follows is_sidepath:of.',
+  todoTableOnly = true,
+  priority = function(_, _) return '2' end,
+  conditions = is_adjoining_of_vs_csv,
 })
 
 local bikelane_todo_categories = {
@@ -570,8 +595,10 @@ local bikelane_todo_categories = {
   -- Other
   currentness_too_old,
   missing_width,
+  unusual_width,
   missing_surface,
   missing_oneway,
+  adjoining_of_vs_csv,
 
   -- Mapillary versions…
   missing_traffic_sign_vehicle_destination__mapillary,

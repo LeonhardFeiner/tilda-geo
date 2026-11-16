@@ -1,4 +1,4 @@
-local parse_length = require('topics.helper.parse_length')
+local parse_width = require('topics.helper.parse_width')
 
 -- Main roads (primary/secondary/tertiary): different values for oneway vs non-oneway (2/3 rule for dual carriageways).
 -- Other roads: same value regardless of oneway.
@@ -46,7 +46,7 @@ local highway_width_fallbacks_oneway = {
 ---@return {value: number|nil, confidence: string|nil, source: string|nil}
 local function road_width_tags(tags)
   if tags.width then
-    local width = parse_length(tags.width)
+    local width = parse_width(tags.width)
     if width then
       return {
         value = width,
@@ -59,7 +59,7 @@ local function road_width_tags(tags)
   local width_oneway = highway_width_fallbacks_oneway[tags.highway]
   local width_no_oneway = highway_width_fallbacks_no_oneway[tags.highway]
 
-  local is_oneway = tags.oneway == 'yes' or tags.oneway == 'implicit_yes'
+  local is_oneway = tags.oneway == 'yes' or tags.oneway == '-1' or tags.oneway == 'implicit_yes'
   if is_oneway then
     return {
       value = width_oneway or 10,

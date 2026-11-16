@@ -30,6 +30,30 @@ describe('bikelane_categories', function()
     end)
   end)
 
+  describe('`footAndCyclewaySegregated` mapped as two lines (traffic_mode:<side>=foot):', function()
+    local function category(extra)
+      local tags = { ['highway'] = 'cycleway', ['is_sidepath'] = 'yes', ['traffic_sign'] = 'none' }
+      for key, value in pairs(extra) do tags[key] = value end
+      return categorize_bikelane(tags).id
+    end
+
+    it('footway right of the cycleway', function()
+      assert.are.equal('footAndCyclewaySegregated_adjoining', category({ ['traffic_mode:right'] = 'foot' }))
+    end)
+
+    it('footway left of the cycleway', function()
+      assert.are.equal('footAndCyclewaySegregated_adjoining', category({ ['traffic_mode:left'] = 'foot' }))
+    end)
+
+    it('a separation on the footway side makes it a cycleway', function()
+      assert.are.equal('cycleway_adjoining', category({ ['traffic_mode:left'] = 'foot', ['separation:left'] = 'kerb' }))
+    end)
+
+    it('a separation on the other side does not matter', function()
+      assert.are.equal('footAndCyclewaySegregated_adjoining', category({ ['traffic_mode:left'] = 'foot', ['separation:right'] = 'kerb' }))
+    end)
+  end)
+
   describe('`footAndCyclewayShared` with highway=service:', function()
     it('should get the category for service road with bicycle=designated, foot=designated, segregated=no', function()
       local tags = {
@@ -79,6 +103,44 @@ describe('bikelane_categories', function()
       }
       local category = categorize_bikelane(tags).id
       assert.are.equal(category, 'cycleway_isolated')
+    end)
+    it('unsigned cycleway with traffic_sign=none', function()
+      local tags = {
+        ['highway'] = 'cycleway',
+        ['traffic_sign'] = 'none',
+      }
+      local category = categorize_bikelane(tags).id
+      assert.are.equal(category, 'cycleway_adjoiningOrIsolated')
+    end)
+    it('unsigned cycleway without traffic_sign stays unclear', function()
+      local tags = {
+        ['highway'] = 'cycleway',
+      }
+      local category = categorize_bikelane(tags).id
+      assert.are.equal(category, 'needsClarification')
+    end)
+    it('a lane between the car lanes with traffic_sign=none on the road side is no unsigned cycleway', function()
+      -- Like way 529891428 in Berlin: the 'Angstweiche' is also tagged as `cycleway:right:*`
+      local input_object = {
+        tags = {
+          highway = 'secondary',
+          oneway = 'yes',
+          lanes = '3',
+          ['cycleway:lanes'] = 'no|no|lane|no',
+          ['bicycle:lanes'] = 'yes|no|designated|yes',
+          ['vehicle:lanes'] = 'yes|yes|no|yes',
+          ['cycleway:left'] = 'no',
+          ['cycleway:right:lane'] = 'advisory',
+          ['cycleway:right:traffic_sign'] = 'none',
+          ['traffic_sign'] = 'none',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local categorized = extract_categories_by_side(input_object)
+      assert.are_not.equal(categorized.right.category and categorized.right.category.id, 'cycleway_adjoiningOrIsolated')
+      assert.are_not.equal(categorized.right.category and categorized.right.category.id, 'cycleway_adjoining')
+      assert.are.equal(categorized.self.category.id, 'cyclewayOnHighwayBetweenLanes')
     end)
   end)
 

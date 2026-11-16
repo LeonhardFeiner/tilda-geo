@@ -112,12 +112,20 @@ const data = {
   },
   bicycleParking_points: {
     gfiAttributes: {
-      capacity: {
-        name: 'Anzahl Fahrrad-Stellplätze',
-        type: 'number',
+      kind: {
+        name: 'Art',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          bicycle_parking: 'Fahrradstellplätze',
+          cargo_bike_parking: 'Lastenrad-Stellplätze',
+          small_electric_vehicle_parking: 'E-Scooter- / Kleinstfahrzeug-Parkplätze',
+          bicycle_rental: 'Bikesharing-Stationen',
+          mobility_hub: 'Mobilitätsstationen',
+        },
       },
-      'capacity:cargo_bike': {
-        name: 'Anzahl Lastenfahrrad-Stellplätze',
+      capacity: {
+        name: 'Anzahl Stellplätze',
         type: 'number',
       },
       access: {
@@ -127,8 +135,10 @@ const data = {
         format: {
           yes: 'Öffentlich',
           customers: 'Kund:innen',
+          members: 'Mitglieder',
           permissive: 'Öffentliche Nutzung geduldet',
           private: 'Privat',
+          no: 'Kein Zugang',
         },
       },
       covered: {
@@ -158,6 +168,7 @@ const data = {
         type: 'string',
         format: {
           yes: 'Zugelassen',
+          designated: 'Nur Lastenräder',
         },
       },
       lit: {
@@ -169,8 +180,8 @@ const data = {
           no: 'Nicht beleuchtet',
         },
       },
-      bicycle_parking: {
-        name: 'Fahrradabstellanlage',
+      stand_type: {
+        name: 'Art der Abstellanlage',
         condition: 'contains',
         type: 'string',
         format: {
@@ -178,9 +189,49 @@ const data = {
           wide_stands: 'Breite Anlehnbügel',
           bollard: 'Poller',
           wall_loops: 'Wandhalter',
-          shed: 'Unterstand',
+          rack: 'Fahrradständer',
+          safe_loops: 'Sicherheitsbügel',
+          ground_slots: 'Bodenschlitze',
+          anchors: 'Bodenanker',
+          lean_and_stick: 'Anlehnhilfe',
+          handlebar_holder: 'Lenkerhalter',
+          upright_stands: 'Vertikalparker',
           'two-tier': 'Doppelstockparker',
+          shed: 'Unterstand',
+          building: 'Fahrradparkhaus',
           lockers: 'Fahrradboxen',
+          streetpod: 'Streetpod',
+          smart_dock: 'Smart-Dock',
+          floor: 'Abstellfläche ohne Halter',
+        },
+      },
+      rental_type: {
+        name: 'Art der Verleihstation',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          docking_station: 'Station mit Andockpunkten',
+          dropoff_point: 'Abstellfläche (Free-Floating-Zone)',
+          key_dispensing_machine: 'Schlüsselautomat',
+        },
+      },
+      network: 'Netz / Verbund',
+      in_mobility_hub: {
+        name: 'In Mobilitätsstation',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          yes: 'Innerhalb einer Mobilitätsstation',
+        },
+      },
+      geometry_transform: {
+        name: 'Geometrie geschätzt',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          area_split: 'Fläche nach Stellplätzen geteilt',
+          line_halves: 'Linie in der Mitte geteilt',
+          point_offset: 'Nebeneinander gesetzt',
         },
       },
       operator_type: {
@@ -199,15 +250,21 @@ const data = {
         format: {
           sidewalk: 'Gehweg',
           grass_verge: 'Grünstreifen',
-          lane: 'Fahrbahn',
           kerb_extension: 'Gehwegvorstreckung',
-          parking_lot: 'Parkplatz',
-          street_side: 'Straßenrand',
-          school_ground: 'Schulgelände',
-          private_property: 'Privatgrund',
           pedestrian_area: 'Fußgängerbereich',
+          lane: 'Fahrbahn',
+          street_side: 'Straßenrand',
+          shoulder: 'Seitenstreifen',
+          traffic_island: 'Verkehrsinsel',
+          parklet: 'Parklet',
           park: 'Park',
+          school_ground: 'Schulgelände',
+          playground: 'Spielplatz',
+          parking_lot: 'Parkplatz',
           parking: 'Parkfläche',
+          driveway: 'Zufahrt',
+          private_property: 'Privatgrund',
+          public_property: 'Öffentliches Gelände',
         },
       },
       indoor: {
@@ -289,8 +346,6 @@ const data = {
       description: 'Beschreibung',
       traffic_sign: 'Verkehrszeichen',
       maxstay: 'Maximaldauer',
-      osm_capacity: 'OSM Kapazität (roh, Testdaten)',
-      'osm_capacity:cargo_bike': 'OSM Kapazität Lastenrad (roh, Testdaten)',
     },
   },
   bikelanes: {
@@ -718,7 +773,31 @@ const data = {
         },
       },
       route_relations: 'Routen',
-      description: 'Hinweis aus OSM',
+      description: {
+        name: 'Hinweise',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          TILDA_surface_bicycle:
+            'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_right:
+            'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_left:
+            'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_right:
+            'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_left:
+            'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_strip:
+            'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          TILDA_smoothness_strip: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          TILDA_access_road: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          TILDA_shared_agricultural:
+            'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          TILDA_closed_construction: 'Weg gesperrt aufgrund einer Baustelle.',
+          TILDA_closed_blocked: 'Weg gesperrt (Sperrung).',
+        },
+      },
       operator_type: {
         name: 'Betreibertyp',
         condition: 'contains',
@@ -805,6 +884,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       surface_confidence: {
@@ -1211,7 +1293,31 @@ const data = {
           none: 'Unbeschildert',
         },
       },
-      description: 'Hinweis aus OSM',
+      description: {
+        name: 'Hinweise',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          TILDA_surface_bicycle:
+            'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_right:
+            'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_left:
+            'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_right:
+            'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_left:
+            'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_strip:
+            'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          TILDA_smoothness_strip: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          TILDA_access_road: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          TILDA_shared_agricultural:
+            'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          TILDA_closed_construction: 'Weg gesperrt aufgrund einer Baustelle.',
+          TILDA_closed_blocked: 'Weg gesperrt (Sperrung).',
+        },
+      },
       operator_type: {
         name: 'Betreibertyp',
         condition: 'contains',
@@ -1483,7 +1589,31 @@ const data = {
           none: 'Unbeschildert',
         },
       },
-      description: 'Hinweis aus OSM',
+      description: {
+        name: 'Hinweise',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          TILDA_surface_bicycle:
+            'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_right:
+            'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_left:
+            'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_right:
+            'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_left:
+            'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_strip:
+            'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          TILDA_smoothness_strip: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          TILDA_access_road: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          TILDA_shared_agricultural:
+            'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          TILDA_closed_construction: 'Weg gesperrt aufgrund einer Baustelle.',
+          TILDA_closed_blocked: 'Weg gesperrt (Sperrung).',
+        },
+      },
       operator_type: {
         name: 'Betreibertyp',
         condition: 'contains',
@@ -1595,6 +1725,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       surface_confidence: {
@@ -1960,6 +2093,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       orientation: {
@@ -2386,6 +2522,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       direction: {
@@ -3320,6 +3459,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       direction: {
@@ -4020,7 +4162,31 @@ const data = {
           none: 'Unbeschildert',
         },
       },
-      description: 'Hinweis aus OSM',
+      description: {
+        name: 'Hinweise',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          TILDA_surface_bicycle:
+            'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_right:
+            'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_left:
+            'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_right:
+            'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_left:
+            'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_strip:
+            'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          TILDA_smoothness_strip: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          TILDA_access_road: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          TILDA_shared_agricultural:
+            'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          TILDA_closed_construction: 'Weg gesperrt aufgrund einer Baustelle.',
+          TILDA_closed_blocked: 'Weg gesperrt (Sperrung).',
+        },
+      },
       operator_type: {
         name: 'Betreibertyp',
         condition: 'contains',
@@ -4260,6 +4426,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       surface_confidence: {
@@ -4464,7 +4633,31 @@ const data = {
           none: 'Unbeschildert',
         },
       },
-      description: 'Hinweis aus OSM',
+      description: {
+        name: 'Hinweise',
+        condition: 'contains',
+        type: 'string',
+        format: {
+          TILDA_surface_bicycle:
+            'Am Rand der Straße kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_right:
+            'Am rechten Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_bicycle_left:
+            'Am linken Rand (in Linienrichtung) kann der Radverkehr einen `{value}`-Streifen nutzen.',
+          TILDA_surface_right:
+            'Die rechte Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_left:
+            'Die linke Hälfte des Weges (in Linienrichtung) hat die Oberfläche `{value}`.',
+          TILDA_surface_strip:
+            'Die Oberfläche gilt nur für einen Streifen am Rand der Straße. Die übrige Straße hat die Oberfläche `{value}`.',
+          TILDA_smoothness_strip: 'Die übrige Straße hat die Fahrqualität `{value}`.',
+          TILDA_access_road: 'Radinfrastruktur auf einem Zufahrtsweg.',
+          TILDA_shared_agricultural:
+            'Radinfrastruktur geteilt mit land- und/oder forstwirtschaftlichem Verkehr.',
+          TILDA_closed_construction: 'Weg gesperrt aufgrund einer Baustelle.',
+          TILDA_closed_blocked: 'Weg gesperrt (Sperrung).',
+        },
+      },
       operator_type: {
         name: 'Betreibertyp',
         condition: 'contains',
@@ -4560,6 +4753,9 @@ const data = {
           tag_transformed: 'Aus OSM-Tag normalisiert',
           parent_highway_tag: 'Von zugeordneter Straße (OSM)',
           parent_highway_tag_transformed: 'Von zugeordneter Straße, normalisiert',
+          tag_directional: 'Schlechtere der richtungs- oder seitenbezogenen Angaben aus OSM',
+          parent_highway_tag_directional:
+            'Von zugeordneter Straße, Angabe für diese Seite oder Richtung',
         },
       },
       surface_confidence: {

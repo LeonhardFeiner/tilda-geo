@@ -27,6 +27,62 @@ describe('bikelane_todos', function()
       local result = run_bikelanes(input_object)
       assert.are.equal(table_includes(result[1]._todo_list, 'missing_access_tag_240'), false)
     end)
+
+    it('creates todo for traffic_sign=DE:240 with bicycle=designated and no foot', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['bicycle'] = 'designated',
+          ['traffic_sign'] = 'DE:240',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local result = run_bikelanes(input_object)
+      assert.are.equal(table_includes(result[1]._todo_list, 'missing_access_tag_240'), true)
+    end)
+
+    it('creates todo for traffic_sign=DE:240 with foot=designated and no bicycle', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['foot'] = 'designated',
+          ['traffic_sign'] = 'DE:240',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local result = run_bikelanes(input_object)
+      assert.are.equal(table_includes(result[1]._todo_list, 'missing_access_tag_240'), true)
+    end)
+
+    it('does not create todo for traffic_sign=DE:240 with bicycle=designated and foot=designated', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['bicycle'] = 'designated',
+          ['foot'] = 'designated',
+          ['traffic_sign'] = 'DE:240',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local result = run_bikelanes(input_object)
+      assert.are.equal(table_includes(result[1]._todo_list, 'missing_access_tag_240'), false)
+    end)
+
+    it('creates todo for traffic_sign=DE:241 with neither bicycle=designated nor foot=designated', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['traffic_sign'] = 'DE:241',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local result = run_bikelanes(input_object)
+      assert.are.equal(table_includes(result[1]._todo_list, 'missing_access_tag_240'), true)
+    end)
   end)
 
   describe('`malformed_traffic_sign`:', function()
@@ -239,13 +295,12 @@ describe('bikelane_todos', function()
       assert.are.equal(table_includes(right._todo_list, 'needs_clarification_track'), true)
     end)
 
-    it('skip when sufficient tagging is present', function()
+    it('skip only on the side with sufficient tagging', function()
       local input_object = {
         tags = {
           ['highway'] = 'secondary',
           ['cycleway:both'] = 'track',
           ['cycleway:left:traffic_sign'] = 'DE:241-30',
-          -- ['cycleway:left:segregated'] = 'yes', -- works as well
         },
         id = 1,
         type = 'way'
@@ -258,6 +313,37 @@ describe('bikelane_todos', function()
       assert.are.equal(table_includes(left._todo_list, 'needs_clarification_track'), false)
 
       local right = cycleways[2]
+      assert.are.equal(right._id, 'way/1/cycleway/right')
+      assert.are.equal(table_includes(right._todo_list, 'needs_clarification_track'), true)
+    end)
+
+    it('skip on both sides with cycleway:both:segregated', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'secondary',
+          ['cycleway:both'] = 'track',
+          ['cycleway:both:segregated'] = 'yes',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local cycleways = run_bikelanes(input_object)
+      assert.are.equal(table_includes(cycleways[1]._todo_list, 'needs_clarification_track'), false)
+      assert.are.equal(table_includes(cycleways[2]._todo_list, 'needs_clarification_track'), false)
+    end)
+
+    it('skip when the track has traffic_sign DE:237', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'secondary',
+          ['cycleway:right'] = 'track',
+          ['cycleway:right:traffic_sign'] = 'DE:237',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local cycleways = run_bikelanes(input_object)
+      local right = cycleways[1]
       assert.are.equal(right._id, 'way/1/cycleway/right')
       assert.are.equal(table_includes(right._todo_list, 'needs_clarification_track'), false)
     end)
@@ -304,6 +390,40 @@ describe('bikelane_todos', function()
       -- print('xxxdata'..inspect(data))
       assert.are.equal(data._id, 'way/1')
       assert.are.equal(table_includes(data._todo_list, 'missing_oneway'), true)
+    end)
+
+    it('skips lanes and tracks tagged on the road (one-way per side by default)', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'secondary',
+          ['sidewalk:right'] = 'yes',
+          ['sidewalk:right:bicycle'] = 'yes',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local right = nil
+      for _, cycleway in ipairs(run_bikelanes(input_object)) do
+        if cycleway._side == 'right' then right = cycleway end
+      end
+      assert.are.equal(right.category, 'footwayBicycleYes_adjoining')
+      assert.are.equal(right.oneway, 'implicit_yes')
+      assert.are.equal(table_includes(right._todo_list, 'missing_oneway'), false)
+    end)
+
+    it('skips own geometries with oneway=-1', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'cycleway',
+          ['is_sidepath'] = 'yes',
+          ['oneway'] = '-1',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local data = run_bikelanes(input_object)[1]
+      assert.are.equal(data.oneway, 'yes')
+      assert.are.equal(table_includes(data._todo_list, 'missing_oneway'), false)
     end)
 
     it('skips specific category cyclewayLink', function()
@@ -438,6 +558,60 @@ describe('bikelane_todos', function()
       assert.are.equal(table_includes(data._todo_list, 'missing_segregated'), true)
       assert.are.equal(table_includes(data._todo_list, 'needs_clarification'), false)
     end)
+
+    it('creates missing_segregated for path with designated bicycle and foot and no segregated tag', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['bicycle'] = 'designated',
+          ['foot'] = 'designated',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local cycleways = run_bikelanes(input_object)
+      assert.are.equal(table_size(cycleways), 1)
+
+      local data = cycleways[1]
+      assert.are.equal(data.category, 'needsClarification')
+      assert.are.equal(table_includes(data._todo_list, 'missing_segregated'), true)
+    end)
+
+    it('does not create missing_segregated for path with designated bicycle and foot and segregated=yes', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['bicycle'] = 'designated',
+          ['foot'] = 'designated',
+          ['segregated'] = 'yes',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local cycleways = run_bikelanes(input_object)
+      assert.are.equal(table_size(cycleways), 1)
+
+      local data = cycleways[1]
+      assert.are.equal(table_includes(data._todo_list, 'missing_segregated'), false)
+    end)
+
+    it('does not create missing_segregated for path with designated bicycle and foot and segregated=no', function()
+      local input_object = {
+        tags = {
+          ['highway'] = 'path',
+          ['bicycle'] = 'designated',
+          ['foot'] = 'designated',
+          ['segregated'] = 'no',
+        },
+        id = 1,
+        type = 'way'
+      }
+      local cycleways = run_bikelanes(input_object)
+      assert.are.equal(table_size(cycleways), 1)
+
+      local data = cycleways[1]
+      assert.are.equal(table_includes(data._todo_list, 'missing_segregated'), false)
+    end)
   end)
 
   describe('`crossing_too_long`:', function()
@@ -475,6 +649,58 @@ describe('bikelane_todos', function()
       local data = cycleways[1]
       assert.are.equal(data.category, 'crossing')
       assert.are.equal(table_includes(data._todo_list, 'crossing_too_long'), false)
+    end)
+  end)
+  describe('`__mapillary` todos on lanes tagged on the road:', function()
+    ---@param mapillary_coverage string|nil
+    local function run_advisory_lanes(mapillary_coverage)
+      return run_bikelanes({
+        tags = {
+          ['highway'] = 'tertiary',
+          ['cycleway:both'] = 'lane',
+          ['mapillary_coverage'] = mapillary_coverage,
+        },
+        id = 1,
+        type = 'way'
+      })
+    end
+
+    it('lanes get the campaign and priority 1 when the road has Mapillary coverage', function()
+      local lanes = run_advisory_lanes('regular')
+      assert.are.equal(table_size(lanes), 2)
+      for _, lane in ipairs(lanes) do
+        assert.are.equal(lane._todo_list['advisory_or_exclusive'], 'prio1')
+        assert.are.equal(lane._todo_list['advisory_or_exclusive__mapillary'], 'prio1')
+      end
+    end)
+
+    it('lanes get no campaign when the road has no Mapillary coverage', function()
+      local lanes = run_advisory_lanes(nil)
+      assert.are.equal(table_size(lanes), 2)
+      for _, lane in ipairs(lanes) do
+        assert.are.equal(lane._todo_list['advisory_or_exclusive'], 'prio2')
+        assert.are.equal(table_includes(lane._todo_list, 'advisory_or_exclusive__mapillary'), false)
+      end
+    end)
+
+    it('sidewalks tagged on the road also use the coverage of the road', function()
+      local result = run_bikelanes({
+        tags = {
+          ['highway'] = 'residential',
+          ['sidewalk:right'] = 'yes',
+          ['sidewalk:right:bicycle'] = 'designated',
+          ['mapillary_coverage'] = 'pano',
+        },
+        id = 1,
+        type = 'way'
+      })
+      local sidewalk = nil
+      for _, row in ipairs(result) do
+        if row._side == 'right' then sidewalk = row end
+      end
+      assert.is_not_nil(sidewalk)
+      assert.are.equal(sidewalk._todo_list['unexpected_bicycle_access_on_footway'], 'prio1')
+      assert.are.equal(sidewalk._todo_list['unexpected_bicycle_access_on_footway__mapillary'], 'prio1')
     end)
   end)
 end)

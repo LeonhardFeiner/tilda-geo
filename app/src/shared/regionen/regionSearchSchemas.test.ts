@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'vitest'
 import {
   compactQaParam,
-  qaStatusForMapFilter,
-  resolvedQaStatusSelectValue,
+  resolvedQaStatusKeys,
 } from '@/components/regionen/pageRegionSlug/modes/qa/qaConfigStyles'
 import {
   defaultMapSearchValue,
+  getMapParamFromSearch,
   getQaParamFromSearch,
   parseRegionSearch,
   regionSearchSchema,
@@ -58,23 +58,42 @@ describe('routerSearch', () => {
   })
 })
 
+describe('getMapParamFromSearch', () => {
+  const regionMap = { zoom: 12, lat: 52.35, lng: 13.61 }
+
+  test('prefers the viewport of the URL', () => {
+    const search = parseRegionSearch({ map: '11.8/52.507/13.367' })
+    expect(getMapParamFromSearch(search, regionMap)).toEqual({
+      zoom: 11.8,
+      lat: 52.507,
+      lng: 13.367,
+    })
+  })
+
+  test.each([
+    ['is missing', {}],
+    ['is invalid', { map: 'foo' }],
+    ['is the sentinel', { map: defaultMapSearchValue }],
+  ])('uses the region start view when map %s', (_label, raw) => {
+    expect(getMapParamFromSearch(parseRegionSearch(raw), regionMap)).toEqual(regionMap)
+  })
+})
+
 describe('regionSearchSchema', () => {
-  test('applies map default when missing', () => {
-    const parsed = regionSearchSchema.parse({})
-    expect(parsed.map).toBe(defaultMapSearchValue)
+  test('leaves map empty when missing or invalid', () => {
+    expect(regionSearchSchema.parse({}).map).toBeUndefined()
+    expect(regionSearchSchema.parse({ map: 'nonsense' }).map).toBeUndefined()
   })
 
   test('keeps URL migration version v', () => {
     expect(regionSearchSchema.parse({ v: '3' }).v).toBe('3')
   })
 
-  test('validateSearch then stringify always includes map=0/0/0', () => {
-    expect(defaultMapSearchValue).toBe('0/0/0')
-    // Link-like stringify without validateSearch can omit map.
-    expect(routerSearch.stringify({ bg3d: false })).toBe('')
-    // navigate() runs validateSearch before stringify, so off-map hrefs get the sentinel.
-    expect(routerSearch.stringify(regionSearchSchema.parse({}))).toContain('map=0/0/0')
-    expect(routerSearch.stringify(regionSearchSchema.parse({ bg3d: false }))).toContain('map=0/0/0')
+  test('validateSearch then stringify adds nothing to a region URL without params', () => {
+    // The router compares this with the request URL on the server and redirects when they differ;
+    // the region loader does the one redirect to the start view instead.
+    expect(routerSearch.stringify(regionSearchSchema.parse({}))).toBe('')
+    expect(routerSearch.stringify(regionSearchSchema.parse({ bg3d: false }))).toBe('')
   })
 
   test('parses qa JSON object', () => {
@@ -101,9 +120,15 @@ describe('regionSearchSchema', () => {
   })
 
   test('missing qa status is the default filter, not Alle Status', () => {
-    expect(resolvedQaStatusSelectValue(undefined)).toBe('pending-needs-review')
-    expect(qaStatusForMapFilter(undefined)).toBe('pending-needs-review')
-    expect(qaStatusForMapFilter('all')).toBeUndefined()
+    expect(resolvedQaStatusKeys(undefined)).toEqual(['pending-needs-review', 'pending-problematic'])
+    expect(resolvedQaStatusKeys('all')).toBeUndefined()
+  })
+
+  test('parses several qa statuses and keeps links with a single status working', () => {
+    const statuses = ['pending-needs-review', 'ok-construction']
+    const parsed = parseRegionSearch({ qa: { key: 'cfg', status: statuses } })
+    expect(getQaParamFromSearch(parsed).status).toEqual(statuses)
+    expect(resolvedQaStatusKeys('pending-problematic')).toEqual(['pending-problematic'])
   })
 
   test('parses qa Alle Status', () => {
