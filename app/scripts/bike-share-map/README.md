@@ -59,7 +59,9 @@ current export, so run the export first.
    generated config, push to `local`. CI tests, builds and deploys to github.io (about 12
    minutes). The BFS subdomain (`radweg.bfschweitenkirchen.de`) only changes on a release:
    publish a GitHub Release on the fork, or run the workflow by hand with `mirror` ticked
-   (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). Debug on github.io first. The
+   (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). The mirror is the same build
+   without the detour map (`umweg.html`, `detour/`, the links in the region card: the
+   `viewer-detour` meta is flipped to `off`). Debug on github.io first. The
    workflow fails before uploading if the deploy folder exceeds 900 MB (GitHub Pages allows 1 GB;
    it is ~570 MB now), and the built `output/viewer/manifest.json` adds a `datasets` field with
    each context dataset's `fetchedAt`/`osmDataFrom`/`source` stamps next to the export's fields.

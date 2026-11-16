@@ -169,6 +169,15 @@ jobs:
             echo "::error::Old base URL still present after rewrite"
             exit 1
           fi
+          # The subdomain is published without the detour map ("Umwege per Rad zu den Nachbarorten"):
+          # index.html's viewer-detour meta switches the links off, the page and its data go.
+          flag='<meta name="viewer-detour" content="on" />'
+          if [ "$(grep -cF "$flag" _site/index.html)" != "1" ]; then
+            echo "::error::viewer-detour meta not found exactly once in index.html; generateViewerHtml.ts changed? Update this step (and bootViewer's mirror option)."
+            exit 1
+          fi
+          sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
+          rm -rf _site/umweg.html _site/detour _site/detourRouting.js
           echo "$MIRROR_DOMAIN" > _site/CNAME
           touch _site/.nojekyll
           du -sh _site

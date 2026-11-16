@@ -844,6 +844,19 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'the mirror build (viewer-detour meta off) shows no detour link even with a routing graph',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS, { mirror: true })
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      expect(p.window.document.getElementById('region-detail-detour')).toBeNull()
+      expect(p.q('#region-detail-neighbors')).toBeTruthy()
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'the search is a combobox: arrows move a highlight, Enter picks, focus stays in the field',
     async () => {
       page = await bootViewer()

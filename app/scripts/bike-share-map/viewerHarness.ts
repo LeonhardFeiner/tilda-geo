@@ -197,6 +197,11 @@ type BootOptions = {
   failGemeindeGeometry?: boolean
   /** Whether a canvas hands out a WebGL context (the page probes before creating the map). Default true. */
   webgl?: boolean
+  /**
+   * The mirror build (radweg.bfschweitenkirchen.de): the same rewrite the workflow's mirror job
+   * applies to index.html, which turns the detour-map links off.
+   */
+  mirror?: boolean
 }
 
 export async function bootViewer(query = '', options: BootOptions = {}): Promise<ViewerPage> {
@@ -206,7 +211,13 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
         JSON.parse(readFileSync(detourIndex, 'utf8')) as { landkreise: Array<{ id: string }> }
       ).landkreise.map((l) => l.id)
     : []
-  const html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026', detourIds)
+  let html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026', detourIds)
+  if (options.mirror) {
+    const flag = '<meta name="viewer-detour" content="on" />'
+    if (!html.includes(flag))
+      throw new Error('viewer-detour meta not found; keep the workflow in sync')
+    html = html.replace(flag, flag.replace('"on"', '"off"'))
+  }
   return bootPage(html, pageBundles(html), query, {
     ...options,
     ready: (page) =>

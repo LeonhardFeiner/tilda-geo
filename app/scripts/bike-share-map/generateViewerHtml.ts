@@ -192,6 +192,10 @@ export function generateViewerHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" />
+  <!-- "on": Gemeinden of a Landkreis with a routing graph link to the detour map (umweg.html). The
+       mirror deploy (radweg.bfschweitenkirchen.de) flips this to "off" and drops the detour files;
+       see .github/workflows/pages-viewer.yml. -->
+  <meta name="viewer-detour" content="on" />
   <script>
     // Text size is a per-browser convenience (Einstellungen › Schriftgröße). Applied before the
     // first paint; page zoom stays off because pinches on the panel zoom the map instead.
@@ -2079,6 +2083,9 @@ export function generateViewerHtml(
   <script src="${v('./vendor/maplibre-gl-4.7.1/maplibre-gl.js')}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
+    // The mirror site is deployed without the detour map (meta flipped to "off" by the workflow).
+    const DETOUR_ENABLED =
+      (document.querySelector('meta[name="viewer-detour"]') || {}).content === 'on';
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -7644,7 +7651,7 @@ export function generateViewerHtml(
       // Detour map: only for Landkreise that have a routing graph.
       const detourLandkreis =
         String(p.level) === '8' ? String(p.landkreis_id ?? '') : String(p.level) === '6' ? String(p.id) : '';
-      if (detourLandkreis && CONFIG.detourLandkreise.includes(detourLandkreis)) {
+      if (DETOUR_ENABLED && detourLandkreis && CONFIG.detourLandkreise.includes(detourLandkreis)) {
         const detour = document.createElement('a');
         detour.className = 'region-detail-osm-edit';
         detour.id = 'region-detail-detour';
