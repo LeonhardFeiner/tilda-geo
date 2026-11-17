@@ -1,44 +1,51 @@
 import { runInNewContext } from 'node:vm'
 import { describe, expect, test } from 'vitest'
-import { COUNTED_HOST, GOATCOUNTER_CODE, visitCounterHeadScript } from './visitCounter'
+import { COUNTED_HOST, GOATCOUNTER_ENDPOINT, visitCounterHeadScript } from './visitCounter'
 
-/** Runs the inline loader against a fake page on `hostname`; returns the scripts it appended. */
-function runLoader(hostname: string) {
+type Page = { hostname?: string; pathname?: string; referrer?: string; visibilityState?: string }
+
+/** Runs the inline script against a fake page; returns the count URLs it sent. */
+function runCounter(page: Page = {}) {
   const body = visitCounterHeadScript()
     .replace(/^<script>/, '')
     .replace(/<\/script>$/, '')
-  const appended: Array<{ src: string; async: boolean; attrs: Record<string, string> }> = []
-  const document = {
-    createElement: () => {
-      const el = {
-        src: '',
-        async: false,
-        attrs: {} as Record<string, string>,
-        setAttribute(name: string, value: string) {
-          el.attrs[name] = value
-        },
-      }
-      return el
-    },
-    head: { appendChild: (el: (typeof appended)[number]) => appended.push(el) },
-  }
-  runInNewContext(body, { location: { hostname }, document })
-  return appended
+  const sent: string[] = []
+  runInNewContext(body, {
+    location: { hostname: page.hostname ?? COUNTED_HOST, pathname: page.pathname ?? '/' },
+    document: { referrer: page.referrer ?? '', visibilityState: page.visibilityState ?? 'visible' },
+    navigator: { sendBeacon: (url: string) => (sent.push(url), true) },
+    Image: class {},
+    encodeURIComponent,
+    Math,
+  })
+  return sent.map((url) => new URL(url))
 }
 
 describe('visitCounterHeadScript', () => {
-  test('loads GoatCounter on the BFS subdomain', () => {
-    const [script, ...rest] = runLoader(COUNTED_HOST)
-    expect(rest).toEqual([])
-    expect(script?.src).toBe('https://gc.zgo.at/count.js')
-    expect(script?.async).toBe(true)
-    expect(script?.attrs['data-goatcounter']).toBe(
-      `https://${GOATCOUNTER_CODE}.goatcounter.com/count`,
-    )
+  test('counts the viewer as "/" with only path and cache buster', () => {
+    for (const pathname of ['/', '/index.html']) {
+      const [url, ...rest] = runCounter({ pathname })
+      expect(rest).toEqual([])
+      expect(`${url?.origin}${url?.pathname}`).toBe(GOATCOUNTER_ENDPOINT)
+      expect([...(url?.searchParams.keys() ?? [])]).toEqual(['p', 'rnd'])
+      expect(url?.searchParams.get('p')).toBe('/')
+    }
   })
 
-  test('does nothing on github.io or locally', () => {
-    expect(runLoader('leonhardfeiner.github.io')).toEqual([])
-    expect(runLoader('localhost')).toEqual([])
+  test('sends external referrers, drops internal ones', () => {
+    const [external] = runCounter({
+      pathname: '/methodik.html',
+      referrer: 'https://www.google.com/',
+    })
+    expect(external?.searchParams.get('p')).toBe('/methodik.html')
+    expect(external?.searchParams.get('r')).toBe('https://www.google.com/')
+    const [internal] = runCounter({ referrer: `https://${COUNTED_HOST}/methodik.html` })
+    expect(internal?.searchParams.has('r')).toBe(false)
+  })
+
+  test('does nothing on github.io, locally or while prerendering', () => {
+    expect(runCounter({ hostname: 'leonhardfeiner.github.io' })).toEqual([])
+    expect(runCounter({ hostname: 'localhost' })).toEqual([])
+    expect(runCounter({ visibilityState: 'prerender' })).toEqual([])
   })
 })

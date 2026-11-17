@@ -78,12 +78,14 @@ ${visitCounterHeadScript()}
   <ul>
     <li><strong>Besucherzählung:</strong> Unter ${COUNTED_HOST} zählen wir Seitenaufrufe mit
     <a href="https://www.goatcounter.com/">GoatCounter</a> (Martin Tournoij, Irland; Server bei
-    Hetzner in Deutschland und Finnland). Übertragen werden die aufgerufene Seite, die verweisende
-    Seite, Browser, Betriebssystem, Bildschirmbreite, Sprache und Ihre IP-Adresse, aus der nur das
-    Land abgeleitet wird. GoatCounter speichert davon nur zusammengefasste Zahlen, weder die
-    IP-Adresse noch eine Kennung, setzt keine Cookies und legt nichts in Ihrem Browser ab. Um
-    doppelte Zählungen zu vermeiden, hält GoatCounter IP-Adresse und Browserkennung höchstens acht
-    Stunden im Arbeitsspeicher. Siehe die
+    Hetzner in Deutschland und Finnland). Die Seite lädt dafür kein Skript von GoatCounter und liest
+    keine Geräteinformationen aus, sondern schickt bei jedem Aufruf eine Anfrage mit der aufgerufenen
+    Seite (ohne die gewählte Region) und, wenn Sie von einer anderen Website kommen, deren Adresse.
+    Wie bei jedem Abruf übermittelt Ihr Browser dabei IP-Adresse, Browserkennung und
+    Spracheinstellung; GoatCounter leitet daraus Browser, Betriebssystem, Sprache und Land ab.
+    GoatCounter speichert davon nur zusammengefasste Zahlen, weder die IP-Adresse noch eine Kennung,
+    und setzt keine Cookies. Um doppelte Zählungen zu vermeiden, hält GoatCounter IP-Adresse und
+    Browserkennung höchstens acht Stunden im Arbeitsspeicher. Siehe die
     <a href="https://www.goatcounter.com/help/privacy">Datenschutzerklärung von GoatCounter</a>.</li>
     <li><strong>Hosting:</strong> Die Seite liegt bei GitHub Pages (GitHub Inc., USA). Beim Aufruf
     verarbeitet GitHub technisch notwendige Daten wie die IP-Adresse, siehe die
