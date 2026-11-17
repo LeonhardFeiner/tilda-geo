@@ -30,7 +30,7 @@
     {
       "id": "ohne-beschriftung-haupt",
       "name": "Haupttrassen-Abschnitte ohne Beschriftung im Plan",
-      "plans": { "kurz": "haupt", "lang": "haupt" },
+      "plans": { "kurz": "haupt" },
       "planLabels": [],
       "baulast": "unklar",
       "documented": "Linienstücke, die im Lageplan als Haupttrasse eingezeichnet sind, aber keiner beschrifteten Trasse eindeutig zugeordnet werden konnten (meist kurze Verbindungen in Ortschaften).",
@@ -39,7 +39,7 @@
     {
       "id": "ohne-beschriftung-ergaenzend",
       "name": "Ergänzende Abschnitte ohne Beschriftung im Plan",
-      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "plans": { "kurz": "ergaenzend" },
       "planLabels": [],
       "baulast": "unklar",
       "documented": "Linienstücke, die im Lageplan als ergänzende Trasse eingezeichnet sind, aber keiner beschrifteten Trasse eindeutig zugeordnet werden konnten.",

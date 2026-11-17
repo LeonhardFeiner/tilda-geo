@@ -44,7 +44,12 @@ done
 "$PY" -I "$HERE/assign.py" "$WORK" "$WORK/osm-area.json" "$RADWEGE/routes.json" \
   "$WORK/assigned.geojson" "$RADWEGE/lines.geojson" "$RADWEGE/overrides.json" | tee "$WORK/assign.log"
 
-# 5. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
+# 5. check against the plan strokes (review aid; see ../README.md)
+"$PY" -I "$HERE/verify.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/routes.json" \
+  "$RADWEGE/gemeinde.geojson" > "$WORK/verify.log"
+grep -E '^(FLAG|OFF|total|kurz/|lang/)' "$WORK/verify.log" || true
+
+# 6. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
   mkdir -p "$CHECK"
   "$PY" -I "$HERE/topx.py" "$WORK" "$WORK/assigned.geojson" "$WORK/assigned-px.json"

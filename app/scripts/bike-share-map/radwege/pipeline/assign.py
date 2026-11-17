@@ -39,6 +39,8 @@ def pt2raw(x, y):
 KEYS = {'haupt': 'rgb(0%,0%,100%)|12', 'ergaenzend': 'rgb(0%,100%,100%)|12'}
 LABELCOL = {'blue': 'haupt', 'cyan': 'ergaenzend'}
 OVERRIDES = json.load(open(sys.argv[6]))
+# Dashed lines of plan 5/2, raw units (~1.06 m each); see the dash rule in the route loop.
+MIN_DASH_GAP, MAX_DASH, MAX_END_DASH = 25, 250, 100
 
 def norm(s):
     s = s.replace(' / ', ' ').replace('/', ' ').replace('–', '-')
@@ -176,7 +178,7 @@ for plan in ('kurz', 'lang'):
         for key, ov in OVERRIDES.items():
             pl, rid = key.split('|')
             r = next(r for r in ROUTES if r['id'] == rid)
-            if pl == plan and rid not in seen and r['plans'].get(plan) == cls:
+            if pl == plan and rid not in seen and r['plans'].get(plan) == cls and 'branches' in ov:
                 seen.add(rid)
                 jobs.append((r, r['name'], pt2raw(*ov['label']), ov['branches']))
         for route, text, lraw, branches in jobs:
@@ -215,17 +217,41 @@ for plan in ('kurz', 'lang'):
           if not ok:
               report.append(f'{plan}/{cls}: {text}: no path'); continue
           for e in path: used[e] += 1
-          # ordered raw polyline + per-edge dashed flag
-          gapnodes = {n for e in edges if e[3] == 'gap' for n in e[:2]}
+          # Dashes (plan 5/2): the plans draw every line as short pieces; a dashed line leaves gaps
+          # of 25-60 units between dashes (measured 40-48), a solid one only drawing gaps of a few
+          # units. A run of strokes between two dash gaps is a dash if shorter than MAX_DASH, a run
+          # with a dash gap on one side only (end of a route, start of a dashed stretch) if
+          # shorter than MAX_END_DASH. Drawing gaps and T-junction joins do not break a run;
+          # joints (60-120) and a leg or branch change do.
+          dashed_edges = set()
+          if plan == 'lang':
+              runs, cur, prev = [], None, None
+              for e in path:
+                  a, b, L, kind = edges[e]
+                  if kind == 'gap' and L < MIN_DASH_GAP: kind = 'join'
+                  if kind in ('gap', 'joint'):
+                      if cur: cur['after'] = kind == 'gap'; runs.append(cur); cur = None
+                      prev = kind; continue
+                  if cur and not ({a, b} & cur['ends']):
+                      runs.append(cur); cur = None; prev = None
+                  if cur is None: cur = dict(edges=[], before=prev == 'gap', after=False, ends=set(), L=0.0)
+                  cur['edges'].append(e); cur['ends'] = {a, b}
+                  if kind == 'line': cur['L'] += L
+                  prev = kind
+              if cur: runs.append(cur)
+              for r in runs:
+                  both = r['before'] and r['after']
+                  one = r['before'] or r['after']
+                  if (both and r['L'] < MAX_DASH) or (one and r['L'] < MAX_END_DASH):
+                      dashed_edges.update(r['edges'])
           parts = []
           for e in path:
               a, b, L, kind = edges[e]
               if kind in ('gap', 'join', 'joint'): continue
-              dashed = plan == 'lang' and (a in gapnodes or b in gapnodes)
               pa, pb = coord[a], coord[b]
               # edges are undirected: orient each one along the path before merging
               if parts and math.dist(parts[-1][1], pb) < math.dist(parts[-1][1], pa): pa, pb = pb, pa
-              parts.append((pa, pb, dashed))
+              parts.append((pa, pb, e in dashed_edges))
           lenm = sum(math.dist(raw2utm(p), raw2utm(q)) for p, q, _ in parts)
           dashedm = sum(math.dist(raw2utm(p), raw2utm(q)) for p, q, d in parts if d)
           # merge consecutive parts into lines by dashed flag
@@ -271,7 +297,10 @@ for plan in ('kurz', 'lang'):
         merged = linemerge(MultiLineString(segs))
         for g in (merged.geoms if hasattr(merged, 'geoms') else [merged]):
             if g.length >= 150:
-                final.append(dict(routeId=f'ohne-beschriftung-{netz}', plan=plan, ausbau='voll' if plan == 'lang' else 'freigabe', utm=list(g.coords)))
+                # "adopt" overrides: a leftover piece through a given point belongs to that route
+                rid = next((k.split('|')[1] for k, ov in OVERRIDES.items() if k.startswith(plan + '|')
+                            for lon, lat in ov.get('adopt', []) if g.distance(Point(to_utm.transform(lon, lat))) < 30), None)
+                final.append(dict(routeId=rid or f'ohne-beschriftung-{netz}', plan=plan, ausbau='voll' if plan == 'lang' else 'freigabe', utm=list(g.coords)))
 for f in out_feats:
     p = f['properties']
     if p.get('unassigned'): continue
