@@ -21,23 +21,24 @@ const NETZ_LABEL = {
 const BAULAST = ['Gemeinde', 'Landkreis', 'Freistaat', 'unklar'] as const
 const AUSBAU_LABEL = {
   freigabe: 'Lageplan 5/1 (laut Konzept überwiegend Freigabe und Beschilderung vorhandener Wege)',
-  'bestand-weg': 'Bestehender asphaltierter Weg (gestrichelt in Lageplan 5/2)',
-  voll: 'Vollausbau (durchgezogen in Lageplan 5/2)',
+  'bestand-weg': 'Bestehender asphaltierter Weg, nur Freigabe (gestrichelt in Lageplan 5/2)',
+  voll: 'Neubau (Vollausbau, durchgezogen in Lageplan 5/2)',
   bestand: 'Bestehender asphaltierter Geh- und Radweg (Lageplan 5/1)',
 } as const
-/** Colour by plan (the alternative to colouring by progress). */
-const PLAN_COLOURS = { kurz: '#0097a7', lang: '#283593', bestand: '#1a7f37' } as const
+/** Events shown before "Ältere Vorgänge" in the detail view; entries in "Neueste Vorgänge". */
+const TIMELINE_OPEN = 3
+const RECENT_COUNT = 8
 
 /**
  * Unlisted page (github.io only): every route of the Schweitenkirchen Radwegekonzept on a map,
- * with what has publicly happened to it. Filters by progress group, plan, network and
- * Baulastträger, single routes can be switched off, a click shows a route's facts and sources.
+ * with what has publicly happened to it. One plan at a time; a bar of the progress groups is
+ * summary, legend and filter at once; a click on a line replaces the overview with that route.
  */
 export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
   const style = JSON.stringify(buildBasemapStyleJson('light'))
   const conceptDe = CONCEPT_DATE.split('-').reverse().join('.')
-  const checkbox = (name: string, value: string, label: string, swatch = '') =>
-    `<label><input type="checkbox" name="${name}" value="${value}" checked />${swatch}<span>${label}</span><span class="km" data-km="${name}:${value}"></span></label>`
+  const checkbox = (name: string, value: string, label: string) =>
+    `<label><input type="checkbox" name="${name}" value="${value}" checked /><span>${label}</span></label>`
   return `<!doctype html>
 <html lang="de">
 <head>
@@ -154,17 +155,50 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     }
     .btn:hover { background: var(--row-hover); }
     .row-btns { display: flex; gap: 6px; margin: 4px 0; }
-    #total { font-size: 13px; border-top: 1px solid var(--border); padding-top: 8px; }
-    #routes { max-height: 260px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 4px; }
+    h2 { font-size: 14px; margin: 12px 0 4px; }
+    .intro { font-size: 13px; }
+    #bar { display: flex; height: 14px; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+    #bar button { all: unset; display: block; height: 100%; cursor: pointer; min-width: 2px; }
+    #bar button.dim { opacity: 0.25; }
+    #bar button:focus-visible { outline: 2px solid var(--fg); outline-offset: -2px; }
+    #groups { list-style: none; padding: 0; margin: 0 0 4px; }
+    #groups button {
+      all: unset;
+      box-sizing: border-box;
+      display: flex;
+      width: 100%;
+      gap: 8px;
+      align-items: baseline;
+      padding: 3px 4px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    #groups button:hover, #groups button[aria-pressed='true'] { background: var(--row-hover); }
+    #groups button.dim { opacity: 0.45; }
+    #groups button:focus-visible { outline: 2px solid var(--accent); }
+    #groups .sw { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
+    #groups .km { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+    #filter-note { font-size: 12px; }
+    #recent { list-style: none; padding: 0; margin: 0; font-size: 13px; }
+    #recent li { padding: 4px 0; border-bottom: 1px solid var(--border); }
+    #recent .when { font-variant-numeric: tabular-nums; color: var(--muted); }
+    #more { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 6px; }
+    #more > summary { cursor: pointer; font-weight: 600; padding: 4px 0; }
+    #routes { max-height: 240px; overflow: auto; border: 1px solid var(--border); border-radius: 6px; margin-top: 4px; }
     #routes label { padding: 3px 6px; font-size: 13px; }
     #routes label:hover, #routes label.selected { background: var(--row-hover); }
     #routes .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
     #routes .name { cursor: pointer; text-decoration: underline dotted; }
-    #detail { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 8px; font-size: 13px; }
-    #detail h2 { font-size: 15px; margin: 0 0 4px; }
-    #detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 2px 8px; margin: 6px 0; }
+    .linkbtn { all: unset; color: var(--accent); cursor: pointer; text-decoration: underline; }
+    .linkbtn:focus-visible { outline: 2px solid var(--accent); }
+    #detail { font-size: 13px; }
+    #detail h2 { font-size: 16px; margin: 8px 0 4px; }
+    #detail h3 { font-size: 13px; margin: 12px 0 4px; }
+    #detail dl { display: grid; grid-template-columns: max-content 1fr; gap: 3px 10px; margin: 6px 0; }
     #detail dt { color: var(--muted); }
     #detail dd { margin: 0; }
+    #detail .summary { background: var(--row-hover); border-radius: 6px; padding: 6px 8px; }
     .badge { display: inline-block; padding: 1px 7px; border-radius: 999px; color: #fff; font-size: 12px; }
     .timeline { list-style: none; padding: 0; margin: 6px 0; }
     .timeline li { border-left: 3px solid var(--border); padding: 2px 0 6px 8px; }
@@ -172,12 +206,15 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     .timeline li.uncertain { opacity: 0.75; }
     .timeline .when { font-weight: 600; font-variant-numeric: tabular-nums; }
     .timeline .kind { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-left: 4px; }
+    #detail details > summary { cursor: pointer; color: var(--accent); margin: 4px 0; }
     .note { background: var(--row-hover); border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+    .maplibregl-popup-content { font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 6px 8px; color: #1c1f23; }
     [hidden] { display: none !important; }
     @media (pointer: coarse) {
       label { min-height: 36px; }
       .seg span { padding: 8px 12px; }
       .btn { padding: 8px 12px; }
+      #groups button { padding: 8px 4px; }
     }
     @media (max-width: 600px) {
       #panel { top: auto; bottom: 24px; left: 12px; right: 12px; width: auto; max-height: 55vh; }
@@ -189,45 +226,43 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
   <details id="panel" open>
     <summary><h1>Radwege Schweitenkirchen</h1></summary>
     <div class="body">
-      <p class="muted"><a href="${viewerHref}">&larr; Zur Karte</a></p>
-      <p>Alle Trassen des Radwegekonzepts der Gemeinde (${conceptDe}) und was öffentlich dokumentiert ist: Gemeinderat, Bürgerversammlungen, Rundschau, Haushalt, Landkreis.</p>
-      <p id="status" aria-live="polite">Lade Daten …</p>
-      <fieldset id="f-status">
-        <legend>Stand</legend>
-        ${STATUS_GROUPS.map((g) =>
-          checkbox('status', g.id, g.label, `<i class="sw" style="background:${g.colour}"></i>`),
-        ).join('\n        ')}
-      </fieldset>
-      <fieldset id="f-plan">
-        <legend>Plan</legend>
-        ${checkbox('plan', 'kurz', PLAN_LABEL.kurz)}
-        ${checkbox('plan', 'lang', PLAN_LABEL.lang)}
-      </fieldset>
-      <fieldset id="f-netz">
-        <legend>Netz</legend>
-        ${Object.entries(NETZ_LABEL)
-          .map(([k, v]) => checkbox('netz', k, v))
-          .join('\n        ')}
-      </fieldset>
-      <fieldset id="f-baulast">
-        <legend>Baulastträger</legend>
-        ${BAULAST.map((b) => checkbox('baulast', b, b === 'unklar' ? 'nicht angegeben' : b)).join('\n        ')}
-      </fieldset>
-      <fieldset class="seg" id="f-farbe">
-        <legend>Farbe nach</legend>
-        <label><input type="radio" name="farbe" value="status" checked><span>Stand</span></label>
-        <label><input type="radio" name="farbe" value="plan"><span>Plan</span></label>
-      </fieldset>
-      <p class="muted" id="line-legend"><i class="sw" style="background:var(--fg)"></i> durchgezogen: vorhanden oder Vollausbau (Lageplan 5/2) · <i class="sw dash" style="border-color:var(--fg)"></i> gestrichelt: übrige Trassen (Lageplan 5/1, bestehender Weg in 5/2) · blasser: Lage nur aus dem Plan übertragen</p>
-      <p id="total" aria-live="polite"></p>
-      <fieldset>
-        <legend><label for="route-search" style="padding:0">Trassen</label></legend>
-        <input id="route-search" type="search" placeholder="Trasse oder Ort suchen" autocomplete="off" />
-        <div class="row-btns"><button class="btn" type="button" id="all-on">alle</button><button class="btn" type="button" id="all-off">keine</button><button class="btn" type="button" id="csv" style="margin-left:auto">CSV</button></div>
-        <div id="routes" role="group" aria-label="Trassen ein- und ausblenden"></div>
-      </fieldset>
+      <div id="overview">
+        <p class="muted"><a href="${viewerHref}">&larr; Zur Karte</a></p>
+        <p class="intro">Das Radwegekonzept der Gemeinde vom ${conceptDe} hat zwei Pläne: kurzfristig vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig ausbauen. Die Karte zeigt für jede Trasse, was seitdem öffentlich dokumentiert ist. Eine Linie anklicken für Details und Quellen.</p>
+        <fieldset class="seg" id="f-plan">
+          <legend>Plan</legend>
+          <label><input type="radio" name="plan" value="kurz" checked><span>Kurzfristig (5/1)</span></label>
+          <label><input type="radio" name="plan" value="lang"><span>Langfristig (5/2)</span></label>
+        </fieldset>
+        <div id="bar" role="group" aria-label="Stand – anklicken, um nur diese Gruppe zu zeigen"></div>
+        <ul id="groups"></ul>
+        <p id="filter-note" hidden></p>
+        <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
+        <p class="muted" id="line-legend" hidden><i class="sw" style="background:var(--fg)"></i> durchgezogen: Neubau oder vorhanden · <i class="sw dash" style="border-color:var(--fg)"></i> gestrichelt: vorhandener Weg, nur Freigabe</p>
+        <h2>Neueste Vorgänge</h2>
+        <ul id="recent"></ul>
+        <details id="more">
+          <summary>Mehr Filter und Trassenliste</summary>
+          <fieldset id="f-netz">
+            <legend>Netz</legend>
+            ${Object.entries(NETZ_LABEL)
+              .map(([k, v]) => checkbox('netz', k, v))
+              .join('\n            ')}
+          </fieldset>
+          <fieldset id="f-baulast">
+            <legend>Baulastträger</legend>
+            ${BAULAST.map((b) => checkbox('baulast', b, b === 'unklar' ? 'nicht angegeben' : b)).join('\n            ')}
+          </fieldset>
+          <fieldset>
+            <legend><label for="route-search" style="padding:0">Trassen</label></legend>
+            <input id="route-search" type="search" placeholder="Trasse oder Ort suchen" autocomplete="off" />
+            <div class="row-btns"><button class="btn" type="button" id="all-on">alle</button><button class="btn" type="button" id="all-off">keine</button><button class="btn" type="button" id="csv" style="margin-left:auto">CSV</button></div>
+            <div id="routes" role="group" aria-label="Trassen ein- und ausblenden"></div>
+          </fieldset>
+        </details>
+        <p class="muted" style="margin-top:8px">Lage der Trassen aus den Lageplänen des Radwegekonzepts übertragen und, wo die Trasse einem Weg folgt, auf OpenStreetMap gelegt (© OpenStreetMap-Mitwirkende); blasser gezeichnet: Lage nur aus dem Plan. „Nichts dokumentiert“ heißt: In den öffentlich zugänglichen Unterlagen wurde nichts gefunden, nicht dass nichts geschehen ist. Stand der Recherche: <span id="stand"></span>.</p>
+      </div>
       <div id="detail" hidden></div>
-      <p class="muted" style="margin-top:8px">Lage der Trassen aus den Lageplänen 5/1 und 5/2 des Radwegekonzepts übertragen und, wo die Trasse einem Weg folgt, auf OpenStreetMap gelegt (© OpenStreetMap-Mitwirkende). „Kein öffentlicher Schritt dokumentiert“ heißt: In den öffentlich zugänglichen Unterlagen wurde nichts gefunden, nicht dass nichts geschehen ist. Stand der Recherche: <span id="stand"></span>.</p>
     </div>
   </details>
   <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
@@ -239,38 +274,44 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const PLAN_LABEL = ${JSON.stringify(PLAN_LABEL)};
     const NETZ_LABEL = ${JSON.stringify(NETZ_LABEL)};
     const AUSBAU_LABEL = ${JSON.stringify(AUSBAU_LABEL)};
-    const PLAN_COLOURS = ${JSON.stringify(PLAN_COLOURS)};
+    const TIMELINE_OPEN = ${TIMELINE_OPEN};
+    const RECENT_COUNT = ${RECENT_COUNT};
+    const CONCEPT_DATE = ${JSON.stringify(CONCEPT_DATE)};
     const GROUP_BY_ID = Object.fromEntries(GROUPS.map((g) => [g.id, g]));
+    const ORDER = GROUPS.map((g) => g.id);
     const $ = (id) => document.getElementById(id);
     const escHtml = (v) => String(v).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
     const km = (m) => (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
     const deDate = (d) => d.split('-').reverse().join('.');
-    const lineGroup = (p) => (p.netz === 'bestand' ? 'bestand' : p.plan);
+    const link = (url, text) => '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">' + escHtml(text) + '</a>';
+    const short = (t, n) => (t.length > n ? t.slice(0, n - 1).replace(/\\s+\\S*$/, '') + ' …' : t);
 
-    // ---- state (URL: lists of switched-off values, so the default URL stays empty)
+    // ---- state (URL keeps only what differs from the default view)
     const params = new URLSearchParams(location.search);
     const offList = (k) => new Set((params.get(k) || '').split(',').filter(Boolean));
     const state = {
-      off: { status: offList('ohne-stand'), plan: offList('ohne-plan'), netz: offList('ohne-netz'), baulast: offList('ohne-baulast') },
+      plan: params.get('plan') === 'lang' ? 'lang' : 'kurz',
+      only: ORDER.includes(params.get('stand')) ? params.get('stand') : null,
+      off: { netz: offList('ohne-netz'), baulast: offList('ohne-baulast') },
       hidden: offList('ohne'),
       selected: params.get('trasse') || null,
-      farbe: params.get('farbe') === 'plan' ? 'plan' : 'status',
       search: '',
     };
-    /** Other routes under the last map click, offered in the detail box. */
+    /** Other routes under the last map click, offered in the detail view. */
     let others = [];
-    const URL_KEYS = { status: 'ohne-stand', plan: 'ohne-plan', netz: 'ohne-netz', baulast: 'ohne-baulast' };
+    const URL_KEYS = { netz: 'ohne-netz', baulast: 'ohne-baulast' };
     function syncUrl() {
       const p = new URLSearchParams();
+      if (state.plan !== 'kurz') p.set('plan', state.plan);
+      if (state.only) p.set('stand', state.only);
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
       if (state.hidden.size) p.set('ohne', [...state.hidden].join(','));
-      if (state.farbe !== 'status') p.set('farbe', state.farbe);
       if (state.selected) p.set('trasse', state.selected);
       const q = p.toString();
       history.replaceState(null, '', location.pathname + (q ? '?' + q : '') + location.hash);
     }
 
-    // Without WebGL MapLibre throws; the list, the details and the CSV still work.
+    // Without WebGL MapLibre throws; the overview, the details and the CSV still work.
     let map = null;
     try {
       map = new maplibregl.Map({
@@ -301,23 +342,31 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const features = data.lines.features;
     if (state.selected && !routeById.has(state.selected)) state.selected = null;
     $('stand').textContent = deDate(data.stand);
-    $('status').textContent = routes.filter((r) => r.id !== 'bestand').length + ' Trassen in ' + features.length + ' Linienstücken.';
 
-    // Group of a route in the list: the "furthest" group among its lines.
-    const ORDER = GROUPS.map((g) => g.id);
-    const routeGroup = new Map();
-    for (const f of features) {
-      const g = f.properties.status, cur = routeGroup.get(f.properties.routeId);
-      if (cur == null || ORDER.indexOf(g) < ORDER.indexOf(cur)) routeGroup.set(f.properties.routeId, g);
-    }
-
-    function passesFilters(p) {
+    // ---- filters
+    /** Existing paths belong to both views; everything else to its plan. */
+    const inPlan = (p) => p.plan === state.plan || p.status === 'bestand';
+    function passesOther(p) {
       const r = routeById.get(p.routeId);
-      return !state.off.status.has(p.status) && !state.off.plan.has(p.plan) && !state.off.netz.has(p.netz) && !state.off.baulast.has(r.baulast);
+      return inPlan(p) && !state.off.netz.has(p.netz) && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
     }
-    const visible = () => features.filter((f) => passesFilters(f.properties) && !state.hidden.has(f.properties.routeId));
+    const passes = (p) => passesOther(p) && (!state.only || p.status === state.only);
+    const visible = () => features.filter((f) => passes(f.properties));
+    /** Groups of a route's lines in the current plan, furthest first. */
+    function routeGroups(id) {
+      const gs = new Set();
+      for (const f of features) if (f.properties.routeId === id && inPlan(f.properties)) gs.add(f.properties.status);
+      return [...gs].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
+    }
 
     // ---- controls
+    for (const input of document.querySelectorAll('input[name=plan]')) {
+      input.checked = input.value === state.plan;
+      input.addEventListener('change', () => {
+        state.plan = input.value;
+        render();
+      });
+    }
     for (const [k] of Object.entries(URL_KEYS)) {
       for (const input of document.querySelectorAll('input[name=' + k + ']')) {
         input.checked = !state.off[k].has(input.value);
@@ -328,13 +377,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         });
       }
     }
-    for (const input of document.querySelectorAll('input[name=farbe]')) {
-      input.checked = input.value === state.farbe;
-      input.addEventListener('change', () => {
-        state.farbe = input.value;
-        render();
-      });
-    }
+    if (state.off.netz.size || state.off.baulast.size || state.hidden.size) $('more').open = true;
     $('route-search').addEventListener('input', (e) => {
       state.search = e.target.value.trim().toLowerCase();
       renderList();
@@ -349,39 +392,63 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       render();
     });
     $('csv').addEventListener('click', downloadCsv);
+    function toggleOnly(id) {
+      state.only = state.only === id ? null : id;
+      render();
+    }
+    // Delegated: links to a route anywhere in the panel (recent list, "auch hier")
+    document.addEventListener('click', (e) => {
+      const a = e.target.closest && e.target.closest('[data-select]');
+      if (!a) return;
+      e.preventDefault();
+      select(a.dataset.select, true);
+    });
 
     // ---- map
     const EMPTY = { type: 'FeatureCollection', features: [] };
-    function colourExpr() {
-      if (state.farbe === 'plan') {
-        return ['case', ['==', ['get', 'netz'], 'bestand'], PLAN_COLOURS.bestand, ['==', ['get', 'plan'], 'kurz'], PLAN_COLOURS.kurz, PLAN_COLOURS.lang];
-      }
-      return ['match', ['get', 'status'], ...GROUPS.flatMap((g) => [g.id, g.colour]), '#888'];
-    }
-    const SOLID = ['any', ['==', ['get', 'status'], 'bestand'], ['==', ['get', 'ausbau'], 'voll']];
+    const COLOUR = ['match', ['get', 'status'], ...GROUPS.flatMap((g) => [g.id, g.colour]), '#888'];
+    // Dashes only mean something in plan 5/2 (existing way, release only)
+    const DASHED = ['==', ['get', 'ausbau'], 'bestand-weg'];
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
+    const LINE_LAYERS = ['radwege-solid', 'radwege-dashed'];
     let mapReady = false;
+    let hoverPopup = null;
     function onMapReady(fn) {
       if (!map) {
-        $('status').textContent += ' Die Karte kann in diesem Browser nicht angezeigt werden (WebGL fehlt); Liste und Details funktionieren.';
+        $('status').textContent += ' Die Karte kann in diesem Browser nicht angezeigt werden (WebGL fehlt); Übersicht und Details funktionieren.';
         return;
       }
       if (map.isStyleLoaded()) fn();
       else map.once('load', fn);
     }
     onMapReady(() => {
+      if (data.outline) {
+        map.addSource('gemeinde', { type: 'geojson', data: data.outline });
+        map.addLayer({ id: 'gemeinde', type: 'line', source: 'gemeinde', paint: { 'line-color': '#5a6068', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.8 } });
+      }
       map.addSource('radwege', { type: 'geojson', data: EMPTY, promoteId: 'fid' });
+      map.addLayer({ id: 'radwege-selected', type: 'line', source: 'radwege', filter: ['==', ['get', 'routeId'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffd400', 'line-width': width(10), 'line-opacity': 0.6 } });
       map.addLayer({ id: 'radwege-casing', type: 'line', source: 'radwege', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': width(6), 'line-opacity': 0.9 } });
-      map.addLayer({ id: 'radwege-solid', type: 'line', source: 'radwege', filter: SOLID, layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': width(3.5) } });
-      map.addLayer({ id: 'radwege-dashed', type: 'line', source: 'radwege', filter: ['!', SOLID], layout: { 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-dasharray': [2, 1.2] } });
-      map.addLayer({ id: 'radwege-selected', type: 'line', source: 'radwege', filter: ['==', ['get', 'routeId'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffd400', 'line-width': width(9), 'line-opacity': 0.55 } }, 'radwege-casing');
-      for (const id of ['radwege-solid', 'radwege-dashed']) {
-        map.on('mouseenter', id, () => (map.getCanvas().style.cursor = 'pointer'));
-        map.on('mouseleave', id, () => (map.getCanvas().style.cursor = ''));
+      map.addLayer({ id: 'radwege-solid', type: 'line', source: 'radwege', filter: ['!', DASHED], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-color': COLOUR } });
+      map.addLayer({ id: 'radwege-dashed', type: 'line', source: 'radwege', filter: DASHED, layout: { 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-dasharray': [2, 1.2], 'line-color': COLOUR } });
+      for (const id of LINE_LAYERS) {
+        map.setPaintProperty(id, 'line-opacity', ['case', ['>', ['get', 'fromPlan'], 0.5], 0.6, 1]);
+        map.on('mousemove', id, (e) => {
+          map.getCanvas().style.cursor = 'pointer';
+          const p = e.features && e.features[0] && e.features[0].properties;
+          if (!p) return;
+          const r = routeById.get(p.routeId);
+          if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong><br>' + escHtml(GROUP_BY_ID[p.status].label)).addTo(map);
+        });
+        map.on('mouseleave', id, () => {
+          map.getCanvas().style.cursor = '';
+          if (hoverPopup) hoverPopup.remove();
+        });
       }
       map.on('click', (e) => {
         const box = [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]];
-        const hits = map.queryRenderedFeatures(box, { layers: ['radwege-solid', 'radwege-dashed'] });
+        const hits = map.queryRenderedFeatures(box, { layers: LINE_LAYERS });
         const ids = [...new Set(hits.map((h) => h.properties.routeId))];
         if (ids.length) select(ids[0], false, ids.slice(1));
       });
@@ -396,40 +463,83 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       if (mapReady) {
         const src = map.getSource('radwege');
         if (src) src.setData({ type: 'FeatureCollection', features: vis });
-        for (const id of ['radwege-solid', 'radwege-dashed']) {
-          map.setPaintProperty(id, 'line-color', colourExpr());
-          map.setPaintProperty(id, 'line-opacity', ['case', ['>', ['get', 'fromPlan'], 0.5], 0.6, 1]);
-        }
         map.setFilter('radwege-selected', ['==', ['get', 'routeId'], state.selected || '']);
       }
-      // km per filter value, counting the lines that pass every other filter
-      for (const el of document.querySelectorAll('[data-km]')) {
-        const [k, v] = el.dataset.km.split(':');
-        let m = 0;
-        for (const f of features) {
-          const p = f.properties;
-          if (state.hidden.has(p.routeId)) continue;
-          const val = k === 'baulast' ? routeById.get(p.routeId).baulast : p[k];
-          if (val !== v) continue;
-          const saved = state.off[k];
-          state.off[k] = new Set();
-          if (passesFilters(p)) m += p.m;
-          state.off[k] = saved;
-        }
-        el.textContent = km(m);
-      }
-      const totalM = vis.reduce((s, f) => s + f.properties.m, 0);
-      const shown = new Set(vis.map((f) => f.properties.routeId));
-      $('total').textContent = 'Angezeigt: ' + shown.size + ' Trassen, ' + km(totalM) + ' Linie' + (state.off.plan.size === 0 ? ' (Trassen in beiden Plänen doppelt gezählt)' : '') + '.';
+      $('line-legend').hidden = state.plan !== 'lang';
+      renderGroups();
+      $('status').textContent = 'Angezeigt: ' + new Set(vis.map((f) => f.properties.routeId)).size + ' Trassen, ' + km(vis.reduce((s, f) => s + f.properties.m, 0)) + '.';
+      renderRecent();
       renderList();
       renderDetail();
+    }
+
+    /** Bar + legend: km per group among the lines that pass every filter except the group. */
+    function renderGroups() {
+      const m = Object.fromEntries(ORDER.map((g) => [g, 0]));
+      for (const f of features) if (passesOther(f.properties)) m[f.properties.status] += f.properties.m;
+      const total = Object.values(m).reduce((a, b) => a + b, 0) || 1;
+      const bar = $('bar'), list = $('groups');
+      bar.textContent = '';
+      list.textContent = '';
+      for (const g of GROUPS) {
+        const dim = state.only && state.only !== g.id;
+        if (m[g.id] > 0) {
+          const seg = document.createElement('button');
+          seg.type = 'button';
+          seg.style.background = g.colour;
+          seg.style.width = (100 * m[g.id]) / total + '%';
+          seg.title = g.label + ': ' + km(m[g.id]);
+          seg.setAttribute('aria-label', g.label + ', ' + km(m[g.id]));
+          if (dim) seg.classList.add('dim');
+          seg.addEventListener('click', () => toggleOnly(g.id));
+          bar.appendChild(seg);
+        }
+        // groups this view has no line of are left out, unless they are the active filter
+        if (!m[g.id] && state.only !== g.id) continue;
+        const li = document.createElement('li');
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.dataset.group = g.id;
+        b.title = g.hint;
+        b.setAttribute('aria-pressed', String(state.only === g.id));
+        if (dim) b.classList.add('dim');
+        b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + '</span><span class="km">' + km(m[g.id]) + '</span>';
+        b.addEventListener('click', () => toggleOnly(g.id));
+        li.appendChild(b);
+        list.appendChild(li);
+      }
+      const note = $('filter-note');
+      note.hidden = !state.only;
+      if (state.only) {
+        note.innerHTML = '<strong>Nur:</strong> ' + escHtml(GROUP_BY_ID[state.only].hint) + ' <button class="linkbtn" type="button" id="only-reset">Alle zeigen</button>';
+        $('only-reset').addEventListener('click', () => toggleOnly(state.only));
+      }
+    }
+
+    function renderRecent() {
+      const all = [];
+      for (const r of routes) for (const e of r.events) if (!e.uncertain) all.push({ r, e });
+      all.sort((a, b) => (a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : 0));
+      const seen = new Set();
+      const items = [];
+      for (const x of all) {
+        // the same document often concerns two routes: list it once
+        const key = x.e.date + '|' + x.e.text;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        items.push(x);
+        if (items.length === RECENT_COUNT) break;
+      }
+      $('recent').innerHTML = items
+        .map(({ r, e }) => '<li><span class="when">' + escHtml(deDate(e.date)) + '</span> · <a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a><br>' + escHtml(short(e.text, 140)) + ' ' + link(e.url, e.source) + '</li>')
+        .join('');
     }
 
     function renderList() {
       const box = $('routes');
       box.textContent = '';
       for (const r of listed()) {
-        const g = GROUP_BY_ID[routeGroup.get(r.id)];
+        const g = GROUP_BY_ID[routeGroups(r.id)[0]];
         const lab = document.createElement('label');
         lab.dataset.route = r.id;
         if (r.id === state.selected) lab.classList.add('selected');
@@ -444,8 +554,8 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         });
         const dot = document.createElement('i');
         dot.className = 'dot';
-        dot.style.background = g ? g.colour : '#888';
-        dot.title = g ? g.label : '';
+        dot.style.background = g ? g.colour : 'transparent';
+        dot.title = g ? g.label : 'nicht in diesem Plan';
         const name = document.createElement('span');
         name.className = 'name';
         name.textContent = r.name + (r.road ? ' (' + r.road + ')' : '');
@@ -461,85 +571,93 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     }
 
     function select(id, zoom, more) {
+      const r = routeById.get(id);
+      if (!r) return;
       state.selected = id;
       others = more || [];
-      if (state.hidden.has(id)) state.hidden.delete(id);
+      state.hidden.delete(id);
+      // A route only in the other plan: switch plans instead of showing an empty selection
+      if (!r.built && id !== 'bestand' && !r.plans[state.plan]) {
+        state.plan = r.plans.kurz ? 'kurz' : 'lang';
+        for (const input of document.querySelectorAll('input[name=plan]')) input.checked = input.value === state.plan;
+      }
+      // The group filter must not hide what was just picked
+      if (state.only && !routeGroups(id).includes(state.only)) state.only = null;
       render();
-      if (zoom) {
-        const fs = features.filter((f) => f.properties.routeId === id);
+      $('panel').open = true;
+      $('panel').scrollTop = 0;
+      if (zoom && map) {
+        const fs = features.filter((f) => f.properties.routeId === id && inPlan(f.properties));
         let w = 180, s = 90, e = -180, n = -90;
         for (const f of fs) for (const [x, y] of f.geometry.coordinates) { w = Math.min(w, x); s = Math.min(s, y); e = Math.max(e, x); n = Math.max(n, y); }
-        if (fs.length && map) map.fitBounds([[w, s], [e, n]], { padding: 60, maxZoom: 15, duration: 500 });
+        if (fs.length) map.fitBounds([[w, s], [e, n]], { padding: 60, maxZoom: 15, duration: 500 });
       }
-      const row = document.querySelector('#routes [data-route="' + id + '"]');
-      if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
-      $('detail').scrollIntoView && $('detail').scrollIntoView({ block: 'nearest' });
+    }
+
+    function closeDetail() {
+      state.selected = null;
+      others = [];
+      render();
     }
 
     function renderDetail() {
       const box = $('detail');
       const r = state.selected && routeById.get(state.selected);
       box.hidden = !r;
+      $('overview').hidden = Boolean(r);
       if (!r) return;
-      const fs = features.filter((f) => f.properties.routeId === r.id);
-      const groups = [...new Set(fs.map((f) => f.properties.status))].sort((a, b) => ORDER.indexOf(a) - ORDER.indexOf(b));
-      const plans = Object.entries(r.plans).map(([p, n]) => escHtml(PLAN_LABEL[p]) + ': ' + escHtml(NETZ_LABEL[n]));
-      const ausbau = {};
-      for (const f of fs) ausbau[f.properties.ausbau] = (ausbau[f.properties.ausbau] || 0) + f.properties.m;
-      const fromPlanM = fs.reduce((s, f) => s + f.properties.m * f.properties.fromPlan, 0);
-      const totalM = fs.reduce((s, f) => s + f.properties.m, 0);
-      let h = '<h2>' + escHtml(r.name) + (r.road ? ' <span class="muted">' + escHtml(r.road) + '</span>' : '') + '</h2>';
-      h += '<p>' + groups.map((g) => '<span class="badge" style="background:' + GROUP_BY_ID[g].colour + '">' + escHtml(GROUP_BY_ID[g].label) + '</span>').join(' ') + '</p>';
-      if (r.firstStep) {
-        h += '<p>Erster dokumentierter Schritt: <strong>' + escHtml(deDate(r.firstStep.date)) + '</strong> – ' + escHtml(r.firstStep.kind) + ' (' + escHtml(r.firstStep.source) + ')</p>';
-      } else if (!r.built && r.id !== 'bestand') {
-        h += '<p>Kein öffentlicher Schritt dokumentiert.</p>';
+      const fs = features.filter((f) => f.properties.routeId === r.id && inPlan(f.properties));
+      const groups = routeGroups(r.id);
+      const latest = r.events.filter((e) => !e.uncertain).slice(-1)[0];
+      let h = '<p><button class="btn" type="button" id="detail-close">&larr; Übersicht</button></p>';
+      if (others.length) {
+        h += '<p class="muted">Hier liegen auch: ' + others.map((id) => '<a href="#" data-select="' + escHtml(id) + '">' + escHtml(routeById.get(id).name) + '</a>').join(', ') + '</p>';
       }
-      h += '<dl>';
+      h += '<h2>' + escHtml(r.name) + (r.road ? ' <span class="muted">' + escHtml(r.road) + '</span>' : '') + '</h2>';
+      h += '<p>' + groups.map((g) => '<span class="badge" style="background:' + GROUP_BY_ID[g].colour + '">' + escHtml(GROUP_BY_ID[g].label) + '</span>').join(' ') + '</p>';
+      h += '<dl class="summary">';
+      const stand = r.firstStep && !r.built
+        ? 'Erster dokumentierter Schritt: ' + deDate(r.firstStep.date) + ' (' + r.firstStep.kind + ') – ' + (groups[0] === 'vor-konzept' ? 'vor' : 'nach') + ' dem Konzept vom ' + deDate(CONCEPT_DATE) + '.'
+        : groups.length ? GROUP_BY_ID[groups[0]].hint : '–';
+      h += '<dt>Stand</dt><dd>' + escHtml(stand) + '</dd>';
+      h += '<dt>Zuletzt</dt><dd>' + (latest ? '<strong>' + escHtml(deDate(latest.date)) + '</strong> ' + escHtml(short(latest.text, 160)) + ' ' + link(latest.url, latest.source) : 'Kein öffentlicher Vorgang gefunden.') + '</dd>';
+      if (r.kusHorizont) h += '<dt>Angekündigt</dt><dd>' + escHtml(r.kusHorizont) + ' ' + link(data.sources.kus, 'KUS-Steckbrief') + '</dd>';
+      h += '</dl>';
+      if (r.events.length) {
+        const evs = r.events.slice().reverse();
+        const item = (e) => {
+          const step = STEP_KINDS.includes(e.kind) && !e.uncertain;
+          return '<li class="' + (step ? 'step' : '') + (e.uncertain ? ' uncertain' : '') + '"><span class="when">' + escHtml(deDate(e.date)) + '</span><span class="kind">' + escHtml(e.kind) + (e.uncertain ? ' · möglicherweise verwandt' : '') + '</span><br>' + escHtml(e.text) + ' ' + link(e.url, e.source) + '</li>';
+        };
+        h += '<h3>Vorgänge (' + evs.length + ')</h3><ul class="timeline">' + evs.slice(0, TIMELINE_OPEN).map(item).join('') + '</ul>';
+        if (evs.length > TIMELINE_OPEN) {
+          h += '<details><summary>Ältere Vorgänge (' + (evs.length - TIMELINE_OPEN) + ')</summary><ul class="timeline">' + evs.slice(TIMELINE_OPEN).map(item).join('') + '</ul></details>';
+        }
+      }
+      h += '<h3>Fakten</h3><dl>';
+      const plans = Object.entries(r.plans).map(([p, n]) => escHtml(PLAN_LABEL[p]) + ': ' + escHtml(NETZ_LABEL[n]));
       if (plans.length) h += '<dt>Plan</dt><dd>' + plans.join('<br>') + '</dd>';
       const len = [];
       if (r.lengthConceptKm) len.push('Konzept ca. ' + r.lengthConceptKm.toLocaleString('de-DE') + ' km');
       for (const [p, v] of Object.entries(r.km)) len.push((p === 'kurz' ? 'Lageplan 5/1' : 'Lageplan 5/2') + ' gemessen ' + v.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' km');
       if (len.length) h += '<dt>Länge</dt><dd>' + len.join('<br>') + '</dd>';
-      h += '<dt>Ausbau</dt><dd>' + Object.entries(ausbau).map(([a, m]) => escHtml(AUSBAU_LABEL[a]) + ': ' + km(m)).join('<br>') + '</dd>';
+      const ausbau = {};
+      for (const f of fs) ausbau[f.properties.ausbau] = (ausbau[f.properties.ausbau] || 0) + f.properties.m;
+      if (fs.length) h += '<dt>Ausbau</dt><dd>' + Object.entries(ausbau).map(([a, m]) => escHtml(AUSBAU_LABEL[a]) + ': ' + km(m)).join('<br>') + '</dd>';
       h += '<dt>Baulast</dt><dd>' + escHtml(r.baulast === 'unklar' ? 'nicht angegeben' : r.baulast) + (r.baulastNote ? '<br><span class="muted">' + escHtml(r.baulastNote) + '</span>' : '') + '</dd>';
       if (r.konzeptHinweis) h += '<dt>Konzept</dt><dd>' + escHtml(r.konzeptHinweis) + '</dd>';
-      if (r.kusHorizont) h += '<dt>Landkreis (KUS)</dt><dd>' + escHtml(r.kusHorizont) + '</dd>';
       h += '</dl>';
       if (r.documented) h += '<p class="note">' + escHtml(r.documented) + '</p>';
-      if (r.events.length) {
-        h += '<ul class="timeline">';
-        for (const e of r.events) {
-          const step = STEP_KINDS.includes(e.kind) && !e.uncertain;
-          h += '<li class="' + (step ? 'step' : '') + (e.uncertain ? ' uncertain' : '') + '"><span class="when">' + escHtml(deDate(e.date)) + '</span><span class="kind">' + escHtml(e.kind) + (e.uncertain ? ' · möglicherweise verwandt' : '') + '</span><br>' + escHtml(e.text) + ' <a href="' + escHtml(e.url) + '" target="_blank" rel="noopener">' + escHtml(e.source) + '</a></li>';
-        }
-        h += '</ul>';
-      } else if (r.id !== 'bestand') {
-        h += '<p class="muted">In den öffentlichen Unterlagen (Ratsinformationssystem, Bürgerversammlungen, Rundschau, Haushalt, KUS-Steckbrief) wurde zu dieser Trasse kein Vorgang gefunden.</p>';
-      }
+      const fromPlanM = fs.reduce((s, f) => s + f.properties.m * f.properties.fromPlan, 0);
+      const totalM = fs.reduce((s, f) => s + f.properties.m, 0);
       if (fromPlanM > 0.05 * totalM) h += '<p class="muted">' + km(fromPlanM) + ' der Linie folgen keinem Weg in OpenStreetMap und sind nur aus dem Lageplan übertragen (Lage ungefähr).</p>';
       const links = [];
-      if (r.plans.kurz || r.id === 'bestand') links.push('<a href="' + escHtml(data.sources.kurz) + '" target="_blank" rel="noopener">Lageplan 5/1</a>');
-      if (r.plans.lang) links.push('<a href="' + escHtml(data.sources.lang) + '" target="_blank" rel="noopener">Lageplan 5/2</a>');
-      links.push('<a href="' + escHtml(data.sources.erlaeuterung) + '" target="_blank" rel="noopener">Erläuterung</a>');
-      if (r.kusHorizont) links.push('<a href="' + escHtml(data.sources.kus) + '" target="_blank" rel="noopener">KUS-Steckbrief</a>');
+      if (r.plans.kurz || r.id === 'bestand') links.push(link(data.sources.kurz, 'Lageplan 5/1'));
+      if (r.plans.lang) links.push(link(data.sources.lang, 'Lageplan 5/2'));
+      links.push(link(data.sources.erlaeuterung, 'Erläuterung'));
       h += '<p>Konzept: ' + links.join(' · ') + '</p>';
-      if (others.length) {
-        h += '<p class="muted">An dieser Stelle auch: ' + others.map((id) => '<a href="#" data-select="' + escHtml(id) + '">' + escHtml(routeById.get(id).name) + '</a>').join(', ') + '</p>';
-      }
-      h += '<p><button class="btn" type="button" id="detail-close">Schließen</button></p>';
       box.innerHTML = h;
-      for (const a of box.querySelectorAll('[data-select]')) {
-        a.addEventListener('click', (e) => {
-          e.preventDefault();
-          select(a.dataset.select, true);
-        });
-      }
-      $('detail-close').addEventListener('click', () => {
-        state.selected = null;
-        others = [];
-        render();
-      });
+      $('detail-close').addEventListener('click', closeDetail);
     }
 
     function downloadCsv() {
@@ -555,6 +673,9 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       a.click();
     }
 
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && state.selected) closeDetail();
+    });
     render();
     if (state.selected && !location.hash.includes('karte=')) select(state.selected, true);
   })();

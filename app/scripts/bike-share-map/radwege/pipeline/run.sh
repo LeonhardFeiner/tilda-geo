@@ -54,4 +54,5 @@ fi
 # the repo's formatter owns the layout of committed JSON (pre-commit hook would change it anyway)
 REPO="$(cd "$RADWEGE/../../../.." && pwd)"
 (cd "$REPO" && app/node_modules/.bin/oxfmt --write -c app/oxfmt.config.mjs \
-  app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json >/dev/null)
+  app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json \
+  app/scripts/bike-share-map/radwege/gemeinde.geojson >/dev/null)

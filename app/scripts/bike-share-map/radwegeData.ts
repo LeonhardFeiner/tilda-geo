@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { length as turfLength } from '@turf/turf'
 import { z } from 'zod'
@@ -104,10 +104,25 @@ export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
       geometry: { type: 'LineString'; coordinates: [number, number][] }
     }[]
   }
+  /** Gemeinde boundary (radwege/gemeinde.geojson), drawn as context. */
+  outline: z.infer<typeof OutlineSchema> | null
 }
 
+const OutlineSchema = z.object({
+  type: z.literal('Feature'),
+  properties: z.object({ name: z.string() }).loose(),
+  geometry: z.object({
+    type: z.enum(['Polygon', 'MultiPolygon']),
+    coordinates: z.array(z.unknown()),
+  }),
+})
+
 /** Joins routes and lines, derives each line's group, checks that both files agree. */
-export function buildRadwegeData(routesFile: unknown, linesFile: unknown): RadwegeData {
+export function buildRadwegeData(
+  routesFile: unknown,
+  linesFile: unknown,
+  outlineFile: unknown = null,
+): RadwegeData {
   const { routes, ...meta } = RoutesFileSchema.parse(routesFile)
   const lines = LinesFileSchema.parse(linesFile)
   const byId = new Map(routes.map((r) => [r.id, r]))
@@ -159,6 +174,7 @@ export function buildRadwegeData(routesFile: unknown, linesFile: unknown): Radwe
       ),
     })),
     lines: { type: 'FeatureCollection', features },
+    outline: outlineFile == null ? null : OutlineSchema.parse(outlineFile),
   }
 }
 
@@ -166,5 +182,8 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
   return buildRadwegeData(
     JSON.parse(readFileSync(join(dir, 'routes.json'), 'utf8')),
     JSON.parse(readFileSync(join(dir, 'lines.geojson'), 'utf8')),
+    existsSync(join(dir, 'gemeinde.geojson'))
+      ? JSON.parse(readFileSync(join(dir, 'gemeinde.geojson'), 'utf8'))
+      : null,
   )
 }

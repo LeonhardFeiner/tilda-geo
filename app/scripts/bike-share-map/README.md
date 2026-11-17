@@ -105,8 +105,10 @@ the built `detourRouting.js`.
 ## Radwege tracker (`radwege-schweitenkirchen.html`, github.io only)
 
 Every route of the Schweitenkirchen Radwegekonzept (WipflerPLAN, 07.06.2024, Lagepläne 5/1 and
-5/2) on a map, with what has publicly happened to it: filters by progress group, plan, network and
-Baulastträger, single routes on/off, a click shows facts, a dated timeline and the public sources.
+5/2) on a map, with what has publicly happened to it. One plan at a time; a bar of the progress
+groups is summary, legend and filter at once; "Neueste Vorgänge" lists the latest events; network,
+Baulastträger and the route list sit under "Mehr Filter". A click on a line replaces the overview
+with the route: status, latest event, announced date, then the timeline and the sources.
 Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page and its data.
 
 - `radwege/routes.json`: the routes and their dated events (each with a public URL), transcribed
@@ -114,6 +116,7 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   this to record progress; the build validates it (`radwegeData.ts`).
 - `radwege/lines.geojson`: the route lines, extracted from the vector Lagepläne
   (`radwege/README.md`). Regenerate only when the plans or the route list change.
+- `radwege/gemeinde.geojson`: the Gemeinde boundary drawn as context (written by the extraction).
 - The group of a line is derived, never typed in (`radwegeStatus.ts`): built → "Vorhanden";
   else the first certain step (Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau,
   Eröffnung) before/since 07.06.2024; without one, lines that need no construction (plan 5/1,

@@ -43,18 +43,36 @@ export type RouteEvent = {
 export const AUSBAU = ['freigabe', 'bestand-weg', 'voll', 'bestand'] as const
 export type Ausbau = (typeof AUSBAU)[number]
 
+/** `hint`: one sentence for the legend and the detail view of the tracker page. */
 export const STATUS_GROUPS = [
-  { id: 'bestand', label: 'Vorhanden', colour: '#1a7f37' },
-  { id: 'vor-konzept', label: 'Begonnen vor dem Konzept', colour: '#1f5fae' },
-  { id: 'seit-konzept', label: 'Begonnen seit dem Konzept', colour: '#8e44ad' },
+  {
+    id: 'bestand',
+    label: 'Vorhanden',
+    hint: 'Der Weg ist gebaut und befahrbar.',
+    colour: '#1a7f37',
+  },
+  {
+    id: 'vor-konzept',
+    label: 'Begonnen vor dem Konzept',
+    hint: 'Erster dokumentierter Schritt (Beschluss, Grunderwerb, Planung, Programm, Haushalt) vor dem 07.06.2024.',
+    colour: '#1f5fae',
+  },
+  {
+    id: 'seit-konzept',
+    label: 'Begonnen seit dem Konzept',
+    hint: 'Erster dokumentierter Schritt am oder nach dem 07.06.2024.',
+    colour: '#8e44ad',
+  },
   {
     id: 'nur-freigabe',
-    label: 'Freigabe/Beschilderung vorhandener Wege, kein Schritt dokumentiert',
+    label: 'Nur Schilder/Freigabe nötig – nichts dokumentiert',
+    hint: 'Laut Konzept genügt es, einen vorhandenen Weg für Räder freizugeben und zu beschildern; öffentlich dokumentiert ist dazu nichts.',
     colour: '#d68910',
   },
   {
     id: 'kein-schritt',
-    label: 'Ausbau nötig, kein öffentlicher Schritt dokumentiert',
+    label: 'Neubau nötig – nichts dokumentiert',
+    hint: 'Laut Konzept muss hier gebaut werden (Vollausbau); öffentlich dokumentiert ist dazu nichts.',
     colour: '#c0392b',
   },
 ] as const

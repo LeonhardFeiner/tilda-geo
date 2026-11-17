@@ -2,6 +2,7 @@
 # OSM roads, paths and bike lanes around Schweitenkirchen from the local tilda-geo database
 # (TILDA tables roads, roadsPathClasses, bikelanes), plus the OSM place nodes of
 # routing/cache/places-de.json, as {"ways": [...], "places": [...]} for georef.py / assign.py.
+# Also writes ../gemeinde.geojson (the Gemeinde boundary the page draws).
 #
 #   export_osm.sh <out.json>
 set -euo pipefail
@@ -38,3 +39,10 @@ json.dump(dict(ways=ways, places=places), open(out, 'w'))
 print(f'OSM: {len(ways)} ways, {len(places)} places', file=sys.stderr)
 EOF
 rm "$OUT.ways"
+
+# Gemeinde boundary for the page (context layer), simplified to ~5 m
+docker exec db psql -U postgres -Atc "
+select json_build_object('type', 'Feature',
+  'properties', json_build_object('name', tags->>'name', 'osm', 'relation/396557'),
+  'geometry', ST_AsGeoJSON(ST_Transform(ST_SimplifyPreserveTopology(geom, 5), 4326), 5)::json)
+from boundaries where osm_id = 396557" > "$HERE/../gemeinde.geojson"
