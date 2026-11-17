@@ -96,6 +96,13 @@ export const DETOUR_PAGE_STEM = 'umweg'
 export const DETOUR_DIR = 'detour'
 
 /**
+ * Unlisted Radwege tracker (radwegePage.ts): every route of the Schweitenkirchen Radwegekonzept
+ * and its documented progress. github.io only — the mirror job in pages-viewer.yml deletes the
+ * page and its data file (same stem, .json).
+ */
+export const RADWEGE_PAGE_STEM = 'radwege-schweitenkirchen'
+
+/**
  * File names inside output/viewer/ that the build writes and the page fetches. One place, so the
  * build, the page (generateViewerHtml CONFIG), the CSV and the model fit can't drift apart.
  */

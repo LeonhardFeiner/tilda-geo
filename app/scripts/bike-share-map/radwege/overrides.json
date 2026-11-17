@@ -1,0 +1,93 @@
+{
+  "kurz|pfaffenhofen-schweitenkirchen": {
+    "branches": [
+      [
+        [82.5, 619.5],
+        [281.5, 696.4]
+      ]
+    ]
+  },
+  "kurz|st2045-preinersdorf-landkreisgrenze": {
+    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]]
+  },
+  "lang|st2045-preinersdorf-landkreisgrenze": {
+    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]]
+  },
+  "kurz|preinerszell-hirschhausen": {
+    "branches": [["Preinerszell", [567.8, 533.5]]]
+  },
+  "kurz|duernzhausen-schmiedhausen": {
+    "branches": [
+      [
+        [567.8, 533.5],
+        [500.8, 641.5]
+      ]
+    ]
+  },
+  "kurz|schmiedhausen-schweitenkirchen-paf25": {
+    "label": [500, 700],
+    "branches": [
+      [
+        [500.8, 641.5],
+        [504.0, 757.6]
+      ]
+    ]
+  },
+  "kurz|preinerszell-hirschhausen-hellblau": {
+    "branches": [[[567.8, 533.5], "Hirschhausen"]]
+  },
+  "kurz|duernzhausen-schmiedhausen-hellblau": {
+    "branches": [["Dürnzhausen", [545.0, 500.5]]]
+  },
+  "kurz|oberthann-schweitenkirchen": {
+    "branches": [
+      ["Oberthann", [381.3, 782.8]],
+      [
+        [306.0, 749.5],
+        [315.8, 734.7]
+      ]
+    ]
+  },
+  "kurz|oberthann-schweitenkirchen-alternative": {
+    "branches": [
+      [
+        [348.5, 782.8],
+        [314.2, 818.2]
+      ]
+    ]
+  },
+  "kurz|frickendorf-oberthann": {
+    "branches": [["Frickendorf", [278.2, 623.5]]]
+  },
+  "kurz|landkreisgrenze-holzhausen": {
+    "branches": [[[959.6, 832.0], "Holzhausen"]]
+  },
+  "kurz|oberthann-guentersdorf": {
+    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]]
+  },
+  "lang|oberthann-guentersdorf": {
+    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]]
+  },
+  "kurz|paf23-preinerszell": {
+    "branches": [[[325.8, 355.4], "Preinerszell"]]
+  },
+  "lang|paf23-preinerszell": {
+    "branches": [[[325.8, 355.4], "Preinerszell"]]
+  },
+  "lang|aufham-guentersdorf-dietersdorf-ampertshausen": {
+    "branches": [
+      ["Aufham", "Dietersdorf"],
+      ["Güntersdorf", "Dietersdorf"],
+      ["Dietersdorf", "Ampertshausen"]
+    ]
+  },
+  "kurz|ampertshausen-saulhof-kirchdorf": {
+    "branches": [
+      ["Dietersdorf", "Ampertshausen"],
+      ["Ampertshausen", "Saulhof", "open"]
+    ]
+  },
+  "lang|loipersdorf-st2045": {
+    "branches": [["Loipersdorf", [716.7, 706.9]]]
+  }
+}

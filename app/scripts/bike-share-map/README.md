@@ -101,3 +101,24 @@ bun run bike-share-map:viewer
 The stress model and cost formula live in `detourRouting.ts` (tested in `detourRouting.test.ts`);
 after changing it, rebuild the viewer before running `detourPage.test.ts` — the page test loads
 the built `detourRouting.js`.
+
+## Radwege tracker (`radwege-schweitenkirchen.html`, github.io only)
+
+Every route of the Schweitenkirchen Radwegekonzept (WipflerPLAN, 07.06.2024, Lagepläne 5/1 and
+5/2) on a map, with what has publicly happened to it: filters by progress group, plan, network and
+Baulastträger, single routes on/off, a click shows facts, a dated timeline and the public sources.
+Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page and its data.
+
+- `radwege/routes.json`: the routes and their dated events (each with a public URL), transcribed
+  from schweitenkirchen-research (`Radwege-Schweitenkirchen-Aussagen-der-Gemeinde.md`). Edit
+  this to record progress; the build validates it (`radwegeData.ts`).
+- `radwege/lines.geojson`: the route lines, extracted from the vector Lagepläne
+  (`radwege/README.md`). Regenerate only when the plans or the route list change.
+- The group of a line is derived, never typed in (`radwegeStatus.ts`): built → "Vorhanden";
+  else the first certain step (Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau,
+  Eröffnung) before/since 07.06.2024; without one, lines that need no construction (plan 5/1,
+  dashed in 5/2) are "Freigabe/Beschilderung", the rest "Ausbau nötig, kein Schritt".
+  Statements, citizen questions, announcements and events marked `uncertain` never count.
+
+`buildViewer.ts` writes the page and `radwege-schweitenkirchen.json`; tests:
+`radwegeStatus.test.ts`, `radwegePage.test.ts` (jsdom, needs the built data file).

@@ -1,0 +1,1016 @@
+{
+  "stand": "2026-10-22",
+  "conceptDate": "2024-06-07",
+  "sources": {
+    "konzeptseite": "https://www.schweitenkirchen.de/leben-und-wohnen/bauen-und-wohnen/radwegekonzept-der-gemeinde-schweitenkirchen",
+    "erlaeuterung": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Erl%C3%A4uterung.pdf",
+    "kurz": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Lageplan_Konzept_kurz-_bis_mittelfristig.pdf",
+    "lang": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Lageplan_Konzept_mittel-_bis_langfristig.pdf",
+    "kus": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+  },
+  "routes": [
+    {
+      "id": "bestand",
+      "name": "Bestehende Geh- und Radwege (laut Lageplan 5/1)",
+      "plans": { "kurz": "bestand" },
+      "planLabels": [],
+      "built": true,
+      "baulast": "unklar",
+      "documented": "Im Lageplan 5/1 rot als „asphaltierte Geh- und Radwege, Bestand“ eingezeichnet (Stand 2024). Das Konzept: „Das vorhandene Radwegenetz besteht nur aus wenigen straßenbegleitenden Radwegen entlang der St 2045 und der PAF 9.“",
+      "events": [
+        {
+          "date": "2015",
+          "kind": "Bau",
+          "text": "Geh- und Radweg an der St 2045 Robert-Koch-Straße – GVS Giegenhausen gebaut (171.198 €, Förderung 100.500 €).",
+          "source": "Landtag Drs. 17/17864, Anlage",
+          "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP17/Drucksachen/Basisdrucksachen/0000011000/0000011209_Bauer_Anlage.pdf"
+        }
+      ]
+    },
+    {
+      "id": "ohne-beschriftung-haupt",
+      "name": "Haupttrassen-Abschnitte ohne Beschriftung im Plan",
+      "plans": { "kurz": "haupt", "lang": "haupt" },
+      "planLabels": [],
+      "baulast": "unklar",
+      "documented": "Linienstücke, die im Lageplan als Haupttrasse eingezeichnet sind, aber keiner beschrifteten Trasse eindeutig zugeordnet werden konnten (meist kurze Verbindungen in Ortschaften).",
+      "events": []
+    },
+    {
+      "id": "ohne-beschriftung-ergaenzend",
+      "name": "Ergänzende Abschnitte ohne Beschriftung im Plan",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": [],
+      "baulast": "unklar",
+      "documented": "Linienstücke, die im Lageplan als ergänzende Trasse eingezeichnet sind, aber keiner beschrifteten Trasse eindeutig zugeordnet werden konnten.",
+      "events": []
+    },
+    {
+      "id": "pfaffenhofen-schweitenkirchen",
+      "name": "Pfaffenhofen – Schweitenkirchen (Waldroute)",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Pfaffenhofen - Schweitenkirchen"],
+      "built": true,
+      "baulast": "Gemeinde",
+      "documented": "Nach Kartenlage die Waldroute durch den Schindelhauser Forst: eröffnet 18.10.2021; Beschilderung über KUS 2022; Reparaturen 2024. Getrennt davon prüft das Staatliche Bauamt laut KUS-Steckbrief 2026 einen Geh- und Radweg entlang der St 2045 nach Pfaffenhofen.",
+      "events": [
+        {
+          "date": "2021-02-09",
+          "kind": "Aussage",
+          "text": "Bekanntgabe: Es wird geprüft, ob der Radweg nach Pfaffenhofen provisorisch entlang der Staatsstraße errichtet werden kann; auch die Variante durch den Wald soll geprüft werden.",
+          "source": "Gemeinderat, Protokoll 09.02.2021",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/09.02.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-06",
+          "kind": "Grunderwerb",
+          "text": "„Beim Radweg von Schweitenkirchen nach Pfaffenhofen konnte erfreulicherweise eine Einigung erzielt werden. Bis zum Sommer ist geplant, den bisherigen Waldweg instand zu setzen und als Radweg auszubauen …“",
+          "source": "Rundschau 2/2021 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_02.21_INTERNET_Neu.pdf"
+        },
+        {
+          "date": "2021-09-21",
+          "kind": "Bau",
+          "text": "„Der Radweg von Schweitenkirchen nach Pfaffenhofen durch den Wald wird derzeit realisiert und steht in den letzten Zügen.“",
+          "source": "Bürgerversammlung Schweitenkirchen 2021",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294847"
+        },
+        {
+          "date": "2021-10-18",
+          "kind": "Eröffnung",
+          "text": "Eröffnung der Waldroute („Anradeln“).",
+          "source": "Pfaffenhofen Today",
+          "url": "https://pfaffenhofen-today.de/65743-radverbindung-201021"
+        },
+        {
+          "date": "2022-03-29",
+          "kind": "Aussage",
+          "text": "Anregung, die Waldroute beschildern zu lassen; laut Vorsitzendem ist das KUS des Landkreises bereits mit der Beschilderung beauftragt.",
+          "source": "Gemeinderat TOP 13",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171233"
+        },
+        {
+          "date": "2024-06-25",
+          "kind": "Aussage",
+          "text": "Zustand des Geh- und Radwegs nach Pfaffenhofen: nur an der Auffahrt durch Starkregen beschädigt gewesen.",
+          "source": "Gemeinderat TOP 10",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56886611"
+        }
+      ]
+    },
+    {
+      "id": "st2045-preinersdorf-landkreisgrenze",
+      "name": "Preinersdorf – Sünzhausen – Landkreisgrenze",
+      "road": "St 2045",
+      "plans": { "kurz": "haupt", "lang": "haupt" },
+      "planLabels": [
+        "Preinersdorf - Sünzhausen - Landkreisgrenze (Abschnitt 1)",
+        "Preinersdorf - Sünzhausen - Landkreisgrenze (Abschnitt 2)"
+      ],
+      "lengthConceptKm": 3.3,
+      "baulast": "Freistaat",
+      "baulastNote": "Staatliches Bauamt Ingolstadt; Grunderwerb durch die Gemeinde",
+      "konzeptHinweis": "Voruntersuchung liegt vor; „Mit einer kurzfristigen Umsetzung ist nicht zu rechnen“",
+      "kusHorizont": "Holzhäuseln – Sünzhausen – Abzw. Loipertshausen „ab 2028 ff.“ (Staatliches Bauamt); Preinersdorf – Holzhäuseln offen; Loipertshausen – Dellnhausen wartet auf Markt Au",
+      "documented": "Seit 2015 im staatlichen Radwegeprogramm; Grunderwerb seit 2017; 12 von 23 Eigentümern (Feb. 2023); letzter Notarvertrag 22.01.2026; Vorentwurfsplanung ab Feb. 2026; Haushaltsstelle „Schweitenkirchen/Sünzhausen – Grunderwerb“ 2023–2026.",
+      "events": [
+        {
+          "date": "2015",
+          "kind": "Programm",
+          "text": "Aufnahme in das Programm zum nachträglichen Anbau von Radwegen an Staatsstraßen (aufgestellt Frühjahr 2015). Stand Dezember 2016 für „St 2045, nördlich Holzhäuseln – Sünzhausen“ und „Preinersdorf – Loipersdorf“: „Planung noch nicht begonnen“.",
+          "source": "Landtag Drs. 17/14681",
+          "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP17/Drucksachen/Schriftliche%20Anfragen/17_0014681.pdf"
+        },
+        {
+          "date": "2017",
+          "kind": "Planung",
+          "text": "„Die Planungen für diesen Radweg laufen seit 2017.“ (rückblickend)",
+          "source": "Rundschau 2/2026, S. 35",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
+        },
+        {
+          "date": "2020-01-13",
+          "kind": "Anfrage",
+          "text": "Bürgeranfragen zum Stand des Grunderwerbs Sünzhausen – Schweitenkirchen und zum Teilabschnitt Holzhäuseln – Sünzhausen (nur drei Eigentümer).",
+          "source": "Bürgerversammlung Sünzhausen 2020",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2021-03-02",
+          "kind": "Aussage",
+          "text": "Bürgermeister: „… dass bisher noch keine Grundstücksverhandlungen in Sachen Radweg nach Sünzhausen stattgefunden haben.“",
+          "source": "Gemeinderat, Protokoll 02.03.2021",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/02.03.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-04-13",
+          "kind": "Anfrage",
+          "text": "Übergabe einer Unterschriftenliste Sünzhauser Bürger für den Radweg.",
+          "source": "Gemeinderat, Protokoll 13.04.2021",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/13.04.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-07-27",
+          "kind": "Grunderwerb",
+          "text": "„Es wurde noch nicht mit allen Grundstückseigentümer gesprochen … Derzeit stockt die Einigung mit einem Eigentümer.“",
+          "source": "Gemeinderat TOP 16",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294659"
+        },
+        {
+          "date": "2022-10-04",
+          "kind": "Beschluss",
+          "text": "Bekanntgabe: Der Marktgemeinderat Au hat am 13.09.2022 den Maßnahmenbeschluss für einen Geh- und Radweg an der St 2045 Sünzhausen – Dellnhausen gefasst.",
+          "source": "Gemeinderat TOP 9",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4175299"
+        },
+        {
+          "date": "2023-02-02",
+          "kind": "Grunderwerb",
+          "text": "Stand Grunderwerb: 12 von 23 Eigentümern.",
+          "source": "Bürgerversammlung 2023",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21690655"
+        },
+        {
+          "date": "2023-07-04",
+          "kind": "Grunderwerb",
+          "text": "Grunderwerb für kleinere Teilstücke noch nicht abgeschlossen („ähnlich … beim Radweg Schweitenkirchen/Sünzhausen“).",
+          "source": "Gemeinderat TOP 15",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21691609"
+        },
+        {
+          "date": "2024-01-18",
+          "kind": "Aussage",
+          "text": "„Die Zuständigkeit für den Bau des Radweges liegt beim zuständigen Straßenbaulastträger.“",
+          "source": "Bürgerversammlung Sünzhausen 2024",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        },
+        {
+          "date": "2025-04",
+          "kind": "Haushalt",
+          "text": "Haushaltsstelle „Geh- und Radweg Schweitenkirchen/Sünzhausen“: Grunderwerb 75.000 € (2024) / 70.000 € (2025), Tiefbau 50.000 € im Finanzplan.",
+          "source": "Haushaltsplan 2025",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Haushaltsplan_2025.pdf"
+        },
+        {
+          "date": "2025-11-12",
+          "kind": "Programm",
+          "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg St 2045 nördl. Holzhäuseln – Sünzhausen & Preinersdorf – Loipersdorf, „Ab 2028 ff.“, Staatliches Bauamt Ingolstadt.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        },
+        {
+          "date": "2026-01-22",
+          "kind": "Grunderwerb",
+          "text": "„Grunderwerb Holzhäuseln bis Sünzhausen abgeschlossen; Grunderwerb Sünzhausen bis Loipertshausen → Letzter Notarvertrag (Termin 22.01.2026).“",
+          "source": "Präsentation Bürgerversammlungen 2026",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/B%C3%BCrgerversammlung_2026_-_Pr%C3%A4sentation.pdf"
+        },
+        {
+          "date": "2026-02",
+          "kind": "Planung",
+          "text": "„Anfang Februar wurde der Weg für den Radweg von Schweitenkirchen bis zur Abzweigung Loipertshausen frei gemacht.“",
+          "source": "Rundschau 2/2026, S. 35",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "preinersdorf-st2045",
+      "name": "Preinersdorf – St 2045",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Preinersdorf - St 2045"],
+      "lengthConceptKm": 0.3,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "nicht asphaltierte Gemeindestraße",
+      "documented": "Möglicherweise verwandt: Bürgerfrage 21.09.2021 zur Beschilderung des Wegs nach Preinersdorf und zum „alten Kirchweg“; Weg Nr. 271 „Alter Kirchweg“ wiederhergestellt (GR 13.09.2022). Ob derselbe Weg gemeint ist, geht aus den Quellen nicht hervor.",
+      "events": [
+        {
+          "date": "2021-09-21",
+          "kind": "Anfrage",
+          "uncertain": true,
+          "text": "Bürgerfrage: bessere Beschilderung des Geh- und Fußwegs nach Preinersdorf; Erschließung über den alten „Kirchweg“?",
+          "source": "Bürgerversammlung Schweitenkirchen 2021",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294847"
+        },
+        {
+          "date": "2022-09-13",
+          "kind": "Bau",
+          "uncertain": true,
+          "text": "Feld- und Waldweg Nr. 271 „Alter Kirchweg“ wiederhergestellt.",
+          "source": "Gemeinderat TOP 12",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4172371"
+        }
+      ]
+    },
+    {
+      "id": "preinerszell-hirschhausen",
+      "name": "Preinerszell – Hirschhausen",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Preinerszell - Hirschhausen"],
+      "baulast": "unklar",
+      "kusHorizont": "an der PAF 25 Preinerszell – Schmiedhausen „kein Neubau“, da Parallelroute über „Blasl“ besteht",
+      "documented": "Östlich parallel zur PAF 25 über den Weiler Blasl (Zuordnung aus Kartenlage und KUS-Wortlaut; Blasl ist im Plan nicht beschriftet). KUS-Steckbrief: „Auf der PAF 25 zwischen Preinerszell und Schmiedhausen ist hingegen kein Neubau eines Geh- und Radwegs vorgesehen, da hier bereits eine Parallelroute über den Weiler „Blasl“ besteht.“",
+      "events": [
+        {
+          "date": "2020-01-20",
+          "kind": "Aussage",
+          "text": "Antwort auf einen Bürgerantrag: weiterer Radwegverlauf „in Abstimmung mit dem Landkreis (z. B. Blasl-Preinerszell/Buchfeld-Geisenhausen/Kysostraße)“.",
+          "source": "Bürgerversammlung Geisenhausen 2020",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2020-12",
+          "kind": "Ankündigung",
+          "text": "Projektliste 2021: „Planung von Geh- und Radwegen: … Schmiedhausen mit Anbindung an Blasl …“",
+          "source": "Rundschau 4/2020 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau04.20.pdf"
+        },
+        {
+          "date": "2021-12-14",
+          "kind": "Beschluss",
+          "uncertain": true,
+          "text": "Bauvereinbarung Ortsdurchfahrt Schmiedhausen (PAF 25), 17:0 – betrifft die Ortsdurchfahrt, nicht die Trasse selbst.",
+          "source": "Gemeinderat TOP 17",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/295131"
+        },
+        {
+          "date": "2025-11-12",
+          "kind": "Aussage",
+          "text": "KUS: an der PAF 25 Preinerszell – Schmiedhausen kein Neubau, da bereits eine Parallelroute über den Weiler „Blasl“ besteht.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
+    },
+    {
+      "id": "duernzhausen-schmiedhausen",
+      "name": "Dürnzhausen – Schmiedhausen",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Dürnzhausen - Schmiedhausen"],
+      "baulast": "unklar",
+      "documented": "Im Recherchebericht zusammen mit Preinerszell – Hirschhausen geführt (Parallelroute zur PAF 25). Kein eigener öffentlicher Vorgang.",
+      "events": [
+        {
+          "date": "2025-11-12",
+          "kind": "Aussage",
+          "uncertain": true,
+          "text": "KUS: an der PAF 25 Preinerszell – Schmiedhausen kein Neubau, da bereits eine Parallelroute über den Weiler „Blasl“ besteht.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
+    },
+    {
+      "id": "schmiedhausen-schweitenkirchen-paf25",
+      "name": "Schmiedhausen – Schweitenkirchen",
+      "road": "PAF 25",
+      "plans": { "kurz": "haupt" },
+      "planLabels": [],
+      "baulast": "unklar",
+      "documented": "Im Lageplan 5/1 als Haupttrasse entlang der PAF 25 eingezeichnet, aber nicht beschriftet; Fortsetzung der Parallelroute Preinerszell – Schmiedhausen.",
+      "events": [
+        {
+          "date": "2021-12-14",
+          "kind": "Beschluss",
+          "uncertain": true,
+          "text": "Bauvereinbarung Ortsdurchfahrt Schmiedhausen (PAF 25), 17:0.",
+          "source": "Gemeinderat TOP 17",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/295131"
+        }
+      ]
+    },
+    {
+      "id": "geisenhausen-preinerszell",
+      "name": "Geisenhausen – Preinerszell",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Geisenhausen - Preinerszell"],
+      "baulast": "unklar",
+      "documented": "Bürgerantrag 2020; 2024: „Momentan laufen hier keine Planungen.“",
+      "events": [
+        {
+          "date": "2020-01-20",
+          "kind": "Anfrage",
+          "text": "Antrag auf einen Geh- und Radweg Geisenhausen/Preinerszell/Schweitenkirchen; Antwort: weiterer Verlauf „in Abstimmung mit dem Landkreis“.",
+          "source": "Bürgerversammlung Geisenhausen 2020",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2024-01-25",
+          "kind": "Aussage",
+          "text": "„Momentan laufen hier keine Planungen. Es wird jedoch ein Radwegeverkehrskonzept erstellt.“",
+          "source": "Bürgerversammlung Geisenhausen 2024",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        }
+      ]
+    },
+    {
+      "id": "geroldshausen-duernzhausen",
+      "name": "Geroldshausen – Dürnzhausen",
+      "road": "PAF 11",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Geroldshausen - Dürnzhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "duernzhausen-suenzhausen",
+      "name": "Dürnzhausen – Sünzhausen",
+      "road": "PAF 11",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Dürnzhausen - Sünzhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "oberthann-schweitenkirchen",
+      "name": "Oberthann – Schweitenkirchen",
+      "plans": { "kurz": "haupt", "lang": "ergaenzend" },
+      "planLabels": ["Oberthann - Schweitenkirchen"],
+      "lengthConceptKm": 1.0,
+      "baulast": "unklar",
+      "konzeptHinweis": "Südseite St 2045, unterquert A 9",
+      "documented": "Möglicherweise verwandt: GR 07.11.2023 TOP 3 (14:0), Bebauungsplan Oberthann soll „einen Abschnitt für einen geplanten Geh- und Radweg“ berücksichtigen; welche Trasse, ist nicht angegeben.",
+      "events": [
+        {
+          "date": "2023-11-07",
+          "kind": "Beschluss",
+          "uncertain": true,
+          "text": "Überplanung Fl.Nr. 845/2 in Oberthann (14:0); laut Antrag soll „ein Abschnitt für einen geplanten Geh- und Radweg berücksichtigt“ werden – welche Trasse, ist nicht angegeben.",
+          "source": "Gemeinderat TOP 3",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21692369"
+        }
+      ]
+    },
+    {
+      "id": "oberthann-guentersdorf",
+      "name": "Oberthann – Güntersdorf",
+      "road": "PAF 27, PAF 6",
+      "plans": { "kurz": "haupt", "lang": "haupt" },
+      "planLabels": ["Oberthann - Güntersdorf"],
+      "lengthConceptKm": 4.0,
+      "baulast": "Landkreis",
+      "baulastNote": "Kreisstraßen; Grunderwerb durch die Gemeinde; Multifunktionsstreifen Niederthann laut KUS: Gemeinde",
+      "konzeptHinweis": "Voruntersuchung liegt vor; kurze Unterbrechung in Niederthann",
+      "kusHorizont": "Multifunktionsstreifen in Niederthann, Abzweig PAF 6 zur Verbindungsstraße nach Streitberg, 2027 (Gemeinde); sonst kein Termin",
+      "documented": "Gemeinsames Projekt „Nörting – Oberthann“ mit Güntersdorf – Nörting; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“ (2023: 177.486,57 €, 2024: 5.055,95 €).",
+      "events": [
+        {
+          "date": "2020-01-06",
+          "kind": "Anfrage",
+          "text": "Bürgerfrage zum geplanten Fahrradweg Aufham – Niederthann; Antwort: Verhandlungen zum Grunderwerb noch nicht abgeschlossen.",
+          "source": "Bürgerversammlung Güntersdorf 2020",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2020-05",
+          "kind": "Planung",
+          "text": "„Folgende Maßnahmen der Gemeinde sind aktuell in Bearbeitung: Fahrradweg Nörting-Oberthann …“",
+          "source": "Rundschau 2/2020 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau02.20.pdf"
+        },
+        {
+          "date": "2020-12",
+          "kind": "Ankündigung",
+          "text": "Projektliste 2021: „Planung von Geh- und Radwegen: Nörting bis Oberthann …“",
+          "source": "Rundschau 4/2020 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau04.20.pdf"
+        },
+        {
+          "date": "2021-06-08",
+          "kind": "Aussage",
+          "text": "Sachstand Grundstücksverhandlungen; Bau „auch in Teilabschnitten möglich“.",
+          "source": "Gemeinderat TOP 15",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294469"
+        },
+        {
+          "date": "2023",
+          "kind": "Grunderwerb",
+          "text": "Ausgaben „Geh- und Radweg Oberthann/Nörting – Grunderwerb“: 177.486,57 € (Jahresrechnung 2023).",
+          "source": "Haushaltsplan 2025, Vorbericht",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Haushaltsplan_2025.pdf"
+        },
+        {
+          "date": "2024",
+          "kind": "Grunderwerb",
+          "text": "Ausgaben „Geh- und Radweg Oberthann/Nörting – Grunderwerb“: 5.055,95 € (Jahresrechnung 2024).",
+          "source": "Haushaltsplan 2026, Vorbericht",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Haushaltsplan_2026.pdf"
+        },
+        {
+          "date": "2025-11-12",
+          "kind": "Programm",
+          "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
+    },
+    {
+      "id": "winden-niederthann",
+      "name": "Winden – Niederthann",
+      "road": "PAF 6",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Winden - Niederthann"],
+      "baulast": "unklar",
+      "kusHorizont": "Multifunktionsstreifen in Niederthann, Abzweig PAF 6 zur Verbindungsstraße nach Streitberg, 2027 (Gemeinde)",
+      "documented": "nichts außer der KUS-Planung",
+      "events": [
+        {
+          "date": "2025-11-12",
+          "kind": "Programm",
+          "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
+    },
+    {
+      "id": "guentersdorf-noerting",
+      "name": "Güntersdorf – Nörting",
+      "road": "PAF 6",
+      "plans": { "kurz": "haupt", "lang": "haupt" },
+      "planLabels": ["Güntersdorf - Nörting"],
+      "lengthConceptKm": 1.4,
+      "baulast": "Landkreis",
+      "baulastNote": "Kreiseigener Tiefbau (KUS); Grunderwerb durch die Gemeinde",
+      "konzeptHinweis": "Vorentwurf liegt vor; Trasse in Aufham unterbrochen",
+      "kusHorizont": "2029 (Kreiseigener Tiefbau)",
+      "documented": "Ein Eigentümer fehlt (Jan. 2026); Landratsamt 21.04.2026: kein Bau mit fehlendem Teilstück; Bürgerfragen 2020–2026; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“.",
+      "events": [
+        {
+          "date": "2019-12",
+          "kind": "Aussage",
+          "text": "„Trotz des fehlenden Radweges war es den Behörden möglich, an den Ortseingängen von Aufham … einen Fahrbahnteiler zu errichten.“",
+          "source": "Rundschau 4/2019",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/RundschaufuerHomepage.pdf"
+        },
+        {
+          "date": "2020-05",
+          "kind": "Planung",
+          "text": "„Folgende Maßnahmen der Gemeinde sind aktuell in Bearbeitung: Fahrradweg Nörting-Oberthann …“",
+          "source": "Rundschau 2/2020 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau02.20.pdf"
+        },
+        {
+          "date": "2021-04-27",
+          "kind": "Aussage",
+          "text": "Der Vorsitzende will „falls möglich – auch einen Teilabschnitt des Radweges … ermöglichen. Dies ist jedoch alles abhängig vom Grunderwerb.“",
+          "source": "Gemeinderat, Protokoll 27.04.2021",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/27.04.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-06-08",
+          "kind": "Grunderwerb",
+          "text": "Radweg Nörting – Güntersdorf: Bericht über den Sachstand der Grundstücksverhandlungen (auf Wunsch der Dorfgemeinschaft Aufham).",
+          "source": "Gemeinderat TOP 15",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294469"
+        },
+        {
+          "date": "2022-02-22",
+          "kind": "Aussage",
+          "text": "„Wenn bis zum 31.08.2022 der Grunderwerb gesichert ist, kann der Antrag beim Landkreis Pfaffenhofen …“ gestellt werden.",
+          "source": "Bürgerversammlung 2022",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171045"
+        },
+        {
+          "date": "2023",
+          "kind": "Grunderwerb",
+          "text": "Ausgaben „Geh- und Radweg Oberthann/Nörting – Grunderwerb“: 177.486,57 € (Jahresrechnung 2023).",
+          "source": "Haushaltsplan 2025, Vorbericht",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Haushaltsplan_2025.pdf"
+        },
+        {
+          "date": "2023-07-04",
+          "kind": "Grunderwerb",
+          "text": "„… dass der Grunderwerb für kleinere Teilstücke noch nicht abgeschlossen sei.“",
+          "source": "Gemeinderat TOP 15",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21691609"
+        },
+        {
+          "date": "2025-01-07",
+          "kind": "Aussage",
+          "text": "„Hier ist das ewige Thema „Grunderwerb“ ausschlaggebend. Ohne Grund kein Radweg.“",
+          "source": "Bürgerversammlung Güntersdorf/Aufham 2025",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Beantwortung_B%C3%BCrgerversammlungen_2025.pdf"
+        },
+        {
+          "date": "2025-11-12",
+          "kind": "Programm",
+          "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg PAF 6 – Güntersdorf bis Nörting (Lkr. Freising), 2029, Kreiseigener Tiefbau.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        },
+        {
+          "date": "2026-01-08",
+          "kind": "Grunderwerb",
+          "text": "„Derzeit fehlt für die Realisierung des Radweges von Aufham bis nach Nörting noch ein Grundstückseigentümer.“",
+          "source": "Bürgerversammlung Aufham 2026 (Rundschau 2/2026)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
+        },
+        {
+          "date": "2026-01-22",
+          "kind": "Grunderwerb",
+          "text": "„Radweg Güntersdorf - Aufham: Einigung mit einem Grundstückseigentümer …“",
+          "source": "Präsentation Bürgerversammlungen 2026",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/B%C3%BCrgerversammlung_2026_-_Pr%C3%A4sentation.pdf"
+        },
+        {
+          "date": "2026-04-21",
+          "kind": "Aussage",
+          "text": "Antwort des Landratsamts: kein Bau des Radwegs Aufham – Nörting, solange auf einem Teilstück der Grunderwerb fehlt.",
+          "source": "Gemeinderat TOP 13",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/77116934"
+        }
+      ]
+    },
+    {
+      "id": "dietersdorf-schweitenkirchen",
+      "name": "Dietersdorf – Schweitenkirchen",
+      "plans": { "kurz": "haupt", "lang": "ergaenzend" },
+      "planLabels": ["Dietersdorf - Schweitenkirchen"],
+      "lengthConceptKm": 1.6,
+      "baulast": "unklar",
+      "konzeptHinweis": "Alternative, falls eine Verbindung entlang der PAF 25 (Schweitenkirchen – Dietersdorf) nicht umsetzbar ist",
+      "events": []
+    },
+    {
+      "id": "ampertshausen-saulhof-kirchdorf",
+      "name": "Ampertshausen – Saulhof – Kirchdorf a. d. Amper",
+      "plans": { "kurz": "haupt" },
+      "planLabels": ["Ampertshausen - Saulhof - Kirchdorf a.d. Amper"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "walkersbach-geisenhausen",
+      "name": "Walkersbach – Geisenhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Walkersbach - Geisenhausen"],
+      "baulast": "unklar",
+      "documented": "Bürgerversammlung Geisenhausen 25.01.2024: „Momentan laufen hier keine Planungen. Es wird jedoch ein Radwegeverkehrskonzept erstellt.“",
+      "events": [
+        {
+          "date": "2024-01-25",
+          "kind": "Aussage",
+          "text": "Anfrage zu Radwegen Richtung Walkersbach; Antwort: „Momentan laufen hier keine Planungen. Es wird jedoch ein Radwegeverkehrskonzept erstellt.“",
+          "source": "Bürgerversammlung Geisenhausen 2024",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        }
+      ]
+    },
+    {
+      "id": "geisenhausen-altkaslehen",
+      "name": "Geisenhausen – Altkaslehen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Geisenhausen - Altkaslehen"],
+      "baulast": "unklar",
+      "konzeptHinweis": "über Groß- und Kleinarreshausen",
+      "documented": "Möglicherweise verwandt: Antrag 20.01.2020 auf einen Weg „entlang des Arreshausener Bachs nach Pfaffenhofen“.",
+      "events": [
+        {
+          "date": "2020-01-20",
+          "kind": "Anfrage",
+          "uncertain": true,
+          "text": "Antrag auf einen Geh- und Radweg „entlang des Arreshausener Bachs nach Pfaffenhofen“.",
+          "source": "Bürgerversammlung Geisenhausen 2020",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        }
+      ]
+    },
+    {
+      "id": "paf23-preinerszell",
+      "name": "PAF 23 – Preinerszell",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["PAF 23 - Preinerszell"],
+      "lengthConceptKm": 1.5,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "asphaltierte Gemeindestraßen, Brücke über A 9",
+      "events": []
+    },
+    {
+      "id": "hueb-preinerszell",
+      "name": "Hueb – Preinerszell",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Hueb - Preinerszell"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "hueb-frickendorf",
+      "name": "Hueb – Frickendorf",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Hueb - Frickendorf"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "frickendorf-oberthann",
+      "name": "Frickendorf – Oberthann",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Frickendorf - Oberthann"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "frickendorf-schmiedhausen",
+      "name": "Frickendorf – Schmiedhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Frickendorf - Schmiedhausen"],
+      "lengthConceptKm": 1.4,
+      "baulast": "unklar",
+      "konzeptHinweis": "südlich Frickendorf Privatweg",
+      "events": []
+    },
+    {
+      "id": "frickendorf-giegenhausen",
+      "name": "Frickendorf – Giegenhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Frickendorf - Giegenhausen"],
+      "lengthConceptKm": 0.6,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "asphaltierter Gemeindeweg",
+      "events": []
+    },
+    {
+      "id": "giegenhausen-schmiedhausen",
+      "name": "Giegenhausen – Schmiedhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Giegenhausen - Schmiedhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "giegenhausen-schweitenkirchen",
+      "name": "Giegenhausen – Schweitenkirchen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Giegenhausen - Schweitenkirchen"],
+      "lengthConceptKm": 0.5,
+      "baulast": "Gemeinde",
+      "baulastNote": "Querungshilfe und Geh- und Radweg an der St 2045 laut KUS: Staatliches Bauamt Ingolstadt",
+      "konzeptHinweis": "asphaltierter Gemeindeweg zum bestehenden Radweg an der St 2045",
+      "kusHorizont": "Querungshilfe an der St 2045, Abzweigung Giegenhausen, und Geh- und Radweg auf der Gegenseite bis Tankstelle Agip, „im Zusammenhang mit Umbau der AS Pfaffenhofen-West“ (Staatliches Bauamt)",
+      "documented": "Anschluss an den 2015 gebauten Radweg St 2045 Robert-Koch-Straße – GVS Giegenhausen (171.198 €, Förderung 100.500 €). Möglicherweise verwandt: Bürgerfragen zum Feld- und Waldweg Rathaus – Giegenhausen (Bürgerversammlung 2022 und 30.01.2024), 2024 weiter offen.",
+      "events": [
+        {
+          "date": "2020-07-07",
+          "kind": "Aussage",
+          "text": "Staatliches Bauamt zur Autobahnausfahrt West: „… auch … eine eventuelle Fortführung des Geh- und Radweges berücksichtigt.“",
+          "source": "Gemeinderat, Protokoll Nr. 4",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/07.07.2020_Gemeinderatssitzung_Protokoll_Nr._4.pdf"
+        },
+        {
+          "date": "2024-01-30",
+          "kind": "Anfrage",
+          "uncertain": true,
+          "text": "Bürgerfrage: Wann wird der Feld- und Waldweg vom Rathaus Richtung Giegenhausen hergerichtet? Antwort: zuständig ist der Kiesgeldbeauftragte.",
+          "source": "Bürgerversammlung Schweitenkirchen 2024",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        },
+        {
+          "date": "2025-11-12",
+          "kind": "Programm",
+          "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg und Querungshilfe St 2045 – Abzweigung Giegenhausen, „im Zusammenhang mit Umbau der AS Pfaffenhofen-West“, Staatliches Bauamt Ingolstadt.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
+    },
+    {
+      "id": "preinerszell-duernzhausen",
+      "name": "Preinerszell – Dürnzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Preinerszell - Dürnzhausen"],
+      "lengthConceptKm": 1.8,
+      "baulast": "unklar",
+      "konzeptHinweis": "bauliche Trennung „ratsam“",
+      "events": []
+    },
+    {
+      "id": "preinerszell-hirschhausen-hellblau",
+      "name": "Preinerszell – Hirschhausen (ergänzende Führung)",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Preinerszell - Hirschhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "duernzhausen-schmiedhausen-hellblau",
+      "name": "Dürnzhausen – Schmiedhausen (ergänzende Führung)",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Dürnzhausen - Schmiedhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "duernzhausen-hirschhausen",
+      "name": "Dürnzhausen – Hirschhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Dürnzhausen - Hirschhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "schmiedhausen-hirschhausen",
+      "name": "Schmiedhausen – Hirschhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Schmiedhausen - Hirschhausen"],
+      "lengthConceptKm": 1.0,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "Gemeindewege, teils asphaltiert",
+      "documented": "Rundschau 1/2021 (Bürgermeister): „Außerdem soll ein Radweg zwischen Schmiedhausen und Einfahrt Hirschhausen entstehen. Die Grundstücksverhandlungen zu diesem Bauvorhaben laufen derzeit.“ Danach kein öffentlicher Vorgang.",
+      "events": [
+        {
+          "date": "2021-03",
+          "kind": "Grunderwerb",
+          "text": "„Außerdem soll ein Radweg zwischen Schmiedhausen und Einfahrt Hirschhausen entstehen. Die Grundstücksverhandlungen zu diesem Bauvorhaben laufen derzeit.“",
+          "source": "Rundschau 1/2021 (Bürgermeister)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_01.21.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hirschhausen-holzhaeuseln",
+      "name": "Hirschhausen – Holzhäuseln",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Hirschhausen - Holzhäuseln"],
+      "lengthConceptKm": 0.9,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "asphaltierte Gemeindestraße",
+      "documented": "Rundschau 2/2026 nennt Holzhäuseln – Hirschhausen – Reisdorf als derzeitige Ausweichroute. Keine Maßnahme dokumentiert.",
+      "events": [
+        {
+          "date": "2026-02",
+          "kind": "Aussage",
+          "text": "Holzhäuseln – Hirschhausen – Reisdorf als derzeitige Ausweichroute, solange an der St 2045 Grund fehlt.",
+          "source": "Rundschau 2/2026",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "hirschhausen-reisdorf-schweitenkirchen",
+      "name": "Hirschhausen – Reisdorf – Schweitenkirchen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Hirschhausen - Reisdorf - Schweitenkirchen"],
+      "lengthConceptKm": 0.9,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "Mischnutzung möglich",
+      "documented": "Rundschau 2/2026: Solange Grund an der St 2045 fehlt, gibt es „zumindest die Möglichkeit über Hirschhausen und Reisdorf nach Schweitenkirchen mit dem Fahrrad zu fahren“. Keine Maßnahme dokumentiert.",
+      "events": [
+        {
+          "date": "2026-02",
+          "kind": "Aussage",
+          "text": "„… zumindest die Möglichkeit über Hirschhausen und Reisdorf nach Schweitenkirchen mit dem Fahrrad zu fahren.“",
+          "source": "Rundschau 2/2026",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
+        }
+      ]
+    },
+    {
+      "id": "oberthann-schweitenkirchen-alternative",
+      "name": "Oberthann – Schweitenkirchen (Alternative)",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Oberthann - Schweitenkirchen (Alternative)"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "guentersdorf-schweitenkirchen",
+      "name": "Güntersdorf – Schweitenkirchen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Güntersdorf - Schweitenkirchen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "geroldshausen-gundelshausen",
+      "name": "Geroldshausen – Gundelshausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Geroldshausen - Gundelshausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "gundelshausen-duernzhausen",
+      "name": "Gundelshausen – Dürnzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Gundelshausen - Dürnzhausen"],
+      "lengthConceptKm": 0.5,
+      "baulast": "unklar",
+      "konzeptHinweis": "Mischnutzung möglich",
+      "events": []
+    },
+    {
+      "id": "weikenhausen-gundelshausen",
+      "name": "Weikenhausen – Gundelshausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Weikenhausen - Gundelshausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "weikenhausen-duernzhausen",
+      "name": "Weikenhausen – Dürnzhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Weikenhausen - Dürnzhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "dellnhausen-loipertshausen-duernzhausen",
+      "name": "Dellnhausen – Loipertshausen – Dürnzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Dellnhausen - Loipertshausen - Dürnzhausen"],
+      "lengthConceptKm": 1.8,
+      "baulast": "unklar",
+      "konzeptHinweis": "Mischnutzung denkbar",
+      "events": []
+    },
+    {
+      "id": "loipertshausen-suenzhausen",
+      "name": "Loipertshausen – Sünzhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Loipertshausen - Sünzhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "hemhausen-suenzhausen",
+      "name": "Hemhausen – Sünzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Hemhausen - Sünzhausen"],
+      "lengthConceptKm": 1.1,
+      "baulast": "unklar",
+      "konzeptHinweis": "quert PAF 20",
+      "events": []
+    },
+    {
+      "id": "suenzhausen-holzhausen",
+      "name": "Sünzhausen – Holzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Sünzhausen - Holzhausen"],
+      "lengthConceptKm": 1.4,
+      "baulast": "unklar",
+      "konzeptHinweis": "parallel PAF 11, nicht asphaltiert",
+      "events": []
+    },
+    {
+      "id": "holzhausen-holzhaeuseln",
+      "name": "Holzhausen – Holzhäuseln",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Holzhausen - Holzhäuseln"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "loipersdorf-st2045",
+      "name": "Loipersdorf – St 2045",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Loipersdorf - St 2045"],
+      "lengthConceptKm": 0.3,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "asphaltierte Gemeindestraße",
+      "events": []
+    },
+    {
+      "id": "landkreisgrenze-holzhausen",
+      "name": "Landkreisgrenze – Holzhausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Landkreisgrenze - Holzhausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "heigenhausen-holzhausen",
+      "name": "Heigenhausen – Holzhausen",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Heigenhausen - Holzhausen"],
+      "lengthConceptKm": 2.0,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "nicht asphaltierte Gemeindewege",
+      "events": []
+    },
+    {
+      "id": "entrischenbrunn-niederthann",
+      "name": "Entrischenbrunn – Niederthann",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Entrischenbrunn - Niederthann"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "paunzhausen-wehrbach-oedhof",
+      "name": "Paunzhausen – Wehrbach-Ödhof",
+      "plans": { "kurz": "ergaenzend", "lang": "ergaenzend" },
+      "planLabels": ["Paunzhausen - Wehrbach-Ödhof"],
+      "lengthConceptKm": 1.7,
+      "baulast": "Gemeinde",
+      "baulastNote": "gemeinsam mit der Gemeinde Paunzhausen",
+      "konzeptHinweis": "Anschluss an geplanten Radweg PAF 6 bei Ödhof",
+      "documented": "GR 06.07.2021 TOP 25 (14:0): Radweg Wehrbacher Straße mit Paunzhausen bis zur PAF 6, Vorentwurf und Grunderwerbsplan; danach kein öffentlicher Vorgang.",
+      "events": [
+        {
+          "date": "2021-07-06",
+          "kind": "Beschluss",
+          "text": "Radweg entlang der Wehrbacher Straße gemeinsam mit Paunzhausen bis zur PAF 6: Vorentwurf und Grunderwerbsplan (14:0).",
+          "source": "Gemeinderat TOP 25",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294563"
+        }
+      ]
+    },
+    {
+      "id": "ampertshausen-preinersdorf",
+      "name": "Ampertshausen – Preinersdorf",
+      "plans": { "kurz": "ergaenzend", "lang": "haupt" },
+      "planLabels": ["Ampertshausen - Preinersdorf"],
+      "lengthConceptKm": 1.7,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "überwiegend Gemeindewege",
+      "events": []
+    },
+    {
+      "id": "schellhof-ampertshausen",
+      "name": "Schellhof – Ampertshausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Schellhof - Ampertshausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "aufham-ampertshausen",
+      "name": "Aufham – Ampertshausen",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Aufham - Ampertshausen"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "aufham-saulhof",
+      "name": "Aufham – Saulhof",
+      "plans": { "kurz": "ergaenzend" },
+      "planLabels": ["Aufham - Saulhof"],
+      "baulast": "unklar",
+      "events": []
+    },
+    {
+      "id": "holzhausen-loipersdorf",
+      "name": "Holzhausen – Loipersdorf",
+      "plans": { "lang": "haupt" },
+      "planLabels": ["Holzhausen - Loipersdorf"],
+      "lengthConceptKm": 1.0,
+      "baulast": "unklar",
+      "konzeptHinweis": "„Von einer Mischnutzung der Straße ist abzuraten“",
+      "events": []
+    },
+    {
+      "id": "aufham-guentersdorf-dietersdorf-ampertshausen",
+      "name": "Aufham – Güntersdorf – Dietersdorf/Ampertshausen",
+      "plans": { "lang": "haupt" },
+      "planLabels": ["Aufham - Güntersdorf - Dietersdorf / Ampertshausen"],
+      "lengthConceptKm": 2.3,
+      "baulast": "Gemeinde",
+      "konzeptHinweis": "ausschließlich Gemeindewege",
+      "events": []
+    }
+  ]
+}

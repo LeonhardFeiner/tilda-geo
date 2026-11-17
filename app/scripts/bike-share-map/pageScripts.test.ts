@@ -4,6 +4,7 @@ import { detourPageHtml } from './detourPage'
 import { generateViewerHtml } from './generateViewerHtml'
 import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
+import { radwegePageHtml } from './radwegePage'
 import { stationAreasPageHtml } from './stationAreasPage'
 import { pageBundles } from './viewerHarness'
 
@@ -41,6 +42,10 @@ const pages: Record<string, string> = {
     siteUrl: 'https://example.org/map/',
   }),
   'impressum.html': legalPageHtml({ projectLead: 'Test', viewerHref: './index.html' }),
+  'radwege-schweitenkirchen.html': radwegePageHtml({
+    dataHref: './radwege-schweitenkirchen.json',
+    viewerHref: './index.html',
+  }),
 }
 
 const inlineScripts = (html: string) =>
@@ -59,7 +64,12 @@ describe.each(Object.entries(pages))('%s', (_name, html) => {
 })
 
 test('the pages with client logic do have inline scripts', () => {
-  for (const name of ['index.html', 'umweg.html', 'naechste-station.html']) {
+  for (const name of [
+    'index.html',
+    'umweg.html',
+    'naechste-station.html',
+    'radwege-schweitenkirchen.html',
+  ]) {
     expect(inlineScripts(pages[name]!).length).toBeGreaterThan(0)
   }
 })

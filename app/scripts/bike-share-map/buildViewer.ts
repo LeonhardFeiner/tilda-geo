@@ -27,6 +27,7 @@ import {
   PROJECT_LEAD,
   DETOUR_DIR,
   DETOUR_PAGE_STEM,
+  RADWEGE_PAGE_STEM,
   STATION_AREAS_PAGE_STEM,
   VIEWER_SOURCE_REPO_URL,
 } from './constants'
@@ -49,6 +50,8 @@ import { generateViewerHtml } from './generateViewerHtml'
 import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
 import { minifyInlineScripts } from './minifyPageHtml'
+import { loadRadwegeData } from './radwegeData'
+import { radwegePageHtml } from './radwegePage'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
 import { buildRegionIndex, computeLazyDarstellungPresence } from './regionNavigation'
 import { writeSiteIcons } from './siteIcon'
@@ -567,6 +570,21 @@ if (detourLandkreise.length) {
   )
 }
 
+// Unlisted Radwege tracker (github.io only, see RADWEGE_PAGE_STEM): routes + lines from radwege/.
+{
+  const dataPath = join(viewerDir, `${RADWEGE_PAGE_STEM}.json`)
+  writeFileSync(dataPath, JSON.stringify(loadRadwegeData()))
+  writeFileSync(
+    join(viewerDir, `${RADWEGE_PAGE_STEM}.html`),
+    radwegePageHtml({
+      dataHref: `./${RADWEGE_PAGE_STEM}.json?v=${contentHash([dataPath])}`,
+      viewerHref: './index.html',
+    }),
+    'utf8',
+  )
+  process.stdout.write(`Radwege tracker: ${viewerDir}/${RADWEGE_PAGE_STEM}.html\n`)
+}
+
 // Content hash per asset the page links to, so an unchanged file stays cached across deploys
 // (the ?v= used to be the build time, which invalidated everything on every push).
 /** Short content hash of files, for ?v= cache busting. */
@@ -665,6 +683,7 @@ for (const page of [
   'impressum.html',
   `${STATION_AREAS_PAGE_STEM}.html`,
   `${DETOUR_PAGE_STEM}.html`,
+  `${RADWEGE_PAGE_STEM}.html`,
 ]) {
   const path = join(viewerDir, page)
   if (!existsSync(path)) continue

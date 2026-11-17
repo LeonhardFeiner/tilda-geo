@@ -178,6 +178,8 @@ jobs:
           fi
           sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
           rm -rf _site/umweg.html _site/detour _site/detourRouting.js
+          # The Radwege tracker (RADWEGE_PAGE_STEM in constants.ts) stays on github.io only.
+          rm -f _site/radwege-schweitenkirchen.html _site/radwege-schweitenkirchen.json
           echo "$MIRROR_DOMAIN" > _site/CNAME
           touch _site/.nojekyll
           du -sh _site
