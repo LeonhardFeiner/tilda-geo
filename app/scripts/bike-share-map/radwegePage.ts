@@ -208,6 +208,40 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     .timeline .kind { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; margin-left: 4px; }
     #detail details > summary { cursor: pointer; color: var(--accent); margin: 4px 0; }
     .note { background: var(--row-hover); border-radius: 6px; padding: 6px 8px; font-size: 12px; }
+    #dauer {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      bottom: 12px;
+      left: 414px;
+      overflow: auto;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 12px 16px;
+      box-sizing: border-box;
+    }
+    #dauer h2 { margin-top: 0; font-size: 16px; }
+    #dauer h3 { font-size: 13px; margin: 14px 0 2px; }
+    .d-axis, .d-track { position: relative; display: block; }
+    .d-axis { height: 30px; font-size: 11px; color: var(--muted); border-bottom: 1px solid var(--border); margin: 8px 0 2px; }
+    .d-axis span { position: absolute; bottom: 2px; transform: translateX(-50%); font-variant-numeric: tabular-nums; }
+    .d-axis span.mark { bottom: auto; top: 0; color: var(--fg); }
+    .d-row { all: unset; display: block; box-sizing: border-box; width: 100%; padding: 3px 0; border-radius: 4px; cursor: pointer; }
+    .d-row:hover, .d-row.selected { background: var(--row-hover); }
+    .d-row:focus-visible { outline: 2px solid var(--accent); }
+    .d-head { display: flex; gap: 8px; font-size: 13px; }
+    .d-head .dur { margin-left: auto; color: var(--muted); white-space: nowrap; font-variant-numeric: tabular-nums; }
+    .d-track { height: 12px; margin-top: 2px; }
+    .d-grid { background-image: linear-gradient(to right, var(--border) 1px, transparent 1px); }
+    .d-bar, .d-plan { position: absolute; top: 2px; height: 8px; border-radius: 4px; box-sizing: border-box; }
+    .d-plan { background: none; border: 1.5px dashed; }
+    .d-line { position: absolute; top: -3px; bottom: -3px; width: 0; border-left: 2px solid var(--fg); opacity: 0.55; }
+    .d-ev { position: absolute; top: 1px; width: 10px; height: 10px; margin-left: -5px; border-radius: 50%; box-sizing: border-box; border: 2px solid var(--fg); background: var(--bg); }
+    .d-ev.step { background: var(--fg); border-color: var(--bg); }
+    #dauer details > summary { cursor: pointer; color: var(--accent); font-size: 13px; }
+    #dauer details p { font-size: 13px; }
     .maplibregl-popup-content { font: 13px/1.35 system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; padding: 6px 8px; color: #1c1f23; }
     [hidden] { display: none !important; }
     @media (pointer: coarse) {
@@ -218,6 +252,11 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     }
     @media (max-width: 600px) {
       #panel { top: auto; bottom: 24px; left: 12px; right: 12px; width: auto; max-height: 55vh; }
+      #dauer { left: 12px; bottom: calc(55vh + 36px); padding: 10px; }
+      #panel:not([open]) + #dauer { bottom: 84px; }
+    }
+    @media (max-width: 900px) {
+      .d-axis span.minor { display: none; }
     }
   </style>
 </head>
@@ -233,6 +272,11 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
           <legend>Plan</legend>
           <label><input type="radio" name="plan" value="kurz" checked><span>Kurzfristig (5/1)</span></label>
           <label><input type="radio" name="plan" value="lang"><span>Langfristig (5/2)</span></label>
+        </fieldset>
+        <fieldset class="seg" id="f-view">
+          <legend>Ansicht</legend>
+          <label><input type="radio" name="view" value="karte" checked><span>Karte</span></label>
+          <label><input type="radio" name="view" value="dauer"><span>Dauer</span></label>
         </fieldset>
         <div id="bar" role="group" aria-label="Stand – anklicken, um nur diese Gruppe zu zeigen"></div>
         <ul id="groups"></ul>
@@ -265,6 +309,12 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       <div id="detail" hidden></div>
     </div>
   </details>
+  <section id="dauer" hidden aria-labelledby="dauer-title">
+    <p style="float:right;margin:0"><button class="btn" type="button" id="dauer-close">Zur Karte</button></p>
+    <h2 id="dauer-title">Wie lange wird schon an den Trassen gearbeitet?</h2>
+    <p class="muted">Balken: vom ersten öffentlich dokumentierten Schritt (Programm, Beschluss, Planung, Grunderwerb, Haushalt, Bau) bis zur Eröffnung oder bis zum Stand der Recherche – gleich ob Gemeinde, Landkreis oder Freistaat zuständig ist. Gestrichelt: der im KUS-Steckbrief (Mobilitätskonzept Radverkehr des Landkreis-Kommunalunternehmens) angekündigte Termin. Punkte: einzelne Vorgänge (gefüllt: Schritt, hohl: Aussage, Ankündigung oder Anfrage). Senkrechte Linie: Radwegekonzept vom ${conceptDe}. Es gelten die Filter im Seitenfeld; eine Zeile anklicken für Details und Quellen.</p>
+    <div id="dauer-chart"></div>
+  </section>
   <script src="./vendor/maplibre-gl-4.7.1/maplibre-gl.js"></script>
   <script>
   (async function () {
@@ -286,6 +336,19 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const link = (url, text) => '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">' + escHtml(text) + '</a>';
     const short = (t, n) => (t.length > n ? t.slice(0, n - 1).replace(/\\s+\\S*$/, '') + ' …' : t);
 
+    /** Fractional year of a (partial) date, at the start of its period. */
+    const fy = (d) => {
+      const p = d.split('-').map(Number);
+      return p[0] + ((p[1] || 1) - 1) / 12 + ((p[2] || 1) - 1) / 365;
+    };
+    /** Months between two dates, worded for "seit …" / "nach …" (dative). */
+    function dur(a, b) {
+      const mo = Math.max(0, Math.round((fy(b) - fy(a)) * 12));
+      if (mo < 12) return mo + (mo === 1 ? ' Monat' : ' Monaten');
+      const y = Math.round(mo / 6) / 2;
+      return y.toLocaleString('de-DE') + (y === 1 ? ' Jahr' : ' Jahren');
+    }
+
     // ---- state (URL keeps only what differs from the default view)
     const params = new URLSearchParams(location.search);
     const offList = (k) => new Set((params.get(k) || '').split(',').filter(Boolean));
@@ -296,6 +359,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       hidden: offList('ohne'),
       selected: params.get('trasse') || null,
       search: '',
+      view: params.get('ansicht') === 'dauer' ? 'dauer' : 'karte',
     };
     /** Other routes under the last map click, offered in the detail view. */
     let others = [];
@@ -303,6 +367,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     function syncUrl() {
       const p = new URLSearchParams();
       if (state.plan !== 'kurz') p.set('plan', state.plan);
+      if (state.view !== 'karte') p.set('ansicht', state.view);
       if (state.only) p.set('stand', state.only);
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
       if (state.hidden.size) p.set('ohne', [...state.hidden].join(','));
@@ -367,6 +432,19 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         render();
       });
     }
+    function setView(v) {
+      state.view = v;
+      // phones: the chart needs the screen the bottom sheet would cover
+      if (v === 'dauer' && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('panel').open = false;
+      for (const input of document.querySelectorAll('input[name=view]')) input.checked = input.value === v;
+      render();
+    }
+    for (const input of document.querySelectorAll('input[name=view]')) {
+      input.checked = input.value === state.view;
+      input.addEventListener('change', () => setView(input.value));
+    }
+    $('dauer-close').addEventListener('click', () => setView('karte'));
+    if (state.view === 'dauer' && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('panel').open = false;
     for (const [k] of Object.entries(URL_KEYS)) {
       for (const input of document.querySelectorAll('input[name=' + k + ']')) {
         input.checked = !state.off[k].has(input.value);
@@ -471,6 +549,76 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       renderRecent();
       renderList();
       renderDetail();
+      renderDauer(vis);
+    }
+
+    // ---- duration view: first documented step → opening or research date, per route
+    function renderDauer(vis) {
+      const box = $('dauer');
+      box.hidden = state.view !== 'dauer';
+      if (box.hidden) return;
+      const metres = new Map();
+      for (const f of vis) metres.set(f.properties.routeId, (metres.get(f.properties.routeId) || 0) + f.properties.m);
+      const rows = [];
+      const waiting = new Map();
+      for (const [id, m] of metres) {
+        const r = routeById.get(id);
+        const opened = r.events.find((e) => e.kind === 'Eröffnung' && !e.uncertain);
+        if (r.firstStep && (!r.built || opened)) rows.push({ r, start: r.firstStep.date, end: opened ? opened.date : data.stand, opened });
+        else if (!r.built) {
+          const g = routeGroups(id).find((x) => x !== 'bestand') || 'kein-schritt';
+          if (!waiting.has(g)) waiting.set(g, { routes: [], m: 0 });
+          waiting.get(g).routes.push(r);
+          waiting.get(g).m += m;
+        }
+      }
+      rows.sort((a, b) => fy(a.start) - fy(b.start) || a.r.name.localeCompare(b.r.name, 'de'));
+      let y0 = Math.floor(fy(CONCEPT_DATE));
+      let y1 = Math.floor(fy(data.stand)) + 1;
+      for (const x of rows) {
+        y0 = Math.min(y0, Math.floor(fy(x.start)));
+        if (x.r.announcedYear && !x.opened) y1 = Math.max(y1, x.r.announcedYear + 1);
+      }
+      const span = y1 - y0;
+      const pos = (v) => ((100 * (v - y0)) / span).toFixed(2) + '%';
+      const gridStyle = ' style="background-size:' + (100 / span).toFixed(4) + '% 100%"';
+      const lineAt = (d) => '<i class="d-line" style="left:' + pos(fy(d)) + '"></i>';
+      let h = '<div class="d-axis" aria-hidden="true">';
+      for (let y = y0; y < y1; y++) h += '<span class="' + (y % 5 && y !== y0 ? 'minor' : '') + '" style="left:' + pos(y + 0.5) + '">' + y + '</span>';
+      h += '<span class="mark" style="left:' + pos(fy(CONCEPT_DATE)) + '">Konzept</span></div>';
+      const track = (inner) => '<span class="d-track d-grid"' + gridStyle + '>' + lineAt(CONCEPT_DATE) + inner + '</span>';
+      if (!rows.length) h += '<p class="muted">Keine der angezeigten Trassen hat einen dokumentierten Schritt.</p>';
+      for (const x of rows) {
+        const r = x.r;
+        const g = GROUP_BY_ID[x.opened ? 'bestand' : routeGroups(r.id).find((x) => x !== 'bestand') || 'seit-konzept'];
+        const a = fy(x.start), b = fy(x.end);
+        let inner = '<i class="d-bar" style="left:' + pos(a) + ';width:max(4px,' + pos(y0 + b - a) + ');background:' + g.colour + '"></i>';
+        let text = x.opened ? 'nach ' + dur(x.start, x.end) + ' eröffnet' : 'seit ' + dur(x.start, x.end);
+        if (r.announcedYear && !x.opened) {
+          inner += '<i class="d-plan" style="left:' + pos(b) + ';width:' + pos(y0 + r.announcedYear + 0.5 - b) + ';border-color:' + g.colour + '"></i>';
+          text += ' · angekündigt ' + r.announcedYear;
+        }
+        for (const e of r.events) {
+          if (e.uncertain) continue;
+          inner += '<i class="d-ev' + (STEP_KINDS.includes(e.kind) ? ' step' : '') + '" style="left:' + pos(fy(e.date)) + '" title="' + escHtml(deDate(e.date) + ' · ' + e.kind + ': ' + short(e.text, 120)) + '"></i>';
+        }
+        const label = r.name + (r.road ? ' (' + r.road + ')' : '');
+        h += '<button type="button" class="d-row' + (r.id === state.selected ? ' selected' : '') + '" data-select="' + escHtml(r.id) + '" title="' + escHtml(g.label + ' · erster Schritt ' + deDate(x.start) + ' (' + r.firstStep.kind + ')') + '">'
+          + '<span class="d-head"><span>' + escHtml(label) + '</span><span class="dur">' + escHtml(text) + '</span></span>' + track(inner) + '</button>';
+      }
+      if (waiting.size) {
+        h += '<h3>Ohne dokumentierten Schritt</h3><p class="muted" style="margin:0 0 4px">Gezählt ab dem Konzept vom ' + deDate(CONCEPT_DATE) + ', das diese Trassen vorsieht.</p>';
+        for (const g of GROUPS) {
+          const w = waiting.get(g.id);
+          if (!w) continue;
+          const a = fy(CONCEPT_DATE), b = fy(data.stand);
+          const inner = '<i class="d-bar" style="left:' + pos(a) + ';width:' + pos(y0 + b - a) + ';background:' + g.colour + ';opacity:0.55"></i>';
+          h += '<div class="d-row" style="cursor:default"><span class="d-head"><span>' + escHtml(g.label) + ': ' + w.routes.length + ' Trassen, ' + km(w.m) + '</span><span class="dur">seit ' + escHtml(dur(CONCEPT_DATE, data.stand)) + '</span></span>' + track(inner) + '</div>';
+          h += '<details><summary>Trassen anzeigen</summary><p>' + w.routes.map((r) => '<a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a>').join(', ') + '</p></details>';
+        }
+      }
+      h += '<p class="muted" style="margin-top:10px">Stand der Recherche: ' + escHtml(deDate(data.stand)) + '. Ein Vorgang mit Jahr oder Monat ist am Anfang des Zeitraums eingezeichnet.</p>';
+      $('dauer-chart').innerHTML = h;
     }
 
     /** Bar + legend: km per group among the lines that pass every filter except the group. */

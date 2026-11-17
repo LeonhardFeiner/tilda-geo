@@ -1,5 +1,11 @@
 import { describe, expect, test } from 'vitest'
-import { dateUpperBound, firstStep, lineStatus, type RouteEvent } from './radwegeStatus'
+import {
+  announcedYear,
+  dateUpperBound,
+  firstStep,
+  lineStatus,
+  type RouteEvent,
+} from './radwegeStatus'
 
 const ev = (date: string, kind: RouteEvent['kind'], uncertain?: boolean): RouteEvent => ({
   date,
@@ -57,5 +63,21 @@ describe('lineStatus', () => {
     expect(lineStatus({ events }, 'freigabe')).toBe('nur-freigabe')
     expect(lineStatus({ events }, 'bestand-weg')).toBe('nur-freigabe')
     expect(lineStatus({ events }, 'voll')).toBe('kein-schritt')
+  })
+})
+
+describe('announcedYear', () => {
+  test('takes the first year after the research date', () => {
+    expect(announcedYear('Holzhäuseln – Sünzhausen „ab 2028 ff.“', '2026-10-22')).toBe(2028)
+    expect(announcedYear('2029 (Kreiseigener Tiefbau)', '2026-10-22')).toBe(2029)
+    expect(announcedYear('2025 begonnen, Fertigstellung 2027', '2026-10-22')).toBe(2027)
+  })
+  test('null without a future year', () => {
+    expect(announcedYear('„kein Neubau“', '2026-10-22')).toBeNull()
+    expect(announcedYear(undefined, '2026-10-22')).toBeNull()
+    expect(announcedYear('2026', '2026-10-22')).toBeNull()
+    expect(
+      announcedYear('Querungshilfe an der St 2045, Abzweigung Giegenhausen', '2026-10-22'),
+    ).toBeNull()
   })
 })

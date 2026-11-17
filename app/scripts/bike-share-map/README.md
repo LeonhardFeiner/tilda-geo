@@ -109,6 +109,9 @@ Every route of the Schweitenkirchen Radwegekonzept (WipflerPLAN, 07.06.2024, Lag
 groups is summary, legend and filter at once; "Neueste Vorgänge" lists the latest events; network,
 Baulastträger and the route list sit under "Mehr Filter". A click on a line replaces the overview
 with the route: status, latest event, announced date, then the timeline and the sources.
+"Ansicht: Dauer" (`?ansicht=dauer`) shows, for the routes the filters let through, a bar from the
+first certain step to the opening or to `stand`, the KUS-announced year dashed after it
+(`announcedYear`), and the routes without a step counted from the concept date.
 Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page and its data.
 
 - `radwege/routes.json`: the routes and their dated events (each with a public URL), transcribed

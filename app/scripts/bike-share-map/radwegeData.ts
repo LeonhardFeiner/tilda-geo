@@ -4,6 +4,7 @@ import { length as turfLength } from '@turf/turf'
 import { z } from 'zod'
 import {
   AUSBAU,
+  announcedYear,
   EVENT_KINDS,
   firstStep,
   lineStatus,
@@ -84,6 +85,8 @@ export const LinesFileSchema = z.object({
 
 export type RadwegeRoute = z.infer<typeof RouteSchema> & {
   firstStep: RouteEvent | null
+  /** Completion year announced in the KUS (kusHorizont), if it names one after `stand`. */
+  announcedYear: number | null
   /** Measured length per plan, km. */
   km: Partial<Record<'kurz' | 'lang', number>>
 }
@@ -169,6 +172,7 @@ export function buildRadwegeData(
       ...r,
       events: [...r.events].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)),
       firstStep: firstStep(r.events),
+      announcedYear: announcedYear(r.kusHorizont, meta.stand),
       km: Object.fromEntries(
         Object.entries(km.get(r.id) ?? {}).map(([k, v]) => [k, Math.round(v * 100) / 100]),
       ),

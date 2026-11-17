@@ -146,4 +146,27 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.q('#detail').hidden).toBe(false)
     expect(p.errors).toEqual([])
   })
+  test('the duration view lists started routes oldest first and the ones without a step', async () => {
+    page = await bootPage(html(), [], '?ansicht=dauer', ready)
+    const p = page
+    await p.waitFor(() => p.qAll('#dauer-chart .d-row').length > 0, 'the duration chart')
+    expect(p.q('#dauer').hidden).toBe(false)
+    const rows = p.qAll('#dauer-chart button.d-row')
+    // St 2045 has the oldest documented step (2015); the Waldroute opened within months
+    expect(rows[0]!.dataset.select).toBe('st2045-preinersdorf-landkreisgrenze')
+    const noerting = rows.find((r) => r.dataset.select === 'guentersdorf-noerting')!
+    expect(noerting.textContent).toMatch(/seit [\d,]+ Jahren · angekündigt 2029/)
+    expect(noerting.querySelector('.d-plan')).not.toBeNull()
+    const wald = rows.find((r) => r.dataset.select === 'pfaffenhofen-schweitenkirchen')!
+    expect(wald.textContent).toMatch(/nach \d Monaten eröffnet/)
+    expect(p.q('#dauer-chart').textContent).toContain('Ohne dokumentierten Schritt')
+
+    click(p, noerting)
+    expect(p.q('#detail').hidden).toBe(false)
+    expect(p.window.location.search).toContain('ansicht=dauer')
+    click(p, p.q('#dauer-close'))
+    expect(p.q('#dauer').hidden).toBe(true)
+    expect(p.window.location.search).not.toContain('ansicht=')
+    expect(p.errors).toEqual([])
+  })
 })

@@ -99,6 +99,19 @@ export function firstStep(events: readonly RouteEvent[]) {
 }
 
 /**
+ * First year named in a KUS horizon that lies after the research date ("ab 2028 ff." → 2028), for
+ * the announced part of the duration view; null when the text names no future year.
+ */
+export function announcedYear(horizon: string | undefined, stand: string) {
+  const standYear = Number(stand.slice(0, 4))
+  // 2020–2039 only, and not a road number ("St 2045", "PAF 2045")
+  for (const m of (horizon ?? '').matchAll(/(?<![A-Z]{2,3}\s?)\b(20[23]\d)\b/g)) {
+    if (Number(m[1]) > standYear) return Number(m[1])
+  }
+  return null
+}
+
+/**
  * Group of one line. A built route is `bestand`; otherwise the first certain step decides
  * before/since the concept ("before" only if the whole period of a partial date lies before it);
  * without a step, lines that need no construction are `nur-freigabe`, the rest `kein-schritt`.
