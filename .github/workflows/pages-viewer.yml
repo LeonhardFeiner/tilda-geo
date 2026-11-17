@@ -132,7 +132,7 @@ jobs:
     needs: build
     env:
       MIRROR_REPO: LeonhardFeiner/radweg
-      MIRROR_DOMAIN: radweg.bfschweitenkirchen.de
+      MIRROR_DOMAIN: radweg.bfschweitenkirchen.de # also COUNTED_HOST in app/scripts/bike-share-map/visitCounter.ts
       SOURCE_BASE_URL: https://leonhardfeiner.github.io/tilda-geo/
       MIRROR_DEPLOY_KEY: ${{ secrets.MIRROR_DEPLOY_KEY }}
     steps:

@@ -73,6 +73,15 @@ parses every inline script and `viewerSmoke.test.ts` boots the real page in jsdo
 (`viewerHarness.ts`). The smoke test loads the _built_ bundles in `output/viewer/`, so rebuild
 after changing a bundled module.
 
+## Visit counts
+
+Page views on `radweg.bfschweitenkirchen.de` go to GoatCounter (cookie-less, no stored IPs):
+dashboard at `https://radweg-bfs.goatcounter.com`. `visitCounter.ts` adds the loader to the
+viewer, Methodik, Impressum, station and detour pages; it only runs on that host, so github.io and
+local builds never count. The share stubs under `r/` aren't counted (they redirect straight into
+the viewer, which counts). Changing the site code or host: `visitCounter.ts`, and the Datenschutz
+text in `legalPage.ts` describes the counting.
+
 ## Detour map (`umweg.html`)
 
 Pick a place in a Landkreis and compare, for every other place, the fastest car road with a bike

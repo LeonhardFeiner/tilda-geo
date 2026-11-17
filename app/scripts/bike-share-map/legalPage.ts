@@ -1,4 +1,5 @@
 import { siteIconHeadLinks } from './siteIcon'
+import { COUNTED_HOST, visitCounterHeadScript } from './visitCounter'
 
 export type LegalPageInput = {
   projectLead: string
@@ -41,6 +42,7 @@ export function legalPageHtml(input: LegalPageInput): string {
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Impressum &amp; Datenschutz – Radinfra-Vergleich</title>
 ${siteIconHeadLinks()}
+${visitCounterHeadScript()}
 <meta name="robots" content="noindex,follow" />
 <style>
   :root { color-scheme: light; }
@@ -72,8 +74,17 @@ ${siteIconHeadLinks()}
   <a href="./methodik.html">Methodik &amp; Datenquellen</a>.</p>
 
   <h2>Datenschutz</h2>
-  <p>Diese Seite setzt keine Cookies, verwendet kein Tracking und keine Analysewerkzeuge.</p>
+  <p>Diese Seite setzt keine Cookies und erkennt Sie bei späteren Besuchen nicht wieder.</p>
   <ul>
+    <li><strong>Besucherzählung:</strong> Unter ${COUNTED_HOST} zählen wir Seitenaufrufe mit
+    <a href="https://www.goatcounter.com/">GoatCounter</a> (Martin Tournoij, Irland; Server bei
+    Hetzner in Deutschland und Finnland). Übertragen werden die aufgerufene Seite, die verweisende
+    Seite, Browser, Betriebssystem, Bildschirmbreite, Sprache und Ihre IP-Adresse, aus der nur das
+    Land abgeleitet wird. GoatCounter speichert davon nur zusammengefasste Zahlen, weder die
+    IP-Adresse noch eine Kennung, setzt keine Cookies und legt nichts in Ihrem Browser ab. Um
+    doppelte Zählungen zu vermeiden, hält GoatCounter IP-Adresse und Browserkennung höchstens acht
+    Stunden im Arbeitsspeicher. Siehe die
+    <a href="https://www.goatcounter.com/help/privacy">Datenschutzerklärung von GoatCounter</a>.</li>
     <li><strong>Hosting:</strong> Die Seite liegt bei GitHub Pages (GitHub Inc., USA). Beim Aufruf
     verarbeitet GitHub technisch notwendige Daten wie die IP-Adresse, siehe die
     <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement">Datenschutzerklärung von GitHub</a>.</li>
@@ -90,7 +101,9 @@ ${siteIconHeadLinks()}
     Browsers abgelegt und verlässt Ihr Gerät nicht.</li>
   </ul>
   <p>Rechtsgrundlage für die Übertragung an die Kartenanbieter ist das berechtigte Interesse an
-  einer funktionierenden Kartendarstellung (Art. 6 Abs. 1 lit. f DSGVO). Sie haben das Recht auf
+  einer funktionierenden Kartendarstellung, für die Besucherzählung das berechtigte Interesse zu
+  erfahren, wie viele Menschen die Seite nutzen und woher sie kommen (jeweils Art. 6 Abs. 1
+  lit. f DSGVO). Sie haben das Recht auf
   Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Beschwerde bei einer
   Datenschutz-Aufsichtsbehörde. Kontakt: ${LEGAL_CONTACT.email}</p>
 </main>

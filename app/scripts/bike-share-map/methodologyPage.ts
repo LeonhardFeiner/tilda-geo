@@ -19,6 +19,7 @@ import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
 import { COUNTING_VERSION } from './snapshotHistory'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
+import { visitCounterHeadScript } from './visitCounter'
 
 export type MethodologyPageInput = {
   /** "Stand" shown for the underlying OpenStreetMap data (geojson refresh date). */
@@ -275,6 +276,7 @@ ${li([
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Methodik &amp; Datenquellen – Radinfra-Vergleich</title>
 ${siteIconHeadLinks()}
+${visitCounterHeadScript()}
 <meta name="description" content="Wie der Radinfra-Vergleich rechnet: Datenquellen, Zählweise und die Grenzen der Aussagekraft." />
 <meta name="robots" content="index,follow" />
 <style>

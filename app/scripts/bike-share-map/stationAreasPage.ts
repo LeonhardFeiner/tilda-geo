@@ -1,5 +1,6 @@
 import { buildBasemapStyleJson } from './basemaps'
 import { siteIconHeadLinks } from './siteIcon'
+import { visitCounterHeadScript } from './visitCounter'
 
 /** Network modes and what routing/station_access.py wrote for each ('straight' only has km). */
 export type StationAccessFiles = Partial<
@@ -65,6 +66,7 @@ export function stationAreasPageHtml({
   <meta name="robots" content="noindex, nofollow" />
   <title>Nächste Station</title>
   ${siteIconHeadLinks()}
+  ${visitCounterHeadScript()}
   <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <style>
     :root {

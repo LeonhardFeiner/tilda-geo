@@ -34,6 +34,7 @@ import {
   ROAD_CLASS_ORDER,
 } from './statsClassSums'
 import { viewerRegionNavScript } from './viewerRegionNavScript'
+import { visitCounterHeadScript } from './visitCounter'
 
 // Bottom-sheet ("phone") layout: narrow screens, short ones (a phone held sideways is wide but
 // too low for the side panel), and touch tablets up to 1024 px, where the 400 px panel plus the
@@ -218,6 +219,7 @@ export function generateViewerHtml(
     });
   </script>
   ${siteIconHeadLinks()}
+  ${visitCounterHeadScript()}
   <!-- By far the largest resource on the page (stats-core.msgpack) — without this hint the
        browser only discovers it once the inline controller script runs, after every script tag
        above it has downloaded and executed. Preloading lets it start immediately, in parallel

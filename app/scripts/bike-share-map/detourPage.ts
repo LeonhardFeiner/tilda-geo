@@ -2,6 +2,7 @@ import { buildBasemapStyleJson } from './basemaps'
 import { CLOSE_FROM_SAFETY, STRESS_WEIGHT } from './detourRouting'
 import type { DetourIndexEntry } from './fetchDetourGraph'
 import { siteIconHeadLinks } from './siteIcon'
+import { visitCounterHeadScript } from './visitCounter'
 
 export type DetourPageInput = {
   /** Landkreise with a graph file (output/detour/index.json). */
@@ -67,6 +68,7 @@ export function detourPageHtml({
   <meta name="robots" content="noindex, nofollow" />
   <title>Umwege per Rad</title>
   ${siteIconHeadLinks()}
+  ${visitCounterHeadScript()}
   <link href="./vendor/maplibre-gl-4.7.1/maplibre-gl.css" rel="stylesheet" />
   <style>
     :root {
