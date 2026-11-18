@@ -6,6 +6,7 @@
         [281.5, 696.4]
       ]
     ],
+    "adopt": [[11.5565, 48.51781]],
     "replace": {
       "coords": [
         [11.53797, 48.520927],
@@ -188,7 +189,7 @@
         [11.5817, 48.51111],
         [11.58169, 48.51122]
       ],
-      "why": "Der Plan zeichnet die Waldroute nur schematisch bis an die St 2045. Tatsächlich führt sie von der Äußeren Moosburger Straße (Pfaffenhofen) durch den Schindelhauser Forst über Kuglhof zur Liebigstraße und nie auf der Staatsstraße (PAFundDU 20.10.2021, Rundschau 4/2021). Verlauf: OSM-Relation 16448191 „Radweg Schindelhauser Forst“, im Gewerbegebiet weiter über Liebigstraße und Robert-Koch-Straße."
+      "why": "Der Plan zeichnet die Waldroute nur schematisch bis an die St 2045. Tatsächlich führt sie von der Äußeren Moosburger Straße (Pfaffenhofen) durch den Schindelhauser Forst über Kuglhof zur Liebigstraße und nie auf der Staatsstraße (PAFundDU 20.10.2021, Rundschau 4/2021). Verlauf: OSM-Relation 16448191 „Radweg Schindelhauser Forst“, im Gewerbegebiet weiter über Liebigstraße und Robert-Koch-Straße. Das im Plan anschließende, unbeschriftete Stück entlang der St 2045 gehört zur schematischen Zeichnung der Waldroute (adopt) und entfällt mit ihr."
     }
   },
   "kurz|st2045-preinersdorf-landkreisgrenze": {

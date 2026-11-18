@@ -423,27 +423,6 @@
         "routeId": "ohne-beschriftung-haupt",
         "plan": "kurz",
         "ausbau": "kein-weg",
-        "weg": "staatsstrasse",
-        "belag": "asphalt",
-        "fromPlan": 0.0,
-        "osmWays": [715786203]
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.55524, 48.518158],
-          [11.555621, 48.518122],
-          [11.556705, 48.518058],
-          [11.557588, 48.518015]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-haupt",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
         "weg": "kreisstrasse",
         "belag": "asphalt",
         "fromPlan": 0.0,
