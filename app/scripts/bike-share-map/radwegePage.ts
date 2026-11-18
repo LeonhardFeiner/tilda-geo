@@ -192,11 +192,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     #howto ul { margin: 4px 0 0; padding-left: 18px; }
     #howto li { margin-bottom: 3px; }
     #headline { margin: 10px 0 0; font-size: 13px; }
-    .hint-touch { display: none; }
-    @media (hover: none) {
-      .hint-touch { display: inline; }
-      .hint-mouse { display: none; }
-    }
+    #recent-box > summary { cursor: pointer; }
+    #recent-box > summary h2 { display: inline; }
     #about { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 6px; font-size: 12px; }
     #about > p { margin: 0 0 6px; }
     #about details > summary { cursor: pointer; color: var(--accent); }
@@ -317,7 +314,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       #dauer { left: calc(min(390px, 48vw) + 24px); }
     }
     @media print {
-      #map, #dauer-close, #detail-close, #f-view, .row-btns, #bar, .hint-mouse, .hint-touch, #copy-link { display: none !important; }
+      #map, #dauer-close, #detail-close, #f-view, .row-btns, #bar, #copy-link { display: none !important; }
       #panel, #dauer { position: static; width: auto; max-width: none; max-height: none; overflow: visible; box-shadow: none; border: 0; }
       #panel > summary::after { content: none; }
       a { color: inherit; }
@@ -340,7 +337,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           <ul>
             <li><strong>Farbe</strong> = der letzte öffentlich dokumentierte Schritt: Beschluss, Grunderwerb, Planung, Programm, Haushaltsansatz oder Bau. Aussagen, Ankündigungen (auch die Maßnahmenliste des Landkreises, KUS) und Anfragen zählen nicht als Schritt; sie stehen in den Details.</li>
             <li><strong>„Kein Schritt gefunden“</strong> heißt: in den ausgewerteten öffentlichen Quellen nichts gefunden. Nichtöffentliche Sitzungen und die Arbeit der Verwaltung sind nicht bekannt; es kann also mehr geschehen sein.</li>
-            <li><strong>Zwei Pläne:</strong> kurzfristig (Lageplan 5/1) vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig (Lageplan 5/2) ausbauen. „Beide“ zeigt jede Strecke einmal.</li>
+            <li><strong>Zwei Pläne:</strong> kurzfristig (Lageplan 5/1) vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig (Lageplan 5/2) ausbauen. „Beide“ zeigt jede Strecke einmal: wo Plan 5/2 oder ein vorhandener Weg dieselbe Strecke führt, gilt dieser; aus Plan 5/1 kommt nur hinzu, was dort nicht liegt.</li>
             <li><strong>Zahlen</strong> sind Kilometer, zunächst nur innerhalb der Gemeindegrenze.</li>
             <li><strong>Zuständig:</strong> Radwege an Kreis- und Staatsstraßen plant und baut der Landkreis bzw. das Staatliche Bauamt; den Grunderwerb übernimmt dort oft die Gemeinde.</li>
             <li><strong>Lage:</strong> Die Lagepläne zeichnen schematisch. Jede Trasse ist deshalb auf den passenden Weg in OpenStreetMap gelegt (bis 60 m vom gezeichneten Verlauf); blasser gezeichnet: kein Weg in der Nähe, Lage nur aus dem Plan.</li>
@@ -350,8 +347,6 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         <p id="headline"></p>
         <div id="bar" aria-hidden="true"></div>
         <ul id="groups"></ul>
-        <p class="muted" style="font-size:12px;margin:0 0 4px"><span class="hint-mouse">Zeile anklicken: nur diese Gruppe · mit Shift (oder Strg) mehrere wählen</span><span class="hint-touch">Zeile antippen: nur diese Gruppe · lange drücken: weitere dazunehmen</span></p>
-        <p class="muted" id="kombi-note" hidden>Beide Pläne zusammen, jede Strecke einmal: wo Plan 5/2 oder ein vorhandener Weg dieselbe Strecke führt, gilt dieser; aus Plan 5/1 kommt nur hinzu, was dort nicht liegt.</p>
         <p id="filter-note" hidden></p>
         <fieldset class="seg" id="f-plan">
           <legend>Plan</legend>
@@ -384,9 +379,11 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
         <label class="muted" id="lk-row"><input type="checkbox" id="lk-toggle" checked /><span>Radnetz des Landkreises: <i class="sw band" style="background:${LANDKREIS.vorrang.colour}"></i> Vorrangroute <i class="sw band" style="background:${LANDKREIS.basis.colour}"></i> Basisnetz</span></label>
         <p class="muted" id="line-legend" hidden></p>
-        <h2 id="recent-title">Neueste Vorgänge</h2>
-        <ul id="recent"></ul>
-        <p class="muted" style="margin:4px 0 0"><button class="linkbtn" type="button" id="recent-more"></button></p>
+        <details id="recent-box" open>
+          <summary><h2 id="recent-title">Neueste Vorgänge</h2></summary>
+          <ul id="recent"></ul>
+          <p class="muted" style="margin:4px 0 0"><button class="linkbtn" type="button" id="recent-more"></button></p>
+        </details>
         <details id="more">
           <summary>Mehr Filter und Trassenliste</summary>
           <fieldset id="f-baulast">
@@ -854,7 +851,6 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       }
       $('mode-note').hidden = state.farbe === 'stand' || state.farbe === 'bedarf';
       const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
-      $('kombi-note').hidden = state.plan !== 'beide';
       // dashes mean something only in plan 5/2 for Stand/Bedarf, always for the OSM modes
       const legend = [];
       if (!((state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan === 'kurz')) legend.push('<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText);
@@ -1063,7 +1059,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       }
       const sinceConcept = unique.filter((x) => x.e.date >= CONCEPT_DATE).length;
       const items = state.seit ? unique.filter((x) => x.e.date >= state.seit) : unique.slice(0, RECENT_COUNT);
-      $('recent-title').textContent = state.seit ? 'Vorgänge seit dem ' + deDate(state.seit) + ' (' + items.length + ')' : 'Neueste Vorgänge';
+      // folded, the title still says how fresh the list is
+      $('recent-title').textContent = state.seit ? 'Vorgänge seit dem ' + deDate(state.seit) + ' (' + items.length + ')' : 'Neueste Vorgänge' + (items.length ? ' (zuletzt ' + deDate(items[0].e.date) + ')' : '');
       $('recent-more').textContent = state.seit ? 'Nur die neuesten zeigen' : 'Alle ' + sinceConcept + ' Vorgänge seit dem Konzept zeigen';
       $('recent').innerHTML = items
         .map(({ r, e }) => '<li><span class="when">' + escHtml(deDate(e.date)) + '</span> · ' + (r ? '<a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a>' : 'Radwegenetz allgemein') + '<br>' + escHtml(short(e.text, 140)) + ' ' + evLink(e) + '</li>')
@@ -1077,6 +1074,9 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       $('korr-list').innerHTML = k.map((c) => '<li><span class="when">' + escHtml(deDate(c.date)) + '</span> ' + escHtml(c.text) + '</li>').join('');
     }
     renderKorrekturen();
+    // phones start with the list folded (the bottom sheet shows the legend first); a ?seit= link is
+    // shared for the list, so it opens
+    if (!state.seit && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('recent-box').open = false;
     $('recent-more').addEventListener('click', () => {
       state.seit = state.seit ? null : CONCEPT_DATE;
       render();

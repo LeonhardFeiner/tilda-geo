@@ -30,6 +30,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page views (jsdom)', () => {
     page = await bootPage(html(), [], '?seit=2025-01-01', ready)
     const p = page
     await p.waitFor(() => p.qAll('#recent li').length > 0, 'the event list')
+    expect(p.q<HTMLDetailsElement>('#recent-box').open).toBe(true)
     expect(p.q('#recent-title').textContent).toMatch(/^Vorgänge seit dem 01\.01\.2025 \(\d+\)$/)
     const dates = p.qAll('#recent .when').map((e) => e.textContent!.split('.').reverse().join('-'))
     expect(dates.every((d) => d >= '2025')).toBe(true)

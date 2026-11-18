@@ -148,6 +148,11 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.q('#about').textContent).toContain('BFS/SPD/Grüne')
     expect(p.q('#korrekturen').hidden).toBe(false)
     // every event since the concept on request
+    // foldable, open on a desktop; the title says how fresh the list is
+    expect(p.q<HTMLDetailsElement>('#recent-box').open).toBe(true)
+    expect(p.q('#recent-title').textContent).toMatch(
+      /^Neueste Vorgänge \(zuletzt \d\d\.\d\d\.\d{4}\)$/,
+    )
     click(p, p.q('#recent-more'))
     expect(p.window.location.search).toContain('seit=2024-06-07')
     expect(p.qAll('#recent li').length).toBeGreaterThan(8)
@@ -230,7 +235,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     beide.dispatchEvent(new p.window.Event('change', { bubbles: true }))
     expect(shownLines(p).every((f) => f.properties.kombi)).toBe(true)
     expect(new Set(shownLines(p).map((f) => f.properties.plan))).toEqual(new Set(['kurz', 'lang']))
-    expect(p.q('#kombi-note').hidden).toBe(false)
+    expect(p.q('#howto').textContent).toContain('aus Plan 5/1 kommt nur hinzu')
     expect(p.window.location.search).toContain('plan=beide')
     expect(p.q('#status').textContent).toMatch(/[\d,]+\skm innerhalb der Gemeinde\.$/)
 
