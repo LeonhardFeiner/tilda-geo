@@ -148,7 +148,9 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   the route runs on today instead: OSM way class (`WEG`) or surface (`BELAG`), from the map
   matching in `radwege/pipeline/assign.py`.
 - "Plan: Beide" (`?plan=beide`) shows each stretch once: Bestand, then plan 5/2, then what plan
-  5/1 adds where neither lies within 30 m (`kombi`). "Nur innerhalb der Gemeindegrenze"
+  5/1 adds where neither lies within 30 m (`kombi`); with "Trassen" set to Haupt or ergänzend, only the 5/2 lines of that kind count
+  (`kombiHaupt`, `kombiErgaenzend`), since a route can be Haupttrasse in one plan and ergänzend in
+  the other (Dietersdorf–Schweitenkirchen). "Nur innerhalb der Gemeindegrenze"
   (`?gemeinde=innen`) hides what lies outside (`innen`) from map and all numbers. Both flags come
   from cutting the lines in `radwegeData.ts` (`radwegeGeometry.ts`).
 - "Trassen" (`?netz=haupt|ergaenzend`): only the Haupt- or only the ergänzende Trassen (the

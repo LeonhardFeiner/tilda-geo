@@ -136,6 +136,9 @@ export type RadwegeLineProps = z.infer<typeof LineProps> & {
   m: number
   /** Part of the combined view: a short-term piece is left out where plan 5/2 or Bestand covers it. */
   kombi: boolean
+  /** The same with "Trassen: nur Haupt" / "nur ergänzende": only 5/2 lines of that kind count. */
+  kombiHaupt: boolean
+  kombiErgaenzend: boolean
   /** Inside the Gemeinde boundary (true when there is no boundary). */
   innen: boolean
 }
@@ -262,10 +265,20 @@ export function buildRadwegeData(
       .map((f) => f.geometry.coordinates),
     KOMBI_NEAR_M,
   )
-  const nearLang = nearIndex(
-    lines.features.filter((f) => f.properties.plan === 'lang').map((f) => f.geometry.coordinates),
-    KOMBI_NEAR_M,
-  )
+  const langLines = (keep: (netz: string | undefined) => boolean) =>
+    nearIndex(
+      lines.features
+        .filter(
+          (f) => f.properties.plan === 'lang' && keep(byId.get(f.properties.routeId)?.plans.lang),
+        )
+        .map((f) => f.geometry.coordinates),
+      KOMBI_NEAR_M,
+    )
+  const nearLang = langLines(() => true)
+  // with the "Trassen" filter on, a 5/1 piece only gives way to a 5/2 line that filter shows:
+  // a route can be Haupttrasse in one plan and ergänzend in the other
+  const nearLangHaupt = langLines((n) => n !== 'ergaenzend')
+  const nearLangErgaenzend = langLines((n) => n === 'ergaenzend')
 
   const km = new Map<string, Partial<Record<'kurz' | 'lang', number>>>()
   const features: RadwegeData['lines']['features'] = []
@@ -279,12 +292,15 @@ export function buildRadwegeData(
       )
     }
     const kurzBestand = f.properties.plan === 'kurz' && isBestand(f)
-    const kombiAt = (p: LonLat) =>
-      kurzBestand ||
-      (f.properties.plan === 'lang' ? !nearBestand(p) : !nearBestand(p) && !nearLang(p))
+    const kombiAt = (p: LonLat, near: (p: LonLat) => boolean) =>
+      kurzBestand || (f.properties.plan === 'lang' ? !nearBestand(p) : !nearBestand(p) && !near(p))
     const pieces = splitByKey(
       f.geometry.coordinates,
-      (p) => (kombiAt(p) ? 1 : 0) + (inside(p) ? 2 : 0),
+      (p) =>
+        (kombiAt(p, nearLang) ? 1 : 0) +
+        (inside(p) ? 2 : 0) +
+        (kombiAt(p, nearLangHaupt) ? 4 : 0) +
+        (kombiAt(p, nearLangErgaenzend) ? 8 : 0),
     )
     for (const piece of pieces) {
       const geometry = { type: 'LineString' as const, coordinates: piece.coords }
@@ -306,6 +322,8 @@ export function buildRadwegeData(
           bedarf: lineBedarf(route, f.properties.ausbau, f.properties.belag),
           m,
           kombi: Boolean(piece.key & 1),
+          kombiHaupt: Boolean(piece.key & 4),
+          kombiErgaenzend: Boolean(piece.key & 8),
           innen: Boolean(piece.key & 2),
         },
         geometry,

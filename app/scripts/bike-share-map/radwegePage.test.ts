@@ -95,6 +95,18 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(st.length).toBeGreaterThan(0)
     expect(st.every((f) => f.properties.strasse === 'St 2045')).toBe(true)
   })
+  test('combined view with a Trassen filter: a route ergänzend in 5/2 keeps its 5/1 Haupt line', () => {
+    // Dietersdorf–Schweitenkirchen: Haupttrasse in 5/1, ergänzend in 5/2. "Beide" + "nur Haupt"
+    // must not drop the 5/1 line for a 5/2 line that filter hides.
+    const ds = data.lines.features.filter(
+      (x) => x.properties.routeId === 'dietersdorf-schweitenkirchen',
+    )
+    const km = (fs: typeof ds) => fs.reduce((s, x) => s + x.properties.m, 0) / 1000
+    const kurz = ds.filter((x) => x.properties.plan === 'kurz')
+    expect(km(kurz.filter((x) => !x.properties.kombi))).toBeGreaterThan(1)
+    expect(km(kurz.filter((x) => x.properties.kombiHaupt))).toBeCloseTo(km(kurz), 1)
+    expect(kurz.every((x) => x.properties.kombiErgaenzend === x.properties.kombi)).toBe(true)
+  })
   test('combined view takes each stretch once; lines are cut at the Gemeinde boundary', () => {
     const f = data.lines.features
     const km = (fs: typeof f) => fs.reduce((s, x) => s + x.properties.m, 0) / 1000

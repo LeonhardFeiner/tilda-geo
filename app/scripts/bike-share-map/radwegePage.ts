@@ -7,6 +7,7 @@ import {
   PLAN_SAYS,
   STATUS_GROUPS,
   STEP_KINDS,
+  vorhandenAuf,
   WEG,
 } from './radwegeStatus'
 import { siteIconHeadLinks } from './siteIcon'
@@ -423,6 +424,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const NETZ_LABEL = ${JSON.stringify(NETZ_LABEL)};
     const AUSBAU_LABEL = ${JSON.stringify(AUSBAU_LABEL)};
     const PLAN_SAYS = ${JSON.stringify(PLAN_SAYS)};
+    const VORHANDEN_AUF = ${JSON.stringify(Object.fromEntries((['bestand', 'freigabe'] as const).map((a) => [a, Object.fromEntries(WEG.map((w) => [w.id, vorhandenAuf(a, w.id)]))])))};
     const TIMELINE_OPEN = ${TIMELINE_OPEN};
     const RECENT_COUNT = ${RECENT_COUNT};
     const CONCEPT_DATE = ${JSON.stringify(CONCEPT_DATE)};
@@ -550,8 +552,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     $('stand').textContent = deDate(data.stand);
 
     // ---- filters
-    /** Existing paths belong to both plans; "beide" takes each stretch once (kombi); optionally only inside the Gemeinde. */
-    const inPlan = (p) => (state.plan === 'beide' ? p.kombi : p.plan === state.plan || p.status === 'bestand') && (!state.innen || p.innen);
+    /** Existing paths belong to both plans; "beide" takes each stretch once (kombi, against the 5/2 lines the Trassen filter shows); optionally only inside the Gemeinde. */
+    const inPlan = (p) => (state.plan === 'beide' ? (state.netz === 'haupt' ? p.kombiHaupt : state.netz === 'ergaenzend' ? p.kombiErgaenzend : p.kombi) : p.plan === state.plan || p.status === 'bestand') && (!state.innen || p.innen);
     function passesOther(p) {
       const r = routeById.get(p.routeId);
       // existing paths always show; "Nur Ergänzende" also leaves out the Landkreis route
@@ -787,7 +789,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           if (!p) return;
           const r = routeById.get(p.routeId);
           if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.status === 'bestand' && VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg] ? '<br>' + escHtml(VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg]) : '') + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
         });
         map.on('mouseleave', id, () => {
           map.getCanvas().style.cursor = '';
