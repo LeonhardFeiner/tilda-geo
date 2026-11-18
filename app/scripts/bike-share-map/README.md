@@ -135,7 +135,9 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   piece what the plan says (`PLAN_SAYS`). The Landkreis network of plan 5/2
   (`radwege/landkreis.geojson`) is a context layer that can be switched off.
 - Numbers and map stop at the Gemeinde boundary by default (`?gemeinde=alle` shows the parts
-  outside). Above the bar: the total km, plan and scope; each group with km and %.
+  outside). Above the bar: the total km, number of routes, plan and scope (in the OSM modes also
+  "laut OpenStreetMap"); each group with km only, the shares are in the bar (tooltip). The checking
+  aids (Unsichere Stellen, Lage wie im Plan) sit in "Mehr Filter"; a link with one on opens it.
 - `baulast` is who builds and maintains; `grunderwerb` who buys the land, where a source says so
   (often the Gemeinde for a Radweg along a Kreis- or Staatsstraße). The detail view shows both.
 - `korrekturen` in `routes.json`: dated corrections, listed under "Wer steht dahinter?" with the

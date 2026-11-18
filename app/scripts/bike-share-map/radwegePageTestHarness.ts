@@ -30,7 +30,7 @@ export const shownLines = (p: ViewerPage) =>
   (
     p.window as unknown as { __map: { getSource: (id: string) => { data: { features: Line[] } } } }
   ).__map.getSource('radwege').data.features
-export const ready = { ready: (p: ViewerPage) => p.q('#status').textContent!.includes('Trassen') }
+export const ready = { ready: (p: ViewerPage) => p.q('#headline').textContent!.includes('Trassen') }
 export const click = (p: ViewerPage, el: Element) =>
   el.dispatchEvent(new p.window.MouseEvent('click', { bubbles: true }))
 export const toggle = (p: ViewerPage, input: HTMLInputElement) => {

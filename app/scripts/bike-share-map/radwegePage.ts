@@ -149,7 +149,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     label .km { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .sw { display: inline-block; width: 14px; height: 4px; border-radius: 2px; flex: none; }
     .sw.band { height: 8px; opacity: 0.45; }
-    #lk-row, #pl-row { font-size: 12px; }
+    #lk-row, #pl-row, #pr-row { font-size: 12px; }
+    #status:empty { display: none; }
     .sw.dash { background: none !important; height: 0; border-top: 3px dashed; }
     input[type='search'] {
       width: 100%;
@@ -220,7 +221,6 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     #groups button:focus-visible { outline: 2px solid var(--accent); }
     #groups .sw { width: 12px; height: 12px; border-radius: 3px; align-self: center; }
     #groups .km { margin-left: auto; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; text-align: right; }
-    #groups .pct { display: block; font-size: 11px; }
     #filter-note { font-size: 12px; }
     #recent { list-style: none; padding: 0; margin: 0; font-size: 13px; }
     #recent li { padding: 4px 0; border-bottom: 1px solid var(--border); }
@@ -343,8 +343,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
             <li><strong>Lage:</strong> Die Lagepläne zeichnen schematisch. Jede Trasse ist deshalb auf den passenden Weg in OpenStreetMap gelegt (bis 60 m vom gezeichneten Verlauf); blasser gezeichnet: kein Weg in der Nähe, Lage nur aus dem Plan.</li>
           </ul>
         </details>
-        <p class="muted" id="mode-note" hidden>Worauf die Trasse heute verläuft, laut OpenStreetMap (© OpenStreetMap-Mitwirkende), unabhängig vom Plan.</p>
-        <p id="headline"></p>
+        <p id="headline" aria-live="polite"></p>
         <div id="bar" aria-hidden="true"></div>
         <ul id="groups"></ul>
         <p id="filter-note" hidden></p>
@@ -374,9 +373,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           <label><input type="radio" name="farbe" value="belag"><span>Belag heute</span></label>
         </fieldset>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
-        <label class="muted" id="innen-row"><input type="checkbox" id="innen-toggle" /><span>Nur innerhalb der Gemeindegrenze (Karte und alle Zahlen)</span></label>
-        <label class="muted" id="pr-row" hidden><input type="checkbox" id="pr-toggle" /><span>Unsichere Stellen: <i class="sw" style="background:#c026d3;border-radius:50%"></i> <span id="pr-count"></span> Stellen, an denen die Lage auf OpenStreetMap unsicher ist (vor Ort zu prüfen)</span></label>
-        <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
+        <label class="muted" id="innen-row"><input type="checkbox" id="innen-toggle" /><span>Nur innerhalb der Gemeindegrenze</span></label>
         <label class="muted" id="lk-row"><input type="checkbox" id="lk-toggle" checked /><span>Radnetz des Landkreises: <i class="sw band" style="background:${LANDKREIS.vorrang.colour}"></i> Vorrangroute <i class="sw band" style="background:${LANDKREIS.basis.colour}"></i> Basisnetz</span></label>
         <p class="muted" id="line-legend" hidden></p>
         <details id="recent-box" open>
@@ -386,6 +383,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         </details>
         <details id="more">
           <summary>Mehr Filter und Trassenliste</summary>
+          <label class="muted" id="pr-row" hidden><input type="checkbox" id="pr-toggle" /><span>Unsichere Stellen: <i class="sw" style="background:#c026d3;border-radius:50%"></i> <span id="pr-count"></span> Stellen, an denen die Lage auf OpenStreetMap unsicher ist (vor Ort zu prüfen)</span></label>
+          <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
           <fieldset id="f-baulast">
             <legend>Zuständig für Bau und Unterhalt (Baulast)</legend>
             ${BAULAST.map((b) => checkbox('baulast', b, BAULAST_LABEL[b])).join('\n            ')}
@@ -607,6 +606,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       render();
     });
     $('pr-row').hidden = !data.pruefen;
+    // the checking aids sit in "Mehr Filter": a link with one switched on opens it
+    if (state.pruefen || state.planlage) $('more').open = true;
     $('pr-toggle').checked = state.pruefen;
     $('pr-toggle').addEventListener('change', (e) => {
       state.pruefen = e.target.checked;
@@ -849,18 +850,16 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         const ids = new Set(vis.map((f) => f.properties.routeId));
         $('pr-count').textContent = String(data.pruefen.features.filter((f) => ids.has(f.properties.routeId) && (state.plan === 'beide' || f.properties.plan === state.plan)).length);
       }
-      $('mode-note').hidden = state.farbe === 'stand' || state.farbe === 'bedarf';
       const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
       // dashes mean something only in plan 5/2 for Stand/Bedarf, always for the OSM modes
       const legend = [];
       if (!((state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan === 'kurz')) legend.push('<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText);
-      if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung einer Kreis- oder Staatsstraße (Annahme: der Plan wechselt dort die Straßenseite)');
+      if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung (angenommen)');
       $('line-legend').hidden = !legend.length;
       $('line-legend').innerHTML = legend.join('<br>');
       renderGroups();
-      const visM = vis.reduce((s, f) => s + f.properties.m, 0);
-      const innenM = vis.reduce((s, f) => s + (f.properties.innen ? f.properties.m : 0), 0);
-      $('status').textContent = 'Angezeigt: ' + new Set(vis.map((f) => f.properties.routeId)).size + ' Trassen, ' + km(visM) + (state.innen ? ' innerhalb der Gemeinde' : innenM < visM ? ', davon ' + km(innenM) + ' innerhalb der Gemeinde' : '') + '.';
+      // the totals are in the headline; the status line keeps only notes such as a missing WebGL
+      $('status').textContent = $('status').textContent.replace('Lade Daten …', '').trim();
       renderRecent();
       renderList();
       renderDetail();
@@ -958,9 +957,13 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       // in the progress view, each group also says how much of it is Aus-/Neubau and how much
       // Freigabe; for what exists, how much of it is only an interim solution
       const split = {};
+      const routeIds = new Set();
+      let innenM = 0;
       for (const f of features) {
         if (!passesOther(f.properties)) continue;
         m[f.properties[md.key]] += f.properties.m;
+        routeIds.add(f.properties.routeId);
+        if (f.properties.innen) innenM += f.properties.m;
         if (state.farbe === 'stand') {
           const s = (split[f.properties.status] = split[f.properties.status] || {});
           const k = f.properties.status === 'bestand' ? (routeById.get(f.properties.routeId).uebergang ? 'uebergang' : 'fest') : f.properties.bedarf.startsWith('freigabe') ? 'freigabe' : f.properties.bedarf;
@@ -977,7 +980,9 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       const sum = Object.values(m).reduce((a, b) => a + b, 0);
       const total = sum || 1;
       const PLAN_TEXT = { kurz: 'im kurzfristigen Plan (Lageplan 5/1)', lang: 'im langfristigen Plan (Lageplan 5/2)', beide: 'in beiden Plänen, jede Strecke einmal' };
-      $('headline').innerHTML = '<strong>' + km(sum) + '</strong> Trassen und vorhandene Wege ' + PLAN_TEXT[state.plan] + (state.innen ? ', innerhalb der Gemeinde' : ', einschließlich der Stücke außerhalb der Gemeinde') + (state.netz === 'alle' ? '' : state.netz === 'haupt' ? ', nur Haupttrassen' : ', nur ergänzende Trassen') + ':';
+      // the OSM modes say where their colours come from (the © is in the map attribution)
+      const OSM_TEXT = { weg: ', Wegart heute laut OpenStreetMap', belag: ', Belag heute laut OpenStreetMap' };
+      $('headline').innerHTML = '<strong>' + km(sum) + '</strong> in ' + routeIds.size + ' Trassen und vorhandenen Wegen ' + PLAN_TEXT[state.plan] + (state.innen ? ', innerhalb der Gemeinde' : ', einschließlich der Stücke außerhalb der Gemeinde' + (innenM < sum ? ' (davon ' + km(innenM) + ' innerhalb)' : '')) + (state.netz === 'alle' ? '' : state.netz === 'haupt' ? ', nur Haupttrassen' : ', nur ergänzende Trassen') + (OSM_TEXT[state.farbe] || '') + ':';
       const pct = (v) => {
         const x = (100 * v) / total;
         return (x > 0 && x < 1 ? '< 1' : Math.round(x)) + ' %';
@@ -1008,7 +1013,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         b.title = g.hint;
         b.setAttribute('aria-pressed', String(Boolean(state.only && state.only.includes(g.id))));
         if (dim) b.classList.add('dim');
-        b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + splitText(g.id) + '</span><span class="km">' + km(m[g.id]) + '<span class="pct">' + pct(m[g.id]) + '</span></span>';
+        b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + splitText(g.id) + '</span><span class="km">' + (m[g.id] > 0 && m[g.id] < 50 ? '<\u00a00,1\u00a0km' : km(m[g.id])) + '</span>';
         b.addEventListener('click', (e) => {
           // the legend is rebuilt by the long press; swallow the click that ends it
           if (longPressed) return void (longPressed = false);

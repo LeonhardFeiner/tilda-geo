@@ -136,10 +136,13 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
       /davon Aus-\/Neubau [\d,]+\skm · Freigabe/,
     )
     expect(p.q('#groups [data-group="vor-konzept"]').textContent).toContain('davon')
-    expect(p.q('#groups [data-group="nichts"]').textContent).toMatch(/\d+ %/)
+    // km only; the shares are in the bar
+    expect(p.q('#groups [data-group="nichts"]').textContent).toMatch(/[\d,]+\skm$/)
+    expect(p.q('#groups').textContent).not.toContain('%')
+    expect(p.q('#status').textContent).toBe('')
     // the total, the plan and the scope are said above the bar; numbers stop at the boundary
     expect(p.q('#headline').textContent).toMatch(
-      /^[\d,]+\skm .*Lageplan 5\/1.*innerhalb der Gemeinde/,
+      /^[\d,]+\skm in \d+ Trassen .*Lageplan 5\/1.*innerhalb der Gemeinde/,
     )
     expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
     // the interim Waldroute is said apart from the real paths
@@ -237,7 +240,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(new Set(shownLines(p).map((f) => f.properties.plan))).toEqual(new Set(['kurz', 'lang']))
     expect(p.q('#howto').textContent).toContain('aus Plan 5/1 kommt nur hinzu')
     expect(p.window.location.search).toContain('plan=beide')
-    expect(p.q('#status').textContent).toMatch(/[\d,]+\skm innerhalb der Gemeinde\.$/)
+    expect(p.q('#headline').textContent).toMatch(/in beiden Plänen.*innerhalb der Gemeinde:$/)
 
     // only the main routes: the switch at the top
     const haupt = p.q<HTMLInputElement>('input[name=netz][value=haupt]')
@@ -273,8 +276,9 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     toggle(p, p.q<HTMLInputElement>('#innen-toggle'))
     expect(shownLines(p).some((f) => !f.properties.innen)).toBe(true)
     expect(p.window.location.search).toContain('gemeinde=alle')
-    expect(p.q('#status').textContent).toMatch(/davon [\d,]+\skm innerhalb der Gemeinde/)
-    expect(p.q('#headline').textContent).toContain('außerhalb')
+    expect(p.q('#headline').textContent).toMatch(
+      /außerhalb der Gemeinde \(davon [\d,]+\skm innerhalb\)/,
+    )
     expect(p.errors).toEqual([])
   })
 

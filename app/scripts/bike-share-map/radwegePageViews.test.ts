@@ -27,10 +27,12 @@ describe.skipIf(!existsSync(dataFile))('radwege page views (jsdom)', () => {
     expect(p.errors).toEqual([])
   })
   test('?seit= lists every event since that date', async () => {
-    page = await bootPage(html(), [], '?seit=2025-01-01', ready)
+    page = await bootPage(html(), [], '?seit=2025-01-01&planlage=an', ready)
     const p = page
     await p.waitFor(() => p.qAll('#recent li').length > 0, 'the event list')
     expect(p.q<HTMLDetailsElement>('#recent-box').open).toBe(true)
+    // a switched-on checking aid opens "Mehr Filter", where it sits
+    expect(p.q<HTMLDetailsElement>('#more').open).toBe(true)
     expect(p.q('#recent-title').textContent).toMatch(/^Vorgänge seit dem 01\.01\.2025 \(\d+\)$/)
     const dates = p.qAll('#recent .when').map((e) => e.textContent!.split('.').reverse().join('-'))
     expect(dates.every((d) => d >= '2025')).toBe(true)
@@ -74,7 +76,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page views (jsdom)', () => {
     weg.checked = true
     weg.dispatchEvent(new p.window.Event('change', { bubbles: true }))
     expect(p.window.location.search).toContain('farbe=weg')
-    expect(p.q('#mode-note').hidden).toBe(false)
+    expect(p.q('#headline').textContent).toContain('Wegart heute laut OpenStreetMap')
     expect(p.qAll('#groups [data-group="kreisstrasse"]').length).toBe(1)
     click(p, p.q('#groups [data-group="kreisstrasse"]'))
     expect(p.window.location.search).toContain('nur=kreisstrasse')
