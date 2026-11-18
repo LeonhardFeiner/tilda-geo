@@ -83,6 +83,11 @@ def runs(flags, min_len):
     return out
 
 
+# routes whose course an override sets on purpose (overrides.json: replace, line, beside, redraw)
+# differ from the drawing by design: only the building check applies to them
+OV = json.load(open(f'{W}/../overrides.json'))
+INTENDED = {tuple(k.split('|')[::-1]) for k, v in OV.items() if {'replace', 'line', 'beside', 'redraw'} & set(v)}
+
 flags = []  # (routeId, plan, grund, utm point, text, metres)
 for key, ms in matched.items():
     rid, plan = key
@@ -104,7 +109,7 @@ for key, ms in matched.items():
                     and min(e.distance(g.interpolate(s)) for e in ends) > 60:
                 last = s
                 flags.append((rid, plan, 'zickzack', g.interpolate(s), 'Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg.', 0))
-    if key not in drawn:
+    if key not in drawn or key in INTENDED:
         continue
     # 6. a bend in the match where the drawing is straight
     def turn(g, s, w=40):

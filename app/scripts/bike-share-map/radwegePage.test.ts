@@ -102,6 +102,13 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     const grund = new Set(data.pruefen!.features.map((f) => f.properties.grund))
     expect(grund.has('gebaeude')).toBe(true)
     expect(grund.has('kurve')).toBe(true)
+    // the plan changes the side of the PAF 6 at Güntersdorf: a crossing there
+    const q = data.querungen!.features.filter((f) =>
+      f.properties.routeIds.includes('guentersdorf-noerting'),
+    )
+    expect(
+      q.some((f) => f.properties.strasse === 'PAF 6' && f.properties.ort === 'Güntersdorf'),
+    ).toBe(true)
     const ids = new Set(data.routes.map((r) => r.id))
     expect(data.pruefen!.features.every((f) => ids.has(f.properties.routeId))).toBe(true)
     // the new path along the St 2045 to Sünzhausen is drawn on one side of the road
@@ -189,7 +196,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     )
     expect(errors).toEqual([])
     expect(st.layers.map((l) => l.id)).toEqual(
-      expect.arrayContaining(['landkreis', 'luftbild', 'radwege-solid', 'pruefen']),
+      expect.arrayContaining(['landkreis', 'luftbild', 'radwege-solid', 'pruefen', 'querungen']),
     )
   })
 

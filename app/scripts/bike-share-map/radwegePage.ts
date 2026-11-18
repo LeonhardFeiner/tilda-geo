@@ -656,6 +656,17 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         map.addLayer({ id: 'planlage', type: 'line', source: 'planlage', filter: ['!', ['get', 'dashed']], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6) } });
         map.addLayer({ id: 'planlage-dashed', type: 'line', source: 'planlage', filter: ['get', 'dashed'], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6), 'line-dasharray': [3, 2] } });
       }
+      if (data.querungen) {
+        map.addSource('querungen', { type: 'geojson', data: data.querungen });
+        map.addLayer({ id: 'querungen', type: 'circle', source: 'querungen', paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 3.5, 16, 7], 'circle-color': '#fff', 'circle-stroke-color': '#1f2328', 'circle-stroke-width': ['interpolate', ['linear'], ['zoom'], 11, 1.5, 16, 3] } });
+        map.on('mousemove', 'querungen', (e) => {
+          const p = e.features && e.features[0] && e.features[0].properties;
+          if (!p) return;
+          if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>Querung (Annahme)</strong><br>' + escHtml(p.text)).addTo(map);
+        });
+        map.on('mouseleave', 'querungen', () => hoverPopup && hoverPopup.remove());
+      }
       if (data.pruefen) {
         map.addSource('pruefen', { type: 'geojson', data: data.pruefen });
         map.addLayer({ id: 'pruefen', type: 'circle', source: 'pruefen', layout: { visibility: 'none' }, paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 16, 8], 'circle-color': '#c026d3', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
@@ -717,6 +728,11 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           map.setFilter(id, ['all', inPlanExpr, id === 'planlage' ? ['!', ['get', 'dashed']] : ['get', 'dashed']]);
         }
         if (map.getLayer('luftbild')) map.setLayoutProperty('luftbild', 'visibility', state.view === 'luftbild' ? 'visible' : 'none');
+        if (map.getLayer('querungen')) {
+          const ids = [...new Set(vis.map((f) => f.properties.routeId))];
+          // routeIds is an array: shown when any of its routes is shown, in the plan(s) on view
+          map.setFilter('querungen', ['all', ['any', ...ids.map((id) => ['in', id, ['get', 'routeIds']]), false], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
+        }
         if (map.getLayer('pruefen')) {
           map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
           map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
@@ -729,9 +745,13 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       }
       $('mode-note').hidden = state.farbe === 'stand' || state.farbe === 'bedarf';
       const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
-      $('line-legend').hidden = (state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan === 'kurz';
       $('kombi-note').hidden = state.plan !== 'beide';
-      $('line-legend').innerHTML = '<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText;
+      // dashes mean something only in plan 5/2 for Stand/Bedarf, always for the OSM modes
+      const legend = [];
+      if (!((state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan === 'kurz')) legend.push('<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText);
+      if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung einer Kreis- oder Staatsstraße (Annahme: der Plan wechselt dort die Straßenseite)');
+      $('line-legend').hidden = !legend.length;
+      $('line-legend').innerHTML = legend.join('<br>');
       renderGroups();
       const visM = vis.reduce((s, f) => s + f.properties.m, 0);
       const innenM = vis.reduce((s, f) => s + (f.properties.innen ? f.properties.m : 0), 0);
@@ -1051,6 +1071,10 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       if (r.konzeptHinweis) h += '<dt>Konzept</dt><dd>' + escHtml(r.konzeptHinweis) + '</dd>';
       h += '</dl>';
       if (r.documented) h += '<p class="note">' + escHtml(r.documented) + '</p>';
+      const qs = (data.querungen ? data.querungen.features : []).filter((f) => f.properties.routeIds.includes(r.id) && (state.plan === 'beide' || f.properties.plan === state.plan));
+      const qSeen = new Set();
+      const qTexts = qs.map((f) => f.properties.text.split(':')[0]).filter((t) => !qSeen.has(t) && qSeen.add(t));
+      if (qTexts.length) h += '<p class="note"><strong>Querungen (Annahme aus der Seitenlage im Plan):</strong> ' + qTexts.map(escHtml).join('<br>') + '</p>';
       const checks = (data.pruefen ? data.pruefen.features : []).filter((f) => f.properties.routeId === r.id && (state.plan === 'beide' || f.properties.plan === state.plan));
       if (checks.length) h += '<p class="note"><strong>Zuordnung prüfen (' + checks.length + '):</strong> ' + checks.map((f) => escHtml(f.properties.text)).join('<br>') + ' <button class="linkbtn" type="button" id="show-checks">Auf der Karte zeigen</button></p>';
       const fromPlanM = fs.reduce((s, f) => s + f.properties.m * f.properties.fromPlan, 0);

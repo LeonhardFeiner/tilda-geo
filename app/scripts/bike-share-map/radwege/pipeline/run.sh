@@ -62,6 +62,8 @@ head -8 "$WORK/review.log"
 # Overpass (cached; delete cache/buildings.json to refresh).
 [ -s "$WORK/buildings.json" ] || "$PY" -I "$HERE/buildings.py" "$WORK/buildings.json"
 "$PY" -I "$HERE/check.py" "$WORK" "$RADWEGE/lines.geojson" "$WORK/buildings.json" "$RADWEGE/pruefen.geojson"
+# where the plan changes the side of a road: crossings (an assumption the page labels as such)
+"$PY" -I "$HERE/querung.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/pruefen.geojson" "$RADWEGE/querungen.geojson"
 
 # 8. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
@@ -75,4 +77,5 @@ REPO="$(cd "$RADWEGE/../../../.." && pwd)"
 (cd "$REPO" && app/node_modules/.bin/oxfmt --write -c app/oxfmt.config.mjs \
   app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json \
   app/scripts/bike-share-map/radwege/gemeinde.geojson app/scripts/bike-share-map/radwege/landkreis.geojson \
-  app/scripts/bike-share-map/radwege/planlage.geojson app/scripts/bike-share-map/radwege/pruefen.geojson >/dev/null)
+  app/scripts/bike-share-map/radwege/planlage.geojson app/scripts/bike-share-map/radwege/pruefen.geojson \
+  app/scripts/bike-share-map/radwege/querungen.geojson >/dev/null)

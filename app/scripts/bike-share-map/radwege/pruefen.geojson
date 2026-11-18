@@ -24,16 +24,6 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "grund": "strassenseite",
-        "text": "Der Plan zeichnet die Trasse über 880 m in gleichmäßigem Abstand neben „St 2045“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.563216, 48.516776] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "preinerszell-hirschhausen",
         "plan": "kurz",
         "grund": "strassenseite",
@@ -64,32 +54,12 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "strassenseite",
-        "text": "Der Plan zeichnet die Trasse über 130 m in gleichmäßigem Abstand neben „PAF 27“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.580796, 48.503621] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "holzhausen-loipersdorf",
         "plan": "lang",
         "grund": "strassenseite",
         "text": "Der Plan zeichnet die Trasse über 120 m in gleichmäßigem Abstand neben „Kreisstraße“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
       },
       "geometry": { "type": "Point", "coordinates": [11.650056, 48.505095] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.581535, 48.510381] }
     },
     {
       "type": "Feature",
@@ -165,36 +135,6 @@
       "type": "Feature",
       "properties": {
         "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 970 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.584106, 48.491785] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 910 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.611307, 48.475712] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 910 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.611307, 48.475712] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
         "plan": "lang",
         "grund": "abseits",
         "text": "Die zugeordnete Linie liegt über 840 m mehr als 45 m neben der Zeichnung im Plan."
@@ -234,72 +174,12 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 290 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.559391, 48.517457] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 260 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.57945, 48.51142] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "oberthann-guentersdorf",
         "plan": "lang",
         "grund": "abseits",
         "text": "Die zugeordnete Linie liegt über 220 m mehr als 45 m neben der Zeichnung im Plan."
       },
       "geometry": { "type": "Point", "coordinates": [11.608799, 48.479305] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
     },
     {
       "type": "Feature",
@@ -330,16 +210,6 @@
         "text": "Die zugeordnete Linie liegt über 150 m mehr als 45 m neben der Zeichnung im Plan."
       },
       "geometry": { "type": "Point", "coordinates": [11.672547, 48.50726] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 110 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.608253, 48.479592] }
     },
     {
       "type": "Feature",
@@ -380,16 +250,6 @@
         "text": "Die zugeordnete Linie liegt über 80 m mehr als 45 m neben der Zeichnung im Plan."
       },
       "geometry": { "type": "Point", "coordinates": [11.595801, 48.53062] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "mehrdeutig",
-        "text": "Zwei parallele Wege liegen gleich nah an der Zeichnung (Feldweg und PAF 27); welcher gemeint ist, ist unklar."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.582991, 48.49674] }
     }
   ]
 }

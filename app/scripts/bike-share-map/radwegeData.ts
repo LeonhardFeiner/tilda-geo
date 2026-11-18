@@ -149,6 +149,8 @@ export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   planlage: z.infer<typeof PlanlageSchema> | null
   /** Spots to check on site (radwege/pipeline/check.py). */
   pruefen: z.infer<typeof PruefSchema> | null
+  /** Road crossings implied by a change of side in the plan (radwege/pipeline/querung.py). */
+  querungen: z.infer<typeof QuerungSchema> | null
 }
 
 const LandkreisSchema = z.object({
@@ -191,6 +193,25 @@ const PruefSchema = z.object({
   ),
 })
 
+/** Where the plan changes the side of a road (radwege/pipeline/querung.py): an assumption. */
+const QuerungSchema = z.object({
+  type: z.literal('FeatureCollection'),
+  features: z.array(
+    z.object({
+      type: z.literal('Feature'),
+      properties: z.object({
+        plan: Plan,
+        strasse: z.string(),
+        routeIds: z.array(z.string()).min(1),
+        ort: z.string().nullable(),
+        hoehe: z.string(),
+        text: z.string(),
+      }),
+      geometry: z.object({ type: z.literal('Point'), coordinates: Position }),
+    }),
+  ),
+})
+
 const OutlineSchema = z.object({
   type: z.literal('Feature'),
   properties: z.object({ name: z.string() }).loose(),
@@ -211,6 +232,7 @@ export function buildRadwegeData(
   landkreisFile: unknown = null,
   planlageFile: unknown = null,
   pruefFile: unknown = null,
+  querungFile: unknown = null,
 ): RadwegeData {
   const { routes, ...meta } = RoutesFileSchema.parse(routesFile)
   const lines = LinesFileSchema.parse(linesFile)
@@ -318,6 +340,7 @@ export function buildRadwegeData(
     landkreis,
     planlage: planlageFile == null ? null : PlanlageSchema.parse(planlageFile),
     pruefen: pruefFile == null ? null : PruefSchema.parse(pruefFile),
+    querungen: querungFile == null ? null : QuerungSchema.parse(querungFile),
   }
 }
 
@@ -329,6 +352,7 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
     optionalJson(join(dir, 'landkreis.geojson')),
     optionalJson(join(dir, 'planlage.geojson')),
     optionalJson(join(dir, 'pruefen.geojson')),
+    optionalJson(join(dir, 'querungen.geojson')),
   )
 }
 
