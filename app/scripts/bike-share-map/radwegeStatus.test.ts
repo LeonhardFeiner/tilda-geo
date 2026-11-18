@@ -4,6 +4,7 @@ import {
   firstStep,
   lastStep,
   lineBedarf,
+  vorhandenAuf,
   lineStatus,
   type RouteEvent,
 } from './radwegeStatus'
@@ -94,5 +95,15 @@ describe('announcedYear', () => {
     expect(
       announcedYear('Querungshilfe an der St 2045, Abzweigung Giegenhausen', '2026-10-22'),
     ).toBeNull()
+  })
+})
+
+describe('vorhandenAuf', () => {
+  test('says when an existing line is no cycle path of its own', () => {
+    expect(vorhandenAuf('freigabe', 'radweg')).toBe('')
+    expect(vorhandenAuf('freigabe', 'ortsstrasse')).toContain('Fahrbahn')
+    expect(vorhandenAuf('freigabe', 'feldweg')).toContain('Feld- oder Waldweg')
+    expect(vorhandenAuf('bestand', 'ortsstrasse')).toContain('in OpenStreetMap ist hier keiner')
+    expect(vorhandenAuf('bestand', 'kein')).toContain('in OpenStreetMap ist hier keiner')
   })
 })

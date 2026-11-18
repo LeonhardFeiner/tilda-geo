@@ -227,6 +227,21 @@ export const WEG = [
 ] as const
 export type Weg = (typeof WEG)[number]['id']
 
+/**
+ * Popup line for a line counted as "Vorhanden": what one rides on there. An opened route can run
+ * on a road or a farm track, without a cycle path of its own; a Bestand line of the plan that
+ * OSM matches onto a road has no path mapped there. Empty where the line is a cycle path.
+ */
+export function vorhandenAuf(ausbau: Ausbau, weg: Weg) {
+  if (weg === 'radweg') return ''
+  if (ausbau === 'bestand') {
+    return 'Laut Plan ein vorhandener Radweg; in OpenStreetMap ist hier keiner erfasst'
+  }
+  if (weg === 'feldweg') return 'Kein eigener Radweg: gefahren wird auf einem Feld- oder Waldweg'
+  if (weg === 'kein') return ''
+  return 'Kein eigener Radweg: gefahren wird auf der Fahrbahn'
+}
+
 /** Surface of that OSM way; classified roads without a tag count as asphalt. */
 export const BELAG = [
   { id: 'asphalt', label: 'Asphalt oder Pflaster', hint: 'Befestigt.', colour: '#1f5fae' },
