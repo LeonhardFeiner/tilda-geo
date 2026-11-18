@@ -31,7 +31,8 @@ import {
 export const RADWEGE_DIR = join(import.meta.dirname, 'radwege')
 
 const PartialDate = z.string().regex(/^\d{4}(-\d{2}(-\d{2})?)?$/)
-const Netz = z.enum(['haupt', 'ergaenzend', 'bestand'])
+/** `landkreis`: the Landkreis network, which plan 5/2 shows "nachrichtlich" (radwege/landkreis.geojson). */
+const Netz = z.enum(['haupt', 'ergaenzend', 'bestand', 'landkreis'])
 const Plan = z.enum(['kurz', 'lang'])
 
 const EventSchema = z.strictObject({
@@ -199,9 +200,10 @@ export function buildRadwegeData(
   const isBestand = (f: (typeof lines.features)[number]) =>
     f.properties.ausbau === 'bestand' || Boolean(byId.get(f.properties.routeId)?.built)
   // Combined view: Bestand first, then plan 5/2, then what plan 5/1 adds where 5/2 has nothing
+  // only real Geh- und Radwege: an interim route (the Waldroute) does not stand in for a 5/2 line
   const nearBestand = nearIndex(
     lines.features
-      .filter((f) => f.properties.plan === 'kurz' && isBestand(f))
+      .filter((f) => f.properties.ausbau === 'bestand')
       .map((f) => f.geometry.coordinates),
     KOMBI_NEAR_M,
   )

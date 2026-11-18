@@ -70,44 +70,9 @@
       "documented": "Nach Kartenlage die Waldroute durch den Schindelhauser Forst: eröffnet 18.10.2021; Beschilderung über KUS 2022; Reparaturen 2024. Getrennt davon prüft das Staatliche Bauamt laut KUS-Steckbrief 2026 einen Geh- und Radweg entlang der St 2045 nach Pfaffenhofen.",
       "events": [
         {
-          "date": "2017-06-20",
-          "kind": "Anfrage",
-          "text": "Radlradar-Meldung #819: Bitte um einen Geh- und Radweg zwischen Schweitenkirchen und Pfaffenhofen, da Radfahren auf der Staatsstraße „lebensgefährlich“ sei.",
-          "source": "Radlradar (PAFundDU-Bürgermelder) #819, 20.06.2017",
-          "url": "https://buergermelder.pafunddu.de/projects/radlradar/issues/819/"
-        },
-        {
-          "date": "2017-07-07",
-          "kind": "Aussage",
-          "text": "Antwort der Stadtverwaltung Pfaffenhofen auf Radlradar #819: Stadt und Gemeinde streben seit Längerem eine Verbindung an; die Realisierung sei bisher häufig am Grunderwerb gescheitert; Weitergabe an das Staatliche Bauamt Ingolstadt.",
-          "source": "Radlradar #819, Kommentar der Stadtverwaltung Pfaffenhofen, 07.07.2017",
-          "url": "https://buergermelder.pafunddu.de/projects/radlradar/issues/819/"
-        },
-        {
-          "date": "2019-01-23",
-          "kind": "Aussage",
-          "text": "Schriftliche Anfrage Helmut Hartinger (Bürgerversammlung Schweitenkirchen 23.01.2019) zu Grund für einen Fahrradweg an der St 2045 vom Kreisel bis zur äußeren Moosburger Straße. Bürgermeister Vogler: Das Staatliche Bauamt hat Ausbau samt Radweg im künftigen Maßnahmenplan, eine baldige Umsetzung sei nicht realistisch, Grunderwerb noch keiner.",
-          "source": "Rundschau 1/2019, S. 12 (Gemeinderat 12.02.2019, Protokoll Nr. 96, TOP 1710)",
-          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau01.19.pdf"
-        },
-        {
-          "date": "2020-01-06",
-          "kind": "Aussage",
-          "text": "Bürgerversammlung Güntersdorf, Anfrage Nr. 4 (Breinbauer) zum Fahrradweg Schweitenkirchen–Pfaffenhofen: Bürgermeister Vogler berichtet von einem Termin mit Landkreis, Bgm. Herker und Straßenbauamt; das Straßenbauamt wolle die Planung mit der Umgehung Pfaffenhofen angehen.",
-          "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
-          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
-        },
-        {
           "date": "2020-01-06",
           "kind": "Aussage",
           "text": "Bürgerversammlung Güntersdorf, Anfrage Nr. 18 (Weber) zum Fahrradweg Schweitenkirchen–Pfaffenhofen über Kuglhof (Waldweg): Die Stadt Pfaffenhofen hat die Verhandlung mit einem Grundbesitzer noch nicht abgeschlossen.",
-          "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
-          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
-        },
-        {
-          "date": "2020-01-13",
-          "kind": "Aussage",
-          "text": "Bürgerversammlung Sünzhausen, Anfrage Nr. 9 (Rank): Bürgermeister Vogler sagt, der Antrag auf den Geh- und Radweg Schweitenkirchen–Pfaffenhofen sei vor 15 Jahren gestellt worden; die Stadt unterstütze das Projekt, das Straßenbauamt wolle es erst mit der Umleitungsstraße angehen.",
           "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
         },
@@ -203,6 +168,97 @@
           "text": "Zustand des Geh- und Radwegs nach Pfaffenhofen: nur an der Auffahrt durch Starkregen beschädigt gewesen.",
           "source": "Gemeinderat TOP 10",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56886611"
+        }
+      ]
+    },
+    {
+      "id": "st2045-pfaffenhofen-schweitenkirchen",
+      "name": "Schweitenkirchen – Pfaffenhofen an der Staatsstraße",
+      "road": "St 2045",
+      "plans": { "lang": "landkreis" },
+      "planLabels": [],
+      "baulast": "Freistaat",
+      "baulastNote": "Staatliches Bauamt Ingolstadt; im langfristigen Plan als Radvorrangroute des Landkreises nachrichtlich übernommen",
+      "kusHorizont": "Prüfung 2026 (Staatliches Bauamt)",
+      "documented": "Der Lageplan 5/2 zeigt die Radvorrangroute des Landkreises entlang der St 2045 bis an seinen Rand Richtung Pfaffenhofen; weiter westlich (bis zur Äußeren Moosburger Straße) reicht der Plan nicht. Bis dahin ist die Waldroute durch den Schindelhauser Forst die Verbindung, laut ihren Initiatoren als Übergangslösung.",
+      "events": [
+        {
+          "date": "2017-06-20",
+          "kind": "Anfrage",
+          "text": "Radlradar-Meldung #819: Bitte um einen Geh- und Radweg zwischen Schweitenkirchen und Pfaffenhofen, da Radfahren auf der Staatsstraße „lebensgefährlich“ sei.",
+          "source": "Radlradar (PAFundDU-Bürgermelder) #819, 20.06.2017",
+          "url": "https://buergermelder.pafunddu.de/projects/radlradar/issues/819/"
+        },
+        {
+          "date": "2017-07-07",
+          "kind": "Aussage",
+          "text": "Antwort der Stadtverwaltung Pfaffenhofen auf Radlradar #819: Stadt und Gemeinde streben seit Längerem eine Verbindung an; die Realisierung sei bisher häufig am Grunderwerb gescheitert; Weitergabe an das Staatliche Bauamt Ingolstadt.",
+          "source": "Radlradar #819, Kommentar der Stadtverwaltung Pfaffenhofen, 07.07.2017",
+          "url": "https://buergermelder.pafunddu.de/projects/radlradar/issues/819/"
+        },
+        {
+          "date": "2019-01-23",
+          "kind": "Aussage",
+          "text": "Schriftliche Anfrage Helmut Hartinger (Bürgerversammlung Schweitenkirchen 23.01.2019) zu Grund für einen Fahrradweg an der St 2045 vom Kreisel bis zur äußeren Moosburger Straße. Bürgermeister Vogler: Das Staatliche Bauamt hat Ausbau samt Radweg im künftigen Maßnahmenplan, eine baldige Umsetzung sei nicht realistisch, Grunderwerb noch keiner.",
+          "source": "Rundschau 1/2019, S. 12 (Gemeinderat 12.02.2019, Protokoll Nr. 96, TOP 1710)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau01.19.pdf"
+        },
+        {
+          "date": "2020-01-06",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Güntersdorf, Anfrage Nr. 4 (Breinbauer) zum Fahrradweg Schweitenkirchen–Pfaffenhofen: Bürgermeister Vogler berichtet von einem Termin mit Landkreis, Bgm. Herker und Straßenbauamt; das Straßenbauamt wolle die Planung mit der Umgehung Pfaffenhofen angehen.",
+          "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2020-01-13",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Sünzhausen, Anfrage Nr. 9 (Rank): Bürgermeister Vogler sagt, der Antrag auf den Geh- und Radweg Schweitenkirchen–Pfaffenhofen sei vor 15 Jahren gestellt worden; die Stadt unterstütze das Projekt, das Straßenbauamt wolle es erst mit der Umleitungsstraße angehen.",
+          "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
+        },
+        {
+          "date": "2020-01-22",
+          "kind": "Aussage",
+          "text": "SPD-Beitrag zur Waldroute, unter Verweis auf einen PK-Bericht vom 05.10.2018: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
+          "source": "SPD Kreisverband Pfaffenhofen (bewegung-paf.de), 22.01.2020",
+          "url": "https://www.bewegung-paf.de/post/durchbruch-f%C3%BCr-radweg-schweitenkirchen-pfaffenhofen",
+          "uncertain": true
+        },
+        {
+          "date": "2021-02-09",
+          "kind": "Aussage",
+          "text": "Bekanntgabe: Es wird geprüft, ob der Radweg nach Pfaffenhofen provisorisch entlang der Staatsstraße errichtet werden kann; auch die Variante durch den Wald soll geprüft werden.",
+          "source": "Gemeinderat, Protokoll 09.02.2021",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/09.02.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-10-18",
+          "kind": "Aussage",
+          "text": "Bürgermeister Heigenhauser bei der Eröffnung: Da das Staatliche Bauamt in den nächsten Jahren keinen Radweg entlang der Staatsstraße zusichern konnte, sei er froh über die Vereinbarung zur Waldroute.",
+          "source": "Rundschau 4/2021, S. 84",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_04_2021_WEB.pdf"
+        },
+        {
+          "date": "2022-09-13",
+          "kind": "Aussage",
+          "text": "Bekanntgaben und Anregungen: Zum geplanten Gewerbegebiet Kuglhof 2 der Stadt Pfaffenhofen fordert GR Knorr eine Zukunftsplanung, die unter anderem einen Radweg direkt entlang der St 2045 von Pfaffenhofen nach Schweitenkirchen enthält.",
+          "source": "Gemeinderat 13.09.2022, TOP 12",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4172371"
+        },
+        {
+          "date": "2023-01-24",
+          "kind": "Aussage",
+          "text": "Stellungnahme der Gemeinde zum Bebauungsplan „Kuglhof 2“ der Stadt Pfaffenhofen (Beschluss 15:3): Wegen des zu erwartenden Pendler- und Radverkehrs hält die Gemeinde einen Geh- und Radweg entlang der Staatsstraße im Zuge der Erschließung für unumgänglich.",
+          "source": "Gemeinderat 24.01.2023, TOP 6",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21689877"
+        },
+        {
+          "date": "2023-02-14",
+          "kind": "Aussage",
+          "text": "Gleichlautende Forderung in der Stellungnahme zur 4. Flächennutzungsplan-Änderung „Kuglhof 2“ (Beschluss 19:1).",
+          "source": "Gemeinderat 14.02.2023, TOP 13",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21690465"
         },
         {
           "date": "2025-11",
@@ -211,6 +267,13 @@
           "source": "Pfaffenhofener Kurier, 14.11.2025",
           "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/pfaffenhofen-fuers-gelingen-der-suedumgehung-muss-die-bahnhofskreuzung-umgebaut-werden-19933177",
           "paywall": true
+        },
+        {
+          "date": "2026-10",
+          "kind": "Ankündigung",
+          "text": "KUS-Steckbrief der Gemeinde: Prüfung eines Neubaus eines gemeinsamen Geh- und Radwegs an der St 2045 Schweitenkirchen – Pfaffenhofen durch das Staatliche Bauamt Ingolstadt, „wird in 2026 geprüft“.",
+          "source": "KUS-Steckbrief Schweitenkirchen",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
     },

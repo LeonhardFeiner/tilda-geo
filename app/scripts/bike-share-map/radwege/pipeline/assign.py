@@ -352,7 +352,7 @@ SIGMA = 25.0    # m; emission cost (d / SIGMA)^2
 ANGLE = 4.0     # extra emission cost of a way running across the drawn line
 NONE_COST = (70 / SIGMA) ** 2  # "no way" beats a way farther than ~70 m (with the angle term, less)
 
-def match(utm, built=False):
+def match(utm, built=False, onto=None):
     """Pieces [(weg, belag, coords, fromPlan, osm way ids)] of one plan line: a hidden Markov
     model over the OSM ways near each sample point (Viterbi). Staying on a way is free, switching
     costs a little plus the square of the jump between the two projections, so the match follows
@@ -364,14 +364,16 @@ def match(utm, built=False):
     for k, q in enumerate(pts):
         a, b = pts[max(0, k - 2)], pts[min(n - 1, k + 2)]
         dx, dy = b.x - a.x, b.y - a.y; dn = math.hypot(dx, dy) or 1.0
-        ws = {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), CORR_BUILT if built else CORR)} - NO_BIKES
+        ws = {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), 200 if onto else CORR_BUILT if built else CORR)} - NO_BIKES
         # an existing bike path does not run on the carriageway of a Staats-/Kreisstraße: where OSM
         # lacks the path beside the road, keep the plan geometry instead
         if built: ws = {w for w in ws if way_class(w)[0] not in ('kreisstrasse', 'staatsstrasse')}
-        c = [(-1, (q.x, q.y), NONE_COST, 0.0)]
+        # a route meant to run directly along one road ("onto": its ref) is matched onto that road only
+        if onto: ws = {w for w in ws if (ways[w][4].get('ref') or '').strip() == onto}
+        c = [(-1, (q.x, q.y), (200 / SIGMA) ** 2 if onto else NONE_COST, 0.0)]
         for wi in ws:
             ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t); d = pr.distance(q)
-            if d > CORR: continue
+            if d > (200 if onto else CORR): continue
             p0, p1 = ls.interpolate(max(0.0, t - 3)), ls.interpolate(min(ls.length, t + 3))
             wx, wy = p1.x - p0.x, p1.y - p0.y; wn = math.hypot(wx, wy) or 1.0
             sin2 = 1 - ((dx * wx + dy * wy) / (dn * wn)) ** 2  # 0 parallel, 1 across the line
@@ -458,6 +460,15 @@ def match(utm, built=False):
 # "redraw" overrides: where a source says the route runs elsewhere than the schematic drawing
 # (e.g. along a street the plan only hints at), the drawn line is cut at `from` and continues along
 # `via`; the matching then follows that. planlage.geojson below still shows the drawing.
+# "line" overrides: a route the plan shows only as context (the Landkreis network in 5/2) gets
+# the course of that drawing, given as lon/lat points; it is matched like any other line.
+for key, ov in OVERRIDES.items():
+    if 'line' not in ov: continue
+    pl, rid = key.split('|')
+    final.append(dict(routeId=rid, plan=pl, ausbau='voll' if pl == 'lang' else 'freigabe',
+                      utm=[to_utm.transform(*q) for q in ov['line']['coords']], onto=ov['line'].get('onto'),
+                      not_drawn=True))
+
 # "replace" overrides: a built route whose real course is known (e.g. an OSM route relation) takes
 # that course instead of the drawing, also beyond the Gemeinde; its other drawn pieces are dropped.
 for key, ov in OVERRIDES.items():
@@ -486,6 +497,7 @@ for key, ov in OVERRIDES.items():
 NETZ_OF = {r['id']: r['plans'] for r in ROUTES}
 plan_geo = []
 for f in final:
+    if f.get('not_drawn'): continue  # not a route stroke of the plan
     netz = 'bestand' if f['ausbau'] == 'bestand' else NETZ_OF.get(f['routeId'], {}).get(f['plan']) or f['routeId'].split('-')[-1]
     g = LineString(f['utm']).simplify(1.0)  # always the drawing, also where redrawn
     plan_geo.append(dict(type='Feature', properties=dict(plan=f['plan'], netz=netz, dashed=f['ausbau'] == 'bestand-weg'),
@@ -496,7 +508,7 @@ geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
     if f.get('skip_match'): continue
-    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f['utm']), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand'):
+    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f['utm']), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto')):
         ausbau = f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße

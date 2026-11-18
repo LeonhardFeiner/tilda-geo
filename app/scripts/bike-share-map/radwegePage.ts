@@ -16,6 +16,7 @@ const NETZ_LABEL = {
   haupt: 'Haupttrassen',
   ergaenzend: 'Ergänzende Trassen',
   bestand: 'Bestehende Geh- und Radwege',
+  landkreis: 'Radnetz des Landkreises (nachrichtlich)',
 } as const
 const BAULAST = ['Gemeinde', 'Landkreis', 'Freistaat', 'unklar'] as const
 const AUSBAU_LABEL = {
@@ -954,6 +955,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       const inKurz = Boolean(r.plans.kurz), inLang = Boolean(r.plans.lang);
       let planHint = '';
       if (inKurz && inLang) planHint = 'In beiden Plänen: kurzfristig auf vorhandenen Wegen, langfristig ausgebaut.';
+      else if (r.plans.lang === 'landkreis') planHint = 'Im langfristigen Plan nur nachrichtlich, als Radnetz des Landkreises; zuständig sind Landkreis oder Freistaat, nicht die Gemeinde.';
       else if (inLang) planHint = 'Nur im langfristigen Plan: eine neue Verbindung, für die kurzfristig nichts vorgesehen ist.';
       else if (inKurz && r.landkreisShare != null && r.landkreisShare >= 0.6) planHint = 'Nur im kurzfristigen Plan: langfristig verläuft hier das Radnetz des Landkreises (' + Math.round(r.landkreisShare * 100) + ' % der Strecke), das als Geh- und Radweg vorgesehen ist – Sache von Landkreis oder Freistaat.';
       else if (inKurz && !r.built && r.id !== 'bestand') planHint = 'Nur im kurzfristigen Plan: eine Zwischenlösung auf vorhandenen Wegen; der langfristige Plan führt diese Verbindung nicht weiter.';

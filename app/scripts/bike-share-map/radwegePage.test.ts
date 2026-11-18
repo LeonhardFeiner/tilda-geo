@@ -83,6 +83,20 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     const netz = new Set(data.landkreis!.features.map((f) => f.properties.netz))
     expect(netz).toEqual(new Set(['vorrang', 'basis']))
   })
+  test('the Radweg along the St 2045 to Pfaffenhofen is its own route, on the road', () => {
+    const st = data.lines.features.filter(
+      (f) => f.properties.routeId === 'st2045-pfaffenhofen-schweitenkirchen',
+    )
+    expect(st.every((f) => f.properties.weg === 'staatsstrasse')).toBe(true)
+    expect(st.every((f) => f.properties.plan === 'lang' && f.properties.netz === 'landkreis')).toBe(
+      true,
+    )
+    expect(
+      st.every((f) => f.properties.status === 'nichts' && f.properties.bedarf === 'neubau'),
+    ).toBe(true)
+    // the interim Waldroute does not hide it in the combined view
+    expect(st.every((f) => f.properties.kombi)).toBe(true)
+  })
   test('combined view takes each stretch once; lines are cut at the Gemeinde boundary', () => {
     const f = data.lines.features
     const km = (fs: typeof f) => fs.reduce((s, x) => s + x.properties.m, 0) / 1000
