@@ -19,7 +19,7 @@
         "grund": "gebaeude",
         "text": "Die Linie führt durch ein Gebäude (6 m)."
       },
-      "geometry": { "type": "Point", "coordinates": [11.652432, 48.540386] }
+      "geometry": { "type": "Point", "coordinates": [11.652431, 48.540387] }
     },
     {
       "type": "Feature",
@@ -34,22 +34,62 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
+        "routeId": "preinerszell-hirschhausen",
         "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
+        "grund": "strassenseite",
+        "text": "Der Plan zeichnet die Trasse über 220 m in gleichmäßigem Abstand neben „PAF 25“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
       },
-      "geometry": { "type": "Point", "coordinates": [11.581535, 48.510381] }
+      "geometry": { "type": "Point", "coordinates": [11.605838, 48.536305] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "geisenhausen-preinerszell",
+        "plan": "kurz",
+        "grund": "strassenseite",
+        "text": "Der Plan zeichnet die Trasse über 200 m in gleichmäßigem Abstand neben „PAF 25“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.600228, 48.553472] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "gundelshausen-duernzhausen",
+        "plan": "lang",
+        "grund": "strassenseite",
+        "text": "Der Plan zeichnet die Trasse über 150 m in gleichmäßigem Abstand neben „Gundolfstraße“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.637414, 48.540227] }
     },
     {
       "type": "Feature",
       "properties": {
         "routeId": "oberthann-guentersdorf",
         "plan": "kurz",
+        "grund": "strassenseite",
+        "text": "Der Plan zeichnet die Trasse über 130 m in gleichmäßigem Abstand neben „PAF 27“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.580796, 48.503621] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "holzhausen-loipersdorf",
+        "plan": "lang",
+        "grund": "strassenseite",
+        "text": "Der Plan zeichnet die Trasse über 120 m in gleichmäßigem Abstand neben „Kreisstraße“ – das bedeutet meist einen Weg auf dieser Straßenseite. Zugeordnet ist aber ein anderer Weg."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.650056, 48.505095] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "pfaffenhofen-schweitenkirchen",
+        "plan": "kurz",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
-      "geometry": { "type": "Point", "coordinates": [11.583722, 48.488233] }
+      "geometry": { "type": "Point", "coordinates": [11.581535, 48.510381] }
     },
     {
       "type": "Feature",
@@ -64,42 +104,12 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "geisenhausen-preinerszell",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.600395, 48.552712] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.609775, 48.478244] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "oberthann-guentersdorf",
         "plan": "lang",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
       "geometry": { "type": "Point", "coordinates": [11.584714, 48.488137] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.609775, 48.478244] }
     },
     {
       "type": "Feature",
@@ -124,32 +134,12 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.649923, 48.518848] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "geisenhausen-altkaslehen",
         "plan": "kurz",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
       "geometry": { "type": "Point", "coordinates": [11.589219, 48.550096] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "duernzhausen-schmiedhausen-hellblau",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.631115, 48.531347] }
     },
     {
       "type": "Feature",
@@ -174,32 +164,32 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "guentersdorf-schweitenkirchen",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.611957, 48.482067] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "lang",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.649921, 48.518847] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "oberthann-guentersdorf",
         "plan": "kurz",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 840 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 970 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.583984, 48.492359] }
+      "geometry": { "type": "Point", "coordinates": [11.584106, 48.491785] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "guentersdorf-noerting",
+        "plan": "kurz",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 910 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.611307, 48.475712] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "guentersdorf-noerting",
+        "plan": "lang",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 910 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.611307, 48.475712] }
     },
     {
       "type": "Feature",
@@ -210,26 +200,6 @@
         "text": "Die zugeordnete Linie liegt über 840 m mehr als 45 m neben der Zeichnung im Plan."
       },
       "geometry": { "type": "Point", "coordinates": [11.584009, 48.492303] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 690 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.612358, 48.47502] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 690 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.612358, 48.47502] }
     },
     {
       "type": "Feature",
@@ -334,6 +304,36 @@
     {
       "type": "Feature",
       "properties": {
+        "routeId": "duernzhausen-schmiedhausen-hellblau",
+        "plan": "kurz",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 180 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.631819, 48.531189] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "heigenhausen-holzhausen",
+        "plan": "kurz",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 150 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.672547, 48.50726] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "heigenhausen-holzhausen",
+        "plan": "lang",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 150 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.672547, 48.50726] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "routeId": "oberthann-guentersdorf",
         "plan": "kurz",
         "grund": "abseits",
@@ -344,132 +344,52 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "mehrdeutig",
-        "text": "Zwei parallele Wege liegen gleich nah an der Zeichnung (Feldweg und PAF 27); welcher gemeint ist, ist unklar."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.582991, 48.49674] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "hueb-preinerszell",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.595806, 48.530682] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "preinerszell-hirschhausen",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.60557, 48.536199] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.580582, 48.503558] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "gundelshausen-duernzhausen",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.638581, 48.54137] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "preinerszell-hirschhausen-hellblau",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.61603, 48.523235] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "hemhausen-suenzhausen",
         "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 100 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.672005, 48.51771] }
+      "geometry": { "type": "Point", "coordinates": [11.672051, 48.517693] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "schellhof-ampertshausen",
+        "routeId": "guentersdorf-schweitenkirchen",
         "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 100 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.644745, 48.485068] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "heigenhausen-holzhausen",
-        "plan": "kurz",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.672495, 48.507285] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "gundelshausen-duernzhausen",
-        "plan": "lang",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.637128, 48.540374] }
+      "geometry": { "type": "Point", "coordinates": [11.612123, 48.481629] }
     },
     {
       "type": "Feature",
       "properties": {
         "routeId": "frickendorf-schmiedhausen",
         "plan": "lang",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 100 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.588309, 48.5186] }
+      "geometry": { "type": "Point", "coordinates": [11.588297, 48.518628] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "hemhausen-suenzhausen",
-        "plan": "lang",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
+        "routeId": "hueb-preinerszell",
+        "plan": "kurz",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 80 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.671736, 48.517795] }
+      "geometry": { "type": "Point", "coordinates": [11.595801, 48.53062] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "heigenhausen-holzhausen",
-        "plan": "lang",
-        "grund": "zickzack",
-        "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
+        "routeId": "oberthann-guentersdorf",
+        "plan": "kurz",
+        "grund": "mehrdeutig",
+        "text": "Zwei parallele Wege liegen gleich nah an der Zeichnung (Feldweg und PAF 27); welcher gemeint ist, ist unklar."
       },
-      "geometry": { "type": "Point", "coordinates": [11.672495, 48.507285] }
+      "geometry": { "type": "Point", "coordinates": [11.582991, 48.49674] }
     }
   ]
 }

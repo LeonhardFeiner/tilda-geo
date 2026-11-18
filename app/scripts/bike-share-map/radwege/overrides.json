@@ -249,7 +249,12 @@
     "branches": [[[959.6, 832.0], "Holzhausen"]]
   },
   "kurz|oberthann-guentersdorf": {
-    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]]
+    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]],
+    "beside": {
+      "ref": "PAF 6",
+      "max": 75,
+      "why": "Der Plan zeichnet Oberthann – Güntersdorf gleichmäßig 23–30 m westlich und Güntersdorf – Nörting 54–68 m östlich der PAF 6 (Seitenwechsel in Güntersdorf). Gemeint ist ein Weg an der PAF 6 auf der jeweiligen Seite; dass die Zeichnung die Blumenstraße berührt, folgt nur aus dem Abstand. Annahme ohne Quelle (Hinweis Ortskenntnis), solange nichts anderes bekannt ist."
+    }
   },
   "lang|oberthann-guentersdorf": {
     "branches": [["Oberthann", "Niederthann", "Güntersdorf"]]
@@ -412,6 +417,20 @@
       ],
       "why": "Plan 5/2 zeigt hier nur die Radvorrangroute des Landkreises (orange, nachrichtlich) entlang der St 2045, vom Planrand Richtung Pfaffenhofen bis zum Kreisel an der Liebigstraße. Gefordert ist ein Radweg direkt entlang der Staatsstraße (Gemeinderat 13.09.2022, 24.01.2023); der Plan zeichnet die Linie schematisch bis 300 m daneben, daher Verlauf der St 2045 aus OpenStreetMap.",
       "onto": "St 2045"
+    }
+  },
+  "kurz|guentersdorf-noerting": {
+    "beside": {
+      "ref": "PAF 6",
+      "max": 75,
+      "why": "Der Plan zeichnet Oberthann – Güntersdorf gleichmäßig 23–30 m westlich und Güntersdorf – Nörting 54–68 m östlich der PAF 6 (Seitenwechsel in Güntersdorf). Gemeint ist ein Weg an der PAF 6 auf der jeweiligen Seite; dass die Zeichnung die Blumenstraße berührt, folgt nur aus dem Abstand. Annahme ohne Quelle (Hinweis Ortskenntnis), solange nichts anderes bekannt ist."
+    }
+  },
+  "lang|guentersdorf-noerting": {
+    "beside": {
+      "ref": "PAF 6",
+      "max": 75,
+      "why": "Der Plan zeichnet Oberthann – Güntersdorf gleichmäßig 23–30 m westlich und Güntersdorf – Nörting 54–68 m östlich der PAF 6 (Seitenwechsel in Güntersdorf). Gemeint ist ein Weg an der PAF 6 auf der jeweiligen Seite; dass die Zeichnung die Blumenstraße berührt, folgt nur aus dem Abstand. Annahme ohne Quelle (Hinweis Ortskenntnis), solange nichts anderes bekannt ist."
     }
   }
 }

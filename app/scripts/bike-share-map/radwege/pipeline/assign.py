@@ -15,7 +15,7 @@ import json, math, re, sys, html, heapq, collections
 import numpy as np
 from scipy.spatial import cKDTree
 from pyproj import Transformer
-from shapely.geometry import LineString, Point
+from shapely.geometry import Polygon, LineString, Point
 from shapely.ops import substring
 
 W, OSMF, ROUTESF, OUT = sys.argv[1:5]
@@ -554,10 +554,24 @@ def beside_road(utm):
     return out, moved
 
 
+def onto_ref(utm, ref, max_d):
+    """Override "beside": every point of the drawing within max_d of the road `ref` moves onto it."""
+    road = [ways[wi][3] for wi in range(len(ways)) if (ways[wi][4].get('ref') or '') == ref]
+    line = LineString(utm); n = max(2, int(line.length // 10) + 1); out = []
+    for k in range(n):
+        q = line.interpolate(line.length * k / (n - 1))
+        best = min(road, key=lambda g: g.distance(q)) if road else None
+        out.append((best.interpolate(best.project(q)).coords[0]) if best is not None and best.distance(q) <= max_d else (q.x, q.y))
+    return out
+
+
 built_set = {r['id'] for r in ROUTES if r.get('built')}
 moved = 0
 for f in final:
     if 'utm_matched' in f or f.get('not_drawn') or f['routeId'] in built_set: continue
+    ov = OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('beside')
+    if ov:
+        f['utm_beside'] = onto_ref(f['utm'], ov['ref'], ov['max']); continue
     if f['ausbau'] not in ('voll', 'freigabe'): continue
     new, m = beside_road(f['utm'])
     if m: f['utm_beside'] = new; moved += m
@@ -573,6 +587,32 @@ for f in final:
     plan_geo.append(dict(type='Feature', properties=dict(plan=f['plan'], netz=netz, dashed=f['ausbau'] == 'bestand-weg'),
                          geometry=dict(type='LineString', coordinates=[[round(v, 6) for v in to_wgs.transform(*c)] for c in g.coords])))
 json.dump(dict(type='FeatureCollection', features=plan_geo), open(sys.argv[5].replace('lines.geojson', 'planlage.geojson'), 'w'), separators=(',', ':'))
+
+def drop_spurs(coords):
+    """Removes stretches where the line runs out and back along itself (a match that overshoots a
+    junction and returns). Invisible as a plain line, but with the road-side offset its two halves
+    would be drawn on both sides of the road. Returns (coords, metres removed)."""
+    g = LineString(coords)
+    if g.length < 20: return coords, 0.0
+    n = int(g.length // 2) + 1
+    pts = [g.interpolate(g.length * k / (n - 1)) for k in range(n)]
+    xy = [(q.x, q.y) for q in pts]
+    removed, i = 0.0, 0
+    while i < len(xy) - 5:
+        cut = None
+        for j in range(len(xy) - 1, i + 4, -1):  # farthest return first
+            if math.dist(xy[i], xy[j]) < 3:
+                loop = xy[i:j + 1]
+                if len(loop) >= 4 and Polygon(loop).buffer(0).area / (2 * (j - i)) < 1.5:
+                    cut = j
+                    break
+        if cut is not None:
+            removed += 2 * (cut - i); xy = xy[:i + 1] + xy[cut + 1:]
+        else:
+            i += 1
+    if removed == 0: return coords, 0.0
+    return list(LineString(xy).simplify(0.5).coords), removed
+
 
 def road_side(coords, drawing):
     """Which side of the matched road the plan draws a new path on: ('links'|'rechts' along the
@@ -597,6 +637,7 @@ def road_side(coords, drawing):
     return ('links' if left >= 0.85 else 'rechts', word)
 
 
+spurs = []
 geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
@@ -607,6 +648,9 @@ for f in final:
         # carriageway of a Staats-/Kreisstraße
         if ausbau == 'freigabe' and f['routeId'] not in built_ids and weg in ('kein', 'kreisstrasse', 'staatsstrasse'):
             ausbau = 'kein-weg'
+        coords, spur = drop_spurs(coords)
+        if spur: spurs.append((f['routeId'], f['plan'], round(spur), to_wgs.transform(*coords[0])))
+        if len(coords) < 2: continue
         ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
         props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=ausbau, weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
         if wids: props['osmWays'] = wids
@@ -623,6 +667,8 @@ km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter
 for g in geo:
     L = LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).length / 1000
     p = g['properties']; km[(p['plan'], p['ausbau'])] += L; kw[p['weg']] += L; kb[p['belag']] += L
+print('out-and-back stretches removed:', len(spurs), 'pieces,', round(sum(x[2] for x in spurs)), 'm')
+for x in sorted(spurs, key=lambda x: -x[2])[:30]: print('  spur', *x)
 print('km by plan/ausbau', {k: round(v, 1) for k, v in sorted(km.items())})
 print('km by weg', {k: round(v, 1) for k, v in kw.most_common()})
 print('km by belag', {k: round(v, 1) for k, v in kb.most_common()})

@@ -94,3 +94,7 @@ a road: the plans draw such a path on the side of the road where it is to be bui
 Before matching, a drawing that runs ≥ 150 m at 8–60 m beside a Kreis-/Staatsstraße, with no
 existing path within 8 m of it, is moved onto that road (gaps ≤ 120 m bridged), so the match
 follows the road rather than side tracks; the side comes from the original drawing.
+Stretches where a match runs out and back along itself are cut out (`drop_spurs`): with the side
+offset they would show as a path on both sides of the road. Override `beside` (`ref`, `max`,
+`why`) moves a drawing onto one road where the automatic rule does not apply (e.g. Güntersdorf:
+the drawing touches the Blumenstraße only because of its offset from the PAF 6).
