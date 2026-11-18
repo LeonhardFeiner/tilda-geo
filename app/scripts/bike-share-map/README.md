@@ -126,9 +126,13 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   (a partial date counts as "since" only if all of it lies after), none → "Kein Schritt
   gefunden". The latest step, not the first, so a route with one Beschluss in 2019 and nothing
   since does not look like it is moving. "Was zu tun ist" (`?farbe=bedarf`) is the separate
-  question of what the plan needs: lines on an existing way (plan 5/1, dashed in 5/2) "Freigabe
-  und Schilder genügen", the rest "Aus- oder Neubau nötig" (solid in 5/2, and 5/1 pieces that
-  follow no way or only a Staats-/Kreisstraße). The Landkreis network of plan 5/2
+  question of what the plan needs: lines on an existing way (plan 5/1, dashed in 5/2) only need a
+  Freigabe, split by the surface the way keeps (asphalt / unbefestigt / nicht erfasst, from OSM; a
+  dashed 5/2 line without an OSM surface counts as asphalt, as its legend says), the rest "Aus-
+  oder Neubau nötig" (solid in 5/2, and 5/1 pieces that follow no way or only a
+  Staats-/Kreisstraße). There is no "Belag/Wegart geplant" mode on purpose: 5/1 paves nothing and
+  5/2 only recommends asphalt for new paths, so it would repeat this view; the map popup says per
+  piece what the plan says (`PLAN_SAYS`). The Landkreis network of plan 5/2
   (`radwege/landkreis.geojson`) is a context layer that can be switched off.
 - Numbers and map stop at the Gemeinde boundary by default (`?gemeinde=alle` shows the parts
   outside). Above the bar: the total km, plan and scope; each group with km and %.

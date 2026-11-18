@@ -66,13 +66,18 @@ describe('lineStatus', () => {
     for (const a of ['freigabe', 'bestand-weg', 'voll', 'kein-weg'] as const)
       expect(lineStatus({ events }, a)).toBe('nichts')
   })
-  test('Bedarf: built → vorhanden, solid 5/2 or no way → neubau, else freigabe', () => {
-    expect(lineBedarf({ built: true }, 'freigabe')).toBe('vorhanden')
-    expect(lineBedarf({}, 'bestand')).toBe('vorhanden')
-    expect(lineBedarf({}, 'voll')).toBe('neubau')
-    expect(lineBedarf({}, 'kein-weg')).toBe('neubau')
-    expect(lineBedarf({}, 'freigabe')).toBe('freigabe')
-    expect(lineBedarf({}, 'bestand-weg')).toBe('freigabe')
+  test('Bedarf: built → vorhanden, solid 5/2 or no way → neubau, else freigabe by surface', () => {
+    expect(lineBedarf({ built: true }, 'freigabe', 'schotter')).toBe('vorhanden')
+    expect(lineBedarf({}, 'bestand', 'asphalt')).toBe('vorhanden')
+    expect(lineBedarf({}, 'voll', 'schotter')).toBe('neubau')
+    expect(lineBedarf({}, 'kein-weg', 'kein')).toBe('neubau')
+    expect(lineBedarf({}, 'freigabe', 'asphalt')).toBe('freigabe-asphalt')
+    expect(lineBedarf({}, 'freigabe', 'schotter')).toBe('freigabe-unbefestigt')
+    expect(lineBedarf({}, 'freigabe', 'natur')).toBe('freigabe-unbefestigt')
+    expect(lineBedarf({}, 'freigabe', 'unbekannt')).toBe('freigabe-unbekannt')
+    // dashed 5/2 = "best. asph. Weg": asphalt unless OSM says otherwise
+    expect(lineBedarf({}, 'bestand-weg', 'unbekannt')).toBe('freigabe-asphalt')
+    expect(lineBedarf({}, 'bestand-weg', 'schotter')).toBe('freigabe-unbefestigt')
   })
 })
 

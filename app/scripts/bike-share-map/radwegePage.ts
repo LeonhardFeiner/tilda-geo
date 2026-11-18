@@ -1,6 +1,14 @@
 import { buildBasemapStyleJson } from './basemaps'
 import { AUTHOR_OSM_USER, LEGAL_CONTACT } from './legalPage'
-import { BEDARF, BELAG, CONCEPT_DATE, STATUS_GROUPS, STEP_KINDS, WEG } from './radwegeStatus'
+import {
+  BEDARF,
+  BELAG,
+  CONCEPT_DATE,
+  PLAN_SAYS,
+  STATUS_GROUPS,
+  STEP_KINDS,
+  WEG,
+} from './radwegeStatus'
 import { siteIconHeadLinks } from './siteIcon'
 import { visitCounterHeadScript } from './visitCounter'
 
@@ -29,11 +37,11 @@ const BAULAST_LABEL = {
   unklar: 'nicht angegeben',
 } as const
 const AUSBAU_LABEL = {
-  freigabe: 'Vorhandener Weg, laut Lageplan 5/1 freigeben und beschildern',
+  freigabe: 'Vorhandener Weg, laut Lageplan 5/1 freigeben und beschildern; der Belag bleibt',
   'kein-weg':
     'Lageplan 5/1, aber kein Weg zum Freigeben: die Linie folgt keinem vorhandenen Weg oder nur der Fahrbahn einer Kreis- oder Staatsstraße',
   'bestand-weg': 'Bestehender asphaltierter Weg, nur Freigabe (gestrichelt in Lageplan 5/2)',
-  voll: 'Vollausbau (durchgezogen in Lageplan 5/2)',
+  voll: 'Vollausbau als Geh- und Radweg, Asphalt empfohlen (durchgezogen in Lageplan 5/2)',
   bestand: 'Bestehender asphaltierter Geh- und Radweg (Lageplan 5/1)',
 } as const
 /** Events shown before "Ältere Vorgänge" in the detail view; entries in "Neueste Vorgänge". */
@@ -418,6 +426,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const PLAN_LABEL = ${JSON.stringify(PLAN_LABEL)};
     const NETZ_LABEL = ${JSON.stringify(NETZ_LABEL)};
     const AUSBAU_LABEL = ${JSON.stringify(AUSBAU_LABEL)};
+    const PLAN_SAYS = ${JSON.stringify(PLAN_SAYS)};
     const TIMELINE_OPEN = ${TIMELINE_OPEN};
     const RECENT_COUNT = ${RECENT_COUNT};
     const CONCEPT_DATE = ${JSON.stringify(CONCEPT_DATE)};
@@ -482,7 +491,8 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const mode = () => MODES[state.farbe];
     {
       // one or more categories, comma-separated
-      const ids = (params.get(mode().param) || '').split(',').filter((id) => mode().byId[id]);
+      // nur=freigabe predates the split by surface
+      const ids = (params.get(mode().param) || '').split(',').flatMap((id) => (state.farbe === 'bedarf' && id === 'freigabe' ? ['freigabe-asphalt', 'freigabe-unbefestigt', 'freigabe-unbekannt'] : [id])).filter((id) => mode().byId[id]);
       if (ids.length) state.only = ids;
     }
     /** Other routes under the last map click, offered in the detail view. */
@@ -779,7 +789,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           if (!p) return;
           const r = routeById.get(p.routeId);
           if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
         });
         map.on('mouseleave', id, () => {
           map.getCanvas().style.cursor = '';
@@ -957,7 +967,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         m[f.properties[md.key]] += f.properties.m;
         if (state.farbe === 'stand') {
           const s = (split[f.properties.status] = split[f.properties.status] || {});
-          const k = f.properties.status === 'bestand' ? (routeById.get(f.properties.routeId).uebergang ? 'uebergang' : 'fest') : f.properties.bedarf;
+          const k = f.properties.status === 'bestand' ? (routeById.get(f.properties.routeId).uebergang ? 'uebergang' : 'fest') : f.properties.bedarf.startsWith('freigabe') ? 'freigabe' : f.properties.bedarf;
           s[k] = (s[k] || 0) + f.properties.m;
         }
       }

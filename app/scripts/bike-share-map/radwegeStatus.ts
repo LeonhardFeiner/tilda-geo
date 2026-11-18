@@ -122,7 +122,11 @@ export function lineStatus(
   return 'nichts'
 }
 
-/** What a line needs according to the plans, independent of progress. */
+/**
+ * What a line needs according to the plans, independent of progress. A release keeps the way as it
+ * is, so the Freigabe group is split by the surface it keeps: in plan 5/1 that is most of the
+ * interim network, and the plan paves nothing.
+ */
 export const BEDARF = [
   {
     id: 'vorhanden',
@@ -131,23 +135,52 @@ export const BEDARF = [
     colour: '#1a7f37',
   },
   {
-    id: 'freigabe',
-    label: 'Freigabe und Schilder genügen',
-    hint: 'Laut Plan gibt es einen Weg, der nur für Räder freigegeben und beschildert werden muss (Plan 5/1 auf einem vorhandenen Weg, Plan 5/2 gestrichelt).',
+    id: 'freigabe-asphalt',
+    label: 'Freigabe, Weg asphaltiert',
+    hint: 'Laut Plan gibt es einen Weg, der nur für Räder freigegeben und beschildert werden muss (Plan 5/1 auf einem vorhandenen Weg, Plan 5/2 gestrichelt). Er ist asphaltiert oder gepflastert (OpenStreetMap; in Plan 5/2 gestrichelt laut Legende „best. asph. Weg“).',
     colour: '#d68910',
+  },
+  {
+    id: 'freigabe-unbefestigt',
+    label: 'Freigabe, Weg bleibt unbefestigt',
+    hint: 'Nur Freigabe und Schilder, aber der Weg ist laut OpenStreetMap Schotter, wassergebunden oder Naturboden. Der Plan sieht dort keinen Ausbau vor; der Belag bliebe so.',
+    colour: '#8e4a1c',
+  },
+  {
+    id: 'freigabe-unbekannt',
+    label: 'Freigabe, Belag nicht erfasst',
+    hint: 'Nur Freigabe und Schilder; in OpenStreetMap ist für diesen Weg kein Belag eingetragen, ob er asphaltiert ist, ist offen.',
+    colour: '#e6c690',
   },
   {
     id: 'neubau',
     label: 'Aus- oder Neubau nötig',
-    hint: 'Aus dem Plan abgeleitet: Plan 5/2 sieht einen Vollausbau vor (durchgezogen; oft auf einem vorhandenen Feldweg oder einer Ortsstraße), oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße – dort gibt es nichts freizugeben.',
+    hint: 'Aus dem Plan abgeleitet: Plan 5/2 sieht einen Vollausbau vor (durchgezogen; oft auf einem vorhandenen Feldweg oder einer Ortsstraße; das Konzept empfiehlt Asphalt), oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße – dort gibt es nichts freizugeben.',
     colour: '#c0392b',
   },
 ] as const
 export type Bedarf = (typeof BEDARF)[number]['id']
 
-export function lineBedarf(route: { built?: boolean }, ausbau: Ausbau): Bedarf {
+/**
+ * Freigabe lines by the surface of their OSM way. A dashed 5/2 line without a surface in OSM counts
+ * as asphalt, since the plan's legend says so ("best. asph. Weg"); where OSM records gravel or soil
+ * there, OSM wins and the conflict shows.
+ */
+export function lineBedarf(route: { built?: boolean }, ausbau: Ausbau, belag: Belag): Bedarf {
   if (route.built || ausbau === 'bestand') return 'vorhanden'
-  return ausbau === 'voll' || ausbau === 'kein-weg' ? 'neubau' : 'freigabe'
+  if (ausbau === 'voll' || ausbau === 'kein-weg') return 'neubau'
+  if (belag === 'asphalt') return 'freigabe-asphalt'
+  if (belag === 'schotter' || belag === 'natur') return 'freigabe-unbefestigt'
+  return ausbau === 'bestand-weg' ? 'freigabe-asphalt' : 'freigabe-unbekannt'
+}
+
+/** One line for the map popup: what the concept says about this piece. */
+export const PLAN_SAYS: Record<Ausbau, string> = {
+  freigabe: 'Lageplan 5/1: Weg bleibt, wie er ist; nur Freigabe und Schilder',
+  'kein-weg': 'Lageplan 5/1: kein Weg zum Freigeben, Ausbau nicht beschrieben',
+  'bestand-weg': 'Lageplan 5/2: vorhandener asphaltierter Weg, mitbenutzt',
+  voll: 'Lageplan 5/2: neuer Geh- und Radweg, Asphalt empfohlen',
+  bestand: 'Bestehender Geh- und Radweg',
 }
 
 /**

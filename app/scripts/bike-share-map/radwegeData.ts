@@ -303,7 +303,7 @@ export function buildRadwegeData(
           fid,
           netz,
           status: lineStatus(route, f.properties.ausbau),
-          bedarf: lineBedarf(route, f.properties.ausbau),
+          bedarf: lineBedarf(route, f.properties.ausbau, f.properties.belag),
           m,
           kombi: Boolean(piece.key & 1),
           innen: Boolean(piece.key & 2),
