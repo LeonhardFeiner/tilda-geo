@@ -13,8 +13,7 @@ import { bootPage, type ViewerPage } from './viewerHarness'
  */
 
 const dataFile = join(import.meta.dirname, 'output', 'viewer', `${RADWEGE_PAGE_STEM}.json`)
-const html = () =>
-  radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json`, viewerHref: './index.html' })
+const html = () => radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json` })
 
 type Line = { properties: { routeId: string; status: string; plan: string; weg: string } }
 const shownLines = (p: ViewerPage) =>
@@ -67,9 +66,10 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
       .reduce((s, f) => s + f.properties.m, 0)
     expect(onPaf25).toBeGreaterThan(1500)
     expect(m('freigabe')).toBeGreaterThan(500)
-    expect(ampertshausen.find((f) => f.properties.ausbau === 'kein-weg')!.properties.status).toBe(
-      'kein-schritt',
-    )
+    const keinWeg = ampertshausen.find((f) => f.properties.ausbau === 'kein-weg')!.properties
+    expect(keinWeg.status).toBe('nichts')
+    expect(keinWeg.bedarf).toBe('neubau')
+    expect(data.planlage!.features.length).toBeGreaterThan(100)
     const netz = new Set(data.landkreis!.features.map((f) => f.properties.netz))
     expect(netz).toEqual(new Set(['vorrang', 'basis']))
   })
@@ -87,8 +87,12 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     ).toBe(true)
     // only groups with lines in this plan are listed
     expect(p.qAll('#groups button').length).toBeGreaterThanOrEqual(4)
-    // plan 5/1 lines without a way to release count as "Neubau nötig"
-    expect(p.qAll('#groups [data-group="kein-schritt"]').length).toBe(1)
+    // progress only; what has to be built is a separate split under each group
+    expect(p.qAll('#groups [data-group="nichts"]').length).toBe(1)
+    expect(p.q('#groups [data-group="nichts"]').textContent).toMatch(
+      /davon Neubau [\d,]+ km · Freigabe/,
+    )
+    expect(p.q('#groups [data-group="vor-konzept"]').textContent).toContain('davon')
     expect(p.qAll('#bar button').length).toBeGreaterThanOrEqual(4)
     expect(p.qAll('#recent li').length).toBe(8)
     expect(p.q('#detail').hidden).toBe(true)
@@ -180,6 +184,8 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     const wald = rows.find((r) => r.dataset.select === 'pfaffenhofen-schweitenkirchen')!
     expect(wald.textContent).toMatch(/nach [\d,]+ (Monaten|Jahren?) eröffnet/)
     expect(p.q('#dauer-chart').textContent).toContain('Ohne dokumentierten Schritt')
+    expect(p.q('#dauer-chart').textContent).toContain('Quellenlage')
+    expect(wald.textContent).toContain('Übergangslösung')
 
     click(p, noerting)
     expect(p.q('#detail').hidden).toBe(false)
@@ -203,6 +209,10 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.window.location.search).toContain('nur=kreisstrasse')
     expect(shownLines(p).length).toBeGreaterThan(0)
     expect(shownLines(p).every((f) => f.properties.weg === 'kreisstrasse')).toBe(true)
+    // the plan geometry as drawn can be switched on
+    const pl = p.q<HTMLInputElement>('#pl-toggle')
+    toggle(p, pl)
+    expect(p.window.location.search).toContain('planlage=an')
     // switching the mode drops the filter
     const belag = p.q<HTMLInputElement>('input[name=farbe][value=belag]')
     belag.checked = true

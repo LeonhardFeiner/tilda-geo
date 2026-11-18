@@ -44,7 +44,6 @@ const pages: Record<string, string> = {
   'impressum.html': legalPageHtml({ projectLead: 'Test', viewerHref: './index.html' }),
   'radwege-schweitenkirchen.html': radwegePageHtml({
     dataHref: './radwege-schweitenkirchen.json',
-    viewerHref: './index.html',
   }),
 }
 

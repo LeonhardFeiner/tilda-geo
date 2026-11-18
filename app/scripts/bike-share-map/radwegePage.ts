@@ -1,12 +1,11 @@
 import { buildBasemapStyleJson } from './basemaps'
-import { BELAG, CONCEPT_DATE, STATUS_GROUPS, STEP_KINDS, WEG } from './radwegeStatus'
+import { BEDARF, BELAG, CONCEPT_DATE, STATUS_GROUPS, STEP_KINDS, WEG } from './radwegeStatus'
 import { siteIconHeadLinks } from './siteIcon'
 import { visitCounterHeadScript } from './visitCounter'
 
 export type RadwegePageInput = {
   /** radwege-schweitenkirchen.json (RadwegeData from radwegeData.ts), with ?v=. */
   dataHref: string
-  viewerHref: string
 }
 
 const PLAN_LABEL = {
@@ -40,7 +39,7 @@ const LANDKREIS = {
  * with what has publicly happened to it. One plan at a time; a bar of the progress groups is
  * summary, legend and filter at once; a click on a line replaces the overview with that route.
  */
-export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
+export function radwegePageHtml({ dataHref }: RadwegePageInput) {
   const style = JSON.stringify(buildBasemapStyleJson('light'))
   const conceptDe = CONCEPT_DATE.split('-').reverse().join('.')
   const checkbox = (name: string, value: string, label: string) =>
@@ -127,7 +126,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     label .km { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .sw { display: inline-block; width: 14px; height: 4px; border-radius: 2px; flex: none; }
     .sw.band { height: 8px; opacity: 0.45; }
-    #lk-row { font-size: 12px; }
+    #lk-row, #pl-row { font-size: 12px; }
     .sw.dash { background: none !important; height: 0; border-top: 3px dashed; }
     input[type='search'] {
       width: 100%;
@@ -274,8 +273,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     <summary><h1>Radwege Schweitenkirchen</h1></summary>
     <div class="body">
       <div id="overview">
-        <p class="muted"><a href="${viewerHref}">&larr; Zur Karte</a></p>
-        <p class="intro">Das Radwegekonzept der Gemeinde vom ${conceptDe} hat zwei Pläne: kurzfristig vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig ausbauen. Wo die kurzfristige Linie keinem vorhandenen Weg folgt oder nur an einer Kreis- oder Staatsstraße liegt, gibt es nichts freizugeben; diese Abschnitte zählen als „Neubau nötig“. Die Karte zeigt für jede Trasse, was seitdem öffentlich dokumentiert ist. Eine Linie anklicken für Details und Quellen.</p>
+        <p class="intro">Das Radwegekonzept der Gemeinde vom ${conceptDe} hat zwei Pläne: kurzfristig vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig ausbauen. Viele Trassen stehen in beiden Plänen; manche nur im kurzfristigen (Zwischenlösung, oder langfristig übernimmt das Radnetz des Landkreises), zwei nur im langfristigen. „Stand“ zeigt, was seit dem Konzept öffentlich dokumentiert ist, „Bedarf“, ob gebaut werden muss. Eine Linie anklicken für Details und Quellen.</p>
         <fieldset class="seg" id="f-plan">
           <legend>Plan</legend>
           <label><input type="radio" name="plan" value="kurz" checked><span>Kurzfristig (5/1)</span></label>
@@ -289,6 +287,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         <fieldset class="seg" id="f-farbe">
           <legend>Einfärben nach</legend>
           <label><input type="radio" name="farbe" value="stand" checked><span>Stand</span></label>
+          <label><input type="radio" name="farbe" value="bedarf"><span>Bedarf</span></label>
           <label><input type="radio" name="farbe" value="weg"><span>Wegart heute</span></label>
           <label><input type="radio" name="farbe" value="belag"><span>Belag heute</span></label>
         </fieldset>
@@ -297,6 +296,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         <ul id="groups"></ul>
         <p id="filter-note" hidden></p>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
+        <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
         <label class="muted" id="lk-row"><input type="checkbox" id="lk-toggle" checked /><span>Radnetz des Landkreises: <i class="sw band" style="background:${LANDKREIS.vorrang.colour}"></i> Vorrangroute <i class="sw band" style="background:${LANDKREIS.basis.colour}"></i> Basisnetz</span></label>
         <p class="muted" id="line-legend" hidden></p>
         <h2>Neueste Vorgänge</h2>
@@ -349,6 +349,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     /** Colour modes: which line property the bar, legend, filter and map colours follow. */
     const MODES = {
       stand: { key: 'status', cats: GROUPS, param: 'stand' },
+      bedarf: { key: 'bedarf', cats: ${JSON.stringify(BEDARF)}, param: 'nur' },
       weg: { key: 'weg', cats: ${JSON.stringify(WEG)}, param: 'nur' },
       belag: { key: 'belag', cats: ${JSON.stringify(BELAG)}, param: 'nur' },
     };
@@ -388,6 +389,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       search: '',
       view: params.get('ansicht') === 'dauer' ? 'dauer' : 'karte',
       landkreis: params.get('landkreis') !== 'aus',
+      planlage: params.get('planlage') === 'an',
     };
     const mode = () => MODES[state.farbe];
     {
@@ -402,6 +404,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       if (state.plan !== 'kurz') p.set('plan', state.plan);
       if (state.view !== 'karte') p.set('ansicht', state.view);
       if (!state.landkreis) p.set('landkreis', 'aus');
+      if (state.planlage) p.set('planlage', 'an');
       if (state.farbe !== 'stand') p.set('farbe', state.farbe);
       if (state.only) p.set(mode().param, state.only);
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
@@ -489,6 +492,11 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       input.addEventListener('change', () => setView(input.value));
     }
     $('dauer-close').addEventListener('click', () => setView('karte'));
+    $('pl-toggle').checked = state.planlage;
+    $('pl-toggle').addEventListener('change', (e) => {
+      state.planlage = e.target.checked;
+      render();
+    });
     $('lk-toggle').checked = state.landkreis;
     $('lk-toggle').addEventListener('change', (e) => {
       state.landkreis = e.target.checked;
@@ -538,7 +546,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const COLOUR = colourExpr();
     // Dashes only mean something in plan 5/2 (existing way, release only)
     // dashed: plan 5/2 "existing way, release only" in the progress view; "no way" in the others
-    const dashedExpr = () => state.farbe === 'stand' ? ['==', ['get', 'ausbau'], 'bestand-weg'] : ['==', ['get', 'weg'], 'kein'];
+    const dashedExpr = () => state.farbe === 'stand' || state.farbe === 'bedarf' ? ['==', ['get', 'ausbau'], 'bestand-weg'] : ['==', ['get', 'weg'], 'kein'];
     const DASHED = dashedExpr();
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
     const LINE_LAYERS = ['radwege-solid', 'radwege-dashed'];
@@ -579,6 +587,12 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       map.addLayer({ id: 'radwege-casing', type: 'line', source: 'radwege', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': width(6), 'line-opacity': 0.9 } });
       map.addLayer({ id: 'radwege-solid', type: 'line', source: 'radwege', filter: ['!', DASHED], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-color': COLOUR } });
       map.addLayer({ id: 'radwege-dashed', type: 'line', source: 'radwege', filter: DASHED, layout: { 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-dasharray': [2, 1.2], 'line-color': COLOUR } });
+      if (data.planlage) {
+        map.addSource('planlage', { type: 'geojson', data: data.planlage });
+        const plColour = ['match', ['get', 'netz'], 'haupt', '#1d4ed8', 'ergaenzend', '#0891b2', '#dc2626'];
+        map.addLayer({ id: 'planlage', type: 'line', source: 'planlage', filter: ['!', ['get', 'dashed']], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6) } });
+        map.addLayer({ id: 'planlage-dashed', type: 'line', source: 'planlage', filter: ['get', 'dashed'], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6), 'line-dasharray': [3, 2] } });
+      }
       for (const id of LINE_LAYERS) {
         map.setPaintProperty(id, 'line-opacity', ['case', ['>', ['get', 'fromPlan'], 0.5], 0.6, 1]);
         map.on('mousemove', id, (e) => {
@@ -616,11 +630,17 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         map.setPaintProperty('radwege-dashed', 'line-color', colourExpr());
         map.setFilter('radwege-solid', ['!', dashedExpr()]);
         map.setFilter('radwege-dashed', dashedExpr());
+        for (const id of ['planlage', 'planlage-dashed']) {
+          if (!map.getLayer(id)) continue;
+          map.setLayoutProperty(id, 'visibility', state.planlage ? 'visible' : 'none');
+          const inPlanExpr = ['any', ['==', ['get', 'plan'], state.plan], ['==', ['get', 'netz'], 'bestand']];
+          map.setFilter(id, ['all', inPlanExpr, id === 'planlage' ? ['!', ['get', 'dashed']] : ['get', 'dashed']]);
+        }
         if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', state.landkreis ? 'visible' : 'none');
       }
-      $('mode-note').hidden = state.farbe === 'stand';
-      const dashText = state.farbe === 'stand' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg vorhanden';
-      $('line-legend').hidden = state.farbe === 'stand' && state.plan !== 'lang';
+      $('mode-note').hidden = state.farbe === 'stand' || state.farbe === 'bedarf';
+      const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
+      $('line-legend').hidden = (state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan !== 'lang';
       $('line-legend').innerHTML = '<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText;
       renderGroups();
       $('status').textContent = 'Angezeigt: ' + new Set(vis.map((f) => f.properties.routeId)).size + ' Trassen, ' + km(vis.reduce((s, f) => s + f.properties.m, 0)) + '.';
@@ -644,7 +664,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         const opened = r.events.find((e) => e.kind === 'Eröffnung' && !e.uncertain);
         if (r.firstStep && (!r.built || opened)) rows.push({ r, start: r.firstStep.date, end: opened ? opened.date : data.stand, opened });
         else if (!r.built) {
-          const g = routeGroups(id).find((x) => x !== 'bestand') || 'kein-schritt';
+          const g = routeGroups(id, 'bedarf').find((x) => x !== 'vorhanden') || 'neubau';
           if (!waiting.has(g)) waiting.set(g, { routes: [], m: 0 });
           waiting.get(g).routes.push(r);
           waiting.get(g).m += m;
@@ -671,7 +691,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         const g = GROUP_BY_ID[x.opened ? 'bestand' : routeGroups(r.id).find((x) => x !== 'bestand') || 'seit-konzept'];
         const a = fy(x.start), b = fy(x.end);
         let inner = '<i class="d-bar" style="left:' + pos(a) + ';width:max(4px,' + pos(y0 + b - a) + ');background:' + g.colour + '"></i>';
-        let text = x.opened ? 'nach ' + dur(x.start, x.end) + ' eröffnet' : 'seit ' + dur(x.start, x.end);
+        let text = x.opened ? 'nach ' + dur(x.start, x.end) + ' eröffnet' + (r.uebergang ? ' (Übergangslösung)' : '') : 'seit ' + dur(x.start, x.end);
         if (r.announcedYear && !x.opened) {
           inner += '<i class="d-plan" style="left:' + pos(b) + ';width:' + pos(y0 + r.announcedYear + 0.5 - b) + ';border-color:' + g.colour + '"></i>';
           text += ' · angekündigt ' + r.announcedYear;
@@ -686,13 +706,22 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       }
       if (waiting.size) {
         h += '<h3>Ohne dokumentierten Schritt</h3><p class="muted" style="margin:0 0 4px">Gezählt ab dem Konzept vom ' + deDate(CONCEPT_DATE) + ', das diese Trassen vorsieht.</p>';
-        for (const g of GROUPS) {
+        for (const g of MODES.bedarf.cats) {
           const w = waiting.get(g.id);
           if (!w) continue;
           const a = fy(CONCEPT_DATE), b = fy(data.stand);
           const inner = '<i class="d-bar" style="left:' + pos(a) + ';width:' + pos(y0 + b - a) + ';background:' + g.colour + ';opacity:0.55"></i>';
           h += '<div class="d-row" style="cursor:default"><span class="d-head"><span>' + escHtml(g.label) + ': ' + w.routes.length + ' Trassen, ' + km(w.m) + '</span><span class="dur">seit ' + escHtml(dur(CONCEPT_DATE, data.stand)) + '</span></span>' + track(inner) + '</div>';
           h += '<details><summary>Trassen anzeigen</summary><p>' + w.routes.map((r) => '<a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a>').join(', ') + '</p></details>';
+        }
+      }
+      // which sources the research could search for which years: gaps mean "not searchable", not "nothing happened"
+      if (data.quellen && data.quellen.length) {
+        h += '<h3>Quellenlage</h3><p class="muted" style="margin:0 0 4px">Ab wann die Quellen ausgewertet sind. Wo ein Balken fehlt, gibt es keine durchsuchbaren Unterlagen; dass dort nichts eingetragen ist, heißt nicht, dass nichts geschah.</p>';
+        for (const q of data.quellen) {
+          const a = Math.max(y0, fy(q.from)), b = fy(data.stand);
+          const inner = a < b ? '<i class="d-bar" style="left:' + pos(a) + ';width:' + pos(y0 + b - a) + ';background:var(--muted);opacity:0.35"></i>' : '';
+          h += '<div class="d-row" style="cursor:default" title="' + escHtml(q.note) + '"><span class="d-head"><span>' + escHtml(q.label) + '</span><span class="dur">ab ' + escHtml(deDate(q.from)) + '</span></span>' + track(inner) + '<span class="muted" style="font-size:11px">' + escHtml(q.note) + '</span></div>';
         }
       }
       h += '<p class="muted" style="margin-top:10px">Stand der Recherche: ' + escHtml(deDate(data.stand)) + '. Ein Vorgang mit Jahr oder Monat ist am Anfang des Zeitraums eingezeichnet.</p>';
@@ -703,7 +732,22 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     function renderGroups() {
       const md = mode();
       const m = Object.fromEntries(md.cats.map((g) => [g.id, 0]));
-      for (const f of features) if (passesOther(f.properties)) m[f.properties[md.key]] += f.properties.m;
+      // in the progress view, each group also says how much of it is Neubau and how much Freigabe
+      const split = {};
+      for (const f of features) {
+        if (!passesOther(f.properties)) continue;
+        m[f.properties[md.key]] += f.properties.m;
+        if (state.farbe === 'stand') {
+          const s = (split[f.properties.status] = split[f.properties.status] || {});
+          s[f.properties.bedarf] = (s[f.properties.bedarf] || 0) + f.properties.m;
+        }
+      }
+      const splitText = (id) => {
+        const s = split[id];
+        if (!s || id === 'bestand') return '';
+        const parts = ['neubau', 'freigabe'].filter((id) => s[id]).map((id) => (id === 'neubau' ? 'Neubau ' : 'Freigabe ') + km(s[id]));
+        return parts.length ? '<br><small class="muted">davon ' + parts.join(' · ') + '</small>' : '';
+      };
       const total = Object.values(m).reduce((a, b) => a + b, 0) || 1;
       const bar = $('bar'), list = $('groups');
       bar.textContent = '';
@@ -730,7 +774,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         b.title = g.hint;
         b.setAttribute('aria-pressed', String(state.only === g.id));
         if (dim) b.classList.add('dim');
-        b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + '</span><span class="km">' + km(m[g.id]) + '</span>';
+        b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + splitText(g.id) + '</span><span class="km">' + km(m[g.id]) + '</span>';
         b.addEventListener('click', () => toggleOnly(g.id));
         li.appendChild(b);
         list.appendChild(li);
@@ -843,7 +887,8 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         h += '<p class="muted">Hier liegen auch: ' + others.map((id) => '<a href="#" data-select="' + escHtml(id) + '">' + escHtml(routeById.get(id).name) + '</a>').join(', ') + '</p>';
       }
       h += '<h2>' + escHtml(r.name) + (r.road ? ' <span class="muted">' + escHtml(r.road) + '</span>' : '') + '</h2>';
-      h += '<p>' + groups.map((g) => '<span class="badge" style="background:' + GROUP_BY_ID[g].colour + '">' + escHtml(GROUP_BY_ID[g].label) + '</span>').join(' ') + '</p>';
+      h += '<p>' + groups.map((g) => '<span class="badge" style="background:' + GROUP_BY_ID[g].colour + '">' + escHtml(GROUP_BY_ID[g].label) + '</span>').join(' ') + (r.uebergang ? ' <span class="badge" style="background:#6b7280">Übergangslösung</span>' : '') + '</p>';
+      if (r.uebergang) h += '<p class="note"><strong>Übergangslösung:</strong> ' + escHtml(r.uebergang) + '</p>';
       h += '<dl class="summary">';
       const stand = r.firstStep && !r.built
         ? 'Erster dokumentierter Schritt: ' + deDate(r.firstStep.date) + ' (' + r.firstStep.kind + ') – ' + (groups[0] === 'vor-konzept' ? 'vor' : 'nach') + ' dem Konzept vom ' + deDate(CONCEPT_DATE) + '.'
@@ -855,6 +900,12 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
           .join(', ') + (r.events.some((e) => !e.uncertain) ? '.' : '; öffentlich dokumentiert ist nichts.')
         : '–';
       h += '<dt>Stand</dt><dd>' + escHtml(stand) + '</dd>';
+      {
+        const by = {};
+        for (const f of fs) by[f.properties.bedarf] = (by[f.properties.bedarf] || 0) + f.properties.m;
+        const parts = MODES.bedarf.cats.filter((c) => by[c.id]).map((c) => c.label + (Object.keys(by).length > 1 ? ' ' + km(by[c.id]) : ''));
+        if (parts.length) h += '<dt>Bedarf</dt><dd>' + escHtml(parts.join(', ')) + '</dd>';
+      }
       h += '<dt>Zuletzt</dt><dd>' + (latest ? '<strong>' + escHtml(deDate(latest.date)) + '</strong> ' + escHtml(short(latest.text, 160)) + ' ' + evLink(latest) : 'Kein öffentlicher Vorgang gefunden.') + '</dd>';
       if (r.kusHorizont) h += '<dt>Angekündigt</dt><dd>' + escHtml(r.kusHorizont) + ' ' + link(data.sources.kus, 'KUS-Steckbrief') + '</dd>';
       h += '</dl>';
@@ -871,7 +922,13 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       }
       h += '<h3>Fakten</h3><dl>';
       const plans = Object.entries(r.plans).map(([p, n]) => escHtml(PLAN_LABEL[p]) + ': ' + escHtml(NETZ_LABEL[n]));
-      if (plans.length) h += '<dt>Plan</dt><dd>' + plans.join('<br>') + '</dd>';
+      const inKurz = Boolean(r.plans.kurz), inLang = Boolean(r.plans.lang);
+      let planHint = '';
+      if (inKurz && inLang) planHint = 'In beiden Plänen: kurzfristig auf vorhandenen Wegen, langfristig ausgebaut.';
+      else if (inLang) planHint = 'Nur im langfristigen Plan: eine neue Verbindung, für die kurzfristig nichts vorgesehen ist.';
+      else if (inKurz && r.landkreisShare != null && r.landkreisShare >= 0.6) planHint = 'Nur im kurzfristigen Plan: langfristig verläuft hier das Radnetz des Landkreises (' + Math.round(r.landkreisShare * 100) + ' % der Strecke), das als Geh- und Radweg vorgesehen ist – Sache von Landkreis oder Freistaat.';
+      else if (inKurz && !r.built && r.id !== 'bestand') planHint = 'Nur im kurzfristigen Plan: eine Zwischenlösung auf vorhandenen Wegen; der langfristige Plan führt diese Verbindung nicht weiter.';
+      if (plans.length) h += '<dt>Plan</dt><dd>' + plans.join('<br>') + (planHint ? '<br><span class="muted">' + escHtml(planHint) + '</span>' : '') + '</dd>';
       const len = [];
       if (r.lengthConceptKm) len.push('Konzept ca. ' + r.lengthConceptKm.toLocaleString('de-DE') + ' km');
       for (const [p, v] of Object.entries(r.km)) len.push((p === 'kurz' ? 'Lageplan 5/1' : 'Lageplan 5/2') + ' gemessen ' + v.toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' km');

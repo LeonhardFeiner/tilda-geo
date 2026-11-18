@@ -578,7 +578,6 @@ if (detourLandkreise.length) {
     join(viewerDir, `${RADWEGE_PAGE_STEM}.html`),
     radwegePageHtml({
       dataHref: `./${RADWEGE_PAGE_STEM}.json?v=${contentHash([dataPath])}`,
-      viewerHref: './index.html',
     }),
     'utf8',
   )

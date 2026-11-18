@@ -67,15 +67,9 @@ export const STATUS_GROUPS = [
     colour: '#8e44ad',
   },
   {
-    id: 'nur-freigabe',
-    label: 'Nur Schilder/Freigabe nötig – nichts dokumentiert',
-    hint: 'Laut Konzept genügt es, einen vorhandenen Weg für Räder freizugeben und zu beschildern; öffentlich dokumentiert ist dazu nichts.',
-    colour: '#d68910',
-  },
-  {
-    id: 'kein-schritt',
-    label: 'Neubau nötig – nichts dokumentiert',
-    hint: 'Hier gibt es keinen Weg, den man nur freigeben könnte: Plan 5/2 sieht einen Neubau vor, oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße. Öffentlich dokumentiert ist dazu nichts.',
+    id: 'nichts',
+    label: 'Nichts dokumentiert',
+    hint: 'Öffentlich ist zu dieser Trasse kein Schritt dokumentiert (kein Beschluss, Grunderwerb, keine Planung, kein Programm, Haushaltsansatz oder Bau).',
     colour: '#c0392b',
   },
 ] as const
@@ -115,10 +109,9 @@ export function announcedYear(horizon: string | undefined, stand: string) {
 }
 
 /**
- * Group of one line. A built route is `bestand`; otherwise the first certain step decides
+ * Progress group of one line. A built route is `bestand`; otherwise the first certain step decides
  * before/since the concept ("before" only if the whole period of a partial date lies before it);
- * without a step, lines on an existing way are `nur-freigabe`, the rest (`voll`, `kein-weg`)
- * `kein-schritt`.
+ * without a step `nichts`. What has to be built there is a separate question: lineBedarf.
  */
 export function lineStatus(
   route: { built?: boolean; events: readonly RouteEvent[] },
@@ -127,7 +120,35 @@ export function lineStatus(
   if (route.built || ausbau === 'bestand') return 'bestand'
   const step = firstStep(route.events)
   if (step) return dateUpperBound(step.date) < CONCEPT_DATE ? 'vor-konzept' : 'seit-konzept'
-  return ausbau === 'voll' || ausbau === 'kein-weg' ? 'kein-schritt' : 'nur-freigabe'
+  return 'nichts'
+}
+
+/** What a line needs according to the plans, independent of progress. */
+export const BEDARF = [
+  {
+    id: 'vorhanden',
+    label: 'Vorhanden',
+    hint: 'Der Weg ist gebaut und befahrbar.',
+    colour: '#1a7f37',
+  },
+  {
+    id: 'freigabe',
+    label: 'Freigabe und Schilder genügen',
+    hint: 'Laut Plan gibt es einen Weg, der nur für Räder freigegeben und beschildert werden muss (Plan 5/1 auf einem vorhandenen Weg, Plan 5/2 gestrichelt).',
+    colour: '#d68910',
+  },
+  {
+    id: 'neubau',
+    label: 'Neubau nötig',
+    hint: 'Plan 5/2 sieht einen Neubau vor (durchgezogen), oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße – dort gibt es nichts freizugeben.',
+    colour: '#c0392b',
+  },
+] as const
+export type Bedarf = (typeof BEDARF)[number]['id']
+
+export function lineBedarf(route: { built?: boolean }, ausbau: Ausbau): Bedarf {
+  if (route.built || ausbau === 'bestand') return 'vorhanden'
+  return ausbau === 'voll' || ausbau === 'kein-weg' ? 'neubau' : 'freigabe'
 }
 
 /**
@@ -167,8 +188,8 @@ export const WEG = [
   },
   {
     id: 'kein',
-    label: 'Kein Weg vorhanden',
-    hint: 'In OpenStreetMap liegt hier kein Weg; die Linie ist nur aus dem Lageplan übertragen.',
+    label: 'Kein Weg in OpenStreetMap',
+    hint: 'In OpenStreetMap liegt hier kein passender Weg; die Linie ist nur aus dem Lageplan übertragen. Bei neuen Trassen gibt es den Weg noch nicht, bei vorhandenen fehlt er in OpenStreetMap.',
     colour: '#8a8f98',
   },
 ] as const
@@ -197,8 +218,8 @@ export const BELAG = [
   },
   {
     id: 'kein',
-    label: 'Kein Weg vorhanden',
-    hint: 'In OpenStreetMap liegt hier kein Weg; die Linie ist nur aus dem Lageplan übertragen.',
+    label: 'Kein Weg in OpenStreetMap',
+    hint: 'In OpenStreetMap liegt hier kein passender Weg; die Linie ist nur aus dem Lageplan übertragen. Bei neuen Trassen gibt es den Weg noch nicht, bei vorhandenen fehlt er in OpenStreetMap.',
     colour: '#8a8f98',
   },
 ] as const

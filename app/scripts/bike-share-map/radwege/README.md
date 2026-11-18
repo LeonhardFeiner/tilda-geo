@@ -43,7 +43,12 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    unbekannt; classified roads count as asphalt); runs < 60 m join their neighbour. `fromPlan` is
    the share with no way near (drawn paler). A plan 5/1 piece on no way or on a Staats-/
    Kreisstraße gets `ausbau: kein-weg` (nothing to release; the page counts it as "Neubau
-   nötig"). Built routes keep `freigabe`. 2026-11-18: 3.3 of ~143 km left without a way.
+   nötig"). Built routes keep `freigabe`, and for them (and the red Bestand lines) the matcher
+   ignores Staats-/Kreisstraßen without a bike lane and looks only 35 m wide: an existing path
+   does not run on the carriageway, so where OSM lacks it (e.g. the Waldroute beside the St 2045
+   at Siebenecken) the plan geometry stays. 2026-11-18: 3.3 of ~143 km left without a way.
+   It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
+   which the page can show on request ("Lage wie im Plan gezeichnet").
 5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
    `landkreis.geojson`, a context layer on the page (the Landkreis plans them as Geh- und
    Radwege, Erläuterung 2.3.1).

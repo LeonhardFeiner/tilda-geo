@@ -3,6 +3,7 @@ import {
   announcedYear,
   dateUpperBound,
   firstStep,
+  lineBedarf,
   lineStatus,
   type RouteEvent,
 } from './radwegeStatus'
@@ -58,12 +59,18 @@ describe('lineStatus', () => {
     expect(lineStatus({ events: [ev('2024', 'Grunderwerb')] }, 'voll')).toBe('seit-konzept')
   })
 
-  test('without a step: no construction needed → nur-freigabe, else kein-schritt', () => {
+  test('without a step: nichts, whatever has to be built', () => {
     const events = [ev('2024-01-25', 'Aussage'), ev('2021-09-21', 'Bau', true)]
-    expect(lineStatus({ events }, 'freigabe')).toBe('nur-freigabe')
-    expect(lineStatus({ events }, 'bestand-weg')).toBe('nur-freigabe')
-    expect(lineStatus({ events }, 'voll')).toBe('kein-schritt')
-    expect(lineStatus({ events }, 'kein-weg')).toBe('kein-schritt')
+    for (const a of ['freigabe', 'bestand-weg', 'voll', 'kein-weg'] as const)
+      expect(lineStatus({ events }, a)).toBe('nichts')
+  })
+  test('Bedarf: built → vorhanden, solid 5/2 or no way → neubau, else freigabe', () => {
+    expect(lineBedarf({ built: true }, 'freigabe')).toBe('vorhanden')
+    expect(lineBedarf({}, 'bestand')).toBe('vorhanden')
+    expect(lineBedarf({}, 'voll')).toBe('neubau')
+    expect(lineBedarf({}, 'kein-weg')).toBe('neubau')
+    expect(lineBedarf({}, 'freigabe')).toBe('freigabe')
+    expect(lineBedarf({}, 'bestand-weg')).toBe('freigabe')
   })
 })
 

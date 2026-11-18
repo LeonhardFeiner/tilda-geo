@@ -65,6 +65,7 @@
       "plans": { "kurz": "haupt" },
       "planLabels": ["Pfaffenhofen - Schweitenkirchen"],
       "built": true,
+      "uebergang": "Nicht asphaltierter Wald- und Feldweg (rund 4 km). Laut den Initiatoren (PK-Bericht 2018) nur als Übergangslösung bis zu einem asphaltierten Radweg an der St 2045 gedacht; bei der Eröffnung 2021 hieß es, das Staatliche Bauamt könne in den nächsten Jahren keinen Radweg an der Staatsstraße zusichern. Eine Beschilderung war 2022 beauftragt, ist aber nur punktuell belegt. Das Staatliche Bauamt will 2026 in die Planung eines Radwegs Pfaffenhofen–Schweitenkirchen einsteigen; die Radvorrangroute des Landkreises verläuft an der St 2045.",
       "baulast": "Gemeinde",
       "documented": "Nach Kartenlage die Waldroute durch den Schindelhauser Forst: eröffnet 18.10.2021; Beschilderung über KUS 2022; Reparaturen 2024. Getrennt davon prüft das Staatliche Bauamt laut KUS-Steckbrief 2026 einen Geh- und Radweg entlang der St 2045 nach Pfaffenhofen.",
       "events": [
@@ -120,7 +121,7 @@
         {
           "date": "2020-01-22",
           "kind": "Aussage",
-          "text": "Im selben SPD-Beitrag unter der Zwischenzeile „PK-Bericht vom 05.10.2018“: Der Radweg durch den Wald solle nur eine „befestigte Übergangslösung“ bis zu einem geteerten Radweg an der Staatsstraße sein, „berichten die Initiatoren“.",
+          "text": "Im selben SPD-Beitrag, unter Verweis auf einen PK-Bericht vom 05.10.2018: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
           "source": "SPD Kreisverband Pfaffenhofen (bewegung-paf.de), 22.01.2020",
           "url": "https://www.bewegung-paf.de/post/durchbruch-f%C3%BCr-radweg-schweitenkirchen-pfaffenhofen",
           "uncertain": true
@@ -1399,6 +1400,28 @@
       "source": "Pfaffenhofener Kurier, 25.04.2026",
       "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/das-ruecklagenpolster-wird-jetzt-ziemlich-duenn-20999788",
       "paywall": true
+    }
+  ],
+  "quellen": [
+    {
+      "label": "Landkreis (Ratsinformationssystem)",
+      "from": "2008",
+      "note": "Kreisausschüsse, online ab 2008"
+    },
+    {
+      "label": "Rundschau (Gemeindeblatt)",
+      "from": "2019",
+      "note": "Ausgaben online ab 2019; eine Ausgabe von 2012 über das Webarchiv"
+    },
+    {
+      "label": "Gemeinderat",
+      "from": "2020-01",
+      "note": "Protokolle 01/2020–04/2021 auf der Gemeindeseite, danach Ratsinformationssystem; Protokolle 2014–2019 sind nicht online"
+    },
+    {
+      "label": "Pfaffenhofener Kurier",
+      "from": "2022",
+      "note": "Online-Archiv erst ab 2022 durchsuchbar; ältere Artikel nur vereinzelt"
     }
   ]
 }
