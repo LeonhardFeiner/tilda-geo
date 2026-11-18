@@ -178,6 +178,10 @@ for key, ms in matched.items():
             flags.append((rid, plan, 'mehrdeutig', D.interpolate(((a + b) / 2) * STEP),
                           'Zwei parallele Wege liegen gleich nah an der Zeichnung (' + what + '); welcher gemeint ist, ist unklar.', (b - a + 1) * STEP))
 
+# spots someone has checked (overrides.json "geprueft": [{"at": [lon, lat], "note": ...}]) drop out
+DONE = [(k.split('|')[1], k.split('|')[0], Point(to_utm.transform(*g['at']))) for k, v in OV.items() for g in v.get('geprueft', [])]
+flags = [f for f in flags if not any(r == f[0] and pl == f[1] and q.distance(f[3]) < 80 for r, pl, q in DONE)]
+
 # one point per route, reason and spot
 ORDER = ['gebaeude', 'strassenseite', 'kurve', 'abseits', 'mehrdeutig', 'zickzack']
 kept = []

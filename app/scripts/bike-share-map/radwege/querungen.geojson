@@ -78,24 +78,24 @@
       "properties": {
         "plan": "lang",
         "strasse": "PAF 6",
-        "routeIds": ["guentersdorf-noerting", "oberthann-guentersdorf"],
-        "ort": "Güntersdorf",
-        "hoehe": "Feldweg",
-        "text": "Querung der PAF 6 in Güntersdorf, an der Einmündung eines Feldwegs: Der Plan zeichnet den Weg hier auf der anderen Straßenseite weiter. Annahme aus der Seitenlage im Plan; ob und wie gequert wird, ist nicht festgelegt."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.606476, 48.479837] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "plan": "lang",
-        "strasse": "PAF 6",
         "routeIds": ["oberthann-guentersdorf"],
         "ort": "Ödhof",
         "hoehe": "Weg",
         "text": "Querung der PAF 6 in Ödhof, an der Einmündung eines Wegs: Der Plan zeichnet den Weg hier auf der anderen Straßenseite weiter. Annahme aus der Seitenlage im Plan; ob und wie gequert wird, ist nicht festgelegt."
       },
       "geometry": { "type": "Point", "coordinates": [11.58405, 48.487156] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "plan": "lang",
+        "strasse": "PAF 6",
+        "routeIds": ["guentersdorf-noerting", "oberthann-guentersdorf"],
+        "ort": "Güntersdorf",
+        "hoehe": "Feldweg",
+        "text": "Querung der PAF 6 in Güntersdorf, an der Einmündung eines Feldwegs: Der Plan zeichnet den Weg hier auf der anderen Straßenseite weiter. Annahme aus der Seitenlage im Plan; ob und wie gequert wird, ist nicht festgelegt."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.606476, 48.479837] }
     }
   ]
 }

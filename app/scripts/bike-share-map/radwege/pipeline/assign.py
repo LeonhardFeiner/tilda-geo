@@ -607,7 +607,16 @@ def drop_spurs(coords):
                     cut = j
                     break
         if cut is not None:
-            removed += 2 * (cut - i); xy = xy[:i + 1] + xy[cut + 1:]
+            if cut >= len(xy) - 15:  # within 30 m of the end
+                # out and back at the end: the outward leg reaches the end, the way back is the error
+                k = max(range(i, cut + 1), key=lambda m: math.dist(xy[i], xy[m]))
+                removed += 2 * (cut - k); xy = xy[:k + 1]
+            elif i <= 15:  # within 30 m of the start
+                # the same at the start: begin at the turning point
+                k = max(range(i, cut + 1), key=lambda m: math.dist(xy[cut], xy[m]))
+                removed += 2 * k; xy = xy[k:]; i = 0; continue
+            else:
+                removed += 2 * (cut - i); xy = xy[:i + 1] + xy[cut + 1:]
         else:
             i += 1
     if removed == 0: return coords, 0.0

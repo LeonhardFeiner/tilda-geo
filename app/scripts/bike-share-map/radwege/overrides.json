@@ -193,10 +193,22 @@
     }
   },
   "kurz|st2045-preinersdorf-landkreisgrenze": {
-    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]]
+    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]],
+    "geprueft": [
+      {
+        "at": [11.65368, 48.52164],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: neuer Geh- und Radweg an der St 2045; die Zeichnung liegt nur 60–100 m daneben."
+      }
+    ]
   },
   "lang|st2045-preinersdorf-landkreisgrenze": {
-    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]]
+    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]],
+    "geprueft": [
+      {
+        "at": [11.65368, 48.52164],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: neuer Geh- und Radweg an der St 2045; die Zeichnung liegt nur 60–100 m daneben."
+      }
+    ]
   },
   "kurz|preinerszell-hirschhausen": {
     "branches": [["Preinerszell", [567.8, 533.5]]]
@@ -231,7 +243,12 @@
         [306.0, 749.5],
         [315.8, 734.7]
       ]
-    ]
+    ],
+    "beside": {
+      "ref": "St 2045",
+      "max": 120,
+      "why": "Die Zeichnung quert die A9 rund 70–90 m südlich der St 2045, wo es keine Unterführung gibt; die einzige Unterführung ist die der St 2045 (Hinweis Ortskenntnis). Der Weg ist daher direkt an der St 2045 gemeint; die Zeichnung liegt vermutlich wegen der Autobahnauffahrt südlich davon."
+    }
   },
   "kurz|oberthann-schweitenkirchen-alternative": {
     "branches": [
@@ -257,7 +274,12 @@
     }
   },
   "lang|oberthann-guentersdorf": {
-    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]]
+    "branches": [["Oberthann", "Niederthann", "Güntersdorf"]],
+    "beside": {
+      "ref": "PAF 6",
+      "max": 75,
+      "why": "Der Plan zeichnet Oberthann – Güntersdorf gleichmäßig 23–30 m westlich und Güntersdorf – Nörting 54–68 m östlich der PAF 6 (Seitenwechsel in Güntersdorf). Gemeint ist ein Weg an der PAF 6 auf der jeweiligen Seite; dass die Zeichnung die Blumenstraße berührt, folgt nur aus dem Abstand. Annahme ohne Quelle (Hinweis Ortskenntnis), solange nichts anderes bekannt ist."
+    }
   },
   "kurz|paf23-preinerszell": {
     "branches": [[[325.8, 355.4], "Preinerszell"]]
@@ -432,5 +454,56 @@
       "max": 75,
       "why": "Der Plan zeichnet Oberthann – Güntersdorf gleichmäßig 23–30 m westlich und Güntersdorf – Nörting 54–68 m östlich der PAF 6 (Seitenwechsel in Güntersdorf). Gemeint ist ein Weg an der PAF 6 auf der jeweiligen Seite; dass die Zeichnung die Blumenstraße berührt, folgt nur aus dem Abstand. Annahme ohne Quelle (Hinweis Ortskenntnis), solange nichts anderes bekannt ist."
     }
+  },
+  "lang|oberthann-schweitenkirchen": {
+    "beside": {
+      "ref": "St 2045",
+      "max": 120,
+      "why": "Die Zeichnung quert die A9 rund 70–90 m südlich der St 2045, wo es keine Unterführung gibt; die einzige Unterführung ist die der St 2045 (Hinweis Ortskenntnis). Der Weg ist daher direkt an der St 2045 gemeint; die Zeichnung liegt vermutlich wegen der Autobahnauffahrt südlich davon."
+    }
+  },
+  "kurz|weikenhausen-gundelshausen": {
+    "geprueft": [
+      {
+        "at": [11.65243, 48.54039],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: die Hofzufahrt führt dicht am Stadel vorbei; Zuordnung stimmt."
+      }
+    ]
+  },
+  "kurz|dietersdorf-schweitenkirchen": {
+    "geprueft": [
+      {
+        "at": [11.614, 48.50211],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: am Feldrand entlang der Zeichnung ist kein Weg zu sehen; der vorhandene Weg führt am Hof Thomashecke vorbei."
+      }
+    ]
+  },
+  "kurz|geisenhausen-altkaslehen": {
+    "geprueft": [
+      {
+        "at": [11.58922, 48.5501],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: der Wirtschaftsweg verläuft im Bogen; die Zeichnung ist nur begradigt."
+      }
+    ]
+  },
+  "kurz|loipertshausen-suenzhausen": {
+    "geprueft": [
+      {
+        "at": [11.65572, 48.51916],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: Ecke an einer Einmündung im Ort; die Zeichnung biegt dort ebenfalls ab."
+      },
+      {
+        "at": [11.655059, 48.518352],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: Zuordnung folgt den Ortsstraßen wie die Zeichnung."
+      }
+    ]
+  },
+  "kurz|frickendorf-schmiedhausen": {
+    "geprueft": [
+      {
+        "at": [11.58865, 48.5171],
+        "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: Ecke an einer Einmündung; die Zeichnung biegt dort ebenfalls ab."
+      }
+    ]
   }
 }
