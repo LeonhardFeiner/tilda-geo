@@ -128,3 +128,77 @@ export function lineStatus(
   if (step) return dateUpperBound(step.date) < CONCEPT_DATE ? 'vor-konzept' : 'seit-konzept'
   return ausbau === 'voll' || ausbau === 'kein-weg' ? 'kein-schritt' : 'nur-freigabe'
 }
+
+/**
+ * What a line runs on today, from the OSM way it is matched onto (radwege/pipeline/assign.py),
+ * ordered from separated from motor traffic to the busiest road. Independent of the plans.
+ */
+export const WEG = [
+  {
+    id: 'radweg',
+    label: 'Eigener Geh- und Radweg',
+    hint: 'Getrennt vom Kfz-Verkehr.',
+    colour: '#0b7a4b',
+  },
+  {
+    id: 'feldweg',
+    label: 'Feld- oder Waldweg',
+    hint: 'Kaum Kfz-Verkehr, vor allem Landwirtschaft und Anlieger.',
+    colour: '#7a9a01',
+  },
+  {
+    id: 'ortsstrasse',
+    label: 'Gemeinde- oder Ortsstraße',
+    hint: 'Mischverkehr mit Autos auf Gemeindeverbindungs-, Orts- und Erschließungsstraßen.',
+    colour: '#1f5fae',
+  },
+  {
+    id: 'kreisstrasse',
+    label: 'Kreisstraße (PAF …)',
+    hint: 'Mischverkehr auf der Fahrbahn einer Kreisstraße, ohne eigenen Radweg.',
+    colour: '#e8590c',
+  },
+  {
+    id: 'staatsstrasse',
+    label: 'Staatsstraße (St …)',
+    hint: 'Mischverkehr auf der Fahrbahn einer Staats- oder Bundesstraße, ohne eigenen Radweg.',
+    colour: '#9c1c3c',
+  },
+  {
+    id: 'kein',
+    label: 'Kein Weg vorhanden',
+    hint: 'In OpenStreetMap liegt hier kein Weg; die Linie ist nur aus dem Lageplan übertragen.',
+    colour: '#8a8f98',
+  },
+] as const
+export type Weg = (typeof WEG)[number]['id']
+
+/** Surface of that OSM way; classified roads without a tag count as asphalt. */
+export const BELAG = [
+  { id: 'asphalt', label: 'Asphalt oder Pflaster', hint: 'Befestigt.', colour: '#1f5fae' },
+  {
+    id: 'schotter',
+    label: 'Schotter oder wassergebunden',
+    hint: 'Kies, Splitt, verdichteter Belag.',
+    colour: '#b07d00',
+  },
+  {
+    id: 'natur',
+    label: 'Naturboden oder Wiese',
+    hint: 'Erde, Gras, unbefestigt.',
+    colour: '#8e4a1c',
+  },
+  {
+    id: 'unbekannt',
+    label: 'Belag nicht erfasst',
+    hint: 'In OpenStreetMap ist für diesen Weg kein Belag eingetragen.',
+    colour: '#c3c7cc',
+  },
+  {
+    id: 'kein',
+    label: 'Kein Weg vorhanden',
+    hint: 'In OpenStreetMap liegt hier kein Weg; die Linie ist nur aus dem Lageplan übertragen.',
+    colour: '#8a8f98',
+  },
+] as const
+export type Belag = (typeof BELAG)[number]['id']

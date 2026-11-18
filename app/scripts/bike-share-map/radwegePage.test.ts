@@ -16,7 +16,7 @@ const dataFile = join(import.meta.dirname, 'output', 'viewer', `${RADWEGE_PAGE_S
 const html = () =>
   radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json`, viewerHref: './index.html' })
 
-type Line = { properties: { routeId: string; status: string; plan: string } }
+type Line = { properties: { routeId: string; status: string; plan: string; weg: string } }
 const shownLines = (p: ViewerPage) =>
   (
     p.window as unknown as { __map: { getSource: (id: string) => { data: { features: Line[] } } } }
@@ -61,6 +61,11 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     const m = (a: string) =>
       ampertshausen.filter((f) => f.properties.ausbau === a).reduce((s, f) => s + f.properties.m, 0)
     expect(m('kein-weg')).toBeGreaterThan(2000)
+    // matched onto the PAF 25 itself: today that is the carriageway of a Kreisstraße
+    const onPaf25 = ampertshausen
+      .filter((f) => f.properties.weg === 'kreisstrasse')
+      .reduce((s, f) => s + f.properties.m, 0)
+    expect(onPaf25).toBeGreaterThan(1500)
     expect(m('freigabe')).toBeGreaterThan(500)
     expect(ampertshausen.find((f) => f.properties.ausbau === 'kein-weg')!.properties.status).toBe(
       'kein-schritt',
@@ -182,6 +187,28 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     click(p, p.q('#dauer-close'))
     expect(p.q('#dauer').hidden).toBe(true)
     expect(p.window.location.search).not.toContain('ansicht=')
+    expect(p.errors).toEqual([])
+  })
+  test('colour by Wegart: the bar and the filter follow the OSM way class', async () => {
+    page = await bootPage(html(), [], '', ready)
+    const p = page
+    await p.waitFor(() => shownLines(p).length > 0, 'the lines on the map')
+    const weg = p.q<HTMLInputElement>('input[name=farbe][value=weg]')
+    weg.checked = true
+    weg.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(p.window.location.search).toContain('farbe=weg')
+    expect(p.q('#mode-note').hidden).toBe(false)
+    expect(p.qAll('#groups [data-group="kreisstrasse"]').length).toBe(1)
+    click(p, p.q('#groups [data-group="kreisstrasse"]'))
+    expect(p.window.location.search).toContain('nur=kreisstrasse')
+    expect(shownLines(p).length).toBeGreaterThan(0)
+    expect(shownLines(p).every((f) => f.properties.weg === 'kreisstrasse')).toBe(true)
+    // switching the mode drops the filter
+    const belag = p.q<HTMLInputElement>('input[name=farbe][value=belag]')
+    belag.checked = true
+    belag.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(p.window.location.search).not.toContain('nur=')
+    expect(p.qAll('#groups [data-group="unbekannt"]').length).toBe(1)
     expect(p.errors).toEqual([])
   })
 })

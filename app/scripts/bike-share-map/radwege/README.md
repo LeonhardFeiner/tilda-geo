@@ -29,11 +29,16 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    leftover piece to a route. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
-   Lines are snapped to OSM ways within 15 m; `fromPlan` is the share left in plan geometry
-   (drawn paler on the page). Plan 5/1 lines are split where they follow no OSM way, or only the
-   carriageway of a Staats-/Kreisstraße without a bike lane or parallel way (`ausbau: kein-weg`;
-   runs < 80 m join their neighbour): there is nothing to release, so the page counts them as
-   "Neubau nötig". Built routes are not split.
+   The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed
+   apart), so each line is map-matched onto OSM: a hidden Markov model over the ways within 90 m
+   of each 5 m sample (cost: squared distance, a way running across the line, switching ways and
+   sideways jumps; motorways excluded; stays < 25 m dropped). Each piece gets the matched way's
+   class `weg` (radweg, feldweg, ortsstrasse, kreisstrasse by PAF/FS ref or tertiary,
+   staatsstrasse by St/B ref or secondary+, kein) and surface `belag` (asphalt, schotter, natur,
+   unbekannt; classified roads count as asphalt); runs < 60 m join their neighbour. `fromPlan` is
+   the share with no way near (drawn paler). A plan 5/1 piece on no way or on a Staats-/
+   Kreisstraße gets `ausbau: kein-weg` (nothing to release; the page counts it as "Neubau
+   nötig"). Built routes keep `freigabe`. 2026-11-18: 3.3 of ~143 km left without a way.
 5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
    `landkreis.geojson`, a context layer on the page (the Landkreis plans them as Geh- und
    Radwege, Erläuterung 2.3.1).
@@ -49,8 +54,7 @@ plans). Look at them after any change to `routes.json` labels or `overrides.json
 `pipeline/verify.py` (last step of `run.sh`, report in `cache/verify.log`) checks the result
 against the strokes, independent of `assign.py`: ink share of each 5/2 line (solid ~1, dashed
 less), colour, final lines off the plan, plan strokes no line covers or only `ohne-beschriftung`
-covers, and length against the concept. 2026-11-18, checked by eye against both plans as well:
-off-plan 0.5 km (OSM snapping at three route ends); uncovered 5/2 strokes 0.14 km, 5/1 0.8 km
-(short pieces, e.g. the last two dashes of Dietersdorf – Schweitenkirchen west of the PAF 25);
-5/1 has ~5.5 km of Ergänzende connectors that carry no label in the plan either (left as
-`ohne-beschriftung`). 5/1 lengths differ from the concept table, which gives 5/2 lengths.
+covers, and length against the concept. 2026-11-18, also checked by eye against both plans:
+nothing farther than 65 m from the plan strokes after map matching; uncovered strokes 5/2
+0.06 km, 5/1 0.07 km; 5/1 has ~4 km of Ergänzende connectors that carry no label in the plan
+either (left as `ohne-beschriftung`). 5/1 lengths differ from the concept table, which gives 5/2 lengths.

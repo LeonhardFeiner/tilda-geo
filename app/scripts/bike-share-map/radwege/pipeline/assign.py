@@ -6,8 +6,10 @@ Each route label of a plan (text layer, coloured blue/cyan) names its stops; the
 cheapest path through that plan colour's line graph between them. overrides.json gives explicit
 stops (place name, [x, y] in PDF points from top-left, or "open" = open line end near the label)
 where names alone are ambiguous. Leftover plan lines >= 150 m become ohne-beschriftung-*;
-the red Bestand lines of plan 5/1 become route "bestand". Lines are snapped onto OSM ways
-within 15 m; fromPlan is the share that stays plan geometry.
+the red Bestand lines of plan 5/1 become route "bestand". The plans are schematic (lines drawn
+beside their road, parallel lines pushed apart), so every line is map-matched onto the OSM ways
+within 60 m (hidden Markov model, see match()); each piece gets the way's class (weg) and
+surface (belag), and fromPlan is the share left in plan geometry where no way is near.
 """
 import json, math, re, sys, html, heapq, collections
 import numpy as np
@@ -57,7 +59,7 @@ ways = []
 for w in OSM['ways']:
     hw = w['tags'].get('highway')
     if hw in ('proposed', 'construction', 'platform', 'steps', 'corridor', 'elevator', 'bus_stop', 'raceway'): continue
-    ways.append((w['id'], hw, w['tags'].get('name'), LineString([to_utm.transform(x, y) for x, y in w['coords']]), 'bikelane' in w['tags']))
+    ways.append((w['id'], hw, w['tags'].get('name'), LineString([to_utm.transform(x, y) for x, y in w['coords']]), w['tags']))
 wpts, wid = [], []
 for i, (_, _, _, ls, _) in enumerate(ways):
     n = max(2, int(ls.length / 3) + 1)
@@ -306,75 +308,165 @@ for f in out_feats:
     if p.get('unassigned'): continue
     final.append(dict(routeId=p['routeId'], plan=p['plan'], ausbau=p['ausbau'], utm=utm_line(f['geometry']['coordinates'])))
 
-SNAP = 15.0
-# Plan 5/1 means "release existing ways". Where its line follows no way, or only the carriageway of
-# a Staats- or Kreisstraße (no bike lane, no parallel track within SNAP), there is nothing to release.
-BIG_ROADS = {'primary', 'secondary', 'tertiary', 'primary_link', 'secondary_link', 'tertiary_link'}
-MIN_RUN = 80  # m; shorter runs of one class join their neighbour (junctions, villages)
+# ---------------------------------------------------------------- map matching onto OSM
+# The Lagepläne are schematic: a route is drawn beside the road it uses so both stay visible, and
+# parallel routes are pushed apart. So each line is matched onto the OSM ways near the drawn line
+# (match()); only where no way is within CORR does the plan geometry stay ("kein Weg").
+CORR = 90.0     # m; ways farther from the drawn line are not candidates
+STEP = 5.0      # m, sampling of the plan line
+MIN_RUN = 60    # m; shorter runs of one class join their neighbour (junctions, villages)
 
-def point_class(q, w):
-    if w < 0: return 'kein-weg'
-    if ways[w][4] or ways[w][1] not in BIG_ROADS: return 'freigabe'
-    d, i = wtree.query((q.x, q.y), k=12, distance_upper_bound=SNAP)
-    for dd, j in zip(np.atleast_1d(d), np.atleast_1d(i)):
-        if np.isfinite(dd):
-            o = ways[int(wid[j])]
-            if o[4] or o[1] not in BIG_ROADS: return 'freigabe'
-    return 'kein-weg'  # only the carriageway of a Staats- or Kreisstraße
+BIG = {'primary', 'secondary', 'tertiary', 'primary_link', 'secondary_link', 'tertiary_link', 'trunk', 'trunk_link'}
+TOWN = {'residential', 'unclassified', 'service_road', 'service_alley', 'service_driveway', 'service_uncategorized',
+        'service_emergency_access', 'living_street', 'bicycle_road', 'residential_priority_road', 'pedestrian'}
+PAVED = {'asphalt', 'concrete', 'paved', 'paving_stones', 'sett', 'concrete:plates', 'concrete:lanes', 'chipseal', 'metal'}
+LOOSE = {'gravel', 'fine_gravel', 'compacted', 'pebblestone'}
+NATURAL = {'ground', 'dirt', 'grass', 'earth', 'mud', 'sand', 'unpaved', 'grass_paver', 'wood', 'woodchips'}
 
-def snap(utm, classify=False):
-    ls = LineString(utm)
-    n = max(2, int(ls.length / 4) + 1)
-    pts = [ls.interpolate(ls.length * k / (n - 1)) for k in range(n)]
-    d, i = wtree.query([(q.x, q.y) for q in pts])
-    wi = [int(wid[j]) if dd < SNAP else -1 for dd, j in zip(d, i)]
-    # majority way in a window of 7 points, so parallel ways don't make it zigzag
-    sm = []
-    for k in range(n):
-        win = [w for w in wi[max(0, k - 3):k + 4] if w >= 0]
-        sm.append(collections.Counter(win).most_common(1)[0][0] if win and wi[k] >= 0 else -1)
-    out, hit = [], []
-    for q, w in zip(pts, sm):
-        if w >= 0:
-            wl = ways[w][3]; pr = wl.interpolate(wl.project(q))
-            if pr.distance(q) < SNAP * 1.5:
-                out.append((pr.x, pr.y)); hit.append(w); continue
-        out.append((q.x, q.y)); hit.append(-1)
-    cls = [point_class(q, w) if classify else None for q, w in zip(pts, hit)]
-    if classify:
-        step = ls.length / (n - 1)
-        while True:
-            runs = []
-            for k, c in enumerate(cls):
-                if runs and runs[-1][0] == c: runs[-1][2] = k + 1
-                else: runs.append([c, k, k + 1])
-            short = [r for r in runs if (r[2] - r[1]) * step < MIN_RUN]
-            if len(runs) == 1 or not short: break
-            r = min(short, key=lambda r: r[2] - r[1]); j = runs.index(r)
-            nb = runs[j - 1] if j > 0 else runs[j + 1]
-            for k in range(r[1], r[2]): cls[k] = nb[0]
+def way_class(wi):
+    """(weg, belag) of an OSM way; see radwegeStatus.ts WEG / BELAG."""
+    _, hw, _, _, t = ways[wi]
+    bl = t.get('bikelane')
+    ref = (t.get('ref') or '').strip()
+    if bl and not bl.startswith('cyclewayOnHighway') and not bl.startswith('bicycleRoad') and bl != 'crossing':
+        weg = 'radweg'
+    elif re.match(r'^(St|B) \d', ref) or hw in ('primary', 'secondary', 'primary_link', 'secondary_link', 'trunk', 'trunk_link'):
+        weg = 'staatsstrasse'
+    elif re.match(r'^[A-Z]{1,3} \d', ref) or hw in BIG:
+        weg = 'kreisstrasse'
+    elif hw in TOWN:
+        weg = 'ortsstrasse'
+    else:
+        weg = 'feldweg'
+    sf = t.get('surface')
+    if sf in PAVED: belag = 'asphalt'
+    elif sf in LOOSE: belag = 'schotter'
+    elif sf in NATURAL: belag = 'natur'
+    elif weg in ('staatsstrasse', 'kreisstrasse'): belag = 'asphalt'  # classified roads are paved
+    else: belag = 'unbekannt'
+    return weg, belag
+
+NO_BIKES = {i for i, w in enumerate(ways) if w[1] in ('motorway', 'motorway_link', 'trunk', 'trunk_link')}
+SIGMA = 25.0    # m; emission cost (d / SIGMA)^2
+ANGLE = 4.0     # extra emission cost of a way running across the drawn line
+NONE_COST = (70 / SIGMA) ** 2  # "no way" beats a way farther than ~70 m (with the angle term, less)
+
+def match(utm):
+    """Pieces [(weg, belag, coords, fromPlan, osm way ids)] of one plan line: a hidden Markov
+    model over the OSM ways near each sample point (Viterbi). Staying on a way is free, switching
+    costs a little plus the square of the jump between the two projections, so the match follows
+    connected ways and does not zigzag between parallel ones; "no way" wins beyond CORR."""
+    line = LineString(utm)
+    n = max(2, int(line.length / STEP) + 1)
+    pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
+    cands = []  # per point: list of (way index or -1, projected (x, y), emission cost)
+    for k, q in enumerate(pts):
+        a, b = pts[max(0, k - 2)], pts[min(n - 1, k + 2)]
+        dx, dy = b.x - a.x, b.y - a.y; dn = math.hypot(dx, dy) or 1.0
+        ws = {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), CORR)} - NO_BIKES
+        c = [(-1, (q.x, q.y), NONE_COST)]
+        for wi in ws:
+            ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t); d = pr.distance(q)
+            if d > CORR: continue
+            p0, p1 = ls.interpolate(max(0.0, t - 3)), ls.interpolate(min(ls.length, t + 3))
+            wx, wy = p1.x - p0.x, p1.y - p0.y; wn = math.hypot(wx, wy) or 1.0
+            sin2 = 1 - ((dx * wx + dy * wy) / (dn * wn)) ** 2  # 0 parallel, 1 across the line
+            em = (d / SIGMA) ** 2 + ANGLE * sin2
+            # a separate bike path beats the carriageway beside it
+            c.append((wi, (pr.x, pr.y), em * (0.8 if way_class(wi)[0] == 'radweg' else 1.0)))
+        cands.append(c)
+    cost = [e for _, _, e in cands[0]]; back = []
+    for k in range(1, n):
+        prev, cur = cands[k - 1], cands[k]
+        nc, nb = [], []
+        for wi, xy, em in cur:
+            best, arg = math.inf, 0
+            for j, (pw, pxy, _) in enumerate(prev):
+                if pw == wi: tr = 0.0
+                elif pw == -1 or wi == -1: tr = 8.0
+                else: tr = 3.0 + (max(0.0, math.dist(pxy, xy) - STEP) / 4) ** 2
+                v = cost[j] + tr
+                if v < best: best, arg = v, j
+            nc.append(best + em); nb.append(arg)
+        cost = nc; back.append(nb)
+    j = int(np.argmin(cost)); path = [j]
+    for k in range(n - 2, -1, -1):
+        j = back[k][j]; path.append(j)
+    path.reverse()
+    state = [cands[k][j][0] for k, j in enumerate(path)]
+    # stays shorter than MIN_STAY on one way (or off all ways) go to the way before them
+    MIN_STAY = 25
+    changed = True
+    while changed:
+        changed = False
+        runs, k = [], 0
+        while k < n:
+            j = k
+            while j < n and state[j] == state[k]: j += 1
+            runs.append((k, j)); k = j
+        for r, (k0, k1) in enumerate(runs):
+            if len(runs) > 1 and (k1 - k0) * line.length / (n - 1) < MIN_STAY:
+                nb = runs[r - 1] if r > 0 else runs[r + 1]
+                for k in range(k0, k1): state[k] = state[nb[0]]
+                changed = True; break
+    seq = []  # (x, y, weg, belag, way id or None)
+    for k, wi in enumerate(state):
+        q = pts[k]
+        if wi >= 0:
+            ls = ways[wi][3]; pr = ls.interpolate(ls.project(q))
+            xy = (pr.x, pr.y) if pr.distance(q) <= CORR * 1.5 else None
+            if xy is None: wi = -1
+        if wi < 0: xy = (q.x, q.y)
+        if wi < 0: seq.append((xy[0], xy[1], 'kein', 'kein', None))
+        else:
+            weg, belag = way_class(wi)
+            seq.append((xy[0], xy[1], weg, belag, ways[wi][0]))
+    # smooth classes along the line: runs shorter than MIN_RUN join their neighbour
+    cls = [(w, b) for _, _, w, b, _ in seq]
+    dist = [0.0]
+    for a, b in zip(seq, seq[1:]): dist.append(dist[-1] + math.hypot(b[0] - a[0], b[1] - a[1]))
+    while True:
+        runs = []
+        for k, c in enumerate(cls):
+            if runs and runs[-1][0] == c: runs[-1][2] = k + 1
+            else: runs.append([c, k, k + 1])
+        rl = lambda r: dist[min(r[2], len(dist) - 1)] - dist[r[1]]
+        short = [r for r in runs if rl(r) < MIN_RUN]
+        if len(runs) == 1 or not short: break
+        r = min(short, key=rl); j = runs.index(r)
+        nb = runs[j - 1] if j > 0 else runs[j + 1]
+        for k in range(r[1], r[2]): cls[k] = nb[0]
     pieces, k0 = [], 0
-    for k in range(1, n + 1):
-        if k == n or cls[k] != cls[k0]:
-            seg = slice(k0, min(k + 1, n))  # share the boundary point with the next piece
-            hs = hit[k0:k]; ids = collections.Counter(ways[w][0] for w in hs if w >= 0)
-            g = LineString(out[seg]) if len(out[seg]) > 1 else None
-            if g is not None and g.length > 0:
-                pieces.append((cls[k0], list(g.simplify(0.8).coords), 1 - sum(1 for w in hs if w >= 0) / len(hs), sorted(i for i, v in ids.items() if v >= 3)))
+    for k in range(1, len(seq) + 1):
+        if k == len(seq) or cls[k] != cls[k0]:
+            part = seq[k0:min(k + 1, len(seq))]
+            g = LineString([(x, y) for x, y, *_ in part]) if len(part) > 1 else None
+            if g is not None and g.length > 0.5:
+                plan_share = sum(1 for p in part if p[4] is None) / len(part)
+                ids = collections.Counter(p[4] for p in part if p[4] is not None)
+                pieces.append((cls[k0][0], cls[k0][1], list(g.simplify(0.5).coords), plan_share, sorted(i for i, v in ids.items() if v >= 2)))
             k0 = k
     return pieces
 
 geo = []
+built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
-    built = next((r.get('built') for r in ROUTES if r['id'] == f['routeId']), False)
-    split = f['plan'] == 'kurz' and f['ausbau'] == 'freigabe' and not built
-    for cls, coords, fromPlan, wids in snap(f['utm'], classify=split):
+    for weg, belag, coords, fromPlan, wids in match(f['utm']):
+        ausbau = f['ausbau']
+        # plan 5/1 means releasing an existing way: nothing to release without one, or on the
+        # carriageway of a Staats-/Kreisstraße
+        if ausbau == 'freigabe' and f['routeId'] not in built_ids and weg in ('kein', 'kreisstrasse', 'staatsstrasse'):
+            ausbau = 'kein-weg'
         ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
-        props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=cls if split else f['ausbau'], fromPlan=round(fromPlan, 2))
+        props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=ausbau, weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
         if wids: props['osmWays'] = wids
         geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
-km = collections.Counter()
-for g in geo: km[(g['properties']['plan'], g['properties']['ausbau'])] += LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).length / 1000
+km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter()
+for g in geo:
+    L = LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).length / 1000
+    p = g['properties']; km[(p['plan'], p['ausbau'])] += L; kw[p['weg']] += L; kb[p['belag']] += L
 print('km by plan/ausbau', {k: round(v, 1) for k, v in sorted(km.items())})
+print('km by weg', {k: round(v, 1) for k, v in kw.most_common()})
+print('km by belag', {k: round(v, 1) for k, v in kb.most_common()})
 print('lines', len(geo), 'mean fromPlan', round(sum(g['properties']['fromPlan'] for g in geo) / len(geo), 2))

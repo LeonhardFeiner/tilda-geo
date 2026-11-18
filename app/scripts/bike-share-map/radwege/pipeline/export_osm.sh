@@ -33,7 +33,8 @@ for w in d['ways']:
     t = w['tags'] or {}
     # georef.py matches against the classified roads (motorway … tertiary): TILDA's `road` tag.
     # Bike lanes carry their parent road's class there; `bikelane` (TILDA category) tells them apart.
-    tags = dict(highway=t.get('road') or t.get('category') or 'path', name=t.get('name'))
+    tags = dict(highway=t.get('road') or t.get('category') or 'path', name=t.get('name'),
+                surface=t.get('surface'), ref=t.get('name_ref'))
     if w['src'] == 'bikelanes': tags['bikelane'] = t.get('category') or 'unknown'
     ways.append(dict(id=w['id'], tags=tags, coords=w['coords']))
 places = [dict(lon=p[0], lat=p[1], place=p[2], name=p[3]) for p in json.load(open(places_file))['places']

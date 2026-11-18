@@ -7,7 +7,7 @@ Per route line (assigned.geojson, plan geometry before snapping onto OSM):
   ink    share of the line that lies on a stroke of its colour (solid ~1, dashed ~0.5-0.8);
          flags 'voll' below 0.85 and 'bestand-weg' above 0.9
   colour which plan colour the line mostly follows (blue = Haupt, cyan = Ergänzend, red = Bestand)
-Per final line (lines.geojson, after snapping): share farther than 20 m from any route stroke.
+Per final line (lines.geojson, after map matching): share farther than 65 m from any route stroke.
 Per plan: route strokes inside the Gemeinde (+300 m) that no final line covers ("missing") or
 that only the leftover lines ohne-beschriftung-* cover ("unlabelled").
 """
@@ -91,7 +91,7 @@ for f in assigned:
 for fl in flags: print('FLAG', *fl)
 print(f'{len(flags)} flagged route lines')
 
-print('\n== 2. Final lines (after snapping) away from any route stroke (> 20 m)')
+print('\n== 2. Final lines (after map matching) farther than 65 m from any route stroke')
 final = json.load(open(LINES))['features']
 off_total = 0
 for f in final:
@@ -99,7 +99,7 @@ for f in final:
     line = raw_line(f['geometry']['coordinates'])
     pts = samples(line, 4)
     d = np.min([dist_to(p['plan'], k, pts) for k in COLOURS], axis=0)
-    off = float(np.mean(d > 20 / math.hypot(A, B))) * m(line.length)
+    off = float(np.mean(d > 65 / math.hypot(A, B))) * m(line.length)
     off_total += off
     if off > 40: print('OFF', p['plan'], p['routeId'], p['ausbau'], f'{off:.0f} m of {m(line.length):.0f} m', f['geometry']['coordinates'][0])
 print(f'total off-plan {off_total / 1000:.2f} km')
@@ -119,7 +119,7 @@ for plan in ('kurz', 'lang'):
         pts = pts[[gem_raw.contains(q) for q in pts]]
         _, dl = tl.query_nearest(pts, return_distance=True, all_matches=False)
         dr = tr.query_nearest(pts, return_distance=True, all_matches=False)[1] if tr else np.full(len(pts), np.inf)
-        tol = 15
+        tol = 65 / math.hypot(A, B)  # the plans draw lines beside their road
         miss = (dl > tol) & (dr > tol)
         unl = (dl > tol) & (dr <= tol)
         step = m(4)

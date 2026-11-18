@@ -5,11 +5,15 @@ import { z } from 'zod'
 import {
   AUSBAU,
   announcedYear,
+  BELAG,
+  type Belag,
   EVENT_KINDS,
   firstStep,
   lineStatus,
   type RouteEvent,
   type StatusGroup,
+  WEG,
+  type Weg,
 } from './radwegeStatus'
 
 /**
@@ -67,6 +71,9 @@ const LineProps = z.strictObject({
   routeId: z.string(),
   plan: Plan,
   ausbau: z.enum(AUSBAU),
+  /** What the line runs on today (matched OSM way) and its surface; see WEG / BELAG. */
+  weg: z.enum(WEG.map((w) => w.id) as [Weg, ...Weg[]]),
+  belag: z.enum(BELAG.map((b) => b.id) as [Belag, ...Belag[]]),
   /** Share of the line not matched to an OSM way, i.e. drawn from the plan (0..1). */
   fromPlan: z.number().min(0).max(1),
   osmWays: z.array(z.number()).optional(),

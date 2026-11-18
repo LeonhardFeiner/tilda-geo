@@ -126,6 +126,9 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   in 5/2) are "Nur Schilder/Freigabe nötig", the rest "Neubau nötig" (solid in 5/2, and 5/1
   pieces that follow no way or only a Staats-/Kreisstraße). The Landkreis network of plan 5/2
   (`radwege/landkreis.geojson`) is a context layer that can be switched off.
+- "Einfärben nach" (`?farbe=weg|belag`, filter `?nur=`) colours bar, legend and lines by what
+  the route runs on today instead: OSM way class (`WEG`) or surface (`BELAG`), from the map
+  matching in `radwege/pipeline/assign.py`.
   Statements, citizen questions, announcements and events marked `uncertain` never count.
 
 `buildViewer.ts` writes the page and `radwege-schweitenkirchen.json`; tests:
