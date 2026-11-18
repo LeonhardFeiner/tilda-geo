@@ -52,7 +52,12 @@ done
   "$RADWEGE/gemeinde.geojson" > "$WORK/verify.log"
 grep -E '^(FLAG|OFF|total|kurz/|lang/)' "$WORK/verify.log" || true
 
-# 7. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
+# 7. rank the lines by signs of a wrong map matching (detours, distance from the drawing, zigzags)
+"$PY" -I "$HERE/review.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/planlage.geojson" \
+  ${CHECK:+"$CHECK/matching-review.png"} > "$WORK/review.log"
+head -8 "$WORK/review.log"
+
+# 8. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
   mkdir -p "$CHECK"
   "$PY" -I "$HERE/topx.py" "$WORK" "$WORK/assigned.geojson" "$WORK/assigned-px.json"
@@ -63,4 +68,5 @@ fi
 REPO="$(cd "$RADWEGE/../../../.." && pwd)"
 (cd "$REPO" && app/node_modules/.bin/oxfmt --write -c app/oxfmt.config.mjs \
   app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json \
-  app/scripts/bike-share-map/radwege/gemeinde.geojson app/scripts/bike-share-map/radwege/landkreis.geojson >/dev/null)
+  app/scripts/bike-share-map/radwege/gemeinde.geojson app/scripts/bike-share-map/radwege/landkreis.geojson \
+  app/scripts/bike-share-map/radwege/planlage.geojson >/dev/null)

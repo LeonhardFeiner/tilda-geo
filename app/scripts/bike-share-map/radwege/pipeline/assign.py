@@ -368,7 +368,7 @@ def match(utm, built=False):
         # an existing bike path does not run on the carriageway of a Staats-/Kreisstraße: where OSM
         # lacks the path beside the road, keep the plan geometry instead
         if built: ws = {w for w in ws if way_class(w)[0] not in ('kreisstrasse', 'staatsstrasse')}
-        c = [(-1, (q.x, q.y), NONE_COST)]
+        c = [(-1, (q.x, q.y), NONE_COST, 0.0)]
         for wi in ws:
             ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t); d = pr.distance(q)
             if d > CORR: continue
@@ -377,15 +377,15 @@ def match(utm, built=False):
             sin2 = 1 - ((dx * wx + dy * wy) / (dn * wn)) ** 2  # 0 parallel, 1 across the line
             em = (d / SIGMA) ** 2 + ANGLE * sin2
             # a separate bike path beats the carriageway beside it
-            c.append((wi, (pr.x, pr.y), em * (0.8 if way_class(wi)[0] == 'radweg' else 1.0)))
+            c.append((wi, (pr.x, pr.y), em * (0.8 if way_class(wi)[0] == 'radweg' else 1.0), sin2))
         cands.append(c)
-    cost = [e for _, _, e in cands[0]]; back = []
+    cost = [c[2] for c in cands[0]]; back = []
     for k in range(1, n):
         prev, cur = cands[k - 1], cands[k]
         nc, nb = [], []
-        for wi, xy, em in cur:
+        for wi, xy, em, _ in cur:
             best, arg = math.inf, 0
-            for j, (pw, pxy, _) in enumerate(prev):
+            for j, (pw, pxy, *_) in enumerate(prev):
                 if pw == wi: tr = 0.0
                 elif pw == -1 or wi == -1: tr = 8.0
                 else: tr = 3.0 + (max(0.0, math.dist(pxy, xy) - STEP) / 4) ** 2
@@ -398,8 +398,9 @@ def match(utm, built=False):
         j = back[k][j]; path.append(j)
     path.reverse()
     state = [cands[k][j][0] for k, j in enumerate(path)]
+    across = [cands[k][j][3] for k, j in enumerate(path)]
     # stays shorter than MIN_STAY on one way (or off all ways) go to the way before them
-    MIN_STAY = 25
+    MIN_STAY = 50
     changed = True
     while changed:
         changed = False
@@ -409,7 +410,9 @@ def match(utm, built=False):
             while j < n and state[j] == state[k]: j += 1
             runs.append((k, j)); k = j
         for r, (k0, k1) in enumerate(runs):
-            if len(runs) > 1 and (k1 - k0) * line.length / (n - 1) < MIN_STAY:
+            rl = (k1 - k0) * line.length / (n - 1)
+            # short stays, and short detours onto ways running across the drawn line (side streets)
+            if len(runs) > 1 and (rl < MIN_STAY or (rl < 150 and state[k0] >= 0 and sum(across[k0:k1]) / (k1 - k0) > 0.5)):
                 nb = runs[r - 1] if r > 0 else runs[r + 1]
                 for k in range(k0, k1): state[k] = state[nb[0]]
                 changed = True; break

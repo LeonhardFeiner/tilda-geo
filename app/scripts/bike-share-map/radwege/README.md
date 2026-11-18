@@ -61,7 +61,14 @@ scripts/bike-share-map/radwege/pipeline/run.sh \
 The second argument writes check images (assigned lines in colour, unassigned in black, over the
 plans). Look at them after any change to `routes.json` labels or `overrides.json`.
 
-`pipeline/verify.py` (last step of `run.sh`, report in `cache/verify.log`) checks the result
+`pipeline/review.py` ranks the matched lines by signs of a wrong match (detours against the
+drawing, distance from it, zigzags) and, with a check folder, draws the top 12
+(`matching-review.png`). It only says where to look; someone who knows the area decides. Known
+OSM gaps show up as plan geometry ("Kein Weg in OpenStreetMap"); the fix is to map the way in
+OSM and re-run the pipeline. Short detours onto ways running across the drawn line (< 150 m)
+and stays < 50 m on one way are dropped.
+
+`pipeline/verify.py` (step 6 of `run.sh`, report in `cache/verify.log`) checks the result
 against the strokes, independent of `assign.py`: ink share of each 5/2 line (solid ~1, dashed
 less), colour, final lines off the plan, plan strokes no line covers or only `ohne-beschriftung`
 covers, and length against the concept. 2026-11-18, also checked by eye against both plans:
