@@ -2,7 +2,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec'
 import { afterEach, describe, expect, test } from 'vitest'
-import { RADWEGE_PAGE_STEM } from './constants'
+import { PROJECT_LEAD, RADWEGE_PAGE_STEM } from './constants'
 import { loadRadwegeData } from './radwegeData'
 import { radwegePageHtml } from './radwegePage'
 import { bootPage, type ViewerPage } from './viewerHarness'
@@ -14,7 +14,8 @@ import { bootPage, type ViewerPage } from './viewerHarness'
  */
 
 const dataFile = join(import.meta.dirname, 'output', 'viewer', `${RADWEGE_PAGE_STEM}.json`)
-const html = () => radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json` })
+const html = () =>
+  radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json`, projectLead: PROJECT_LEAD })
 
 type Line = {
   properties: {
@@ -53,7 +54,7 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
       for (const e of r.events) expect(e.url).toMatch(/^https:\/\//)
     }
   })
-  test('the Waldroute is built, St 2045 started before the concept, PAF 6 too', () => {
+  test('the Waldroute is built; St 2045 and PAF 6 have steps since the concept', () => {
     const group = (id: string) =>
       new Set(
         data.lines.features
@@ -61,8 +62,13 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
           .map((f) => f.properties.status),
       )
     expect(group('pfaffenhofen-schweitenkirchen')).toEqual(new Set(['bestand']))
-    expect(group('st2045-preinersdorf-landkreisgrenze')).toEqual(new Set(['vor-konzept']))
-    expect(group('guentersdorf-noerting')).toEqual(new Set(['vor-konzept']))
+    expect(group('st2045-preinersdorf-landkreisgrenze')).toEqual(new Set(['seit-konzept']))
+    expect(group('guentersdorf-noerting')).toEqual(new Set(['seit-konzept']))
+    // a deferral in 2019 is no step; a listing in the Landkreis's KUS is an announcement
+    expect(group('preinersdorf-st2045')).toEqual(new Set(['nichts']))
+    expect(group('giegenhausen-schweitenkirchen')).toEqual(new Set(['nichts']))
+    expect(group('winden-niederthann')).toEqual(new Set(['nichts']))
+    expect(data.korrekturen!.length).toBeGreaterThan(0)
   })
   test('plan 5/1 along the PAF 25 has no way to release; the Landkreis network is there', () => {
     const ampertshausen = data.lines.features.filter(
@@ -156,9 +162,26 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     // progress only; what has to be built is a separate split under each group
     expect(p.qAll('#groups [data-group="nichts"]').length).toBe(1)
     expect(p.q('#groups [data-group="nichts"]').textContent).toMatch(
-      /davon Neubau [\d,]+ km · Freigabe/,
+      /davon Aus-\/Neubau [\d,]+\skm · Freigabe/,
     )
     expect(p.q('#groups [data-group="vor-konzept"]').textContent).toContain('davon')
+    expect(p.q('#groups [data-group="nichts"]').textContent).toMatch(/\d+ %/)
+    // the total, the plan and the scope are said above the bar; numbers stop at the boundary
+    expect(p.q('#headline').textContent).toMatch(
+      /^[\d,]+\skm .*Lageplan 5\/1.*innerhalb der Gemeinde/,
+    )
+    expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
+    // the interim Waldroute is said apart from the real paths
+    expect(p.q('#groups [data-group="bestand"]').textContent).toContain('Übergangslösung')
+    // who made the page, and where to report errors
+    expect(p.q('#about').textContent).toContain('BFS/SPD/Grüne')
+    expect(p.q('#korrekturen').hidden).toBe(false)
+    // every event since the concept on request
+    click(p, p.q('#recent-more'))
+    expect(p.window.location.search).toContain('seit=2024-06-07')
+    expect(p.qAll('#recent li').length).toBeGreaterThan(8)
+    click(p, p.q('#recent-more'))
+    expect(p.qAll('#recent li').length).toBe(8)
     expect(p.qAll('#bar button').length).toBeGreaterThanOrEqual(4)
     expect(p.qAll('#recent li').length).toBe(8)
     expect(p.q('#detail').hidden).toBe(true)
@@ -238,7 +261,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(new Set(shownLines(p).map((f) => f.properties.plan))).toEqual(new Set(['kurz', 'lang']))
     expect(p.q('#kombi-note').hidden).toBe(false)
     expect(p.window.location.search).toContain('plan=beide')
-    expect(p.q('#status').textContent).toMatch(/davon [\d,]+ km innerhalb der Gemeinde/)
+    expect(p.q('#status').textContent).toMatch(/[\d,]+\skm innerhalb der Gemeinde\.$/)
 
     // only the main routes: the switch at the top
     const haupt = p.q<HTMLInputElement>('input[name=netz][value=haupt]')
@@ -270,10 +293,12 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.window.location.search).toContain('pruefen=an')
     expect(Number(p.q('#pr-count').textContent)).toBeGreaterThan(0)
 
+    // also the parts outside the Gemeinde
     toggle(p, p.q<HTMLInputElement>('#innen-toggle'))
-    expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
-    expect(p.window.location.search).toContain('gemeinde=innen')
-    expect(p.q('#status').textContent).toMatch(/km innerhalb der Gemeinde\.$/)
+    expect(shownLines(p).some((f) => !f.properties.innen)).toBe(true)
+    expect(p.window.location.search).toContain('gemeinde=alle')
+    expect(p.q('#status').textContent).toMatch(/davon [\d,]+\skm innerhalb der Gemeinde/)
+    expect(p.q('#headline').textContent).toContain('außerhalb')
     expect(p.errors).toEqual([])
   })
 
@@ -293,8 +318,13 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     const detail = p.q('#detail')
     expect(detail.hidden).toBe(false)
     expect(detail.textContent).toContain('Güntersdorf – Nörting')
-    expect(detail.textContent).toContain('Begonnen vor dem Konzept')
-    expect(detail.querySelector('.summary')!.textContent).toContain('2029')
+    expect(detail.textContent).toContain('Schritte seit dem Konzept')
+    const summary = detail.querySelector('.summary')!.textContent!
+    expect(summary).toContain('2029')
+    expect(summary).toMatch(/Letzter dokumentierter Schritt: 22\.01\.2026 \(Grunderwerb\)/)
+    expect(summary).toContain('Grunderwerb: Gemeinde')
+    // keyboard focus moves into the details and back
+    expect(p.window.document.activeElement).toBe(detail.querySelector('h2'))
     // newest first, the rest folded away
     expect(p.qAll('#detail > .timeline li').length).toBe(3)
     expect(p.qAll('#detail details .timeline li').length).toBeGreaterThan(3)
@@ -303,10 +333,13 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     ).toBeGreaterThan(0)
     expect(p.window.location.search).toContain('trasse=guentersdorf-noerting')
 
+    p.q<HTMLButtonElement>('#detail-close').focus()
     click(p, p.q('#detail-close'))
     expect(p.q('#overview').hidden).toBe(false)
     expect(p.q('#detail').hidden).toBe(true)
     expect(p.window.location.search).not.toContain('trasse=')
+    // back to a control for that route in the overview, not to the top of the page
+    expect(p.q('#overview').contains(p.window.document.activeElement)).toBe(true)
 
     // on the map: a click selects the route under it, a second click on it closes it again
     const map = (
@@ -338,12 +371,21 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     await p.waitFor(() => !p.q('#detail').hidden, 'the detail view')
     expect(p.q<HTMLInputElement>('input[name=plan][value=lang]').checked).toBe(true)
     expect(shownLines(p).some((f) => f.properties.routeId === 'holzhausen-loipersdorf')).toBe(true)
-    expect(p.q('#detail').textContent).toContain('Neubau nötig')
+    expect(p.q('#detail').textContent).toContain('Aus- oder Neubau nötig')
     expect(p.q('#detail').textContent).toContain('Kein öffentlicher Vorgang gefunden')
 
     click(p, p.q('#detail-close'))
     click(p, p.q('#recent a[data-select]'))
     expect(p.q('#detail').hidden).toBe(false)
+    expect(p.errors).toEqual([])
+  })
+  test('?seit= lists every event since that date', async () => {
+    page = await bootPage(html(), [], '?seit=2025-01-01', ready)
+    const p = page
+    await p.waitFor(() => p.qAll('#recent li').length > 0, 'the event list')
+    expect(p.q('#recent-title').textContent).toMatch(/^Vorgänge seit dem 01\.01\.2025 \(\d+\)$/)
+    const dates = p.qAll('#recent .when').map((e) => e.textContent!.split('.').reverse().join('-'))
+    expect(dates.every((d) => d >= '2025')).toBe(true)
     expect(p.errors).toEqual([])
   })
   test('the duration view lists started routes oldest first and the ones without a step', async () => {
@@ -355,7 +397,12 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     // St 2045 has the oldest documented step (2015); the Waldroute opened within months
     expect(rows[0]!.dataset.select).toBe('st2045-preinersdorf-landkreisgrenze')
     const noerting = rows.find((r) => r.dataset.select === 'guentersdorf-noerting')!
-    expect(noerting.textContent).toMatch(/seit [\d,]+ Jahren · angekündigt 2029/)
+    expect(noerting.textContent).toMatch(
+      /seit [\d,]+ Jahren · letzter Schritt vor \d+ Monaten · angekündigt 2029/,
+    )
+    // a route whose last step lies years back: pale from then on
+    const st = rows.find((r) => r.dataset.select === 'st2045-preinersdorf-landkreisgrenze')!
+    expect(st.querySelector('.d-bar')).not.toBeNull()
     expect(noerting.querySelector('.d-plan')).not.toBeNull()
     const wald = rows.find((r) => r.dataset.select === 'pfaffenhofen-schweitenkirchen')!
     expect(wald.textContent).toMatch(/nach [\d,]+ (Monaten|Jahren?) eröffnet/)

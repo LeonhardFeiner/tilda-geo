@@ -109,8 +109,8 @@ Every route of the Schweitenkirchen Radwegekonzept (WipflerPLAN, 07.06.2024, Lag
 groups is summary, legend and filter at once; "Neueste Vorgänge" lists the latest events; network,
 Baulastträger and the route list sit under "Mehr Filter". A click on a line replaces the overview
 with the route: status, latest event, announced date, then the timeline and the sources.
-"Ansicht: Dauer" (`?ansicht=dauer`) shows, for the routes the filters let through, a bar from the
-first certain step to the opening or to `stand`, the KUS-announced year dashed after it
+"Ansicht: Dauer" (`?ansicht=dauer`) shows, for the routes the filters let through, a solid bar from the
+first to the last certain step (or the opening), pale from there to `stand`, the KUS-announced year dashed after it
 (`announcedYear`), and the routes without a step counted from the concept date.
 Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page and its data.
 
@@ -120,12 +120,24 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
 - `radwege/lines.geojson`: the route lines, extracted from the vector Lagepläne
   (`radwege/README.md`). Regenerate only when the plans or the route list change.
 - `radwege/gemeinde.geojson`: the Gemeinde boundary drawn as context (written by the extraction).
-- The group of a line is derived, never typed in (`radwegeStatus.ts`): built → "Vorhanden";
-  else the first certain step (Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau,
-  Eröffnung) before/since 07.06.2024; without one, lines on an existing way (plan 5/1, dashed
-  in 5/2) are "Nur Schilder/Freigabe nötig", the rest "Neubau nötig" (solid in 5/2, and 5/1
-  pieces that follow no way or only a Staats-/Kreisstraße). The Landkreis network of plan 5/2
+- The group of a line is derived, never typed in (`radwegeStatus.ts`): built → "Vorhanden"; else
+  the latest certain step (Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau, Eröffnung)
+  on/after 07.06.2024 → "Schritte seit dem Konzept", before it → "Nur Schritte vor dem Konzept"
+  (a partial date counts as "since" only if all of it lies after), none → "Kein Schritt
+  gefunden". The latest step, not the first, so a route with one Beschluss in 2019 and nothing
+  since does not look like it is moving. "Was zu tun ist" (`?farbe=bedarf`) is the separate
+  question of what the plan needs: lines on an existing way (plan 5/1, dashed in 5/2) "Freigabe
+  und Schilder genügen", the rest "Aus- oder Neubau nötig" (solid in 5/2, and 5/1 pieces that
+  follow no way or only a Staats-/Kreisstraße). The Landkreis network of plan 5/2
   (`radwege/landkreis.geojson`) is a context layer that can be switched off.
+- Numbers and map stop at the Gemeinde boundary by default (`?gemeinde=alle` shows the parts
+  outside). Above the bar: the total km, plan and scope; each group with km and %.
+- `baulast` is who builds and maintains; `grunderwerb` who buys the land, where a source says so
+  (often the Gemeinde for a Radweg along a Kreis- or Staatsstraße). The detail view shows both.
+- `korrekturen` in `routes.json`: dated corrections, listed under "Wer steht dahinter?" with the
+  author's disclosure and the contact for errors. Add one whenever a published entry changes.
+- "Neueste Vorgänge" shows the latest 8; `?seit=YYYY-MM-DD` (or the link under the list) every
+  event since that date.
 - "Einfärben nach" (`?farbe=weg|belag`, filter `?nur=`) colours bar, legend and lines by what
   the route runs on today instead: OSM way class (`WEG`) or surface (`BELAG`), from the map
   matching in `radwege/pipeline/assign.py`.

@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 import {
   announcedYear,
-  dateUpperBound,
   firstStep,
+  lastStep,
   lineBedarf,
   lineStatus,
   type RouteEvent,
@@ -17,15 +17,6 @@ const ev = (date: string, kind: RouteEvent['kind'], uncertain?: boolean): RouteE
   ...(uncertain ? { uncertain } : {}),
 })
 
-describe('dateUpperBound', () => {
-  test('partial dates stand for their last day', () => {
-    expect(dateUpperBound('2024')).toBe('2024-12-31')
-    expect(dateUpperBound('2024-02')).toBe('2024-02-29')
-    expect(dateUpperBound('2023-11')).toBe('2023-11-30')
-    expect(dateUpperBound('2024-06-07')).toBe('2024-06-07')
-  })
-})
-
 describe('firstStep', () => {
   test('ignores context events and uncertain steps, picks the earliest', () => {
     const events = [
@@ -37,6 +28,8 @@ describe('firstStep', () => {
     ]
     expect(firstStep(events)?.date).toBe('2021-07-27')
     expect(firstStep([ev('2020', 'Ankündigung')])).toBeNull()
+    expect(lastStep(events)?.date).toBe('2026-01-22')
+    expect(lastStep([ev('2026', 'Beschluss', true)])).toBeNull()
   })
 })
 
@@ -46,17 +39,26 @@ describe('lineStatus', () => {
     expect(lineStatus({ events: [] }, 'bestand')).toBe('bestand')
   })
 
-  test('the first certain step decides before/since the concept (07.06.2024)', () => {
+  test('the latest certain step decides since/before the concept (07.06.2024)', () => {
     expect(lineStatus({ events: [ev('2015', 'Programm')] }, 'voll')).toBe('vor-konzept')
     expect(lineStatus({ events: [ev('2024-06-06', 'Beschluss')] }, 'voll')).toBe('vor-konzept')
     expect(lineStatus({ events: [ev('2024-06-07', 'Beschluss')] }, 'voll')).toBe('seit-konzept')
-    expect(lineStatus({ events: [ev('2025-11-12', 'Programm')] }, 'freigabe')).toBe('seit-konzept')
+    // an old first step does not matter once a later one follows
+    expect(
+      lineStatus({ events: [ev('2019-02-12', 'Beschluss'), ev('2025-04', 'Haushalt')] }, 'voll'),
+    ).toBe('seit-konzept')
+    // a step long ago and nothing since: not shown as moving
+    expect(
+      lineStatus({ events: [ev('2019-02-12', 'Beschluss'), ev('2025-01', 'Aussage')] }, 'voll'),
+    ).toBe('vor-konzept')
   })
 
-  test('a partial date counts as "before" only if all of it lies before the concept', () => {
+  test('a partial date counts as "since" only if all of it lies on or after the concept', () => {
     expect(lineStatus({ events: [ev('2024-05', 'Grunderwerb')] }, 'voll')).toBe('vor-konzept')
-    expect(lineStatus({ events: [ev('2024-06', 'Grunderwerb')] }, 'voll')).toBe('seit-konzept')
-    expect(lineStatus({ events: [ev('2024', 'Grunderwerb')] }, 'voll')).toBe('seit-konzept')
+    expect(lineStatus({ events: [ev('2024-06', 'Grunderwerb')] }, 'voll')).toBe('vor-konzept')
+    expect(lineStatus({ events: [ev('2024', 'Grunderwerb')] }, 'voll')).toBe('vor-konzept')
+    expect(lineStatus({ events: [ev('2024-07', 'Grunderwerb')] }, 'voll')).toBe('seit-konzept')
+    expect(lineStatus({ events: [ev('2025', 'Grunderwerb')] }, 'voll')).toBe('seit-konzept')
   })
 
   test('without a step: nichts, whatever has to be built', () => {

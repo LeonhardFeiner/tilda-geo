@@ -8,6 +8,28 @@
     "lang": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Lageplan_Konzept_mittel-_bis_langfristig.pdf",
     "kus": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
   },
+  "korrekturen": [
+    {
+      "date": "2026-11-18",
+      "text": "Einteilung nach dem letzten statt dem ersten dokumentierten Schritt: Eine Trasse, bei der seit Jahren nichts mehr geschehen ist, erscheint nicht mehr als „begonnen“. Zahlen zunächst nur innerhalb der Gemeindegrenze."
+    },
+    {
+      "date": "2026-11-18",
+      "text": "Preinersdorf – St 2045: Gemeinderat 12.02.2019 als Aussage statt als Beschluss eingeordnet – festgestellt wurde, dass der Radweg derzeit nicht in Planung ist."
+    },
+    {
+      "date": "2026-11-18",
+      "text": "Preinerszell – Hirschhausen: Die Gemeinderatsvorgänge vom 18.02. und 10.03.2020 betreffen die Ortsdurchfahrt Schmiedhausen; als Aussage bzw. Ankündigung statt als Planung eingeordnet."
+    },
+    {
+      "date": "2026-11-18",
+      "text": "Maßnahmenliste des Landkreises (KUS-Steckbrief, 12.11.2025) als Ankündigung statt als Schritt eingeordnet; der Multifunktionsstreifen in Niederthann ist keiner Trasse sicher zuzuordnen."
+    },
+    {
+      "date": "2026-11-18",
+      "text": "St 2045 Pfaffenhofen – Schweitenkirchen: Datum des Landkreis-Steckbriefs auf den 12.11.2025 berichtigt (war Oktober 2026)."
+    }
+  ],
   "routes": [
     {
       "id": "bestand",
@@ -269,7 +291,7 @@
           "paywall": true
         },
         {
-          "date": "2026-10",
+          "date": "2025-11-12",
           "kind": "Ankündigung",
           "text": "KUS-Steckbrief der Gemeinde: Prüfung eines Neubaus eines gemeinsamen Geh- und Radwegs an der St 2045 Schweitenkirchen – Pfaffenhofen durch das Staatliche Bauamt Ingolstadt, „wird in 2026 geprüft“.",
           "source": "KUS-Steckbrief Schweitenkirchen",
@@ -288,7 +310,8 @@
       ],
       "lengthConceptKm": 3.3,
       "baulast": "Freistaat",
-      "baulastNote": "Staatliches Bauamt Ingolstadt; Grunderwerb durch die Gemeinde",
+      "grunderwerb": "Gemeinde",
+      "baulastNote": "Staatliches Bauamt Ingolstadt",
       "konzeptHinweis": "Voruntersuchung liegt vor; „Mit einer kurzfristigen Umsetzung ist nicht zu rechnen“",
       "kusHorizont": "Holzhäuseln – Sünzhausen – Abzw. Loipertshausen „ab 2028 ff.“ (Staatliches Bauamt); Preinersdorf – Holzhäuseln offen; Loipertshausen – Dellnhausen wartet auf Markt Au",
       "documented": "Seit 2015 im staatlichen Radwegeprogramm; Grunderwerb seit 2017; 12 von 23 Eigentümern (Feb. 2023); letzter Notarvertrag 22.01.2026; Vorentwurfsplanung ab Feb. 2026; Haushaltsstelle „Schweitenkirchen/Sünzhausen – Grunderwerb“ 2023–2026.",
@@ -455,7 +478,7 @@
         },
         {
           "date": "2025-11-12",
-          "kind": "Programm",
+          "kind": "Ankündigung",
           "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg St 2045 nördl. Holzhäuseln – Sünzhausen & Preinersdorf – Loipersdorf, „Ab 2028 ff.“, Staatliches Bauamt Ingolstadt.",
           "source": "KUS-Steckbrief Schweitenkirchen",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
@@ -520,7 +543,7 @@
         },
         {
           "date": "2019-02-12",
-          "kind": "Beschluss",
+          "kind": "Aussage",
           "text": "Gemeinderat, TOP 1710 (Behandlung der Bürgerversammlungen): Ein Radweg Preinersdorf–Loipersdorf ist derzeit nicht in Planung und nicht zeitnah umsetzbar; verwiesen wird auf die Planung des Staatlichen Bauamts Schweitenkirchen–Sünzhausen.",
           "source": "Rundschau 1/2019, S. 10 (Gemeinderat 12.02.2019, Protokoll Nr. 96, TOP 1710)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau01.19.pdf"
@@ -568,14 +591,14 @@
         },
         {
           "date": "2020-02-18",
-          "kind": "Planung",
+          "kind": "Aussage",
           "text": "Gemeinderat, TOP 2049 (Erneuerung Ortsdurchfahrt Schmiedhausen, Planungsentwürfe Landkreis/WipflerPLAN): GR Wildmoser regt an, den Geh- und Radweg bis zum Abzweig „Blasl“ zu verlängern; die Planung findet grundsätzliche Zustimmung, Baubeginn voraussichtlich Frühjahr 2021.",
           "source": "Gemeinderat 18.02.2020, Protokoll Nr. 115, TOP 2049",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/18.02.2020_Gemeinderatssitzung_Protokoll_Nr._115.pdf"
         },
         {
           "date": "2020-03-10",
-          "kind": "Planung",
+          "kind": "Ankündigung",
           "text": "Gemeinderat, TOP 2085, Antwort auf den Antrag Ostler: Beim Ausbau der PAF 25 in Schmiedhausen wird am Ortsende Richtung Preinerszell ein Gehweg mit Querungshilfe zur Anbindung an den Weg zum Weiler „Blasl“ errichtet, als Querung für einen künftigen Radweg nach Geisenhausen; der weitere Verlauf sei mit dem Landkreis abzustimmen.",
           "source": "Gemeinderat 10.03.2020, Protokoll Nr. 116, TOP 2085",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
@@ -720,7 +743,8 @@
       "planLabels": ["Oberthann - Güntersdorf"],
       "lengthConceptKm": 4.0,
       "baulast": "Landkreis",
-      "baulastNote": "Kreisstraßen; Grunderwerb durch die Gemeinde; Multifunktionsstreifen Niederthann laut KUS: Gemeinde",
+      "grunderwerb": "Gemeinde",
+      "baulastNote": "Kreisstraßen; Multifunktionsstreifen Niederthann laut KUS: Gemeinde",
       "konzeptHinweis": "Voruntersuchung liegt vor; kurze Unterbrechung in Niederthann",
       "kusHorizont": "Multifunktionsstreifen in Niederthann, Abzweig PAF 6 zur Verbindungsstraße nach Streitberg, 2027 (Gemeinde); sonst kein Termin",
       "documented": "Gemeinsames Projekt „Nörting – Oberthann“ mit Güntersdorf – Nörting; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“ (2023: 177.486,57 €, 2024: 5.055,95 €).",
@@ -785,7 +809,8 @@
         },
         {
           "date": "2025-11-12",
-          "kind": "Programm",
+          "kind": "Ankündigung",
+          "uncertain": true,
           "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
           "source": "KUS-Steckbrief Schweitenkirchen",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
@@ -804,7 +829,8 @@
       "events": [
         {
           "date": "2025-11-12",
-          "kind": "Programm",
+          "kind": "Ankündigung",
+          "uncertain": true,
           "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
           "source": "KUS-Steckbrief Schweitenkirchen",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
@@ -819,7 +845,8 @@
       "planLabels": ["Güntersdorf - Nörting"],
       "lengthConceptKm": 1.4,
       "baulast": "Landkreis",
-      "baulastNote": "Kreiseigener Tiefbau (KUS); Grunderwerb durch die Gemeinde",
+      "grunderwerb": "Gemeinde",
+      "baulastNote": "Kreiseigener Tiefbau (KUS)",
       "konzeptHinweis": "Vorentwurf liegt vor; Trasse in Aufham unterbrochen",
       "kusHorizont": "2029 (Kreiseigener Tiefbau)",
       "documented": "Ein Eigentümer fehlt (Jan. 2026); Landratsamt 21.04.2026: kein Bau mit fehlendem Teilstück; Bürgerfragen 2020–2026; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“.",
@@ -905,7 +932,7 @@
         },
         {
           "date": "2025-11-12",
-          "kind": "Programm",
+          "kind": "Ankündigung",
           "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg PAF 6 – Güntersdorf bis Nörting (Lkr. Freising), 2029, Kreiseigener Tiefbau.",
           "source": "KUS-Steckbrief Schweitenkirchen",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
@@ -1095,7 +1122,7 @@
         },
         {
           "date": "2025-11-12",
-          "kind": "Programm",
+          "kind": "Ankündigung",
           "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg und Querungshilfe St 2045 – Abzweigung Giegenhausen, „im Zusammenhang mit Umbau der AS Pfaffenhofen-West“, Staatliches Bauamt Ingolstadt.",
           "source": "KUS-Steckbrief Schweitenkirchen",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"

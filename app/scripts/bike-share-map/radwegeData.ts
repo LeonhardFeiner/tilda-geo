@@ -11,6 +11,7 @@ import {
   type Belag,
   EVENT_KINDS,
   firstStep,
+  lastStep,
   lineBedarf,
   lineStatus,
   type RouteEvent,
@@ -57,6 +58,11 @@ const RouteSchema = z.strictObject({
   /** Built, but only as an interim solution (shown as a badge and note). */
   uebergang: z.string().optional(),
   baulast: z.enum(['Gemeinde', 'Landkreis', 'Freistaat', 'unklar']),
+  /**
+   * Who buys the land, where a source says so. For a Radweg along a Kreis- or Staatsstraße this
+   * is often the Gemeinde, while Landkreis or Staatliches Bauamt plan and build.
+   */
+  grunderwerb: z.enum(['Gemeinde', 'Landkreis', 'Freistaat']).optional(),
   baulastNote: z.string().optional(),
   konzeptHinweis: z.string().optional(),
   kusHorizont: z.string().optional(),
@@ -77,6 +83,8 @@ export const RoutesFileSchema = z.strictObject({
   routes: z.array(RouteSchema),
   /** Events about the network as a whole (concept, budget), not tied to one route. */
   allgemein: z.array(EventSchema).optional(),
+  /** Corrections to the page, newest shown first; public, so readers see what changed. */
+  korrekturen: z.array(z.strictObject({ date: PartialDate, text: z.string().min(1) })).optional(),
   /** Since when each kind of source was searched; drawn under the duration view. */
   quellen: z
     .array(z.strictObject({ label: z.string(), from: PartialDate, note: z.string() }))
@@ -112,6 +120,7 @@ export const LinesFileSchema = z.object({
 
 export type RadwegeRoute = z.infer<typeof RouteSchema> & {
   firstStep: RouteEvent | null
+  lastStep: RouteEvent | null
   /** Share (0..1) of a short-term-only route along the Landkreis network of plan 5/2. */
   landkreisShare: number | null
   /** Completion year announced in the KUS (kusHorizont), if it names one after `stand`. */
@@ -321,6 +330,7 @@ export function buildRadwegeData(
       ...r,
       events: [...r.events].sort(byDate),
       firstStep: firstStep(r.events),
+      lastStep: lastStep(r.events),
       landkreisShare:
         landkreis && Object.keys(r.plans).join() === 'kurz' && !r.built
           ? shareNear(

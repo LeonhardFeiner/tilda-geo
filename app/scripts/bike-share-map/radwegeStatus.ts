@@ -46,7 +46,11 @@ export type RouteEvent = {
 export const AUSBAU = ['freigabe', 'bestand-weg', 'voll', 'bestand', 'kein-weg'] as const
 export type Ausbau = (typeof AUSBAU)[number]
 
-/** `hint`: one sentence for the legend and the detail view of the tracker page. */
+/**
+ * `hint`: one sentence for the legend and the detail view of the tracker page. In progress order;
+ * the group of an unbuilt route follows its latest certain step, so a route whose last step lies
+ * years back is not shown as moving.
+ */
 export const STATUS_GROUPS = [
   {
     id: 'bestand',
@@ -55,44 +59,38 @@ export const STATUS_GROUPS = [
     colour: '#1a7f37',
   },
   {
-    id: 'vor-konzept',
-    label: 'Begonnen vor dem Konzept',
-    hint: 'Erster dokumentierter Schritt (Beschluss, Grunderwerb, Planung, Programm, Haushalt) vor dem 07.06.2024.',
+    id: 'seit-konzept',
+    label: 'Schritte seit dem Konzept',
+    hint: 'Mindestens ein öffentlich dokumentierter Schritt (Beschluss, Grunderwerb, Planung, Programm, Haushaltsansatz, Bau) am oder nach dem 07.06.2024.',
     colour: '#1f5fae',
   },
   {
-    id: 'seit-konzept',
-    label: 'Begonnen seit dem Konzept',
-    hint: 'Erster dokumentierter Schritt am oder nach dem 07.06.2024.',
-    colour: '#8e44ad',
+    id: 'vor-konzept',
+    label: 'Nur Schritte vor dem Konzept',
+    hint: 'Dokumentiert sind Schritte nur aus der Zeit vor dem 07.06.2024, seitdem keiner mehr.',
+    colour: '#b7791f',
   },
   {
     id: 'nichts',
-    label: 'Nichts dokumentiert',
-    hint: 'Öffentlich ist zu dieser Trasse kein Schritt dokumentiert (kein Beschluss, Grunderwerb, keine Planung, kein Programm, Haushaltsansatz oder Bau).',
-    colour: '#c0392b',
+    label: 'Kein Schritt gefunden',
+    hint: 'In den ausgewerteten öffentlichen Quellen ist zu dieser Trasse kein Schritt dokumentiert (kein Beschluss, Grunderwerb, keine Planung, kein Programm, Haushaltsansatz oder Bau). Das heißt nicht, dass nichts geschehen ist.',
+    colour: '#7c8594',
   },
 ] as const
 export type StatusGroup = (typeof STATUS_GROUPS)[number]['id']
 
 const isStep = (e: RouteEvent) => !e.uncertain && (STEP_KINDS as readonly string[]).includes(e.kind)
 
-/** Last day a partial date can stand for: '2024' → '2024-12-31', '2024-02' → '2024-02-29'. */
-export function dateUpperBound(date: string) {
-  if (/^\d{4}$/.test(date)) return `${date}-12-31`
-  const m = /^(\d{4})-(\d{2})$/.exec(date)
-  if (m) {
-    const last = new Date(Date.UTC(Number(m[1]), Number(m[2]), 0)).getUTCDate()
-    return `${date}-${String(last).padStart(2, '0')}`
-  }
-  return date
-}
+const byDate = (a: RouteEvent, b: RouteEvent) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)
 
 /** The earliest certain step, or null. Partial dates sort by their first day. */
 export function firstStep(events: readonly RouteEvent[]) {
-  const steps = events.filter(isStep)
-  steps.sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
-  return steps[0] ?? null
+  return events.filter(isStep).sort(byDate)[0] ?? null
+}
+
+/** The latest certain step, or null. */
+export function lastStep(events: readonly RouteEvent[]) {
+  return events.filter(isStep).sort(byDate).at(-1) ?? null
 }
 
 /**
@@ -109,17 +107,18 @@ export function announcedYear(horizon: string | undefined, stand: string) {
 }
 
 /**
- * Progress group of one line. A built route is `bestand`; otherwise the first certain step decides
- * before/since the concept ("before" only if the whole period of a partial date lies before it);
- * without a step `nichts`. What has to be built there is a separate question: lineBedarf.
+ * Progress group of one line. A built route is `bestand`; otherwise the latest certain step decides
+ * since/before the concept ("since" only if the whole period of a partial date lies on or after
+ * it, so "2024" or "2024-06" count as before); without a step `nichts`. What has to be built there
+ * is a separate question: lineBedarf.
  */
 export function lineStatus(
   route: { built?: boolean; events: readonly RouteEvent[] },
   ausbau: Ausbau,
 ): StatusGroup {
   if (route.built || ausbau === 'bestand') return 'bestand'
-  const step = firstStep(route.events)
-  if (step) return dateUpperBound(step.date) < CONCEPT_DATE ? 'vor-konzept' : 'seit-konzept'
+  const step = lastStep(route.events)
+  if (step) return step.date >= CONCEPT_DATE ? 'seit-konzept' : 'vor-konzept'
   return 'nichts'
 }
 
@@ -139,8 +138,8 @@ export const BEDARF = [
   },
   {
     id: 'neubau',
-    label: 'Neubau nötig',
-    hint: 'Plan 5/2 sieht einen Neubau vor (durchgezogen), oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße – dort gibt es nichts freizugeben.',
+    label: 'Aus- oder Neubau nötig',
+    hint: 'Aus dem Plan abgeleitet: Plan 5/2 sieht einen Vollausbau vor (durchgezogen; oft auf einem vorhandenen Feldweg oder einer Ortsstraße), oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße – dort gibt es nichts freizugeben.',
     colour: '#c0392b',
   },
 ] as const
