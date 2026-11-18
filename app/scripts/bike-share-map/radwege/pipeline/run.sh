@@ -57,6 +57,12 @@ grep -E '^(FLAG|OFF|total|kurz/|lang/)' "$WORK/verify.log" || true
   ${CHECK:+"$CHECK/matching-review.png"} > "$WORK/review.log"
 head -8 "$WORK/review.log"
 
+# 7b. spots for a local check (through a building, beside a road but matched elsewhere, bend
+# where the drawing is straight, …) → pruefen.geojson, a layer of the page. Buildings come from
+# Overpass (cached; delete cache/buildings.json to refresh).
+[ -s "$WORK/buildings.json" ] || "$PY" -I "$HERE/buildings.py" "$WORK/buildings.json"
+"$PY" -I "$HERE/check.py" "$WORK" "$RADWEGE/lines.geojson" "$WORK/buildings.json" "$RADWEGE/pruefen.geojson"
+
 # 8. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
   mkdir -p "$CHECK"
@@ -69,4 +75,4 @@ REPO="$(cd "$RADWEGE/../../../.." && pwd)"
 (cd "$REPO" && app/node_modules/.bin/oxfmt --write -c app/oxfmt.config.mjs \
   app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json \
   app/scripts/bike-share-map/radwege/gemeinde.geojson app/scripts/bike-share-map/radwege/landkreis.geojson \
-  app/scripts/bike-share-map/radwege/planlage.geojson >/dev/null)
+  app/scripts/bike-share-map/radwege/planlage.geojson app/scripts/bike-share-map/radwege/pruefen.geojson >/dev/null)

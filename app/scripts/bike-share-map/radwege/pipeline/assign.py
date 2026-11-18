@@ -60,6 +60,9 @@ for w in OSM['ways']:
     hw = w['tags'].get('highway')
     if hw in ('proposed', 'construction', 'platform', 'steps', 'corridor', 'elevator', 'bus_stop', 'raceway'): continue
     ways.append((w['id'], hw, w['tags'].get('name'), LineString([to_utm.transform(x, y) for x, y in w['coords']]), w['tags']))
+IDX = {}
+for i, w in enumerate(ways): IDX.setdefault(w[0], i)
+WAY_INDEX_OF = lambda ids: [IDX[i] for i in ids if i in IDX]
 wpts, wid = [], []
 for i, (_, _, _, ls, _) in enumerate(ways):
     n = max(2, int(ls.length / 3) + 1)
@@ -504,6 +507,29 @@ for f in final:
                          geometry=dict(type='LineString', coordinates=[[round(v, 6) for v in to_wgs.transform(*c)] for c in g.coords])))
 json.dump(dict(type='FeatureCollection', features=plan_geo), open(sys.argv[5].replace('lines.geojson', 'planlage.geojson'), 'w'), separators=(',', ':'))
 
+def road_side(coords, drawing):
+    """Which side of the matched road the plan draws a new path on: ('links'|'rechts' along the
+    line, compass word) when the drawing keeps one side at 5-80 m over 70 % of the length, else
+    None. The plans draw a path beside its road on the side where it is to be built."""
+    g = LineString(coords)
+    if g.length < 60: return None
+    n = int(g.length // 10) + 1; votes = []; nx = ny = 0.0
+    for k in range(n):
+        s = min(g.length, k * 10)
+        p, a, b = g.interpolate(s), g.interpolate(max(0.0, s - 5)), g.interpolate(min(g.length, s + 5))
+        d = drawing.interpolate(drawing.project(p))
+        vx, vy = d.x - p.x, d.y - p.y; dist = math.hypot(vx, vy)
+        if not 5 <= dist <= 80: continue
+        cross = (b.x - a.x) * vy - (b.y - a.y) * vx
+        votes.append(1 if cross > 0 else -1); nx += vx / dist; ny += vy / dist
+    if len(votes) < 0.7 * n: return None
+    left = votes.count(1) / len(votes)
+    if 0.15 < left < 0.85: return None
+    ang = math.degrees(math.atan2(nx, ny)) % 360  # 0 = north
+    word = ['nördlich', 'östlich', 'südlich', 'westlich'][int(((ang + 45) % 360) // 90)]
+    return ('links' if left >= 0.85 else 'rechts', word)
+
+
 geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
@@ -517,6 +543,13 @@ for f in final:
         ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
         props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=ausbau, weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
         if wids: props['osmWays'] = wids
+        # a new path beside a road: keep the side the plan draws it on (not for redrawn lines)
+        if ausbau in ('voll', 'kein-weg') and weg in ('staatsstrasse', 'kreisstrasse', 'ortsstrasse') \
+                and 'utm_matched' not in f and not f.get('not_drawn'):
+            rs = road_side(coords, LineString(f['utm']))
+            if rs: props['seite'], props['richtung'] = rs
+            strasse = next((ways[wi][4].get('ref') or ways[wi][2] for wi in WAY_INDEX_OF(wids) if ways[wi][4].get('ref') or ways[wi][2]), None) if wids else None
+            if rs and strasse: props['strasse'] = strasse
         geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
 km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter()

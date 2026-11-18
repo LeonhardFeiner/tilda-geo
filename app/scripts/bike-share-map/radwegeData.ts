@@ -93,6 +93,10 @@ const LineProps = z.strictObject({
   /** Share of the line not matched to an OSM way, i.e. drawn from the plan (0..1). */
   fromPlan: z.number().min(0).max(1),
   osmWays: z.array(z.number()).optional(),
+  /** A new path beside a road: the side the plan draws it on, along the line and as a compass word. */
+  seite: z.enum(['links', 'rechts']).optional(),
+  richtung: z.enum(['nördlich', 'östlich', 'südlich', 'westlich']).optional(),
+  strasse: z.string().optional(),
 })
 const Position = z.tuple([z.number(), z.number()])
 export const LinesFileSchema = z.object({
@@ -143,6 +147,8 @@ export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   landkreis: z.infer<typeof LandkreisSchema> | null
   /** The route lines as drawn in the Lagepläne, georeferenced but not matched onto OSM. */
   planlage: z.infer<typeof PlanlageSchema> | null
+  /** Spots to check on site (radwege/pipeline/check.py). */
+  pruefen: z.infer<typeof PruefSchema> | null
 }
 
 const LandkreisSchema = z.object({
@@ -168,6 +174,23 @@ const PlanlageSchema = z.object({
   ),
 })
 
+/** Spots where the matching may be wrong (radwege/pipeline/check.py), for a local check. */
+const PruefSchema = z.object({
+  type: z.literal('FeatureCollection'),
+  features: z.array(
+    z.object({
+      type: z.literal('Feature'),
+      properties: z.object({
+        routeId: z.string(),
+        plan: Plan,
+        grund: z.enum(['gebaeude', 'strassenseite', 'kurve', 'abseits', 'mehrdeutig', 'zickzack']),
+        text: z.string(),
+      }),
+      geometry: z.object({ type: z.literal('Point'), coordinates: Position }),
+    }),
+  ),
+})
+
 const OutlineSchema = z.object({
   type: z.literal('Feature'),
   properties: z.object({ name: z.string() }).loose(),
@@ -187,6 +210,7 @@ export function buildRadwegeData(
   outlineFile: unknown = null,
   landkreisFile: unknown = null,
   planlageFile: unknown = null,
+  pruefFile: unknown = null,
 ): RadwegeData {
   const { routes, ...meta } = RoutesFileSchema.parse(routesFile)
   const lines = LinesFileSchema.parse(linesFile)
@@ -293,6 +317,7 @@ export function buildRadwegeData(
     outline,
     landkreis,
     planlage: planlageFile == null ? null : PlanlageSchema.parse(planlageFile),
+    pruefen: pruefFile == null ? null : PruefSchema.parse(pruefFile),
   }
 }
 
@@ -303,6 +328,7 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
     optionalJson(join(dir, 'gemeinde.geojson')),
     optionalJson(join(dir, 'landkreis.geojson')),
     optionalJson(join(dir, 'planlage.geojson')),
+    optionalJson(join(dir, 'pruefen.geojson')),
   )
 }
 

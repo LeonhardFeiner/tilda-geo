@@ -281,6 +281,11 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           <label><input type="radio" name="plan" value="lang"><span>Langfristig (5/2)</span></label>
           <label><input type="radio" name="plan" value="beide"><span>Beide</span></label>
         </fieldset>
+        <fieldset class="seg" id="f-netz">
+          <legend>Trassen</legend>
+          <label><input type="radio" name="netz" value="alle" checked><span>Haupt- und ergänzende</span></label>
+          <label><input type="radio" name="netz" value="haupt"><span>Nur Haupttrassen</span></label>
+        </fieldset>
         <fieldset class="seg" id="f-view">
           <legend>Ansicht</legend>
           <label><input type="radio" name="view" value="karte" checked><span>Karte</span></label>
@@ -301,6 +306,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         <p id="filter-note" hidden></p>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
         <label class="muted" id="innen-row"><input type="checkbox" id="innen-toggle" /><span>Nur innerhalb der Gemeindegrenze (Karte und alle Zahlen)</span></label>
+        <label class="muted" id="pr-row" hidden><input type="checkbox" id="pr-toggle" /><span>Prüfstellen: <i class="sw" style="background:#c026d3;border-radius:50%"></i> <span id="pr-count"></span> Stellen, an denen die Zuordnung zu OpenStreetMap unsicher ist (zum Prüfen vor Ort)</span></label>
         <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
         <label class="muted" id="lk-row"><input type="checkbox" id="lk-toggle" checked /><span>Radnetz des Landkreises: <i class="sw band" style="background:${LANDKREIS.vorrang.colour}"></i> Vorrangroute <i class="sw band" style="background:${LANDKREIS.basis.colour}"></i> Basisnetz</span></label>
         <p class="muted" id="line-legend" hidden></p>
@@ -308,12 +314,6 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         <ul id="recent"></ul>
         <details id="more">
           <summary>Mehr Filter und Trassenliste</summary>
-          <fieldset id="f-netz">
-            <legend>Netz</legend>
-            ${Object.entries(NETZ_LABEL)
-              .map(([k, v]) => checkbox('netz', k, v))
-              .join('\n            ')}
-          </fieldset>
           <fieldset id="f-baulast">
             <legend>Baulastträger</legend>
             ${BAULAST.map((b) => checkbox('baulast', b, b === 'unklar' ? 'nicht angegeben' : b)).join('\n            ')}
@@ -388,7 +388,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       plan: ['lang', 'beide'].includes(params.get('plan')) ? params.get('plan') : 'kurz',
       farbe: MODES[params.get('farbe')] ? params.get('farbe') : 'stand',
       only: null,
-      off: { netz: offList('ohne-netz'), baulast: offList('ohne-baulast') },
+      off: { baulast: offList('ohne-baulast') },
+      // vorhandene Wege und das Landkreisnetz bleiben immer sichtbar; wählbar ist nur, ob die ergänzenden Trassen dazukommen
+      nurHaupt: params.get('netz') === 'haupt' || offList('ohne-netz').has('ergaenzend'),
       hidden: offList('ohne'),
       selected: params.get('trasse') || null,
       search: '',
@@ -396,6 +398,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       landkreis: params.get('landkreis') !== 'aus',
       planlage: params.get('planlage') === 'an',
       innen: params.get('gemeinde') === 'innen',
+      pruefen: params.get('pruefen') === 'an',
     };
     const mode = () => MODES[state.farbe];
     {
@@ -405,7 +408,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     }
     /** Other routes under the last map click, offered in the detail view. */
     let others = [];
-    const URL_KEYS = { netz: 'ohne-netz', baulast: 'ohne-baulast' };
+    const URL_KEYS = { baulast: 'ohne-baulast' };
     function syncUrl() {
       const p = new URLSearchParams();
       if (state.plan !== 'kurz') p.set('plan', state.plan);
@@ -413,6 +416,8 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       if (!state.landkreis) p.set('landkreis', 'aus');
       if (state.planlage) p.set('planlage', 'an');
       if (state.innen) p.set('gemeinde', 'innen');
+      if (state.nurHaupt) p.set('netz', 'haupt');
+      if (state.pruefen) p.set('pruefen', 'an');
       if (state.farbe !== 'stand') p.set('farbe', state.farbe);
       if (state.only) p.set(mode().param, state.only.join(','));
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
@@ -459,7 +464,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     const inPlan = (p) => (state.plan === 'beide' ? p.kombi : p.plan === state.plan || p.status === 'bestand') && (!state.innen || p.innen);
     function passesOther(p) {
       const r = routeById.get(p.routeId);
-      return inPlan(p) && !state.off.netz.has(p.netz) && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
+      return inPlan(p) && !(state.nurHaupt && p.netz === 'ergaenzend') && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
     }
     const passes = (p) => passesOther(p) && (!state.only || state.only.includes(p[mode().key]));
     const visible = () => features.filter((f) => passes(f.properties));
@@ -505,6 +510,12 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       state.planlage = e.target.checked;
       render();
     });
+    $('pr-row').hidden = !data.pruefen;
+    $('pr-toggle').checked = state.pruefen;
+    $('pr-toggle').addEventListener('change', (e) => {
+      state.pruefen = e.target.checked;
+      render();
+    });
     $('innen-toggle').checked = state.innen;
     $('innen-toggle').addEventListener('change', (e) => {
       state.innen = e.target.checked;
@@ -526,7 +537,14 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         });
       }
     }
-    if (state.off.netz.size || state.off.baulast.size || state.hidden.size) $('more').open = true;
+    if (state.off.baulast.size || state.hidden.size) $('more').open = true;
+    for (const input of document.querySelectorAll('input[name=netz]')) {
+      input.checked = (input.value === 'haupt') === state.nurHaupt;
+      input.addEventListener('change', () => {
+        state.nurHaupt = input.value === 'haupt';
+        render();
+      });
+    }
     $('route-search').addEventListener('input', (e) => {
       state.search = e.target.value.trim().toLowerCase();
       renderList();
@@ -571,6 +589,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     const dashedExpr = () => state.farbe === 'stand' || state.farbe === 'bedarf' ? ['==', ['get', 'ausbau'], 'bestand-weg'] : ['==', ['get', 'weg'], 'kein'];
     const DASHED = dashedExpr();
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
+    // a new path beside a road sits on the side the plan draws it on (positive = right of the line direction)
+    const side = (px) => ['match', ['get', 'seite'], 'links', -px, 'rechts', px, 0];
+    const OFFSET = ['interpolate', ['linear'], ['zoom'], 11, side(2), 16, side(7)];
     const LINE_LAYERS = ['radwege-solid', 'radwege-dashed'];
     let mapReady = false;
     let hoverPopup = null;
@@ -605,15 +626,30 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         map.on('mouseleave', 'landkreis', () => hoverPopup && hoverPopup.remove());
       }
       map.addSource('radwege', { type: 'geojson', data: EMPTY, promoteId: 'fid' });
-      map.addLayer({ id: 'radwege-selected', type: 'line', source: 'radwege', filter: ['==', ['get', 'routeId'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffd400', 'line-width': width(10), 'line-opacity': 0.6 } });
-      map.addLayer({ id: 'radwege-casing', type: 'line', source: 'radwege', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': width(6), 'line-opacity': 0.9 } });
-      map.addLayer({ id: 'radwege-solid', type: 'line', source: 'radwege', filter: ['!', DASHED], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-color': COLOUR } });
-      map.addLayer({ id: 'radwege-dashed', type: 'line', source: 'radwege', filter: DASHED, layout: { 'line-join': 'round' }, paint: { 'line-width': width(3.5), 'line-dasharray': [2, 1.2], 'line-color': COLOUR } });
+      map.addLayer({ id: 'radwege-selected', type: 'line', source: 'radwege', filter: ['==', ['get', 'routeId'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-offset': OFFSET, 'line-color': '#ffd400', 'line-width': width(10), 'line-opacity': 0.6 } });
+      map.addLayer({ id: 'radwege-casing', type: 'line', source: 'radwege', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-offset': OFFSET, 'line-color': '#fff', 'line-width': width(6), 'line-opacity': 0.9 } });
+      map.addLayer({ id: 'radwege-solid', type: 'line', source: 'radwege', filter: ['!', DASHED], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-offset': OFFSET, 'line-width': width(3.5), 'line-color': COLOUR } });
+      map.addLayer({ id: 'radwege-dashed', type: 'line', source: 'radwege', filter: DASHED, layout: { 'line-join': 'round' }, paint: { 'line-offset': OFFSET, 'line-width': width(3.5), 'line-dasharray': [2, 1.2], 'line-color': COLOUR } });
       if (data.planlage) {
         map.addSource('planlage', { type: 'geojson', data: data.planlage });
         const plColour = ['match', ['get', 'netz'], 'haupt', '#1d4ed8', 'ergaenzend', '#0891b2', '#dc2626'];
         map.addLayer({ id: 'planlage', type: 'line', source: 'planlage', filter: ['!', ['get', 'dashed']], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6) } });
         map.addLayer({ id: 'planlage-dashed', type: 'line', source: 'planlage', filter: ['get', 'dashed'], layout: { 'line-join': 'round', visibility: 'none' }, paint: { 'line-color': plColour, 'line-width': width(1.6), 'line-dasharray': [3, 2] } });
+      }
+      if (data.pruefen) {
+        map.addSource('pruefen', { type: 'geojson', data: data.pruefen });
+        map.addLayer({ id: 'pruefen', type: 'circle', source: 'pruefen', layout: { visibility: 'none' }, paint: { 'circle-radius': ['interpolate', ['linear'], ['zoom'], 11, 4, 16, 8], 'circle-color': '#c026d3', 'circle-stroke-color': '#fff', 'circle-stroke-width': 1.5 } });
+        map.on('mousemove', 'pruefen', (e) => {
+          const p = e.features && e.features[0] && e.features[0].properties;
+          if (!p) return;
+          map.getCanvas().style.cursor = 'pointer';
+          if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>Prüfen: ' + escHtml(routeById.get(p.routeId).name) + '</strong><br>' + escHtml(p.text)).addTo(map);
+        });
+        map.on('mouseleave', 'pruefen', () => {
+          map.getCanvas().style.cursor = '';
+          if (hoverPopup) hoverPopup.remove();
+        });
       }
       for (const id of LINE_LAYERS) {
         map.setPaintProperty(id, 'line-opacity', ['case', ['>', ['get', 'fromPlan'], 0.5], 0.6, 1]);
@@ -623,7 +659,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           if (!p) return;
           const r = routeById.get(p.routeId);
           if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
         });
         map.on('mouseleave', id, () => {
           map.getCanvas().style.cursor = '';
@@ -632,7 +668,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       }
       map.on('click', (e) => {
         const box = [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]];
-        const hits = map.queryRenderedFeatures(box, { layers: LINE_LAYERS });
+        const hits = map.queryRenderedFeatures(box, { layers: map.getLayer('pruefen') && state.pruefen ? ['pruefen', ...LINE_LAYERS] : LINE_LAYERS });
         const ids = [...new Set(hits.map((h) => h.properties.routeId))];
         if (ids.length) select(ids[0], false, ids.slice(1));
       });
@@ -658,7 +694,15 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           const inPlanExpr = state.plan === 'beide' ? true : ['any', ['==', ['get', 'plan'], state.plan], ['==', ['get', 'netz'], 'bestand']];
           map.setFilter(id, ['all', inPlanExpr, id === 'planlage' ? ['!', ['get', 'dashed']] : ['get', 'dashed']]);
         }
+        if (map.getLayer('pruefen')) {
+          map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
+          map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
+        }
         if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', state.landkreis ? 'visible' : 'none');
+      }
+      if (data.pruefen) {
+        const ids = new Set(vis.map((f) => f.properties.routeId));
+        $('pr-count').textContent = String(data.pruefen.features.filter((f) => ids.has(f.properties.routeId) && (state.plan === 'beide' || f.properties.plan === state.plan)).length);
       }
       $('mode-note').hidden = state.farbe === 'stand' || state.farbe === 'bedarf';
       const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
@@ -974,10 +1018,18 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         const parts = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([c, m]) => escHtml(MODES[k].byId[c].label) + ': ' + km(m));
         if (parts.length) h += '<dt>' + title + '</dt><dd>' + parts.join('<br>') + '</dd>';
       }
+      {
+        const by = {};
+        for (const f of fs) if (f.properties.richtung) { const k = f.properties.richtung + ' der ' + (f.properties.strasse || 'Straße'); by[k] = (by[k] || 0) + f.properties.m; }
+        const parts = Object.entries(by).sort((a, b) => b[1] - a[1]).map(([k, m]) => escHtml(k) + ': ' + km(m));
+        if (parts.length) h += '<dt>Straßenseite</dt><dd>' + parts.join('<br>') + '<br><span class="muted">Wo der Plan einen neuen Weg neben einer Straße zeichnet, gibt die Seite der Zeichnung an, auf welcher Straßenseite er gebaut werden soll; die Karte zeigt die Linie dort versetzt.</span></dd>';
+      }
       h += '<dt>Baulast</dt><dd>' + escHtml(r.baulast === 'unklar' ? 'nicht angegeben' : r.baulast) + (r.baulastNote ? '<br><span class="muted">' + escHtml(r.baulastNote) + '</span>' : '') + '</dd>';
       if (r.konzeptHinweis) h += '<dt>Konzept</dt><dd>' + escHtml(r.konzeptHinweis) + '</dd>';
       h += '</dl>';
       if (r.documented) h += '<p class="note">' + escHtml(r.documented) + '</p>';
+      const checks = (data.pruefen ? data.pruefen.features : []).filter((f) => f.properties.routeId === r.id && (state.plan === 'beide' || f.properties.plan === state.plan));
+      if (checks.length) h += '<p class="note"><strong>Zuordnung prüfen (' + checks.length + '):</strong> ' + checks.map((f) => escHtml(f.properties.text)).join('<br>') + ' <button class="linkbtn" type="button" id="show-checks">Auf der Karte zeigen</button></p>';
       const fromPlanM = fs.reduce((s, f) => s + f.properties.m * f.properties.fromPlan, 0);
       const totalM = fs.reduce((s, f) => s + f.properties.m, 0);
       if (fromPlanM > 0.05 * totalM) h += '<p class="muted">' + km(fromPlanM) + ' der Linie folgen keinem Weg in OpenStreetMap und sind nur aus dem Lageplan übertragen (Lage ungefähr).</p>';
@@ -988,6 +1040,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       h += '<p>Konzept: ' + links.join(' · ') + '</p>';
       box.innerHTML = h;
       $('detail-close').addEventListener('click', closeDetail);
+      if ($('show-checks')) $('show-checks').addEventListener('click', () => { state.pruefen = true; $('pr-toggle').checked = true; render(); });
     }
 
     function downloadCsv() {

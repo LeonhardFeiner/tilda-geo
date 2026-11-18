@@ -97,6 +97,19 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     // the interim Waldroute does not hide it in the combined view
     expect(st.every((f) => f.properties.kombi)).toBe(true)
   })
+  test('spots to check and the side of the road come with the data', () => {
+    const grund = new Set(data.pruefen!.features.map((f) => f.properties.grund))
+    expect(grund.has('gebaeude')).toBe(true)
+    expect(grund.has('kurve')).toBe(true)
+    const ids = new Set(data.routes.map((r) => r.id))
+    expect(data.pruefen!.features.every((f) => ids.has(f.properties.routeId))).toBe(true)
+    // the new path along the St 2045 to Sünzhausen is drawn on one side of the road
+    const st = data.lines.features.filter(
+      (f) => f.properties.routeId === 'st2045-preinersdorf-landkreisgrenze' && f.properties.seite,
+    )
+    expect(st.length).toBeGreaterThan(0)
+    expect(st.every((f) => f.properties.strasse === 'St 2045')).toBe(true)
+  })
   test('combined view takes each stretch once; lines are cut at the Gemeinde boundary', () => {
     const f = data.lines.features
     const km = (fs: typeof f) => fs.reduce((s, x) => s + x.properties.m, 0) / 1000
@@ -182,6 +195,19 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.q('#kombi-note').hidden).toBe(false)
     expect(p.window.location.search).toContain('plan=beide')
     expect(p.q('#status').textContent).toMatch(/davon [\d,]+ km innerhalb der Gemeinde/)
+
+    // only the main routes: the switch at the top
+    const haupt = p.q<HTMLInputElement>('input[name=netz][value=haupt]')
+    haupt.checked = true
+    haupt.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(p.window.location.search).toContain('netz=haupt')
+    const nets = new Set(shownLines(p).map((f) => (f.properties as { netz?: string }).netz))
+    expect(nets.has('ergaenzend')).toBe(false)
+    expect(nets.has('haupt')).toBe(true)
+    // the spots to check can be switched on
+    toggle(p, p.q<HTMLInputElement>('#pr-toggle'))
+    expect(p.window.location.search).toContain('pruefen=an')
+    expect(Number(p.q('#pr-count').textContent)).toBeGreaterThan(0)
 
     toggle(p, p.q<HTMLInputElement>('#innen-toggle'))
     expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)

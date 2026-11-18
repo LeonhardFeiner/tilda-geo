@@ -81,3 +81,13 @@ covers, and length against the concept. 2026-11-18, also checked by eye against 
 nothing farther than 65 m from the plan strokes after map matching; uncovered strokes 5/2
 0.06 km, 5/1 0.07 km; 5/1 has ~4 km of Ergänzende connectors that carry no label in the plan
 either (left as `ohne-beschriftung`). 5/1 lengths differ from the concept table, which gives 5/2 lengths.
+
+## Prüfstellen and road side
+
+`pipeline/check.py` writes `pruefen.geojson`: one point per route and spot where the matching may
+be wrong — the line runs through a building (`pipeline/buildings.py`, Overpass, cached), the plan
+draws the route at a steady offset beside a road but the match takes another way, the match bends
+or turns a corner where the drawing is straight, runs > 45 m from the drawing, two parallel ways
+are equally close, or the match runs out and back. Fix a confirmed one with an override.
+`assign.py` sets `seite`/`richtung`/`strasse` on new paths (5/2 solid, 5/1 without a way) along
+a road: the plans draw such a path on the side of the road where it is to be built.
