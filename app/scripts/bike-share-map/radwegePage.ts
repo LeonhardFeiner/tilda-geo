@@ -698,7 +698,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         const box = [[e.point.x - 6, e.point.y - 6], [e.point.x + 6, e.point.y + 6]];
         const hits = map.queryRenderedFeatures(box, { layers: map.getLayer('pruefen') && state.pruefen ? ['pruefen', ...LINE_LAYERS] : LINE_LAYERS });
         const ids = [...new Set(hits.map((h) => h.properties.routeId))];
-        if (ids.length) select(ids[0], false, ids.slice(1));
+        // a click on the selected route again closes it
+        if (state.selected && ids.includes(state.selected)) closeDetail();
+        else if (ids.length) select(ids[0], false, ids.slice(1));
       });
       mapReady = true;
       render();

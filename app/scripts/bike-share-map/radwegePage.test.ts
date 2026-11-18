@@ -263,6 +263,28 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.q('#overview').hidden).toBe(false)
     expect(p.q('#detail').hidden).toBe(true)
     expect(p.window.location.search).not.toContain('trasse=')
+
+    // on the map: a click selects the route under it, a second click on it closes it again
+    const map = (
+      p.window as unknown as {
+        __map: Record<string, unknown> & { fire: (t: string, e?: object) => void }
+      }
+    ).__map
+    const under = (id: string) => {
+      map.queryRenderedFeatures = () => [{ properties: { routeId: id } }]
+    }
+    const clickMap = () => map.fire('click', { point: { x: 100, y: 100 } })
+    under('guentersdorf-noerting')
+    clickMap()
+    expect(p.q('#detail').hidden).toBe(false)
+    clickMap()
+    expect(p.q('#detail').hidden).toBe(true)
+    expect(p.window.location.search).not.toContain('trasse=')
+    // another route under the click switches to it
+    clickMap()
+    under('oberthann-guentersdorf')
+    clickMap()
+    expect(p.window.location.search).toContain('trasse=oberthann-guentersdorf')
     expect(p.errors).toEqual([])
   })
 
