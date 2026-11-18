@@ -20,7 +20,9 @@ const NETZ_LABEL = {
 } as const
 const BAULAST = ['Gemeinde', 'Landkreis', 'Freistaat', 'unklar'] as const
 const AUSBAU_LABEL = {
-  freigabe: 'Lageplan 5/1 (laut Konzept überwiegend Freigabe und Beschilderung vorhandener Wege)',
+  freigabe: 'Vorhandener Weg, laut Lageplan 5/1 freigeben und beschildern',
+  'kein-weg':
+    'Lageplan 5/1, aber kein Weg zum Freigeben: die Linie folgt keinem vorhandenen Weg oder nur der Fahrbahn einer Kreis- oder Staatsstraße',
   'bestand-weg': 'Bestehender asphaltierter Weg, nur Freigabe (gestrichelt in Lageplan 5/2)',
   voll: 'Neubau (Vollausbau, durchgezogen in Lageplan 5/2)',
   bestand: 'Bestehender asphaltierter Geh- und Radweg (Lageplan 5/1)',
@@ -28,6 +30,10 @@ const AUSBAU_LABEL = {
 /** Events shown before "Ältere Vorgänge" in the detail view; entries in "Neueste Vorgänge". */
 const TIMELINE_OPEN = 3
 const RECENT_COUNT = 8
+const LANDKREIS = {
+  vorrang: { label: 'Radvorrangroute des Landkreises', colour: '#0e7490', width: 10 },
+  basis: { label: 'Basisradnetz des Landkreises', colour: '#64748b', width: 7 },
+} as const
 
 /**
  * Unlisted page (github.io only): every route of the Schweitenkirchen Radwegekonzept on a map,
@@ -120,6 +126,8 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     label { display: flex; gap: 6px; align-items: center; padding: 2px 0; cursor: pointer; }
     label .km { margin-left: auto; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
     .sw { display: inline-block; width: 14px; height: 4px; border-radius: 2px; flex: none; }
+    .sw.band { height: 8px; opacity: 0.45; }
+    #lk-row { font-size: 12px; }
     .sw.dash { background: none !important; height: 0; border-top: 3px dashed; }
     input[type='search'] {
       width: 100%;
@@ -267,7 +275,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     <div class="body">
       <div id="overview">
         <p class="muted"><a href="${viewerHref}">&larr; Zur Karte</a></p>
-        <p class="intro">Das Radwegekonzept der Gemeinde vom ${conceptDe} hat zwei Pläne: kurzfristig vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig ausbauen. Die Karte zeigt für jede Trasse, was seitdem öffentlich dokumentiert ist. Eine Linie anklicken für Details und Quellen.</p>
+        <p class="intro">Das Radwegekonzept der Gemeinde vom ${conceptDe} hat zwei Pläne: kurzfristig vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig ausbauen. Wo die kurzfristige Linie keinem vorhandenen Weg folgt oder nur an einer Kreis- oder Staatsstraße liegt, gibt es nichts freizugeben; diese Abschnitte zählen als „Neubau nötig“. Die Karte zeigt für jede Trasse, was seitdem öffentlich dokumentiert ist. Eine Linie anklicken für Details und Quellen.</p>
         <fieldset class="seg" id="f-plan">
           <legend>Plan</legend>
           <label><input type="radio" name="plan" value="kurz" checked><span>Kurzfristig (5/1)</span></label>
@@ -282,6 +290,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         <ul id="groups"></ul>
         <p id="filter-note" hidden></p>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
+        <label class="muted" id="lk-row"><input type="checkbox" id="lk-toggle" checked /><span>Radnetz des Landkreises: <i class="sw band" style="background:${LANDKREIS.vorrang.colour}"></i> Vorrangroute <i class="sw band" style="background:${LANDKREIS.basis.colour}"></i> Basisnetz</span></label>
         <p class="muted" id="line-legend" hidden><i class="sw" style="background:var(--fg)"></i> durchgezogen: Neubau oder vorhanden · <i class="sw dash" style="border-color:var(--fg)"></i> gestrichelt: vorhandener Weg, nur Freigabe</p>
         <h2>Neueste Vorgänge</h2>
         <ul id="recent"></ul>
@@ -327,6 +336,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const TIMELINE_OPEN = ${TIMELINE_OPEN};
     const RECENT_COUNT = ${RECENT_COUNT};
     const CONCEPT_DATE = ${JSON.stringify(CONCEPT_DATE)};
+    const LANDKREIS = ${JSON.stringify(LANDKREIS)};
     const GROUP_BY_ID = Object.fromEntries(GROUPS.map((g) => [g.id, g]));
     const ORDER = GROUPS.map((g) => g.id);
     const $ = (id) => document.getElementById(id);
@@ -360,6 +370,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       selected: params.get('trasse') || null,
       search: '',
       view: params.get('ansicht') === 'dauer' ? 'dauer' : 'karte',
+      landkreis: params.get('landkreis') !== 'aus',
     };
     /** Other routes under the last map click, offered in the detail view. */
     let others = [];
@@ -368,6 +379,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       const p = new URLSearchParams();
       if (state.plan !== 'kurz') p.set('plan', state.plan);
       if (state.view !== 'karte') p.set('ansicht', state.view);
+      if (!state.landkreis) p.set('landkreis', 'aus');
       if (state.only) p.set('stand', state.only);
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
       if (state.hidden.size) p.set('ohne', [...state.hidden].join(','));
@@ -444,6 +456,11 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       input.addEventListener('change', () => setView(input.value));
     }
     $('dauer-close').addEventListener('click', () => setView('karte'));
+    $('lk-toggle').checked = state.landkreis;
+    $('lk-toggle').addEventListener('change', (e) => {
+      state.landkreis = e.target.checked;
+      render();
+    });
     if (state.view === 'dauer' && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('panel').open = false;
     for (const [k] of Object.entries(URL_KEYS)) {
       for (const input of document.querySelectorAll('input[name=' + k + ']')) {
@@ -504,6 +521,23 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         map.addSource('gemeinde', { type: 'geojson', data: data.outline });
         map.addLayer({ id: 'gemeinde', type: 'line', source: 'gemeinde', paint: { 'line-color': '#5a6068', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.8 } });
       }
+      if (data.landkreis) {
+        map.addSource('landkreis', { type: 'geojson', data: data.landkreis });
+        map.addLayer({ id: 'landkreis', type: 'line', source: 'landkreis', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
+          'line-color': ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.colour, LANDKREIS.basis.colour],
+          'line-width': ['match', ['get', 'netz'], 'vorrang', width(LANDKREIS.vorrang.width), width(LANDKREIS.basis.width)],
+          'line-opacity': 0.3,
+        } });
+        map.on('mousemove', 'landkreis', (e) => {
+          // the route lines on top have their own popup
+          if (map.queryRenderedFeatures(e.point, { layers: LINE_LAYERS }).length) return;
+          const p = e.features && e.features[0] && e.features[0].properties;
+          if (!p) return;
+          if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(LANDKREIS[p.netz].label) + '</strong><br>Mobilitätskonzept des Landkreises (2023), im Radwegekonzept nachrichtlich übernommen; als Geh- und Radweg vorgesehen.').addTo(map);
+        });
+        map.on('mouseleave', 'landkreis', () => hoverPopup && hoverPopup.remove());
+      }
       map.addSource('radwege', { type: 'geojson', data: EMPTY, promoteId: 'fid' });
       map.addLayer({ id: 'radwege-selected', type: 'line', source: 'radwege', filter: ['==', ['get', 'routeId'], ''], layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#ffd400', 'line-width': width(10), 'line-opacity': 0.6 } });
       map.addLayer({ id: 'radwege-casing', type: 'line', source: 'radwege', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': '#fff', 'line-width': width(6), 'line-opacity': 0.9 } });
@@ -542,6 +576,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         const src = map.getSource('radwege');
         if (src) src.setData({ type: 'FeatureCollection', features: vis });
         map.setFilter('radwege-selected', ['==', ['get', 'routeId'], state.selected || '']);
+        if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', state.landkreis ? 'visible' : 'none');
       }
       $('line-legend').hidden = state.plan !== 'lang';
       renderGroups();
@@ -766,7 +801,13 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
       h += '<dl class="summary">';
       const stand = r.firstStep && !r.built
         ? 'Erster dokumentierter Schritt: ' + deDate(r.firstStep.date) + ' (' + r.firstStep.kind + ') – ' + (groups[0] === 'vor-konzept' ? 'vor' : 'nach') + ' dem Konzept vom ' + deDate(CONCEPT_DATE) + '.'
-        : groups.length ? GROUP_BY_ID[groups[0]].hint : '–';
+        : groups.length === 1 ? GROUP_BY_ID[groups[0]].hint
+        : groups.length ? groups
+          .map((g) => ({ g, m: fs.filter((f) => f.properties.status === g).reduce((a, f) => a + f.properties.m, 0) }))
+          .sort((a, b) => b.m - a.m)
+          .map((x) => km(x.m) + ' ' + GROUP_BY_ID[x.g].label.split(' – ')[0])
+          .join(', ') + (r.events.some((e) => !e.uncertain) ? '.' : '; öffentlich dokumentiert ist nichts.')
+        : '–';
       h += '<dt>Stand</dt><dd>' + escHtml(stand) + '</dd>';
       h += '<dt>Zuletzt</dt><dd>' + (latest ? '<strong>' + escHtml(deDate(latest.date)) + '</strong> ' + escHtml(short(latest.text, 160)) + ' ' + link(latest.url, latest.source) : 'Kein öffentlicher Vorgang gefunden.') + '</dd>';
       if (r.kusHorizont) h += '<dt>Angekündigt</dt><dd>' + escHtml(r.kusHorizont) + ' ' + link(data.sources.kus, 'KUS-Steckbrief') + '</dd>';

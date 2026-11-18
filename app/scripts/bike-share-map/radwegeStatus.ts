@@ -39,8 +39,10 @@ export type RouteEvent = {
  * - `bestand-weg`: long-term plan 5/2, dashed ("best. asph. Weg")
  * - `voll`: long-term plan 5/2, solid ("Vollausbau")
  * - `bestand`: drawn as an existing asphalt Geh- und Radweg in plan 5/1
+ * - `kein-weg`: plan 5/1, but the line follows no existing way, or only the carriageway of a
+ *   Staats- or Kreisstraße, so there is nothing to release (radwege/pipeline/assign.py)
  */
-export const AUSBAU = ['freigabe', 'bestand-weg', 'voll', 'bestand'] as const
+export const AUSBAU = ['freigabe', 'bestand-weg', 'voll', 'bestand', 'kein-weg'] as const
 export type Ausbau = (typeof AUSBAU)[number]
 
 /** `hint`: one sentence for the legend and the detail view of the tracker page. */
@@ -72,7 +74,7 @@ export const STATUS_GROUPS = [
   {
     id: 'kein-schritt',
     label: 'Neubau nötig – nichts dokumentiert',
-    hint: 'Laut Konzept muss hier gebaut werden (Vollausbau); öffentlich dokumentiert ist dazu nichts.',
+    hint: 'Hier gibt es keinen Weg, den man nur freigeben könnte: Plan 5/2 sieht einen Neubau vor, oder die Linie in Plan 5/1 folgt keinem vorhandenen Weg bzw. nur der Fahrbahn einer Kreis- oder Staatsstraße. Öffentlich dokumentiert ist dazu nichts.',
     colour: '#c0392b',
   },
 ] as const
@@ -114,7 +116,8 @@ export function announcedYear(horizon: string | undefined, stand: string) {
 /**
  * Group of one line. A built route is `bestand`; otherwise the first certain step decides
  * before/since the concept ("before" only if the whole period of a partial date lies before it);
- * without a step, lines that need no construction are `nur-freigabe`, the rest `kein-schritt`.
+ * without a step, lines on an existing way are `nur-freigabe`, the rest (`voll`, `kein-weg`)
+ * `kein-schritt`.
  */
 export function lineStatus(
   route: { built?: boolean; events: readonly RouteEvent[] },
@@ -123,5 +126,5 @@ export function lineStatus(
   if (route.built || ausbau === 'bestand') return 'bestand'
   const step = firstStep(route.events)
   if (step) return dateUpperBound(step.date) < CONCEPT_DATE ? 'vor-konzept' : 'seit-konzept'
-  return ausbau === 'voll' ? 'kein-schritt' : 'nur-freigabe'
+  return ausbau === 'voll' || ausbau === 'kein-weg' ? 'kein-schritt' : 'nur-freigabe'
 }

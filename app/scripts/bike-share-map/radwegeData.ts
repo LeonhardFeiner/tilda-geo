@@ -109,7 +109,21 @@ export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   }
   /** Gemeinde boundary (radwege/gemeinde.geojson), drawn as context. */
   outline: z.infer<typeof OutlineSchema> | null
+  /** Landkreis network shown in Lageplan 5/2 (radwege/landkreis.geojson), drawn as context. */
+  landkreis: z.infer<typeof LandkreisSchema> | null
 }
+
+const LandkreisSchema = z.object({
+  type: z.literal('FeatureCollection'),
+  features: z.array(
+    z.object({
+      type: z.literal('Feature'),
+      /** vorrang: Radvorrangroute, basis: Basisradnetz (Mobilitätskonzept des Landkreises, 2023) */
+      properties: z.object({ netz: z.enum(['vorrang', 'basis']) }),
+      geometry: z.object({ type: z.literal('LineString'), coordinates: z.array(Position).min(2) }),
+    }),
+  ),
+})
 
 const OutlineSchema = z.object({
   type: z.literal('Feature'),
@@ -125,6 +139,7 @@ export function buildRadwegeData(
   routesFile: unknown,
   linesFile: unknown,
   outlineFile: unknown = null,
+  landkreisFile: unknown = null,
 ): RadwegeData {
   const { routes, ...meta } = RoutesFileSchema.parse(routesFile)
   const lines = LinesFileSchema.parse(linesFile)
@@ -179,6 +194,7 @@ export function buildRadwegeData(
     })),
     lines: { type: 'FeatureCollection', features },
     outline: outlineFile == null ? null : OutlineSchema.parse(outlineFile),
+    landkreis: landkreisFile == null ? null : LandkreisSchema.parse(landkreisFile),
   }
 }
 
@@ -186,8 +202,10 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
   return buildRadwegeData(
     JSON.parse(readFileSync(join(dir, 'routes.json'), 'utf8')),
     JSON.parse(readFileSync(join(dir, 'lines.geojson'), 'utf8')),
-    existsSync(join(dir, 'gemeinde.geojson'))
-      ? JSON.parse(readFileSync(join(dir, 'gemeinde.geojson'), 'utf8'))
-      : null,
+    optionalJson(join(dir, 'gemeinde.geojson')),
+    optionalJson(join(dir, 'landkreis.geojson')),
   )
 }
+
+const optionalJson = (path: string): unknown =>
+  existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null

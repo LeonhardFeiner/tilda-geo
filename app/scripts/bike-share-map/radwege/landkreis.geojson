@@ -1,0 +1,2589 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.555178, 48.517879],
+          [11.557065, 48.51778],
+          [11.557863, 48.517706]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.560248, 48.49331],
+          [11.559315, 48.493274],
+          [11.558097, 48.493538],
+          [11.557157, 48.493645],
+          [11.55697, 48.493639]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.558689, 48.517602],
+          [11.55954, 48.517421],
+          [11.561067, 48.516998],
+          [11.561892, 48.516875]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.564219, 48.494242],
+          [11.56333, 48.493928],
+          [11.562241, 48.493638],
+          [11.561071, 48.493444]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.56272, 48.516818],
+          [11.563846, 48.516689],
+          [11.564569, 48.51654],
+          [11.565925, 48.516139]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.568319, 48.494609],
+          [11.567666, 48.494718],
+          [11.56748, 48.494722],
+          [11.565954, 48.494556],
+          [11.565016, 48.494424]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.566687, 48.515903],
+          [11.568663, 48.515307],
+          [11.568878, 48.514722],
+          [11.569318, 48.51435],
+          [11.569491, 48.51409],
+          [11.569442, 48.513977]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.56943, 48.513434],
+          [11.570195, 48.512979],
+          [11.57141, 48.512629],
+          [11.571923, 48.512284],
+          [11.572191, 48.512202]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.572336, 48.495015],
+          [11.570605, 48.494482],
+          [11.569844, 48.494432],
+          [11.569144, 48.494486]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.572759, 48.511818],
+          [11.573142, 48.511448],
+          [11.573684, 48.511122],
+          [11.574105, 48.510922],
+          [11.575543, 48.510748]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.576471, 48.495505],
+          [11.575511, 48.495488],
+          [11.574204, 48.495412],
+          [11.573147, 48.495188]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.576385, 48.510691],
+          [11.577947, 48.510685],
+          [11.5782, 48.510594],
+          [11.578521, 48.51072],
+          [11.579366, 48.510701],
+          [11.57965, 48.510648]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.580634, 48.495108],
+          [11.579664, 48.495177],
+          [11.578681, 48.495294],
+          [11.577494, 48.49532],
+          [11.576471, 48.495505]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.580459, 48.510497],
+          [11.581113, 48.510387],
+          [11.581526, 48.510349],
+          [11.581617, 48.510718],
+          [11.581887, 48.510684],
+          [11.582306, 48.510751],
+          [11.583026, 48.510249],
+          [11.583327, 48.509967],
+          [11.583529, 48.509724],
+          [11.584007, 48.508971]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58262, 48.496435],
+          [11.581497, 48.496622],
+          [11.581159, 48.496153],
+          [11.58128, 48.495408],
+          [11.581269, 48.495208]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58548, 48.498047],
+          [11.584869, 48.497861],
+          [11.584351, 48.497815],
+          [11.583662, 48.497802],
+          [11.583087, 48.496891]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.584311, 48.50845],
+          [11.584888, 48.50739],
+          [11.585771, 48.506428]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586235, 48.505961],
+          [11.586588, 48.505572],
+          [11.587381, 48.504821],
+          [11.587827, 48.504564],
+          [11.588109, 48.504482],
+          [11.588507, 48.504416]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586223, 48.498307],
+          [11.589515, 48.498824]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58935, 48.504378],
+          [11.591195, 48.504309],
+          [11.592726, 48.504284]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.593605, 48.499533],
+          [11.592979, 48.499338],
+          [11.590339, 48.498958]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.593571, 48.504265],
+          [11.596946, 48.504143]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.597607, 48.499644],
+          [11.59652, 48.499954],
+          [11.595864, 48.500016],
+          [11.595129, 48.499937],
+          [11.594375, 48.499754]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.599939, 48.552943],
+          [11.599585, 48.553598],
+          [11.599344, 48.554232],
+          [11.599246, 48.554558],
+          [11.59931, 48.55469],
+          [11.599772, 48.554756],
+          [11.600488, 48.555016],
+          [11.602339, 48.555888]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.601209, 48.550268],
+          [11.600986, 48.550968],
+          [11.600227, 48.552413]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.597789, 48.504114],
+          [11.599337, 48.504128],
+          [11.601151, 48.504296]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.60089, 48.500256],
+          [11.600639, 48.499833],
+          [11.600183, 48.499311],
+          [11.598416, 48.499483]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.601454, 48.547464],
+          [11.601361, 48.547904],
+          [11.601209, 48.550268]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.602131, 48.544688],
+          [11.601967, 48.545129],
+          [11.601584, 48.546909]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.602339, 48.555888],
+          [11.603131, 48.556242],
+          [11.603832, 48.556493],
+          [11.605345, 48.556916]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.604349, 48.542344],
+          [11.603952, 48.542705],
+          [11.602767, 48.543664],
+          [11.602391, 48.544158]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.602396, 48.50285],
+          [11.602075, 48.502458],
+          [11.601816, 48.501864],
+          [11.601598, 48.501516],
+          [11.601055, 48.500976],
+          [11.60089, 48.500256]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.601974, 48.50443],
+          [11.602626, 48.504568],
+          [11.605253, 48.504957]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605288, 48.539648],
+          [11.605202, 48.540783],
+          [11.60508, 48.541204],
+          [11.604927, 48.541579],
+          [11.604349, 48.542344]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.604344, 48.504825],
+          [11.603776, 48.504371],
+          [11.602836, 48.503336]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606077, 48.557195],
+          [11.606798, 48.557569],
+          [11.608175, 48.558414],
+          [11.608576, 48.5587],
+          [11.609101, 48.559145]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605161, 48.536842],
+          [11.605134, 48.537452],
+          [11.605303, 48.539086]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605882, 48.534094],
+          [11.605508, 48.53494],
+          [11.605262, 48.536288]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606789, 48.531351],
+          [11.606542, 48.532413],
+          [11.606127, 48.533555]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607596, 48.528601],
+          [11.60733, 48.529016],
+          [11.607164, 48.529429],
+          [11.607003, 48.529928],
+          [11.606861, 48.530787]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605915, 48.505018],
+          [11.605863, 48.505124],
+          [11.606638, 48.504022],
+          [11.606992, 48.503652],
+          [11.607145, 48.503553]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606087, 48.505024],
+          [11.606724, 48.505153],
+          [11.607481, 48.505393],
+          [11.607783, 48.505415],
+          [11.607378, 48.505614],
+          [11.607115, 48.505801],
+          [11.606923, 48.505977],
+          [11.606763, 48.506199],
+          [11.606599, 48.506641],
+          [11.606588, 48.507831]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606443, 48.510643],
+          [11.606522, 48.511069],
+          [11.606777, 48.511283],
+          [11.607264, 48.511576],
+          [11.607433, 48.511801],
+          [11.607528, 48.512256],
+          [11.607547, 48.512636]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606588, 48.507831],
+          [11.606604, 48.508735],
+          [11.606529, 48.510079]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.609101, 48.559145],
+          [11.609909, 48.559813],
+          [11.611394, 48.560798]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.609782, 48.52621],
+          [11.608459, 48.527534],
+          [11.607957, 48.528097]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607518, 48.513199],
+          [11.607445, 48.514304],
+          [11.607179, 48.514996],
+          [11.607187, 48.515158],
+          [11.607315, 48.515402]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607866, 48.515828],
+          [11.608439, 48.51611],
+          [11.60933, 48.516433],
+          [11.609536, 48.516552],
+          [11.610193, 48.517356]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607906, 48.503318],
+          [11.608415, 48.502887],
+          [11.608658, 48.502606],
+          [11.609427, 48.501665],
+          [11.609571, 48.501386]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610114, 48.523422],
+          [11.610067, 48.525328],
+          [11.609999, 48.525672]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.612029, 48.561174],
+          [11.612858, 48.561679],
+          [11.61332, 48.562021],
+          [11.61428, 48.562847]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610043, 48.520616],
+          [11.610167, 48.521365],
+          [11.610143, 48.52286]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610478, 48.517883],
+          [11.610572, 48.518319],
+          [11.610547, 48.518681],
+          [11.610409, 48.519056],
+          [11.610037, 48.519645],
+          [11.609972, 48.520055],
+          [11.610043, 48.520616]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.609831, 48.500856],
+          [11.610066, 48.500423],
+          [11.610479, 48.499814],
+          [11.611275, 48.498825]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.611635, 48.498312],
+          [11.612586, 48.496158]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.612817, 48.49562],
+          [11.613333, 48.494504],
+          [11.613869, 48.493483]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.614244, 48.49298],
+          [11.614686, 48.492646],
+          [11.615132, 48.492398],
+          [11.615734, 48.492128],
+          [11.616154, 48.491956],
+          [11.616972, 48.4917],
+          [11.61778, 48.491539]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.61778, 48.491539],
+          [11.619411, 48.491207],
+          [11.620044, 48.490993],
+          [11.620812, 48.490604]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.621378, 48.490182],
+          [11.621658, 48.489767],
+          [11.622027, 48.488854],
+          [11.62229, 48.488401],
+          [11.622517, 48.488081],
+          [11.623099, 48.487687]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.623099, 48.487687],
+          [11.624176, 48.487473],
+          [11.624684, 48.487328],
+          [11.624951, 48.487208],
+          [11.625868, 48.486673],
+          [11.626786, 48.486415]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.627594, 48.486244],
+          [11.627596, 48.486006],
+          [11.62767, 48.485766],
+          [11.627814, 48.485515],
+          [11.628599, 48.484613]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.628989, 48.484109],
+          [11.629403, 48.483538],
+          [11.629946, 48.482659],
+          [11.630127, 48.482007]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.630401, 48.481478],
+          [11.63094, 48.480828],
+          [11.631902, 48.479464]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.632262, 48.478951],
+          [11.632972, 48.477983],
+          [11.633486, 48.4774],
+          [11.634431, 48.476551]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.634431, 48.476551],
+          [11.634841, 48.47618],
+          [11.63507, 48.475879],
+          [11.63543, 48.47509],
+          [11.635732, 48.474827],
+          [11.636051, 48.474629],
+          [11.636602, 48.474207]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.636602, 48.474207],
+          [11.637024, 48.473769],
+          [11.637441, 48.473255],
+          [11.638799, 48.471806]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.638799, 48.471806],
+          [11.639202, 48.471292],
+          [11.639299, 48.470938],
+          [11.639286, 48.470691],
+          [11.639172, 48.470427],
+          [11.638847, 48.469958],
+          [11.63875, 48.469732],
+          [11.638863, 48.469148]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.638863, 48.469148],
+          [11.639304, 48.468815],
+          [11.639712, 48.468663],
+          [11.640574, 48.468443],
+          [11.641851, 48.468224]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.642659, 48.468072],
+          [11.643514, 48.46772],
+          [11.643763, 48.467543],
+          [11.644377, 48.466958],
+          [11.644694, 48.466703],
+          [11.645014, 48.466524],
+          [11.645729, 48.466232]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "vorrang" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.645729, 48.466232],
+          [11.646429, 48.465931],
+          [11.646705, 48.465724],
+          [11.647012, 48.465298],
+          [11.647136, 48.464915]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.557209, 48.502792],
+          [11.55891, 48.502707],
+          [11.559908, 48.502619]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.559828, 48.528411],
+          [11.560344, 48.528694],
+          [11.560671, 48.528935],
+          [11.561496, 48.529659],
+          [11.561836, 48.529871],
+          [11.562173, 48.530025],
+          [11.56297, 48.530189]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.560733, 48.502496],
+          [11.564015, 48.501948]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.56297, 48.530189],
+          [11.564034, 48.530251],
+          [11.564878, 48.530213],
+          [11.567175, 48.530011]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.564839, 48.501816],
+          [11.566672, 48.501518],
+          [11.567507, 48.50131],
+          [11.568057, 48.501136]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.568092, 48.564767],
+          [11.568779, 48.564457],
+          [11.570217, 48.563664]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.567175, 48.530011],
+          [11.568127, 48.529837],
+          [11.568805, 48.529651],
+          [11.569288, 48.529555],
+          [11.569973, 48.529492],
+          [11.570448, 48.529529]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.570858, 48.563298],
+          [11.572559, 48.562318],
+          [11.573468, 48.56186]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.568819, 48.5009],
+          [11.569426, 48.500706],
+          [11.570746, 48.500172],
+          [11.571788, 48.499816]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.571283, 48.529615],
+          [11.574636, 48.529884],
+          [11.575459, 48.52999]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.5742, 48.561567],
+          [11.575622, 48.56105],
+          [11.576063, 48.560974],
+          [11.576678, 48.560932],
+          [11.577366, 48.560926],
+          [11.578192, 48.560803]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.572564, 48.499589],
+          [11.573201, 48.499442],
+          [11.575489, 48.499068],
+          [11.575829, 48.498994],
+          [11.576591, 48.498758]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.575459, 48.52999],
+          [11.576361, 48.530256],
+          [11.576664, 48.530306],
+          [11.578724, 48.530508]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.578192, 48.560803],
+          [11.580078, 48.560105],
+          [11.580386, 48.559946],
+          [11.580983, 48.559561]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.576591, 48.498758],
+          [11.577585, 48.498298],
+          [11.578308, 48.497854],
+          [11.578644, 48.497703],
+          [11.579351, 48.497517],
+          [11.580021, 48.497178]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.579558, 48.530575],
+          [11.580998, 48.530686],
+          [11.582463, 48.530749],
+          [11.582898, 48.530854],
+          [11.583629, 48.531142]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.581521, 48.55913],
+          [11.583362, 48.557243]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.580525, 48.514674],
+          [11.580605, 48.513692],
+          [11.580852, 48.513192],
+          [11.581968, 48.513167]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.581061, 48.517357],
+          [11.581029, 48.516729],
+          [11.581233, 48.515935],
+          [11.580638, 48.515224]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.580298, 48.504141],
+          [11.58028, 48.503475],
+          [11.580315, 48.503322],
+          [11.580525, 48.502946],
+          [11.580743, 48.502722],
+          [11.58102, 48.502525],
+          [11.581636, 48.502245]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.581517, 48.506732],
+          [11.581028, 48.506419],
+          [11.580861, 48.506222],
+          [11.580509, 48.505488],
+          [11.580355, 48.504701]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.582095, 48.519981],
+          [11.581998, 48.518897],
+          [11.581747, 48.518475],
+          [11.581199, 48.518106],
+          [11.581132, 48.517917]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.583827, 48.556775],
+          [11.585726, 48.554906]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.583392, 48.522417],
+          [11.582935, 48.521304],
+          [11.582343, 48.521222],
+          [11.582152, 48.520541]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.584627, 48.507891],
+          [11.582248, 48.50702]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.582382, 48.501971],
+          [11.582958, 48.501749],
+          [11.583392, 48.50154],
+          [11.58396, 48.501175],
+          [11.58422, 48.500912],
+          [11.584434, 48.500622],
+          [11.584564, 48.500352]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.585614, 48.541837],
+          [11.584709, 48.543789],
+          [11.584647, 48.543991]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.584789, 48.54453],
+          [11.585391, 48.545393],
+          [11.585971, 48.546094],
+          [11.58638, 48.546523]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.585154, 48.524968],
+          [11.584515, 48.52423],
+          [11.583719, 48.522934]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.582937, 48.496181],
+          [11.58277, 48.494851],
+          [11.582832, 48.494383]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.583006, 48.493837],
+          [11.58361, 48.492472],
+          [11.583755, 48.49165]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.585076, 48.53369],
+          [11.586001, 48.53585]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58612, 48.530516],
+          [11.585284, 48.531544],
+          [11.584926, 48.531551],
+          [11.584435, 48.531772],
+          [11.584089, 48.531456],
+          [11.584434, 48.531753],
+          [11.584632, 48.531996],
+          [11.584727, 48.532156],
+          [11.585076, 48.53369]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586307, 48.554493],
+          [11.587407, 48.553831],
+          [11.588576, 48.552843],
+          [11.589309, 48.552598]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586856, 48.539153],
+          [11.586498, 48.540028],
+          [11.585845, 48.541299]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.584694, 48.499797],
+          [11.58456, 48.499134],
+          [11.583662, 48.497802]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.583785, 48.491088],
+          [11.583776, 48.490631],
+          [11.583844, 48.490001],
+          [11.58403, 48.488845]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.587393, 48.527318],
+          [11.587101, 48.526934],
+          [11.585778, 48.525687],
+          [11.58558, 48.525454]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586229, 48.536387],
+          [11.586769, 48.538003],
+          [11.586855, 48.538582],
+          [11.586856, 48.539153]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58682, 48.547008],
+          [11.587372, 48.54771],
+          [11.587669, 48.548199],
+          [11.587913, 48.548783],
+          [11.588072, 48.549665]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.584116, 48.488281],
+          [11.584209, 48.487841],
+          [11.584542, 48.487063],
+          [11.584849, 48.486608],
+          [11.585317, 48.486236]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586526, 48.530021],
+          [11.587133, 48.529275],
+          [11.587321, 48.527881]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.588072, 48.549665],
+          [11.588082, 48.550151],
+          [11.588241, 48.550737],
+          [11.588396, 48.550972],
+          [11.588623, 48.551205],
+          [11.588818, 48.551372],
+          [11.589277, 48.551657]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.589309, 48.552598],
+          [11.589946, 48.552708],
+          [11.591131, 48.553177],
+          [11.591646, 48.553441],
+          [11.592094, 48.553784]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.585972, 48.485879],
+          [11.58788, 48.485075],
+          [11.58885, 48.484711]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.589939, 48.552004],
+          [11.590485, 48.552306],
+          [11.590874, 48.552621],
+          [11.591388, 48.553152],
+          [11.591423, 48.553275],
+          [11.591398, 48.553342]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.592848, 48.553948],
+          [11.593495, 48.553981],
+          [11.594615, 48.55429],
+          [11.595596, 48.55442],
+          [11.596049, 48.554572]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.589611, 48.484475],
+          [11.590809, 48.484096],
+          [11.592592, 48.48339]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.59682, 48.554793],
+          [11.597599, 48.55488],
+          [11.598543, 48.55483],
+          [11.599054, 48.554733],
+          [11.59934, 48.554727]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.593338, 48.483136],
+          [11.593946, 48.48296],
+          [11.59443, 48.482902],
+          [11.595432, 48.482899],
+          [11.596652, 48.482957]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.597495, 48.482929],
+          [11.598277, 48.482807],
+          [11.598858, 48.48268],
+          [11.601503, 48.482031]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.600183, 48.499311],
+          [11.599698, 48.498779],
+          [11.599531, 48.498021],
+          [11.59993, 48.497707]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.600632, 48.497416],
+          [11.601238, 48.497221],
+          [11.602723, 48.496836],
+          [11.603074, 48.496133]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.601503, 48.482031],
+          [11.602422, 48.481791],
+          [11.603423, 48.481483],
+          [11.604209, 48.48117],
+          [11.605217, 48.48071]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.603348, 48.495603],
+          [11.603312, 48.494899],
+          [11.604077, 48.493883],
+          [11.60455, 48.493606]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605191, 48.493239],
+          [11.605752, 48.492998],
+          [11.606878, 48.492611],
+          [11.607699, 48.492136],
+          [11.607773, 48.491906]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.605217, 48.48071],
+          [11.60768, 48.479579],
+          [11.607986, 48.47942],
+          [11.608582, 48.479016]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607805, 48.505833],
+          [11.608432, 48.505781],
+          [11.608701, 48.505708],
+          [11.609486, 48.505377],
+          [11.610294, 48.505197]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.607946, 48.491359],
+          [11.608095, 48.490918],
+          [11.608282, 48.490647],
+          [11.608966, 48.490289],
+          [11.60967, 48.489493]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.60892, 48.478628],
+          [11.609014, 48.478512],
+          [11.609143, 48.478223],
+          [11.609369, 48.477599],
+          [11.609751, 48.476934]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610104, 48.489007],
+          [11.610512, 48.488293],
+          [11.610481, 48.487685],
+          [11.610644, 48.487224],
+          [11.610667, 48.486824]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.611103, 48.505045],
+          [11.611756, 48.504936],
+          [11.613237, 48.50475],
+          [11.614455, 48.50477]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610141, 48.47643],
+          [11.610493, 48.476041],
+          [11.611302, 48.475328],
+          [11.612317, 48.474735]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.610696, 48.486262],
+          [11.610759, 48.485813],
+          [11.611156, 48.484033]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.612049, 48.480757],
+          [11.611912, 48.480313],
+          [11.61167, 48.479766],
+          [11.611169, 48.47893],
+          [11.610856, 48.478689]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.611343, 48.483486],
+          [11.611748, 48.482725],
+          [11.612135, 48.481593],
+          [11.612106, 48.481317]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.612972, 48.474387],
+          [11.613916, 48.473804],
+          [11.61528, 48.472745]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.615278, 48.504885],
+          [11.615915, 48.505014],
+          [11.616468, 48.505192],
+          [11.617274, 48.505536],
+          [11.618158, 48.50602]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.615817, 48.472314],
+          [11.616423, 48.471853],
+          [11.616585, 48.471659],
+          [11.616716, 48.471409],
+          [11.616768, 48.471036],
+          [11.616749, 48.470932],
+          [11.616536, 48.470679],
+          [11.616485, 48.470528],
+          [11.616506, 48.470376],
+          [11.61656, 48.470317]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.618793, 48.506396],
+          [11.61955, 48.506912],
+          [11.620257, 48.507563],
+          [11.620734, 48.507942],
+          [11.621, 48.508089]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.617082, 48.469877],
+          [11.61745, 48.469507],
+          [11.618628, 48.468462],
+          [11.61911, 48.46808]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.622149, 48.541631],
+          [11.621868, 48.540914],
+          [11.621746, 48.540212],
+          [11.621691, 48.539414]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.621691, 48.538852],
+          [11.621754, 48.538403],
+          [11.62188, 48.538058],
+          [11.622219, 48.537669],
+          [11.622484, 48.537521],
+          [11.623559, 48.537239]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.623176, 48.54435],
+          [11.622786, 48.542893],
+          [11.622433, 48.542158]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.624711, 48.549704],
+          [11.623686, 48.548727],
+          [11.623483, 48.548408],
+          [11.623338, 48.548088],
+          [11.623276, 48.547708]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.623304, 48.547146],
+          [11.623404, 48.546296],
+          [11.623422, 48.545534],
+          [11.623368, 48.545021],
+          [11.623176, 48.54435]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.624351, 48.562878],
+          [11.625056, 48.562653],
+          [11.625984, 48.562289],
+          [11.626616, 48.562018],
+          [11.62737, 48.56162]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.619601, 48.467621],
+          [11.619992, 48.467127],
+          [11.621277, 48.465661]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.62173, 48.508368],
+          [11.622626, 48.508509],
+          [11.623315, 48.508541],
+          [11.624439, 48.508659],
+          [11.625869, 48.508893]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.624368, 48.537088],
+          [11.625449, 48.536921],
+          [11.627635, 48.536491]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.628151, 48.551093],
+          [11.626867, 48.55094],
+          [11.626257, 48.550773],
+          [11.625772, 48.550556],
+          [11.625221, 48.550149]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.621682, 48.465166],
+          [11.622541, 48.464052],
+          [11.623431, 48.463251]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.62737, 48.56162],
+          [11.627881, 48.561237],
+          [11.628085, 48.561024],
+          [11.628225, 48.560954],
+          [11.629031, 48.560726],
+          [11.629324, 48.560558],
+          [11.629803, 48.560128]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.625869, 48.508893],
+          [11.626543, 48.508897],
+          [11.626828, 48.508872],
+          [11.627679, 48.50871],
+          [11.628726, 48.508448],
+          [11.629139, 48.508401]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.623864, 48.462765],
+          [11.624544, 48.461789],
+          [11.625424, 48.460788]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.631963, 48.552168],
+          [11.631358, 48.55183],
+          [11.630712, 48.551539],
+          [11.63023, 48.551369],
+          [11.629882, 48.551282],
+          [11.628987, 48.551159]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.628444, 48.53633],
+          [11.629434, 48.536069],
+          [11.629913, 48.535897],
+          [11.630578, 48.535463],
+          [11.631042, 48.534995]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.630253, 48.559651],
+          [11.631322, 48.558685],
+          [11.632165, 48.557799]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.625901, 48.46032],
+          [11.627658, 48.458834]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.632165, 48.557799],
+          [11.63173, 48.558257],
+          [11.632278, 48.558597],
+          [11.633051, 48.559407],
+          [11.633491, 48.559588]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.633486, 48.554733],
+          [11.633156, 48.553626],
+          [11.632889, 48.553175],
+          [11.632473, 48.552604],
+          [11.631963, 48.552168]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.629985, 48.50841],
+          [11.630634, 48.508491],
+          [11.631478, 48.508748],
+          [11.631933, 48.508966],
+          [11.632289, 48.509196],
+          [11.632725, 48.509596]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.6326, 48.557314],
+          [11.632938, 48.556925],
+          [11.63358, 48.556292],
+          [11.63367, 48.5561],
+          [11.633716, 48.55587],
+          [11.633657, 48.555281]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.631609, 48.534583],
+          [11.6322, 48.534379],
+          [11.632824, 48.534232],
+          [11.63313, 48.534063],
+          [11.633308, 48.533897],
+          [11.63349, 48.533531],
+          [11.633421, 48.533028],
+          [11.633566, 48.532482]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.634249, 48.559828],
+          [11.635311, 48.560127],
+          [11.635554, 48.560122],
+          [11.637361, 48.559558]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.633566, 48.532482],
+          [11.633815, 48.532039],
+          [11.633738, 48.531936],
+          [11.633576, 48.531844],
+          [11.633485, 48.531741],
+          [11.633445, 48.531247],
+          [11.633663, 48.530738],
+          [11.633919, 48.530428]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.633122, 48.510091],
+          [11.633555, 48.51071],
+          [11.633815, 48.511304],
+          [11.634287, 48.511845],
+          [11.6346, 48.512086]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.634426, 48.529978],
+          [11.634912, 48.529663],
+          [11.635428, 48.529384],
+          [11.637012, 48.528691],
+          [11.637601, 48.528164]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.635235, 48.512452],
+          [11.635849, 48.512686],
+          [11.636203, 48.512887],
+          [11.636516, 48.513118],
+          [11.636802, 48.513397],
+          [11.636979, 48.513489],
+          [11.637532, 48.513657],
+          [11.637694, 48.513749],
+          [11.637814, 48.51385],
+          [11.63817, 48.514356]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.638123, 48.559312],
+          [11.63941, 48.558959],
+          [11.641329, 48.558621]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.637601, 48.528164],
+          [11.637925, 48.527767],
+          [11.638701, 48.526959],
+          [11.639293, 48.526222]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.63817, 48.514356],
+          [11.63841, 48.514856],
+          [11.638463, 48.515331],
+          [11.638435, 48.515902],
+          [11.638528, 48.516319],
+          [11.638627, 48.516565]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.638968, 48.51708],
+          [11.639476, 48.517488],
+          [11.639845, 48.517689],
+          [11.640386, 48.517905],
+          [11.641126, 48.518079],
+          [11.641816, 48.51812]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.639626, 48.52571],
+          [11.640016, 48.52493],
+          [11.640265, 48.524201],
+          [11.640281, 48.523962],
+          [11.640216, 48.523526]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.640116, 48.522966],
+          [11.640078, 48.52251],
+          [11.640123, 48.522281],
+          [11.640322, 48.521972],
+          [11.640752, 48.521695],
+          [11.641898, 48.521403]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.642137, 48.558716],
+          [11.64357, 48.558693],
+          [11.644147, 48.558757],
+          [11.644755, 48.558581],
+          [11.644832, 48.558132]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.642554, 48.521055],
+          [11.643074, 48.520577],
+          [11.64429, 48.51914]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.642663, 48.518158],
+          [11.646038, 48.5183],
+          [11.645449, 48.518266]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.645237, 48.557637],
+          [11.645925, 48.556803],
+          [11.646649, 48.556377],
+          [11.647209, 48.555841]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.647702, 48.555382],
+          [11.648174, 48.555086],
+          [11.649, 48.554696],
+          [11.649493, 48.554228],
+          [11.649868, 48.553724]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.646874, 48.518377],
+          [11.648363, 48.518638],
+          [11.649161, 48.518839],
+          [11.65005, 48.519123]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.650244, 48.55322],
+          [11.650887, 48.552349],
+          [11.651419, 48.552089],
+          [11.652124, 48.551873],
+          [11.652542, 48.551911],
+          [11.652601, 48.551939]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.650781, 48.519402],
+          [11.651338, 48.519646],
+          [11.652164, 48.520104],
+          [11.653295, 48.520906],
+          [11.653805, 48.521351]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.653346, 48.552207],
+          [11.655346, 48.552619],
+          [11.656051, 48.552946],
+          [11.656431, 48.55308],
+          [11.657251, 48.553128]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.653805, 48.521351],
+          [11.655202, 48.522596],
+          [11.65593, 48.523093]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.657251, 48.553128],
+          [11.66036, 48.552238]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.656579, 48.523449],
+          [11.657387, 48.523841],
+          [11.658149, 48.524156],
+          [11.658951, 48.524433],
+          [11.659489, 48.524583]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.661137, 48.552021],
+          [11.661759, 48.551835],
+          [11.664341, 48.5513]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.660261, 48.524813],
+          [11.660961, 48.525044],
+          [11.661476, 48.525299],
+          [11.662128, 48.525713],
+          [11.662759, 48.526269]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.663283, 48.526714],
+          [11.663717, 48.527057],
+          [11.664221, 48.527388],
+          [11.664796, 48.527708],
+          [11.665865, 48.528141]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": { "netz": "basis" },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.665167, 48.551186],
+          [11.668163, 48.551175],
+          [11.668538, 48.551223]
+        ]
+      }
+    }
+  ]
+}

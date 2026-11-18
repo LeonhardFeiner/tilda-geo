@@ -54,6 +54,20 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(group('st2045-preinersdorf-landkreisgrenze')).toEqual(new Set(['vor-konzept']))
     expect(group('guentersdorf-noerting')).toEqual(new Set(['vor-konzept']))
   })
+  test('plan 5/1 along the PAF 25 has no way to release; the Landkreis network is there', () => {
+    const ampertshausen = data.lines.features.filter(
+      (f) => f.properties.routeId === 'ampertshausen-saulhof-kirchdorf',
+    )
+    const m = (a: string) =>
+      ampertshausen.filter((f) => f.properties.ausbau === a).reduce((s, f) => s + f.properties.m, 0)
+    expect(m('kein-weg')).toBeGreaterThan(2000)
+    expect(m('freigabe')).toBeGreaterThan(500)
+    expect(ampertshausen.find((f) => f.properties.ausbau === 'kein-weg')!.properties.status).toBe(
+      'kein-schritt',
+    )
+    const netz = new Set(data.landkreis!.features.map((f) => f.properties.netz))
+    expect(netz).toEqual(new Set(['vorrang', 'basis']))
+  })
 })
 
 describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
@@ -68,7 +82,8 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     ).toBe(true)
     // only groups with lines in this plan are listed
     expect(p.qAll('#groups button').length).toBeGreaterThanOrEqual(4)
-    expect(p.qAll('#groups [data-group="kein-schritt"]').length).toBe(0)
+    // plan 5/1 lines without a way to release count as "Neubau nötig"
+    expect(p.qAll('#groups [data-group="kein-schritt"]').length).toBe(1)
     expect(p.qAll('#bar button').length).toBeGreaterThanOrEqual(4)
     expect(p.qAll('#recent li').length).toBe(8)
     expect(p.q('#detail').hidden).toBe(true)

@@ -28,8 +28,15 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    a road or the Landkreisgrenze, the unlabelled PAF 25 piece); its `adopt` points give a
    leftover piece to a route. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
-   40–48), a run between two of them shorter than 250 units is a dash, a longer one solid. Lines are snapped to OSM ways within 15 m; `fromPlan` is the
-   share left in plan geometry (drawn paler on the page).
+   40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
+   Lines are snapped to OSM ways within 15 m; `fromPlan` is the share left in plan geometry
+   (drawn paler on the page). Plan 5/1 lines are split where they follow no OSM way, or only the
+   carriageway of a Staats-/Kreisstraße without a bike lane or parallel way (`ausbau: kein-weg`;
+   runs < 80 m join their neighbour): there is nothing to release, so the page counts them as
+   "Neubau nötig". Built routes are not split.
+5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
+   `landkreis.geojson`, a context layer on the page (the Landkreis plans them as Geh- und
+   Radwege, Erläuterung 2.3.1).
 
 ```sh
 scripts/bike-share-map/radwege/pipeline/run.sh \

@@ -44,12 +44,15 @@ done
 "$PY" -I "$HERE/assign.py" "$WORK" "$WORK/osm-area.json" "$RADWEGE/routes.json" \
   "$WORK/assigned.geojson" "$RADWEGE/lines.geojson" "$RADWEGE/overrides.json" | tee "$WORK/assign.log"
 
-# 5. check against the plan strokes (review aid; see ../README.md)
+# 5. the Landkreis network that plan 5/2 shows (Radvorrangrouten, Basisradnetz), context layer
+"$PY" -I "$HERE/landkreis.py" "$WORK" "$RADWEGE/landkreis.geojson"
+
+# 6. check against the plan strokes (review aid; see ../README.md)
 "$PY" -I "$HERE/verify.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/routes.json" \
   "$RADWEGE/gemeinde.geojson" > "$WORK/verify.log"
 grep -E '^(FLAG|OFF|total|kurz/|lang/)' "$WORK/verify.log" || true
 
-# 6. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
+# 7. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
   mkdir -p "$CHECK"
   "$PY" -I "$HERE/topx.py" "$WORK" "$WORK/assigned.geojson" "$WORK/assigned-px.json"
@@ -60,4 +63,4 @@ fi
 REPO="$(cd "$RADWEGE/../../../.." && pwd)"
 (cd "$REPO" && app/node_modules/.bin/oxfmt --write -c app/oxfmt.config.mjs \
   app/scripts/bike-share-map/radwege/lines.geojson app/scripts/bike-share-map/radwege/overrides.json \
-  app/scripts/bike-share-map/radwege/gemeinde.geojson >/dev/null)
+  app/scripts/bike-share-map/radwege/gemeinde.geojson app/scripts/bike-share-map/radwege/landkreis.geojson >/dev/null)

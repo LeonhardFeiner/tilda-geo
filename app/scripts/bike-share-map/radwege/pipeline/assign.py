@@ -57,9 +57,9 @@ ways = []
 for w in OSM['ways']:
     hw = w['tags'].get('highway')
     if hw in ('proposed', 'construction', 'platform', 'steps', 'corridor', 'elevator', 'bus_stop', 'raceway'): continue
-    ways.append((w['id'], hw, w['tags'].get('name'), LineString([to_utm.transform(x, y) for x, y in w['coords']])))
+    ways.append((w['id'], hw, w['tags'].get('name'), LineString([to_utm.transform(x, y) for x, y in w['coords']]), 'bikelane' in w['tags']))
 wpts, wid = [], []
-for i, (_, _, _, ls) in enumerate(ways):
+for i, (_, _, _, ls, _) in enumerate(ways):
     n = max(2, int(ls.length / 3) + 1)
     for k in range(n):
         q = ls.interpolate(ls.length * k / (n - 1)); wpts.append((q.x, q.y)); wid.append(i)
@@ -307,7 +307,22 @@ for f in out_feats:
     final.append(dict(routeId=p['routeId'], plan=p['plan'], ausbau=p['ausbau'], utm=utm_line(f['geometry']['coordinates'])))
 
 SNAP = 15.0
-def snap(utm):
+# Plan 5/1 means "release existing ways". Where its line follows no way, or only the carriageway of
+# a Staats- or Kreisstraße (no bike lane, no parallel track within SNAP), there is nothing to release.
+BIG_ROADS = {'primary', 'secondary', 'tertiary', 'primary_link', 'secondary_link', 'tertiary_link'}
+MIN_RUN = 80  # m; shorter runs of one class join their neighbour (junctions, villages)
+
+def point_class(q, w):
+    if w < 0: return 'kein-weg'
+    if ways[w][4] or ways[w][1] not in BIG_ROADS: return 'freigabe'
+    d, i = wtree.query((q.x, q.y), k=12, distance_upper_bound=SNAP)
+    for dd, j in zip(np.atleast_1d(d), np.atleast_1d(i)):
+        if np.isfinite(dd):
+            o = ways[int(wid[j])]
+            if o[4] or o[1] not in BIG_ROADS: return 'freigabe'
+    return 'kein-weg'  # only the carriageway of a Staats- or Kreisstraße
+
+def snap(utm, classify=False):
     ls = LineString(utm)
     n = max(2, int(ls.length / 4) + 1)
     pts = [ls.interpolate(ls.length * k / (n - 1)) for k in range(n)]
@@ -318,24 +333,48 @@ def snap(utm):
     for k in range(n):
         win = [w for w in wi[max(0, k - 3):k + 4] if w >= 0]
         sm.append(collections.Counter(win).most_common(1)[0][0] if win and wi[k] >= 0 else -1)
-    out, matched, ids = [], 0, collections.Counter()
+    out, hit = [], []
     for q, w in zip(pts, sm):
         if w >= 0:
             wl = ways[w][3]; pr = wl.interpolate(wl.project(q))
             if pr.distance(q) < SNAP * 1.5:
-                out.append((pr.x, pr.y)); matched += 1; ids[ways[w][0]] += 1; continue
-        out.append((q.x, q.y))
-    g = LineString(out).simplify(0.8)
-    return list(g.coords), 1 - matched / n, sorted(k for k, v in ids.items() if v >= 3)
+                out.append((pr.x, pr.y)); hit.append(w); continue
+        out.append((q.x, q.y)); hit.append(-1)
+    cls = [point_class(q, w) if classify else None for q, w in zip(pts, hit)]
+    if classify:
+        step = ls.length / (n - 1)
+        while True:
+            runs = []
+            for k, c in enumerate(cls):
+                if runs and runs[-1][0] == c: runs[-1][2] = k + 1
+                else: runs.append([c, k, k + 1])
+            short = [r for r in runs if (r[2] - r[1]) * step < MIN_RUN]
+            if len(runs) == 1 or not short: break
+            r = min(short, key=lambda r: r[2] - r[1]); j = runs.index(r)
+            nb = runs[j - 1] if j > 0 else runs[j + 1]
+            for k in range(r[1], r[2]): cls[k] = nb[0]
+    pieces, k0 = [], 0
+    for k in range(1, n + 1):
+        if k == n or cls[k] != cls[k0]:
+            seg = slice(k0, min(k + 1, n))  # share the boundary point with the next piece
+            hs = hit[k0:k]; ids = collections.Counter(ways[w][0] for w in hs if w >= 0)
+            g = LineString(out[seg]) if len(out[seg]) > 1 else None
+            if g is not None and g.length > 0:
+                pieces.append((cls[k0], list(g.simplify(0.8).coords), 1 - sum(1 for w in hs if w >= 0) / len(hs), sorted(i for i, v in ids.items() if v >= 3)))
+            k0 = k
+    return pieces
 
 geo = []
 for f in final:
-    coords, fromPlan, wids = snap(f['utm'])
-    ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
-    props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=f['ausbau'], fromPlan=round(fromPlan, 2))
-    if wids: props['osmWays'] = wids
-    geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
+    built = next((r.get('built') for r in ROUTES if r['id'] == f['routeId']), False)
+    split = f['plan'] == 'kurz' and f['ausbau'] == 'freigabe' and not built
+    for cls, coords, fromPlan, wids in snap(f['utm'], classify=split):
+        ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
+        props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=cls if split else f['ausbau'], fromPlan=round(fromPlan, 2))
+        if wids: props['osmWays'] = wids
+        geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
-tot = collections.Counter(); fp = collections.Counter()
-for f in final: pass
+km = collections.Counter()
+for g in geo: km[(g['properties']['plan'], g['properties']['ausbau'])] += LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).length / 1000
+print('km by plan/ausbau', {k: round(v, 1) for k, v in sorted(km.items())})
 print('lines', len(geo), 'mean fromPlan', round(sum(g['properties']['fromPlan'] for g in geo) / len(geo), 2))

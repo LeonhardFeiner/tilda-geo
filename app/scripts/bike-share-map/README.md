@@ -122,8 +122,10 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
 - `radwege/gemeinde.geojson`: the Gemeinde boundary drawn as context (written by the extraction).
 - The group of a line is derived, never typed in (`radwegeStatus.ts`): built → "Vorhanden";
   else the first certain step (Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau,
-  Eröffnung) before/since 07.06.2024; without one, lines that need no construction (plan 5/1,
-  dashed in 5/2) are "Freigabe/Beschilderung", the rest "Ausbau nötig, kein Schritt".
+  Eröffnung) before/since 07.06.2024; without one, lines on an existing way (plan 5/1, dashed
+  in 5/2) are "Nur Schilder/Freigabe nötig", the rest "Neubau nötig" (solid in 5/2, and 5/1
+  pieces that follow no way or only a Staats-/Kreisstraße). The Landkreis network of plan 5/2
+  (`radwege/landkreis.geojson`) is a context layer that can be switched off.
   Statements, citizen questions, announcements and events marked `uncertain` never count.
 
 `buildViewer.ts` writes the page and `radwege-schweitenkirchen.json`; tests:

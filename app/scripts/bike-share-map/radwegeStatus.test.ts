@@ -63,6 +63,7 @@ describe('lineStatus', () => {
     expect(lineStatus({ events }, 'freigabe')).toBe('nur-freigabe')
     expect(lineStatus({ events }, 'bestand-weg')).toBe('nur-freigabe')
     expect(lineStatus({ events }, 'voll')).toBe('kein-schritt')
+    expect(lineStatus({ events }, 'kein-weg')).toBe('kein-schritt')
   })
 })
 
