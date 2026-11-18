@@ -9,7 +9,12 @@ Add an event to the route in `routes.json`: `date` (`YYYY`, `YYYY-MM` or `YYYY-M
 (steps: Programm, Beschluss, Grunderwerb, Planung, Haushalt, Bau, Eröffnung; context: Aussage,
 Ankündigung, Anfrage), a short German `text` (quotes in „…“), `source` and a public `url`
 (Komuna RIS links on meeting level: `https://ris.komuna.net/schweitenkirchen/app/sitzungen/<id>`,
-TOP number in the text). `uncertain: true` keeps an event out of the group. A finished route gets
+TOP number in the text). `uncertain: true` keeps an event out of the group. `paywall: true`
+marks a source behind a paywall (Pfaffenhofener Kurier Plus): the page shows our own short summary
+and the link, never the article text or longer verbatim quotes (UrhG, Presseverleger-Leistungsschutz
+§ 87f). Events about the whole network (concept, budget) go into the top-level `allgemein`.
+2026-11-18: 51 events added from `schweitenkirchen-research/radwege-schweitenkirchen-2026-11-18.tar.gz`
+(`vorgaenge.json`; its `quote` field stays in the research archive). A finished route gets
 `"built": true`. Update `stand`, then `bun run bike-share-map:viewer`.
 
 ## Lines from the Lagepläne

@@ -19,7 +19,9 @@ import {
 /**
  * Source data of the Radwege tracker (radwegePage.ts), committed in radwege/:
  * - routes.json: one entry per route of the Radwegekonzept with its dated public events,
- *   transcribed from schweitenkirchen-research (Radwege-Schweitenkirchen-Aussagen-der-Gemeinde.md)
+ *   transcribed from schweitenkirchen-research (Radwege-Schweitenkirchen-Aussagen-der-Gemeinde.md,
+ *   radwege-schweitenkirchen-2026-11-18.tar.gz → vorgaenge.json); events about the whole network
+ *   are in `allgemein`
  * - lines.geojson: the route lines, extracted from the vector Lagepläne by
  *   radwege/extract_lageplan.py (see radwege/README.md)
  */
@@ -36,6 +38,8 @@ const EventSchema = z.strictObject({
   source: z.string().min(1),
   url: z.url(),
   uncertain: z.boolean().optional(),
+  /** The source is behind a paywall (link only, own summary). */
+  paywall: z.boolean().optional(),
 })
 
 const RouteSchema = z.strictObject({
@@ -65,6 +69,8 @@ export const RoutesFileSchema = z.strictObject({
     kus: z.url(),
   }),
   routes: z.array(RouteSchema),
+  /** Events about the network as a whole (concept, budget), not tied to one route. */
+  allgemein: z.array(EventSchema).optional(),
 })
 
 const LineProps = z.strictObject({
@@ -188,11 +194,14 @@ export function buildRadwegeData(
     }
   }
 
+  const byDate = (a: { date: string }, b: { date: string }) =>
+    a.date < b.date ? -1 : a.date > b.date ? 1 : 0
   return {
     ...meta,
+    allgemein: [...(meta.allgemein ?? [])].sort(byDate),
     routes: routes.map((r) => ({
       ...r,
-      events: [...r.events].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0)),
+      events: [...r.events].sort(byDate),
       firstStep: firstStep(r.events),
       announcedYear: announcedYear(r.kusHorizont, meta.stand),
       km: Object.fromEntries(

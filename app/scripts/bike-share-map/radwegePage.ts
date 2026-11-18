@@ -358,6 +358,8 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     const km = (m) => (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' km';
     const deDate = (d) => d.split('-').reverse().join('.');
     const link = (url, text) => '<a href="' + escHtml(url) + '" target="_blank" rel="noopener">' + escHtml(text) + '</a>';
+    /** Source link of an event; paywalled sources are marked. */
+    const evLink = (e) => link(e.url, e.source) + (e.paywall ? ' <span class="muted">(Bezahlschranke)</span>' : '');
     const short = (t, n) => (t.length > n ? t.slice(0, n - 1).replace(/\\s+\\S*$/, '') + ' …' : t);
 
     /** Fractional year of a (partial) date, at the start of its period. */
@@ -744,6 +746,8 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
     function renderRecent() {
       const all = [];
       for (const r of routes) for (const e of r.events) if (!e.uncertain) all.push({ r, e });
+      // events about the whole network (concept, budget) have no route
+      for (const e of data.allgemein || []) if (!e.uncertain) all.push({ r: null, e });
       all.sort((a, b) => (a.e.date < b.e.date ? 1 : a.e.date > b.e.date ? -1 : 0));
       const seen = new Set();
       const items = [];
@@ -756,7 +760,7 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
         if (items.length === RECENT_COUNT) break;
       }
       $('recent').innerHTML = items
-        .map(({ r, e }) => '<li><span class="when">' + escHtml(deDate(e.date)) + '</span> · <a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a><br>' + escHtml(short(e.text, 140)) + ' ' + link(e.url, e.source) + '</li>')
+        .map(({ r, e }) => '<li><span class="when">' + escHtml(deDate(e.date)) + '</span> · ' + (r ? '<a href="#" data-select="' + escHtml(r.id) + '">' + escHtml(r.name) + '</a>' : 'Radwegenetz allgemein') + '<br>' + escHtml(short(e.text, 140)) + ' ' + evLink(e) + '</li>')
         .join('');
     }
 
@@ -851,14 +855,14 @@ export function radwegePageHtml({ dataHref, viewerHref }: RadwegePageInput) {
           .join(', ') + (r.events.some((e) => !e.uncertain) ? '.' : '; öffentlich dokumentiert ist nichts.')
         : '–';
       h += '<dt>Stand</dt><dd>' + escHtml(stand) + '</dd>';
-      h += '<dt>Zuletzt</dt><dd>' + (latest ? '<strong>' + escHtml(deDate(latest.date)) + '</strong> ' + escHtml(short(latest.text, 160)) + ' ' + link(latest.url, latest.source) : 'Kein öffentlicher Vorgang gefunden.') + '</dd>';
+      h += '<dt>Zuletzt</dt><dd>' + (latest ? '<strong>' + escHtml(deDate(latest.date)) + '</strong> ' + escHtml(short(latest.text, 160)) + ' ' + evLink(latest) : 'Kein öffentlicher Vorgang gefunden.') + '</dd>';
       if (r.kusHorizont) h += '<dt>Angekündigt</dt><dd>' + escHtml(r.kusHorizont) + ' ' + link(data.sources.kus, 'KUS-Steckbrief') + '</dd>';
       h += '</dl>';
       if (r.events.length) {
         const evs = r.events.slice().reverse();
         const item = (e) => {
           const step = STEP_KINDS.includes(e.kind) && !e.uncertain;
-          return '<li class="' + (step ? 'step' : '') + (e.uncertain ? ' uncertain' : '') + '"><span class="when">' + escHtml(deDate(e.date)) + '</span><span class="kind">' + escHtml(e.kind) + (e.uncertain ? ' · möglicherweise verwandt' : '') + '</span><br>' + escHtml(e.text) + ' ' + link(e.url, e.source) + '</li>';
+          return '<li class="' + (step ? 'step' : '') + (e.uncertain ? ' uncertain' : '') + '"><span class="when">' + escHtml(deDate(e.date)) + '</span><span class="kind">' + escHtml(e.kind) + (e.uncertain ? ' · möglicherweise verwandt' : '') + '</span><br>' + escHtml(e.text) + ' ' + evLink(e) + '</li>';
         };
         h += '<h3>Vorgänge (' + evs.length + ')</h3><ul class="timeline">' + evs.slice(0, TIMELINE_OPEN).map(item).join('') + '</ul>';
         if (evs.length > TIMELINE_OPEN) {

@@ -31,6 +31,7 @@ export type RouteEvent = {
   url: string
   /** The research could not tie the event to this route for sure ("möglicherweise verwandt"). */
   uncertain?: boolean
+  paywall?: boolean
 }
 
 /**

@@ -178,7 +178,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(noerting.textContent).toMatch(/seit [\d,]+ Jahren · angekündigt 2029/)
     expect(noerting.querySelector('.d-plan')).not.toBeNull()
     const wald = rows.find((r) => r.dataset.select === 'pfaffenhofen-schweitenkirchen')!
-    expect(wald.textContent).toMatch(/nach \d Monaten eröffnet/)
+    expect(wald.textContent).toMatch(/nach [\d,]+ (Monaten|Jahren?) eröffnet/)
     expect(p.q('#dauer-chart').textContent).toContain('Ohne dokumentierten Schritt')
 
     click(p, noerting)
