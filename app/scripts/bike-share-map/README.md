@@ -129,6 +129,10 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
 - "Einfärben nach" (`?farbe=weg|belag`, filter `?nur=`) colours bar, legend and lines by what
   the route runs on today instead: OSM way class (`WEG`) or surface (`BELAG`), from the map
   matching in `radwege/pipeline/assign.py`.
+- "Plan: Beide" (`?plan=beide`) shows each stretch once: Bestand, then plan 5/2, then what plan
+  5/1 adds where neither lies within 30 m (`kombi`). "Nur innerhalb der Gemeindegrenze"
+  (`?gemeinde=innen`) hides what lies outside (`innen`) from map and all numbers. Both flags come
+  from cutting the lines in `radwegeData.ts` (`radwegeGeometry.ts`).
   Statements, citizen questions, announcements and events marked `uncertain` never count.
 
 `buildViewer.ts` writes the page and `radwege-schweitenkirchen.json`; tests:

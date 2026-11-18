@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { length as turfLength } from '@turf/turf'
 import { z } from 'zod'
+import { insideIndex, type LonLat, nearIndex, splitByKey } from './radwegeGeometry'
 import {
   AUSBAU,
   announcedYear,
@@ -119,6 +120,10 @@ export type RadwegeLineProps = z.infer<typeof LineProps> & {
   status: StatusGroup
   bedarf: Bedarf
   m: number
+  /** Part of the combined view: a short-term piece is left out where plan 5/2 or Bestand covers it. */
+  kombi: boolean
+  /** Inside the Gemeinde boundary (true when there is no boundary). */
+  innen: boolean
 }
 export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   routes: RadwegeRoute[]
@@ -171,6 +176,9 @@ const OutlineSchema = z.object({
   }),
 })
 
+/** Plan 5/1 pieces closer than this to a 5/2 or Bestand line count as the same way. */
+const KOMBI_NEAR_M = 30
+
 /** Joins routes and lines, derives each line's group, checks that both files agree. */
 export function buildRadwegeData(
   routesFile: unknown,
@@ -184,8 +192,27 @@ export function buildRadwegeData(
   const byId = new Map(routes.map((r) => [r.id, r]))
   if (byId.size !== routes.length) throw new Error('radwege/routes.json: duplicate route id')
 
+  const outline = outlineFile == null ? null : OutlineSchema.parse(outlineFile)
+  const inside = outline
+    ? insideIndex(outline.geometry as Parameters<typeof insideIndex>[0])
+    : () => true
+  const isBestand = (f: (typeof lines.features)[number]) =>
+    f.properties.ausbau === 'bestand' || Boolean(byId.get(f.properties.routeId)?.built)
+  // Combined view: Bestand first, then plan 5/2, then what plan 5/1 adds where 5/2 has nothing
+  const nearBestand = nearIndex(
+    lines.features
+      .filter((f) => f.properties.plan === 'kurz' && isBestand(f))
+      .map((f) => f.geometry.coordinates),
+    KOMBI_NEAR_M,
+  )
+  const nearLang = nearIndex(
+    lines.features.filter((f) => f.properties.plan === 'lang').map((f) => f.geometry.coordinates),
+    KOMBI_NEAR_M,
+  )
+
   const km = new Map<string, Partial<Record<'kurz' | 'lang', number>>>()
-  const features = lines.features.map((f, fid) => {
+  const features: RadwegeData['lines']['features'] = []
+  for (const f of lines.features) {
     const route = byId.get(f.properties.routeId)
     if (!route) throw new Error(`radwege/lines.geojson: unknown route ${f.properties.routeId}`)
     const netz = route.plans[f.properties.plan]
@@ -194,24 +221,40 @@ export function buildRadwegeData(
         `radwege/lines.geojson: ${route.id} has a line in plan ${f.properties.plan} but no entry in plans`,
       )
     }
-    const m = Math.round(turfLength(f, { units: 'meters' }))
-    const perPlan = km.get(route.id) ?? {}
-    perPlan[f.properties.plan] = (perPlan[f.properties.plan] ?? 0) + m / 1000
-    km.set(route.id, perPlan)
-    return {
-      type: 'Feature' as const,
-      id: fid,
-      properties: {
-        ...f.properties,
-        fid,
-        netz,
-        status: lineStatus(route, f.properties.ausbau),
-        bedarf: lineBedarf(route, f.properties.ausbau),
-        m,
-      },
-      geometry: f.geometry,
+    const kurzBestand = f.properties.plan === 'kurz' && isBestand(f)
+    const kombiAt = (p: LonLat) =>
+      kurzBestand ||
+      (f.properties.plan === 'lang' ? !nearBestand(p) : !nearBestand(p) && !nearLang(p))
+    const pieces = splitByKey(
+      f.geometry.coordinates,
+      (p) => (kombiAt(p) ? 1 : 0) + (inside(p) ? 2 : 0),
+    )
+    for (const piece of pieces) {
+      const geometry = { type: 'LineString' as const, coordinates: piece.coords }
+      const m = Math.round(
+        turfLength({ type: 'Feature', properties: {}, geometry }, { units: 'meters' }),
+      )
+      const perPlan = km.get(route.id) ?? {}
+      perPlan[f.properties.plan] = (perPlan[f.properties.plan] ?? 0) + m / 1000
+      km.set(route.id, perPlan)
+      const fid = features.length
+      features.push({
+        type: 'Feature' as const,
+        id: fid,
+        properties: {
+          ...f.properties,
+          fid,
+          netz,
+          status: lineStatus(route, f.properties.ausbau),
+          bedarf: lineBedarf(route, f.properties.ausbau),
+          m,
+          kombi: Boolean(piece.key & 1),
+          innen: Boolean(piece.key & 2),
+        },
+        geometry,
+      })
     }
-  })
+  }
 
   for (const r of routes) {
     for (const plan of Object.keys(r.plans) as ('kurz' | 'lang')[]) {
@@ -245,7 +288,7 @@ export function buildRadwegeData(
       ),
     })),
     lines: { type: 'FeatureCollection', features },
-    outline: outlineFile == null ? null : OutlineSchema.parse(outlineFile),
+    outline,
     landkreis,
     planlage: planlageFile == null ? null : PlanlageSchema.parse(planlageFile),
   }
@@ -264,64 +307,24 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
 const optionalJson = (path: string): unknown =>
   existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null
 
-/**
- * Share of the length of `lines` within NEAR_M of any of `targets` (lon/lat), sampled every
- * ~20 m on a local flat projection; a grid of target segments keeps it fast.
- */
+/** Share of the length of `lines` within NEAR_M of any of `targets`, sampled every ~20 m. */
 const NEAR_M = 60
-function shareNear(lines: [number, number][][], targets: [number, number][][]) {
-  const KX = 111_320 * Math.cos((48.5 * Math.PI) / 180),
-    KY = 110_570
-  const xy = (p: [number, number]) => [p[0] * KX, p[1] * KY] as const
-  const CELL = 200
-  const grid = new Map<string, [number, number, number, number][]>()
-  for (const t of targets) {
-    for (let i = 1; i < t.length; i++) {
-      const [ax, ay] = xy(t[i - 1]!),
-        [bx, by] = xy(t[i]!)
-      for (
-        let gx = Math.floor(Math.min(ax, bx) / CELL);
-        gx <= Math.floor(Math.max(ax, bx) / CELL);
-        gx++
-      )
-        for (
-          let gy = Math.floor(Math.min(ay, by) / CELL);
-          gy <= Math.floor(Math.max(ay, by) / CELL);
-          gy++
-        ) {
-          const k = gx + ',' + gy
-          if (!grid.has(k)) grid.set(k, [])
-          grid.get(k)!.push([ax, ay, bx, by])
-        }
-    }
-  }
-  const near = (x: number, y: number) => {
-    for (let dx = -1; dx <= 1; dx++)
-      for (let dy = -1; dy <= 1; dy++)
-        for (const [ax, ay, bx, by] of grid.get(
-          Math.floor(x / CELL) + dx + ',' + (Math.floor(y / CELL) + dy),
-        ) ?? []) {
-          const vx = bx - ax,
-            vy = by - ay,
-            L2 = vx * vx + vy * vy || 1
-          const t = Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / L2))
-          if (Math.hypot(x - ax - t * vx, y - ay - t * vy) <= NEAR_M) return true
-        }
-    return false
-  }
+function shareNear(lines: LonLat[][], targets: LonLat[][]) {
+  const near = nearIndex(targets, NEAR_M)
   let total = 0,
     hit = 0
   for (const l of lines) {
-    for (let i = 1; i < l.length; i++) {
-      const [ax, ay] = xy(l[i - 1]!),
-        [bx, by] = xy(l[i]!)
-      const len = Math.hypot(bx - ax, by - ay),
-        n = Math.max(1, Math.ceil(len / 20))
-      for (let k = 0; k < n; k++) {
-        const t = (k + 0.5) / n
-        total += len / n
-        if (near(ax + t * (bx - ax), ay + t * (by - ay))) hit += len / n
-      }
+    for (const piece of splitByKey(l, near, 0)) {
+      const m = turfLength(
+        {
+          type: 'Feature',
+          properties: {},
+          geometry: { type: 'LineString', coordinates: piece.coords },
+        },
+        { units: 'meters' },
+      )
+      total += m
+      if (piece.key) hit += m
     }
   }
   return total ? Math.round((hit / total) * 100) / 100 : 0

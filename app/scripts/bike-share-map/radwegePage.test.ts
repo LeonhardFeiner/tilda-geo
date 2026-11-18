@@ -15,7 +15,17 @@ import { bootPage, type ViewerPage } from './viewerHarness'
 const dataFile = join(import.meta.dirname, 'output', 'viewer', `${RADWEGE_PAGE_STEM}.json`)
 const html = () => radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json` })
 
-type Line = { properties: { routeId: string; status: string; plan: string; weg: string } }
+type Line = {
+  properties: {
+    routeId: string
+    status: string
+    plan: string
+    weg: string
+    kombi: boolean
+    innen: boolean
+    m: number
+  }
+}
 const shownLines = (p: ViewerPage) =>
   (
     p.window as unknown as { __map: { getSource: (id: string) => { data: { features: Line[] } } } }
@@ -73,6 +83,27 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     const netz = new Set(data.landkreis!.features.map((f) => f.properties.netz))
     expect(netz).toEqual(new Set(['vorrang', 'basis']))
   })
+  test('combined view takes each stretch once; lines are cut at the Gemeinde boundary', () => {
+    const f = data.lines.features
+    const km = (fs: typeof f) => fs.reduce((s, x) => s + x.properties.m, 0) / 1000
+    const lang = f.filter((x) => x.properties.plan === 'lang')
+    const kombi = f.filter((x) => x.properties.kombi)
+    // all of plan 5/2 not on a Bestand line is in; plan 5/1 only where 5/2 has nothing
+    expect(km(lang.filter((x) => x.properties.kombi))).toBeGreaterThan(km(lang) * 0.7)
+    const kurzIn = km(
+      kombi.filter((x) => x.properties.plan === 'kurz' && x.properties.status !== 'bestand'),
+    )
+    const kurzAll = km(
+      f.filter((x) => x.properties.plan === 'kurz' && x.properties.status !== 'bestand'),
+    )
+    expect(kurzIn).toBeLessThan(kurzAll * 0.85)
+    expect(kurzIn).toBeGreaterThan(kurzAll * 0.4)
+    // the Waldroute to Pfaffenhofen leaves the Gemeinde
+    const wald = f.filter((x) => x.properties.routeId === 'pfaffenhofen-schweitenkirchen')
+    expect(new Set(wald.map((x) => x.properties.innen))).toEqual(new Set([true, false]))
+    // every piece is split cleanly, no slivers
+    expect(f.every((x) => x.properties.m >= 1)).toBe(true)
+  })
 })
 
 describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
@@ -128,6 +159,20 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     ).toBe(true)
     expect(p.window.location.search).toContain('plan=lang')
     expect(p.q('#line-legend').hidden).toBe(false)
+
+    const beide = p.q<HTMLInputElement>('input[name=plan][value=beide]')
+    beide.checked = true
+    beide.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(shownLines(p).every((f) => f.properties.kombi)).toBe(true)
+    expect(new Set(shownLines(p).map((f) => f.properties.plan))).toEqual(new Set(['kurz', 'lang']))
+    expect(p.q('#kombi-note').hidden).toBe(false)
+    expect(p.window.location.search).toContain('plan=beide')
+    expect(p.q('#status').textContent).toMatch(/davon [\d,]+ km innerhalb der Gemeinde/)
+
+    toggle(p, p.q<HTMLInputElement>('#innen-toggle'))
+    expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
+    expect(p.window.location.search).toContain('gemeinde=innen')
+    expect(p.q('#status').textContent).toMatch(/km innerhalb der Gemeinde\.$/)
     expect(p.errors).toEqual([])
   })
 

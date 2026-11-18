@@ -32,7 +32,9 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    named places; `overrides.json` pins stops where names are not enough (branching routes, ends at
    a road or the Landkreisgrenze, the unlabelled PAF 25 piece); its `adopt` points give a
    leftover piece to a route; `redraw` (cut at `from`, continue along `via`, with the source in
-   `why`) fixes an end the plan only sketches, e.g. the Waldroute via the Liebigstraße. The
+   `why`) fixes an end the plan only sketches; `replace` (`coords`, `why`) swaps the whole
+   drawing of a built route for its real course, e.g. the Waldroute = OSM relation 16448191 plus
+   Liebigstraße, also beyond the Gemeinde (verify.py then lists it as OFF, as intended). The
    `planlage.geojson` layer keeps the drawing. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.

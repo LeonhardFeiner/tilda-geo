@@ -458,6 +458,18 @@ def match(utm, built=False):
 # "redraw" overrides: where a source says the route runs elsewhere than the schematic drawing
 # (e.g. along a street the plan only hints at), the drawn line is cut at `from` and continues along
 # `via`; the matching then follows that. planlage.geojson below still shows the drawing.
+# "replace" overrides: a built route whose real course is known (e.g. an OSM route relation) takes
+# that course instead of the drawing, also beyond the Gemeinde; its other drawn pieces are dropped.
+for key, ov in OVERRIDES.items():
+    if 'replace' not in ov: continue
+    pl, rid = key.split('|')
+    items = [f for f in final if f['routeId'] == rid and f['plan'] == pl]
+    if not items: continue
+    keep = max(items, key=lambda f: LineString(f['utm']).length)
+    keep['utm_matched'] = [to_utm.transform(*q) for q in ov['replace']['coords']]
+    for f in items:
+        if f is not keep: f['skip_match'] = True
+
 redrawn = []
 for key, ov in OVERRIDES.items():
     if 'redraw' not in ov: continue
@@ -483,6 +495,7 @@ json.dump(dict(type='FeatureCollection', features=plan_geo), open(sys.argv[5].re
 geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
+    if f.get('skip_match'): continue
     for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f['utm']), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand'):
         ausbau = f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
