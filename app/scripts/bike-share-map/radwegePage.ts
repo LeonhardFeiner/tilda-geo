@@ -294,6 +294,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         <p class="muted" id="mode-note" hidden>Worauf die Trasse heute verläuft, laut OpenStreetMap (© OpenStreetMap-Mitwirkende), unabhängig vom Plan.</p>
         <div id="bar" role="group" aria-label="Stand – anklicken, um nur diese Gruppe zu zeigen"></div>
         <ul id="groups"></ul>
+        <p class="muted" style="font-size:12px;margin:0 0 4px">Farbe anklicken: nur diese Gruppe · mit Shift (oder Strg) mehrere wählen</p>
         <p id="filter-note" hidden></p>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
         <label class="muted" id="pl-row"><input type="checkbox" id="pl-toggle" /><span>Lage wie im Plan gezeichnet (ohne Anpassung an Wege): <i class="sw" style="background:#1d4ed8"></i> Haupt <i class="sw" style="background:#0891b2"></i> ergänzend <i class="sw" style="background:#dc2626"></i> Bestand</span></label>
@@ -393,8 +394,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     };
     const mode = () => MODES[state.farbe];
     {
-      const o = params.get(mode().param);
-      if (o && mode().byId[o]) state.only = o;
+      // one or more categories, comma-separated
+      const ids = (params.get(mode().param) || '').split(',').filter((id) => mode().byId[id]);
+      if (ids.length) state.only = ids;
     }
     /** Other routes under the last map click, offered in the detail view. */
     let others = [];
@@ -406,7 +408,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       if (!state.landkreis) p.set('landkreis', 'aus');
       if (state.planlage) p.set('planlage', 'an');
       if (state.farbe !== 'stand') p.set('farbe', state.farbe);
-      if (state.only) p.set(mode().param, state.only);
+      if (state.only) p.set(mode().param, state.only.join(','));
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
       if (state.hidden.size) p.set('ohne', [...state.hidden].join(','));
       if (state.selected) p.set('trasse', state.selected);
@@ -453,7 +455,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       const r = routeById.get(p.routeId);
       return inPlan(p) && !state.off.netz.has(p.netz) && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
     }
-    const passes = (p) => passesOther(p) && (!state.only || p[mode().key] === state.only);
+    const passes = (p) => passesOther(p) && (!state.only || state.only.includes(p[mode().key]));
     const visible = () => features.filter((f) => passes(f.properties));
     /** Progress groups (or, with a key, the categories of that property) of a route's lines in the current plan, in legend order. */
     function routeGroups(id, key) {
@@ -528,10 +530,19 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       render();
     });
     $('csv').addEventListener('click', downloadCsv);
-    function toggleOnly(id) {
-      state.only = state.only === id ? null : id;
+    /** Click: only this category (again: all). Shift/Ctrl/Cmd-click: add or remove it. */
+    function toggleOnly(id, add) {
+      if (add) {
+        const set = new Set(state.only || []);
+        if (set.has(id)) set.delete(id);
+        else set.add(id);
+        state.only = set.size ? mode().cats.map((c) => c.id).filter((c) => set.has(c)) : null;
+      } else {
+        state.only = state.only && state.only.length === 1 && state.only[0] === id ? null : [id];
+      }
       render();
     }
+    const isAdd = (e) => e.shiftKey || e.ctrlKey || e.metaKey;
     // Delegated: links to a route anywhere in the panel (recent list, "auch hier")
     document.addEventListener('click', (e) => {
       const a = e.target.closest && e.target.closest('[data-select]');
@@ -753,7 +764,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       bar.textContent = '';
       list.textContent = '';
       for (const g of md.cats) {
-        const dim = state.only && state.only !== g.id;
+        const dim = state.only && !state.only.includes(g.id);
         if (m[g.id] > 0) {
           const seg = document.createElement('button');
           seg.type = 'button';
@@ -762,28 +773,33 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           seg.title = g.label + ': ' + km(m[g.id]);
           seg.setAttribute('aria-label', g.label + ', ' + km(m[g.id]));
           if (dim) seg.classList.add('dim');
-          seg.addEventListener('click', () => toggleOnly(g.id));
+          seg.addEventListener('click', (e) => toggleOnly(g.id, isAdd(e)));
           bar.appendChild(seg);
         }
         // groups this view has no line of are left out, unless they are the active filter
-        if (!m[g.id] && state.only !== g.id) continue;
+        if (!m[g.id] && !(state.only && state.only.includes(g.id))) continue;
         const li = document.createElement('li');
         const b = document.createElement('button');
         b.type = 'button';
         b.dataset.group = g.id;
         b.title = g.hint;
-        b.setAttribute('aria-pressed', String(state.only === g.id));
+        b.setAttribute('aria-pressed', String(Boolean(state.only && state.only.includes(g.id))));
         if (dim) b.classList.add('dim');
         b.innerHTML = '<i class="sw" style="background:' + g.colour + '"></i><span>' + escHtml(g.label) + splitText(g.id) + '</span><span class="km">' + km(m[g.id]) + '</span>';
-        b.addEventListener('click', () => toggleOnly(g.id));
+        b.addEventListener('click', (e) => toggleOnly(g.id, isAdd(e)));
         li.appendChild(b);
         list.appendChild(li);
       }
       const note = $('filter-note');
       note.hidden = !state.only;
       if (state.only) {
-        note.innerHTML = '<strong>Nur:</strong> ' + escHtml(md.byId[state.only].label + ' – ' + md.byId[state.only].hint) + ' <button class="linkbtn" type="button" id="only-reset">Alle zeigen</button>';
-        $('only-reset').addEventListener('click', () => toggleOnly(state.only));
+        const sel = state.only.map((id) => md.byId[id]);
+        const what = sel.length === 1 ? sel[0].label + ' – ' + sel[0].hint : sel.map((c) => c.label).join(' + ');
+        note.innerHTML = '<strong>Nur:</strong> ' + escHtml(what) + ' <button class="linkbtn" type="button" id="only-reset">Alle zeigen</button>';
+        $('only-reset').addEventListener('click', () => {
+          state.only = null;
+          render();
+        });
       }
     }
 
@@ -855,7 +871,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         for (const input of document.querySelectorAll('input[name=plan]')) input.checked = input.value === state.plan;
       }
       // The group filter must not hide what was just picked
-      if (state.only && !routeGroups(id, mode().key).includes(state.only)) state.only = null;
+      if (state.only && !routeGroups(id, mode().key).some((g) => state.only.includes(g))) state.only = null;
       render();
       $('panel').open = true;
       $('panel').scrollTop = 0;

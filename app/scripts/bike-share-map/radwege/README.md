@@ -31,7 +31,9 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
 4. `assign.py`: each label's route = cheapest path through its colour's line graph between the
    named places; `overrides.json` pins stops where names are not enough (branching routes, ends at
    a road or the Landkreisgrenze, the unlabelled PAF 25 piece); its `adopt` points give a
-   leftover piece to a route. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
+   leftover piece to a route; `redraw` (cut at `from`, continue along `via`, with the source in
+   `why`) fixes an end the plan only sketches, e.g. the Waldroute via the Liebigstraße. The
+   `planlage.geojson` layer keeps the drawing. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
    The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed

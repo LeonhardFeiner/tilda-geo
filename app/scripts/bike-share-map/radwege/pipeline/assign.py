@@ -455,12 +455,27 @@ def match(utm, built=False):
             k0 = k
     return pieces
 
+# "redraw" overrides: where a source says the route runs elsewhere than the schematic drawing
+# (e.g. along a street the plan only hints at), the drawn line is cut at `from` and continues along
+# `via`; the matching then follows that. planlage.geojson below still shows the drawing.
+redrawn = []
+for key, ov in OVERRIDES.items():
+    if 'redraw' not in ov: continue
+    pl, rid = key.split('|')
+    cut = to_utm.transform(*ov['redraw']['from'])
+    items = [f for f in final if f['routeId'] == rid and f['plan'] == pl]
+    if not items: continue
+    f = min(items, key=lambda f: LineString(f['utm']).distance(Point(cut)))
+    i = min(range(len(f['utm'])), key=lambda k: math.dist(f['utm'][k], cut))
+    redrawn.append((f, f['utm']))
+    f['utm_matched'] = f['utm'][:i + 1] + [to_utm.transform(*q) for q in ov['redraw']['via']]
+
 # the plan geometry as drawn (georeferenced, not matched), for the page's "Lage wie im Plan" layer
 NETZ_OF = {r['id']: r['plans'] for r in ROUTES}
 plan_geo = []
 for f in final:
     netz = 'bestand' if f['ausbau'] == 'bestand' else NETZ_OF.get(f['routeId'], {}).get(f['plan']) or f['routeId'].split('-')[-1]
-    g = LineString(f['utm']).simplify(1.0)
+    g = LineString(f['utm']).simplify(1.0)  # always the drawing, also where redrawn
     plan_geo.append(dict(type='Feature', properties=dict(plan=f['plan'], netz=netz, dashed=f['ausbau'] == 'bestand-weg'),
                          geometry=dict(type='LineString', coordinates=[[round(v, 6) for v in to_wgs.transform(*c)] for c in g.coords])))
 json.dump(dict(type='FeatureCollection', features=plan_geo), open(sys.argv[5].replace('lines.geojson', 'planlage.geojson'), 'w'), separators=(',', ':'))
@@ -468,7 +483,7 @@ json.dump(dict(type='FeatureCollection', features=plan_geo), open(sys.argv[5].re
 geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
-    for weg, belag, coords, fromPlan, wids in match(f['utm'], built=f['routeId'] in built_ids or f['ausbau'] == 'bestand'):
+    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f['utm']), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand'):
         ausbau = f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße

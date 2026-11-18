@@ -109,7 +109,15 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(shownLines(p).every((f) => f.properties.status === 'vor-konzept')).toBe(true)
     expect(p.window.location.search).toContain('stand=vor-konzept')
     expect(p.q('#filter-note').hidden).toBe(false)
-    click(p, p.q('#groups [data-group="vor-konzept"]'))
+    // shift-click adds a second group
+    p.q('#groups [data-group="nichts"]').dispatchEvent(
+      new p.window.MouseEvent('click', { bubbles: true, shiftKey: true }),
+    )
+    expect(decodeURIComponent(p.window.location.search)).toContain('stand=vor-konzept,nichts')
+    expect(new Set(shownLines(p).map((f) => f.properties.status))).toEqual(
+      new Set(['vor-konzept', 'nichts']),
+    )
+    click(p, p.q('#only-reset'))
     expect(shownLines(p).length).toBe(all)
 
     const lang = p.q<HTMLInputElement>('input[name=plan][value=lang]')
