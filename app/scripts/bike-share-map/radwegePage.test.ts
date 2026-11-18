@@ -205,10 +205,10 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(nets.has('ergaenzend')).toBe(false)
     expect(nets.has('haupt')).toBe(true)
     // aerial images as background
-    const luft = p.q<HTMLInputElement>('input[name=bg][value=luftbild]')
+    const luft = p.q<HTMLInputElement>('input[name=view][value=luftbild]')
     luft.checked = true
     luft.dispatchEvent(new p.window.Event('change', { bubbles: true }))
-    expect(p.window.location.search).toContain('hintergrund=luftbild')
+    expect(p.window.location.search).toContain('ansicht=luftbild')
     // the fuller choice is on the right
     expect(p.qAll('input[name=netz]').map((i) => (i as HTMLInputElement).value)).toEqual([
       'haupt',

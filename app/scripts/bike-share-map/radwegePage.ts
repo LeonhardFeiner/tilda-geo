@@ -290,12 +290,8 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         <fieldset class="seg" id="f-view">
           <legend>Ansicht</legend>
           <label><input type="radio" name="view" value="karte" checked><span>Karte</span></label>
+          <label><input type="radio" name="view" value="luftbild"><span>Luftbild</span></label>
           <label><input type="radio" name="view" value="dauer"><span>Dauer</span></label>
-        </fieldset>
-        <fieldset class="seg" id="f-bg">
-          <legend>Hintergrund</legend>
-          <label><input type="radio" name="bg" value="karte" checked><span>Karte</span></label>
-          <label><input type="radio" name="bg" value="luftbild"><span>Luftbild</span></label>
         </fieldset>
         <fieldset class="seg" id="f-farbe">
           <legend>Einfärben nach</legend>
@@ -400,12 +396,12 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       hidden: offList('ohne'),
       selected: params.get('trasse') || null,
       search: '',
-      view: params.get('ansicht') === 'dauer' ? 'dauer' : 'karte',
+      // Karte or Luftbild (the same map on aerial images), or the duration chart
+      view: ['dauer', 'luftbild'].includes(params.get('ansicht')) ? params.get('ansicht') : params.get('hintergrund') === 'luftbild' ? 'luftbild' : 'karte',
       landkreis: params.get('landkreis') !== 'aus',
       planlage: params.get('planlage') === 'an',
       innen: params.get('gemeinde') === 'innen',
       pruefen: params.get('pruefen') === 'an',
-      luftbild: params.get('hintergrund') === 'luftbild',
     };
     const mode = () => MODES[state.farbe];
     {
@@ -425,7 +421,6 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       if (state.innen) p.set('gemeinde', 'innen');
       if (state.netz !== 'alle') p.set('netz', state.netz);
       if (state.pruefen) p.set('pruefen', 'an');
-      if (state.luftbild) p.set('hintergrund', 'luftbild');
       if (state.farbe !== 'stand') p.set('farbe', state.farbe);
       if (state.only) p.set(mode().param, state.only.join(','));
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
@@ -503,7 +498,10 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         render();
       });
     }
+    // closing the chart returns to the map view it was opened from
+    let lastMap = state.view === 'dauer' ? 'karte' : state.view;
     function setView(v) {
+      if (v !== 'dauer') lastMap = v;
       state.view = v;
       // phones: the chart needs the screen the bottom sheet would cover
       if (v === 'dauer' && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('panel').open = false;
@@ -514,19 +512,12 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       input.checked = input.value === state.view;
       input.addEventListener('change', () => setView(input.value));
     }
-    $('dauer-close').addEventListener('click', () => setView('karte'));
+    $('dauer-close').addEventListener('click', () => setView(lastMap));
     $('pl-toggle').checked = state.planlage;
     $('pl-toggle').addEventListener('change', (e) => {
       state.planlage = e.target.checked;
       render();
     });
-    for (const input of document.querySelectorAll('input[name=bg]')) {
-      input.checked = (input.value === 'luftbild') === state.luftbild;
-      input.addEventListener('change', () => {
-        state.luftbild = input.value === 'luftbild';
-        render();
-      });
-    }
     $('pr-row').hidden = !data.pruefen;
     $('pr-toggle').checked = state.pruefen;
     $('pr-toggle').addEventListener('change', (e) => {
@@ -724,7 +715,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           const inPlanExpr = state.plan === 'beide' ? true : ['any', ['==', ['get', 'plan'], state.plan], ['==', ['get', 'netz'], 'bestand']];
           map.setFilter(id, ['all', inPlanExpr, id === 'planlage' ? ['!', ['get', 'dashed']] : ['get', 'dashed']]);
         }
-        if (map.getLayer('luftbild')) map.setLayoutProperty('luftbild', 'visibility', state.luftbild ? 'visible' : 'none');
+        if (map.getLayer('luftbild')) map.setLayoutProperty('luftbild', 'visibility', state.view === 'luftbild' ? 'visible' : 'none');
         if (map.getLayer('pruefen')) {
           map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
           map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
