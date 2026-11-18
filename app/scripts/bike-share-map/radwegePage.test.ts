@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs'
 import { join } from 'node:path'
+import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec'
 import { afterEach, describe, expect, test } from 'vitest'
 import { RADWEGE_PAGE_STEM } from './constants'
 import { loadRadwegeData } from './radwegeData'
@@ -154,6 +155,42 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.qAll('#bar button').length).toBeGreaterThanOrEqual(4)
     expect(p.qAll('#recent li').length).toBe(8)
     expect(p.q('#detail').hidden).toBe(true)
+  })
+
+  test('every layer the page adds is valid MapLibre style', async () => {
+    // the map stub accepts anything; MapLibre drops an invalid layer with only a console error
+    page = await bootPage(html(), [], '', ready)
+    const p = page
+    await p.waitFor(() => shownLines(p).length > 0, 'the lines on the map')
+    const st = (
+      p.window as unknown as {
+        __map: {
+          getStyle: () => {
+            layers: { id: string }[]
+            sources: Record<string, Record<string, unknown>>
+          }
+        }
+      }
+    ).__map.getStyle()
+    const sources = Object.fromEntries(
+      Object.entries(st.sources).map(([id, src]) => {
+        const { setData: _s, data: _d, ...rest } = src
+        return [
+          id,
+          rest.type === 'geojson'
+            ? { ...rest, data: { type: 'FeatureCollection', features: [] } }
+            : rest,
+        ]
+      }),
+    )
+    const style = { version: 8, sources, layers: JSON.parse(JSON.stringify(st.layers)) }
+    const errors = validateStyleMin(style as Parameters<typeof validateStyleMin>[0]).map(
+      (e) => e.message,
+    )
+    expect(errors).toEqual([])
+    expect(st.layers.map((l) => l.id)).toEqual(
+      expect.arrayContaining(['landkreis', 'luftbild', 'radwege-solid', 'pruefen']),
+    )
   })
 
   test('the legend filters by group, the switch changes the plan', async () => {

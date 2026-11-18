@@ -631,8 +631,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         map.addSource('landkreis', { type: 'geojson', data: data.landkreis });
         map.addLayer({ id: 'landkreis', type: 'line', source: 'landkreis', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
           'line-color': ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.colour, LANDKREIS.basis.colour],
-          'line-width': ['match', ['get', 'netz'], 'vorrang', width(LANDKREIS.vorrang.width), width(LANDKREIS.basis.width)],
-          'line-opacity': 0.3,
+          // zoom must be the outer expression: MapLibre rejects an interpolate inside a match
+          'line-width': ['interpolate', ['linear'], ['zoom'], 11, ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.width, LANDKREIS.basis.width], 16, ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.width * 2, LANDKREIS.basis.width * 2]],
+          'line-opacity': 0.4,
         } });
         map.on('mousemove', 'landkreis', (e) => {
           // the route lines on top have their own popup
