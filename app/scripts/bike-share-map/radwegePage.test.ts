@@ -204,6 +204,23 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     const nets = new Set(shownLines(p).map((f) => (f.properties as { netz?: string }).netz))
     expect(nets.has('ergaenzend')).toBe(false)
     expect(nets.has('haupt')).toBe(true)
+    // aerial images as background
+    const luft = p.q<HTMLInputElement>('input[name=bg][value=luftbild]')
+    luft.checked = true
+    luft.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(p.window.location.search).toContain('hintergrund=luftbild')
+    // the fuller choice is on the right
+    expect(p.qAll('input[name=netz]').map((i) => (i as HTMLInputElement).value)).toEqual([
+      'haupt',
+      'ergaenzend',
+      'alle',
+    ])
+    const erg = p.q<HTMLInputElement>('input[name=netz][value=ergaenzend]')
+    erg.checked = true
+    erg.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    const nets2 = new Set(shownLines(p).map((f) => (f.properties as { netz?: string }).netz))
+    expect(nets2.has('haupt')).toBe(false)
+    expect(nets2.has('ergaenzend')).toBe(true)
     // the spots to check can be switched on
     toggle(p, p.q<HTMLInputElement>('#pr-toggle'))
     expect(p.window.location.search).toContain('pruefen=an')

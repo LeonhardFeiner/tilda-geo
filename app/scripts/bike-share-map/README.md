@@ -133,8 +133,9 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   5/1 adds where neither lies within 30 m (`kombi`). "Nur innerhalb der Gemeindegrenze"
   (`?gemeinde=innen`) hides what lies outside (`innen`) from map and all numbers. Both flags come
   from cutting the lines in `radwegeData.ts` (`radwegeGeometry.ts`).
-- "Trassen: Nur Haupttrassen" (`?netz=haupt`) hides the ergänzende Trassen; Bestand and the
-  Landkreis route always show. A new path beside a road is drawn offset to the side the plan
+- "Trassen" (`?netz=haupt|ergaenzend`): only the Haupt- or only the ergänzende Trassen (the
+  latter also without the Landkreis route); Bestand always shows. "Hintergrund: Luftbild"
+  (`?hintergrund=luftbild`): DOP20 orthophotos of the Bayerische Vermessungsverwaltung (open data). A new path beside a road is drawn offset to the side the plan
   draws it on (`seite`, `richtung`, `strasse` from `assign.py`). "Prüfstellen" (`?pruefen=an`,
   `radwege/pruefen.geojson` from `pipeline/check.py`) marks where the matching may be wrong.
   Statements, citizen questions, announcements and events marked `uncertain` never count.

@@ -4,36 +4,6 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "oberthann-schweitenkirchen",
-        "plan": "lang",
-        "grund": "gebaeude",
-        "text": "Die Linie führt durch ein Gebäude (58 m)."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.597708, 48.50402] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "gebaeude",
-        "text": "Die Linie führt durch ein Gebäude (17 m)."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.608321, 48.479738] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "lang",
-        "grund": "gebaeude",
-        "text": "Die Linie führt durch ein Gebäude (17 m)."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.608321, 48.479738] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "bestand",
         "plan": "kurz",
         "grund": "gebaeude",
@@ -50,16 +20,6 @@
         "text": "Die Linie führt durch ein Gebäude (6 m)."
       },
       "geometry": { "type": "Point", "coordinates": [11.652432, 48.540386] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "grund": "gebaeude",
-        "text": "Die Linie führt durch ein Gebäude (5 m)."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.653468, 48.515883] }
     },
     {
       "type": "Feature",
@@ -85,41 +45,21 @@
       "type": "Feature",
       "properties": {
         "routeId": "oberthann-guentersdorf",
-        "plan": "lang",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.583386, 48.491091] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
         "plan": "kurz",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
-      "geometry": { "type": "Point", "coordinates": [11.582451, 48.495112] }
+      "geometry": { "type": "Point", "coordinates": [11.583722, 48.488233] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "oberthann-guentersdorf",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.583693, 48.488408] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-guentersdorf",
+        "routeId": "oberthann-schweitenkirchen",
         "plan": "lang",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
-      "geometry": { "type": "Point", "coordinates": [11.584853, 48.488217] }
+      "geometry": { "type": "Point", "coordinates": [11.589035, 48.504068] }
     },
     {
       "type": "Feature",
@@ -129,7 +69,7 @@
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
-      "geometry": { "type": "Point", "coordinates": [11.600394, 48.552712] }
+      "geometry": { "type": "Point", "coordinates": [11.600395, 48.552712] }
     },
     {
       "type": "Feature",
@@ -140,6 +80,16 @@
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
       "geometry": { "type": "Point", "coordinates": [11.609775, 48.478244] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-guentersdorf",
+        "plan": "lang",
+        "grund": "kurve",
+        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.584714, 48.488137] }
     },
     {
       "type": "Feature",
@@ -150,26 +100,6 @@
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
       "geometry": { "type": "Point", "coordinates": [11.609775, 48.478244] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.649902, 48.518841] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.654536, 48.521692] }
     },
     {
       "type": "Feature",
@@ -184,32 +114,32 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "lang",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.649902, 48.518841] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "lang",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.654537, 48.521692] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
         "routeId": "aufham-guentersdorf-dietersdorf-ampertshausen",
         "plan": "lang",
         "grund": "kurve",
         "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
       },
       "geometry": { "type": "Point", "coordinates": [11.622019, 48.486018] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "st2045-preinersdorf-landkreisgrenze",
+        "plan": "kurz",
+        "grund": "kurve",
+        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.649923, 48.518848] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "geisenhausen-altkaslehen",
+        "plan": "kurz",
+        "grund": "kurve",
+        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.589219, 48.550096] }
     },
     {
       "type": "Feature",
@@ -254,6 +184,36 @@
     {
       "type": "Feature",
       "properties": {
+        "routeId": "st2045-preinersdorf-landkreisgrenze",
+        "plan": "lang",
+        "grund": "kurve",
+        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.649921, 48.518847] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-guentersdorf",
+        "plan": "kurz",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 840 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.583984, 48.492359] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-guentersdorf",
+        "plan": "lang",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 840 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.584009, 48.492303] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
         "routeId": "guentersdorf-noerting",
         "plan": "kurz",
         "grund": "abseits",
@@ -274,22 +234,22 @@
     {
       "type": "Feature",
       "properties": {
-        "routeId": "guentersdorf-noerting",
+        "routeId": "st2045-preinersdorf-landkreisgrenze",
         "plan": "kurz",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 570 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
+      "geometry": { "type": "Point", "coordinates": [11.653685, 48.521639] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "guentersdorf-noerting",
+        "routeId": "st2045-preinersdorf-landkreisgrenze",
         "plan": "lang",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 570 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
+      "geometry": { "type": "Point", "coordinates": [11.653685, 48.521639] }
     },
     {
       "type": "Feature",
@@ -297,29 +257,29 @@
         "routeId": "oberthann-schweitenkirchen",
         "plan": "lang",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 330 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 500 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.594855, 48.50397] }
+      "geometry": { "type": "Point", "coordinates": [11.596004, 48.503945] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
+        "routeId": "guentersdorf-noerting",
         "plan": "kurz",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 320 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.652635, 48.520758] }
+      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
     },
     {
       "type": "Feature",
       "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
+        "routeId": "guentersdorf-noerting",
         "plan": "lang",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 320 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 470 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.652635, 48.520758] }
+      "geometry": { "type": "Point", "coordinates": [11.622266, 48.465002] }
     },
     {
       "type": "Feature",
@@ -345,61 +305,41 @@
       "type": "Feature",
       "properties": {
         "routeId": "oberthann-guentersdorf",
+        "plan": "lang",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 220 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.608799, 48.479305] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "guentersdorf-noerting",
         "plan": "kurz",
         "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 250 m mehr als 45 m neben der Zeichnung im Plan."
+        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.584232, 48.489809] }
+      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "guentersdorf-noerting",
+        "plan": "lang",
+        "grund": "abseits",
+        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
+      },
+      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
     },
     {
       "type": "Feature",
       "properties": {
         "routeId": "oberthann-guentersdorf",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 250 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.584227, 48.489841] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "kurz",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "guentersdorf-noerting",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 190 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.624446, 48.462539] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
-        "plan": "lang",
-        "grund": "abseits",
-        "text": "Die zugeordnete Linie liegt über 120 m mehr als 45 m neben der Zeichnung im Plan."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.655625, 48.52319] }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "st2045-preinersdorf-landkreisgrenze",
         "plan": "kurz",
         "grund": "abseits",
         "text": "Die zugeordnete Linie liegt über 110 m mehr als 45 m neben der Zeichnung im Plan."
       },
-      "geometry": { "type": "Point", "coordinates": [11.655675, 48.52322] }
+      "geometry": { "type": "Point", "coordinates": [11.608253, 48.479592] }
     },
     {
       "type": "Feature",
@@ -429,7 +369,7 @@
         "grund": "zickzack",
         "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
       },
-      "geometry": { "type": "Point", "coordinates": [11.605564, 48.536235] }
+      "geometry": { "type": "Point", "coordinates": [11.60557, 48.536199] }
     },
     {
       "type": "Feature",
@@ -439,7 +379,7 @@
         "grund": "zickzack",
         "text": "Die zugeordnete Linie läuft hier hin und wieder zurück; vermutlich ein Umweg über einen falschen Weg."
       },
-      "geometry": { "type": "Point", "coordinates": [11.58058, 48.503576] }
+      "geometry": { "type": "Point", "coordinates": [11.580582, 48.503558] }
     },
     {
       "type": "Feature",

@@ -283,13 +283,19 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
         </fieldset>
         <fieldset class="seg" id="f-netz">
           <legend>Trassen</legend>
+          <label><input type="radio" name="netz" value="haupt"><span>Nur Haupt</span></label>
+          <label><input type="radio" name="netz" value="ergaenzend"><span>Nur Ergänzende</span></label>
           <label><input type="radio" name="netz" value="alle" checked><span>Haupt- und ergänzende</span></label>
-          <label><input type="radio" name="netz" value="haupt"><span>Nur Haupttrassen</span></label>
         </fieldset>
         <fieldset class="seg" id="f-view">
           <legend>Ansicht</legend>
           <label><input type="radio" name="view" value="karte" checked><span>Karte</span></label>
           <label><input type="radio" name="view" value="dauer"><span>Dauer</span></label>
+        </fieldset>
+        <fieldset class="seg" id="f-bg">
+          <legend>Hintergrund</legend>
+          <label><input type="radio" name="bg" value="karte" checked><span>Karte</span></label>
+          <label><input type="radio" name="bg" value="luftbild"><span>Luftbild</span></label>
         </fieldset>
         <fieldset class="seg" id="f-farbe">
           <legend>Einfärben nach</legend>
@@ -390,7 +396,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       only: null,
       off: { baulast: offList('ohne-baulast') },
       // vorhandene Wege und das Landkreisnetz bleiben immer sichtbar; wählbar ist nur, ob die ergänzenden Trassen dazukommen
-      nurHaupt: params.get('netz') === 'haupt' || offList('ohne-netz').has('ergaenzend'),
+      netz: ['haupt', 'ergaenzend'].includes(params.get('netz')) ? params.get('netz') : offList('ohne-netz').has('ergaenzend') ? 'haupt' : 'alle',
       hidden: offList('ohne'),
       selected: params.get('trasse') || null,
       search: '',
@@ -399,6 +405,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       planlage: params.get('planlage') === 'an',
       innen: params.get('gemeinde') === 'innen',
       pruefen: params.get('pruefen') === 'an',
+      luftbild: params.get('hintergrund') === 'luftbild',
     };
     const mode = () => MODES[state.farbe];
     {
@@ -416,8 +423,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       if (!state.landkreis) p.set('landkreis', 'aus');
       if (state.planlage) p.set('planlage', 'an');
       if (state.innen) p.set('gemeinde', 'innen');
-      if (state.nurHaupt) p.set('netz', 'haupt');
+      if (state.netz !== 'alle') p.set('netz', state.netz);
       if (state.pruefen) p.set('pruefen', 'an');
+      if (state.luftbild) p.set('hintergrund', 'luftbild');
       if (state.farbe !== 'stand') p.set('farbe', state.farbe);
       if (state.only) p.set(mode().param, state.only.join(','));
       for (const [k, key] of Object.entries(URL_KEYS)) if (state.off[k].size) p.set(key, [...state.off[k]].join(','));
@@ -464,7 +472,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     const inPlan = (p) => (state.plan === 'beide' ? p.kombi : p.plan === state.plan || p.status === 'bestand') && (!state.innen || p.innen);
     function passesOther(p) {
       const r = routeById.get(p.routeId);
-      return inPlan(p) && !(state.nurHaupt && p.netz === 'ergaenzend') && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
+      // existing paths always show; "Nur Ergänzende" also leaves out the Landkreis route
+      const netzOk = state.netz === 'alle' || p.netz === 'bestand' || (state.netz === 'haupt' ? p.netz !== 'ergaenzend' : p.netz === 'ergaenzend');
+      return inPlan(p) && netzOk && !state.off.baulast.has(r.baulast) && !state.hidden.has(p.routeId);
     }
     const passes = (p) => passesOther(p) && (!state.only || state.only.includes(p[mode().key]));
     const visible = () => features.filter((f) => passes(f.properties));
@@ -510,6 +520,13 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       state.planlage = e.target.checked;
       render();
     });
+    for (const input of document.querySelectorAll('input[name=bg]')) {
+      input.checked = (input.value === 'luftbild') === state.luftbild;
+      input.addEventListener('change', () => {
+        state.luftbild = input.value === 'luftbild';
+        render();
+      });
+    }
     $('pr-row').hidden = !data.pruefen;
     $('pr-toggle').checked = state.pruefen;
     $('pr-toggle').addEventListener('change', (e) => {
@@ -539,9 +556,9 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
     }
     if (state.off.baulast.size || state.hidden.size) $('more').open = true;
     for (const input of document.querySelectorAll('input[name=netz]')) {
-      input.checked = (input.value === 'haupt') === state.nurHaupt;
+      input.checked = input.value === state.netz;
       input.addEventListener('change', () => {
-        state.nurHaupt = input.value === 'haupt';
+        state.netz = input.value;
         render();
       });
     }
@@ -604,6 +621,17 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
       else map.once('load', fn);
     }
     onMapReady(() => {
+      // Luftbild: amtliche Orthophotos (DOP20) der Bayerischen Vermessungsverwaltung, Open Data;
+      // unter den Beschriftungen der Grundkarte, über ihren Flächen. Lädt erst beim Einschalten.
+      map.addSource('luftbild', {
+        type: 'raster',
+        tiles: ['https://geoservices.bayern.de/od/wms/dop/v1/dop20?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap&LAYERS=by_dop20c&STYLES=&SRS=EPSG:3857&BBOX={bbox-epsg-3857}&WIDTH=256&HEIGHT=256&FORMAT=image/jpeg'],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: 'Luftbild © <a href="https://geodaten.bayern.de/opengeodata/">Bayerische Vermessungsverwaltung</a> (CC BY 4.0)',
+      });
+      const firstLabel = (map.getStyle().layers || []).find((l) => l.type === 'symbol');
+      map.addLayer({ id: 'luftbild', type: 'raster', source: 'luftbild', layout: { visibility: 'none' } }, firstLabel ? firstLabel.id : undefined);
       if (data.outline) {
         map.addSource('gemeinde', { type: 'geojson', data: data.outline });
         map.addLayer({ id: 'gemeinde', type: 'line', source: 'gemeinde', paint: { 'line-color': '#5a6068', 'line-width': 1.5, 'line-dasharray': [4, 2], 'line-opacity': 0.8 } });
@@ -694,6 +722,7 @@ export function radwegePageHtml({ dataHref }: RadwegePageInput) {
           const inPlanExpr = state.plan === 'beide' ? true : ['any', ['==', ['get', 'plan'], state.plan], ['==', ['get', 'netz'], 'bestand']];
           map.setFilter(id, ['all', inPlanExpr, id === 'planlage' ? ['!', ['get', 'dashed']] : ['get', 'dashed']]);
         }
+        if (map.getLayer('luftbild')) map.setLayoutProperty('luftbild', 'visibility', state.luftbild ? 'visible' : 'none');
         if (map.getLayer('pruefen')) {
           map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
           map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);

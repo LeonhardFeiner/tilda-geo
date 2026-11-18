@@ -496,6 +496,73 @@ for key, ov in OVERRIDES.items():
     redrawn.append((f, f['utm']))
     f['utm_matched'] = f['utm'][:i + 1] + [to_utm.transform(*q) for q in ov['redraw']['via']]
 
+# A new path drawn at a steady offset beside a Kreis-/Staatsstraße means "a path on this side of
+# that road" (the plans are schematic). Where no existing path follows the drawing more closely,
+# the drawing is moved onto the road before matching, so the match follows the road instead of
+# side tracks; the side is kept from the drawing (road_side below).
+BESIDE_MIN, BESIDE_MAX, BESIDE_RUN, BESIDE_GAP = 8, 60, 150, 12
+
+
+def nearest_on_ref(q, ref):
+    best = None
+    for wi in {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), BESIDE_MAX + 30)}:
+        if ways[wi][4].get('ref') != ref or way_class(wi)[0] not in ('kreisstrasse', 'staatsstrasse'): continue
+        pr = ways[wi][3].interpolate(ways[wi][3].project(q))
+        if best is None or pr.distance(q) < best.distance(q): best = pr
+    return best or q
+
+
+def beside_road(utm):
+    line = LineString(utm)
+    n = max(2, int(line.length // 10) + 1)
+    pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
+    hit = []
+    for k, q in enumerate(pts):
+        a, b = pts[max(0, k - 2)], pts[min(n - 1, k + 2)]
+        dx, dy = b.x - a.x, b.y - a.y; dn = math.hypot(dx, dy) or 1.0
+        best, other = None, math.inf
+        for wi in {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), BESIDE_MAX + 5)}:
+            ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t); d = pr.distance(q)
+            p0, p1 = ls.interpolate(max(0.0, t - 5)), ls.interpolate(min(ls.length, t + 5))
+            wx, wy = p1.x - p0.x, p1.y - p0.y; wn = math.hypot(wx, wy) or 1.0
+            if abs((dx * wx + dy * wy) / (dn * wn)) < 0.9: continue  # not alongside
+            if way_class(wi)[0] in ('kreisstrasse', 'staatsstrasse'):
+                if BESIDE_MIN <= d <= BESIDE_MAX and (best is None or d < best[0]): best = (d, pr, ways[wi][4].get('ref'))
+            else:
+                other = min(other, d)
+        # an existing path right on the drawing is what the plan means
+        hit.append(best if best and other > min(8, best[0]) else None)
+    # bridge short gaps (a crossing, a field path touching the drawing) within one road's run
+    for k in range(1, n):
+        if hit[k] is None and hit[k - 1] is not None:
+            j = k
+            while j < n and hit[j] is None and j - k < BESIDE_GAP: j += 1
+            if j < n and hit[j] is not None and hit[j][2] == hit[k - 1][2]:
+                for i in range(k, j):
+                    ls_ref = hit[k - 1]
+                    hit[i] = (ls_ref[0], nearest_on_ref(pts[i], ls_ref[2]), ls_ref[2])
+    out, k, moved = [], 0, 0
+    while k < n:
+        if hit[k] is None: out.append((pts[k].x, pts[k].y)); k += 1; continue
+        j = k
+        while j < n and hit[j] is not None and hit[j][2] == hit[k][2]: j += 1
+        if (j - k) * 10 >= BESIDE_RUN:
+            out += [(hit[i][1].x, hit[i][1].y) for i in range(k, j)]; moved += (j - k) * 10
+        else:
+            out += [(pts[i].x, pts[i].y) for i in range(k, j)]
+        k = j
+    return out, moved
+
+
+built_set = {r['id'] for r in ROUTES if r.get('built')}
+moved = 0
+for f in final:
+    if 'utm_matched' in f or f.get('not_drawn') or f['routeId'] in built_set: continue
+    if f['ausbau'] not in ('voll', 'freigabe'): continue
+    new, m = beside_road(f['utm'])
+    if m: f['utm_beside'] = new; moved += m
+print('drawing moved onto the road beside it:', round(moved / 1000, 1), 'km')
+
 # the plan geometry as drawn (georeferenced, not matched), for the page's "Lage wie im Plan" layer
 NETZ_OF = {r['id']: r['plans'] for r in ROUTES}
 plan_geo = []
@@ -534,7 +601,7 @@ geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
     if f.get('skip_match'): continue
-    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f['utm']), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto')):
+    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto')):
         ausbau = f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße

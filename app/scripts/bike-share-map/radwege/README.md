@@ -91,3 +91,6 @@ or turns a corner where the drawing is straight, runs > 45 m from the drawing, t
 are equally close, or the match runs out and back. Fix a confirmed one with an override.
 `assign.py` sets `seite`/`richtung`/`strasse` on new paths (5/2 solid, 5/1 without a way) along
 a road: the plans draw such a path on the side of the road where it is to be built.
+Before matching, a drawing that runs ≥ 150 m at 8–60 m beside a Kreis-/Staatsstraße, with no
+existing path within 8 m of it, is moved onto that road (gaps ≤ 120 m bridged), so the match
+follows the road rather than side tracks; the side comes from the original drawing.
