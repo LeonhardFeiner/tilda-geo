@@ -1,3 +1,4 @@
+import { runInNewContext } from 'node:vm'
 import { describe, expect, test } from 'vitest'
 import { notFoundPageHtml } from './notFoundPage'
 
@@ -14,7 +15,7 @@ function redirectFor(href: string) {
     },
   }
   const window: Record<string, unknown> = {}
-  new Function('location', 'window', script)(location, window)
+  runInNewContext(script, { location, window })
   return { target, home: window.__radinfraHome }
 }
 
