@@ -1,7 +1,9 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { validateStyleMin } from '@maplibre/maplibre-gl-style-spec'
 import { afterEach, describe, expect, test } from 'vitest'
-import { loadRadwegeData } from './radwegeData'
+import { RADWEGE_PAGE_STEM } from './constants'
+import { buildRadwegeData, loadRadwegeData, RADWEGE_DIR } from './radwegeData'
 import { click, dataFile, html, ready, shownLines, toggle } from './radwegePageTestHarness'
 import { bootPage, type ViewerPage } from './viewerHarness'
 
@@ -76,9 +78,6 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(st.every((f) => f.properties.kombi)).toBe(true)
   })
   test('spots to check and the side of the road come with the data', () => {
-    const grund = new Set(data.pruefen!.features.map((f) => f.properties.grund))
-    expect(grund.has('gebaeude')).toBe(true)
-    expect(grund.has('kurve')).toBe(true)
     // the plan changes the side of the PAF 6 at Güntersdorf: a crossing there
     const q = data.querungen!.features.filter((f) =>
       f.properties.routeIds.includes('guentersdorf-noerting'),
@@ -87,7 +86,7 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
       q.some((f) => f.properties.strasse === 'PAF 6' && f.properties.ort === 'Güntersdorf'),
     ).toBe(true)
     const ids = new Set(data.routes.map((r) => r.id))
-    expect(data.pruefen!.features.every((f) => ids.has(f.properties.routeId))).toBe(true)
+    for (const f of data.pruefen?.features ?? []) expect(ids.has(f.properties.routeId)).toBe(true)
     // the new path along the St 2045 to Sünzhausen is drawn on one side of the road
     const st = data.lines.features.filter(
       (f) => f.properties.routeId === 'st2045-preinersdorf-landkreisgrenze' && f.properties.seite,
@@ -167,6 +166,41 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
   })
 })
 
+test('an empty Prüfstellen file counts as none (all spots checked)', () => {
+  const read = (name: string) => JSON.parse(readFileSync(join(RADWEGE_DIR, name), 'utf8'))
+  const build = (pruefen: unknown) =>
+    buildRadwegeData(read('routes.json'), read('lines.geojson'), null, null, null, pruefen)
+  expect(build({ type: 'FeatureCollection', features: [] }).pruefen).toBeNull()
+  expect(build(null).pruefen).toBeNull()
+  const spot = {
+    type: 'Feature',
+    properties: { routeId: 'bestand', plan: 'kurz', grund: 'kurve', text: 'Test' },
+    geometry: { type: 'Point', coordinates: [11.6, 48.5] },
+  }
+  expect(build({ type: 'FeatureCollection', features: [spot] }).pruefen!.features).toHaveLength(1)
+})
+
+/** The built data file with one spot to check, so the Prüfstellen layer and row exist. */
+const withSpot = () => {
+  const d = JSON.parse(readFileSync(dataFile, 'utf8')) as Record<string, unknown>
+  d.pruefen = {
+    type: 'FeatureCollection',
+    features: [
+      {
+        type: 'Feature',
+        properties: {
+          routeId: 'ohne-beschriftung-ergaenzend',
+          plan: 'kurz',
+          grund: 'kurve',
+          text: 'Test',
+        },
+        geometry: { type: 'Point', coordinates: [11.6, 48.5] },
+      },
+    ],
+  }
+  return { serve: { [`${RADWEGE_PAGE_STEM}.json`]: JSON.stringify(d) } }
+}
+
 describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
   test('boots with the short-term plan, the group bar and the latest events', async () => {
     page = await bootPage(html(), [], '', ready)
@@ -230,11 +264,14 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.qAll('#bar button').length).toBeGreaterThanOrEqual(4)
     expect(p.qAll('#recent li').length).toBe(8)
     expect(p.q('#detail').hidden).toBe(true)
+    // no Prüfstellen row once every spot is checked
+    const built = JSON.parse(readFileSync(dataFile, 'utf8')) as { pruefen: unknown }
+    expect(p.q('#pr-row').hidden).toBe(built.pruefen == null)
   })
 
   test('every layer the page adds is valid MapLibre style', async () => {
     // the map stub accepts anything; MapLibre drops an invalid layer with only a console error
-    page = await bootPage(html(), [], '', ready)
+    page = await bootPage(html(), [], '', { ...ready, ...withSpot() })
     const p = page
     await p.waitFor(() => shownLines(p).length > 0, 'the lines on the map')
     const st = (
@@ -269,7 +306,7 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
   })
 
   test('the legend filters by group, the switch changes the plan', async () => {
-    page = await bootPage(html(), [], '', ready)
+    page = await bootPage(html(), [], '', { ...ready, ...withSpot() })
     const p = page
     await p.waitFor(() => shownLines(p).length > 0, 'the lines on the map')
     const all = shownLines(p).length

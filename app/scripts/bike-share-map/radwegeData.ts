@@ -387,7 +387,8 @@ export function buildRadwegeData(
     outline,
     landkreis,
     planlage: planlageFile == null ? null : PlanlageSchema.parse(planlageFile),
-    pruefen: pruefFile == null ? null : PruefSchema.parse(pruefFile),
+    // no spot left to check (all confirmed in overrides.json): the page shows no Prüfstellen row
+    pruefen: pruefFile == null ? null : nonEmpty(PruefSchema.parse(pruefFile)),
     querungen: querungFile == null ? null : QuerungSchema.parse(querungFile),
   }
 }
@@ -403,6 +404,8 @@ export function loadRadwegeData(dir = RADWEGE_DIR) {
     optionalJson(join(dir, 'querungen.geojson')),
   )
 }
+
+const nonEmpty = <T extends { features: unknown[] }>(fc: T) => (fc.features.length ? fc : null)
 
 const optionalJson = (path: string): unknown =>
   existsSync(path) ? JSON.parse(readFileSync(path, 'utf8')) : null

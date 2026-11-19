@@ -202,6 +202,8 @@ type BootOptions = {
    * applies to index.html, which turns the detour-map links off.
    */
   mirror?: boolean
+  /** Served instead of the file in output/viewer/ at that path (e.g. a data file with test data). */
+  serve?: Record<string, string>
 }
 
 export async function bootViewer(query = '', options: BootOptions = {}): Promise<ViewerPage> {
@@ -283,6 +285,7 @@ export async function bootPage(
     const rel = url.pathname.replace(/^\//, '')
     window.__fetches.push(rel)
     if (options.failGemeindeGeometry && rel.startsWith('gemeinde-geometry/')) return respond(404)
+    if (options.serve?.[rel] != null) return respond(200, Buffer.from(options.serve[rel]))
     // Region preview pages are gitignored build output (CI makes them); pretend they exist.
     if (rel.startsWith('r/') && rel.endsWith('.html'))
       return respond(init?.method === 'HEAD' ? 200 : 404)

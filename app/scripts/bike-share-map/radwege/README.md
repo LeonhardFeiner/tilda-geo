@@ -112,6 +112,6 @@ offset they would show as a path on both sides of the road. Override `beside` (`
 `why`) moves a drawing onto one road where the automatic rule does not apply (e.g. Güntersdorf:
 the drawing touches the Blumenstraße only because of its offset from the PAF 6).
 Spots checked by someone (aerial images or on site) go into `overrides.json` as `geprueft`
-(`at`, `note`) and drop out of `pruefen.geojson`. `querung.py` writes `querungen.geojson`: where
+(`at`, `note`) and drop out of `pruefen.geojson`; with none left, the page hides the Prüfstellen row. `querung.py` writes `querungen.geojson`: where
 the drawing of a new path changes the side of a Kreis-/Staatsstraße, a crossing at the junction
 where the drawing crosses the road (an assumption, shown as such).
