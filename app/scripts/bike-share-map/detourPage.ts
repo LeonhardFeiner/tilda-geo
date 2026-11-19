@@ -38,6 +38,10 @@ const REFERENCES = {
   },
   auto: { label: 'Auto', head: 'Auto', dative: 'dem Auto', legend: 'Auto' },
 } as const
+/** A worked pair per Landkreis for the empty page (place URL names, see placeParam in the page). */
+const DETOUR_EXAMPLES: Record<string, [string, string]> = {
+  'relation/62371': ['schweitenkirchen', 'pfaffenhofen-an-der-ilm'],
+}
 const SCALE_COLOURS = ['#1a9850', '#fee08b', '#d73027']
 const UNREACHABLE_COLOUR = '#9aa0a6'
 /** Bike route colour by edge stress (0..100). */
@@ -221,6 +225,7 @@ export function detourPageHtml({
       <p class="page-nav"><a href="${viewerHref}">&larr; Zur Karte</a> · <a href="${methodikHref}#umweg">Methodik</a></p>
       <p class="muted">Wie viel länger, höher und langsamer ist eine verkehrsarme Radroute als die übliche Autostrecke oder die schnellste Radroute — von einem Ort zu allen anderen im Landkreis.</p>
       <p id="status" aria-live="polite">Lade Daten …</p>
+      <p id="example" class="muted" hidden></p>
       <fieldset id="lk-box" hidden>
         <legend>Landkreis</legend>
         <select id="lk-select" aria-label="Landkreis"></select>
@@ -270,6 +275,7 @@ export function detourPageHtml({
           </select>
           <button class="btn" id="csv" type="button" style="float:right">CSV</button></p>
         <div style="overflow-x:auto"><table id="table"><thead><tr><th scope="col">Ort</th><th scope="col" data-sort="air" title="Luftlinie"><button type="button" class="th-sort">Luft</button></th><th scope="col" id="ref-head" title="Auto: km / min">Auto</th><th scope="col" title="Rad: km / min">Rad</th><th scope="col" data-sort="km" title="Mehr Kilometer"><button type="button" class="th-sort">+km</button></th><th scope="col" data-sort="hm" title="Mehr Höhenmeter bergauf"><button type="button" class="th-sort">+Hm</button></th><th scope="col" data-sort="min" title="Mehr Minuten"><button type="button" class="th-sort">+min</button></th></tr></thead><tbody></tbody></table></div>
+        <p class="muted" style="margin-top:4px">Ein Minus bei +km: Die Radroute ist kürzer, weil Räder Feld-, Wald- und Radwege nutzen, die Autos nicht befahren dürfen.</p>
       </div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Radinfrastruktur-Kategorien: TILDA; Höhen: Mapzen/AWS Terrain Tiles. Annahmen: siehe <a href="${methodikHref}#umweg">Methodik</a>.</p>
     </div>
@@ -288,6 +294,8 @@ export function detourPageHtml({
     const STRESS_COLOURS = ${JSON.stringify(STRESS_COLOURS)};
     const CLOSE_PCT = ${closePct};
     const STRESS_WEIGHT = ${STRESS_WEIGHT};
+    /** "at least 1 km" on Tempo 70–100 without a cycle path, for the count in the summary. */
+    const BUSY_COUNT_M = 1000;
     const R = DetourRouting;
     const $ = (id) => document.getElementById(id);
     const deNum = (v, digits) => v.toLocaleString('de-DE', { minimumFractionDigits: digits, maximumFractionDigits: digits });
@@ -298,8 +306,10 @@ export function detourPageHtml({
     const params = new URLSearchParams(location.search);
     const state = {
       lk: LANDKREISE.some((l) => l.id === params.get('lk')) ? params.get('lk') : (LANDKREISE[0] || {}).id,
-      origin: params.get('von') ? Number(params.get('von')) : null,
-      dest: params.get('nach') ? Number(params.get('nach')) : null,
+      // ?von=/nach= hold a place's URL name (schweitenkirchen) or its OSM node id; both are
+      // resolved once the places are loaded (placeFromParam)
+      origin: params.get('von') || null,
+      dest: params.get('nach') || null,
       safety: Math.max(0, Math.min(100, Number(params.get('sicherheit') || 70))),
       metric: METRICS[params.get('zeige')] ? params.get('zeige') : 'km',
       // Default: the fastest bike route. Against the car, most of the extra time is just that
@@ -338,8 +348,8 @@ export function detourPageHtml({
     function syncUrl() {
       const p = new URLSearchParams();
       if (LANDKREISE.length > 1) p.set('lk', state.lk);
-      if (state.origin != null) p.set('von', String(state.origin));
-      if (state.dest != null) p.set('nach', String(state.dest));
+      if (state.origin != null) p.set('von', placeParam(state.origin));
+      if (state.dest != null) p.set('nach', placeParam(state.dest));
       if (state.safety !== 70) p.set('sicherheit', String(state.safety));
       if (state.metric !== 'km') p.set('zeige', state.metric);
       if (state.ref !== 'rad') p.set('vergleich', state.ref);
@@ -372,6 +382,42 @@ export function detourPageHtml({
     const adjCar = R.buildAdjacency(graph.car, graph.nodeCount);
     const places = graph.places;
     const indexById = new Map(places.map((p, i) => [p.id, i]));
+    // Readable, rebuild-proof links: a place's name as a URL word ("pfaffenhofen-an-der-ilm"),
+    // with its Gemeinde where the name alone is ambiguous; the OSM node id only as a last resort.
+    const slug = (t) => t.toLowerCase().replace(/[äöüß]/g, (c) => ({ ä: 'ae', ö: 'oe', ü: 'ue', ß: 'ss' })[c]).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+    const slugCount = new Map();
+    const longSlug = (p) => slug(p.name + ' ' + (p.gemeinde || ''));
+    for (const p of places) for (const k of [slug(p.name), longSlug(p)]) slugCount.set(k, (slugCount.get(k) || 0) + 1);
+    function placeParam(id) {
+      const p = places[indexById.get(id)];
+      if (!p) return String(id);
+      if (slugCount.get(slug(p.name)) === 1) return slug(p.name);
+      if (slugCount.get(longSlug(p)) === 1) return longSlug(p);
+      return String(id);
+    }
+    function placeFromParam(v) {
+      if (v == null) return null;
+      if (/^\\d+$/.test(v)) return Number(v);
+      const w = slug(v);
+      const hit = places.filter((p) => slug(p.name) === w);
+      if (hit.length === 1) return hit[0].id;
+      const long = places.filter((p) => longSlug(p) === w);
+      return long.length === 1 ? long[0].id : null;
+    }
+    state.origin = placeFromParam(state.origin);
+    state.dest = placeFromParam(state.dest);
+    // One worked pair for the empty page, where the Landkreis has one (DETOUR_EXAMPLES)
+    let exampleHtml = '';
+    {
+      const ex = ${JSON.stringify(DETOUR_EXAMPLES)}[state.lk];
+      const a = ex ? placeFromParam(ex[0]) : null;
+      const b = ex ? placeFromParam(ex[1]) : null;
+      if (a != null && b != null) {
+        const q = (LANDKREISE.length > 1 ? 'lk=' + encodeURIComponent(state.lk) + '&' : '') + 'von=' + placeParam(a) + '&nach=' + placeParam(b);
+        exampleHtml = 'Zum Beispiel: <a href="?' + q + '">' + escHtml(places[indexById.get(a)].name) + ' → ' + escHtml(places[indexById.get(b)].name) + '</a>';
+      }
+      $('example').innerHTML = exampleHtml;
+    }
     // From the viewer's region card: ?gemeinde=<OSM id> starts at the Gemeinde's main place —
     // the one named like the Gemeinde, else its largest (town before village before hamlet).
     const gemeindeParam = params.get('gemeinde');
@@ -605,6 +651,7 @@ export function detourPageHtml({
       if (map.getSource('dots')) map.getSource('dots').setData(dotsData());
       const box = $('origin-box');
       box.hidden = state.origin == null;
+      $('example').hidden = state.origin != null || !exampleHtml;
       if (state.origin == null) {
         $('pair').hidden = true;
         if (map.getSource('route-ref')) {
@@ -643,6 +690,9 @@ export function detourPageHtml({
       if (comps.length) {
         const pctOf = (key, which) => deNum(median(comps.map((c) => (c[which][key] / c[which].totalM) * 100)), 0) + ' %';
         parts.push('Die schnellste Radroute zu den ' + comps.length + ' anderen Orten führt im Median zu <strong>' + pctOf('busyM', 'fast') + ' über Straßen mit Tempo 70–100 ohne Radweg</strong>.');
+        // the same as a count, which reads easier than a median share
+        const busyAtLeast = (which) => comps.filter((c) => c[which].busyM >= BUSY_COUNT_M).length;
+        parts.push('Bei <strong>' + busyAtLeast('fast') + ' von ' + comps.length + '</strong> Orten sind es mindestens 1 km' + (state.safety > 0 ? '; auf der verkehrsarmen Route bei ' + busyAtLeast('safe') + '.' : '.'));
         if (state.safety > 0) {
           parts.push('Die verkehrsarme Route führt im Median zu ' + pctOf('trackM', 'safe') + ' über Feld- und Wirtschaftswege und zu ' + pctOf('infraM', 'safe') + ' über Radwege.');
         }

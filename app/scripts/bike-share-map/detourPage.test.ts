@@ -221,4 +221,40 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
     },
     TIMEOUT,
   )
+
+  test(
+    'pair links use place names; old OSM-id links still work and are rewritten',
+    async () => {
+      page = await bootPage(html(), pageBundles(html()), '?von=26539333&nach=240059158', loaded)
+      const p = page
+      await p.waitFor(() => !p.q('#pair').hidden, 'the pair box')
+      expect(p.window.location.search).toBe('?von=schweitenkirchen&nach=pfaffenhofen-an-der-ilm')
+      // the count beside the median: places reached over ≥ 1 km of Tempo 70–100 without a path
+      expect(p.q('#summary').textContent).toMatch(
+        /Bei \d+ von \d+ Orten sind es mindestens 1 km; auf der verkehrsarmen Route bei \d+\./,
+      )
+      p.close()
+      // a name shared by several places needs its Gemeinde (three Fürholzen in the Landkreis)
+      page = await bootPage(html(), pageBundles(html()), '?von=fuerholzen-gerolsbach', loaded)
+      const q = page
+      await q.waitFor(() => rows(q).length > 0, 'the destination table')
+      expect(q.window.location.search).toBe('?von=fuerholzen-gerolsbach')
+      expect(q.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'the empty page offers one worked example',
+    async () => {
+      page = await bootPage(html(), pageBundles(html()), '', loaded)
+      const p = page
+      await p.waitFor(() => !p.q('#example').hidden, 'the example')
+      expect(p.q('#example a').getAttribute('href')).toBe(
+        '?von=schweitenkirchen&nach=pfaffenhofen-an-der-ilm',
+      )
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
 })
