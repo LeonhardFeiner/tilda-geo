@@ -505,5 +505,24 @@
         "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: Ecke an einer Einmündung; die Zeichnung biegt dort ebenfalls ab."
       }
     ]
+  },
+  "kurz|bestand": {
+    "befund": [
+      {
+        "from": [11.637942, 48.513267],
+        "to": [11.63889, 48.514997],
+        "route": "holzhaeuseln-gehweg",
+        "ausbau": "freigabe",
+        "onto": "St 2045",
+        "max": 40,
+        "hinweis": "Vor Ort (November 2026): breiter Gehweg innerorts ohne Radweg-Schild. Der Plan zeichnet hier einen vorhandenen Radweg; Radfahren ist auf dem Gehweg nur Kindern erlaubt. Es fehlt die Beschilderung.",
+        "why": "Hinweis Ortskenntnis, November 2026; Street View 2023 zeigt ebenfalls kein Radweg-Schild. Die Linie liegt deshalb auf der St 2045 statt auf der Zeichnung."
+      },
+      {
+        "at": [11.63386, 48.51064],
+        "hinweis": "Vor Ort (November 2026): eigener Weg neben der Straße, das Radweg-Schild ist entfernt. Radfahren ist erlaubt, aber nicht vorgeschrieben.",
+        "why": "Hinweis Ortskenntnis, November 2026."
+      }
+    ]
   }
 }

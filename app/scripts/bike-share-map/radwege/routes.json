@@ -10,6 +10,10 @@
   },
   "korrekturen": [
     {
+      "date": "2026-11-19",
+      "text": "Holzhäuseln: Der Gehweg an der St 2045 im Ort, den Lageplan 5/1 als vorhandenen Geh- und Radweg zeigt, hat kein Radweg-Schild (Ortskenntnis, November 2026); er zählt nicht mehr als vorhanden, sondern als „Freigabe nötig“. Am Weg südwestlich des Orts ist das Radweg-Schild entfernt; er bleibt vorhanden, mit Hinweis."
+    },
+    {
       "date": "2026-11-18",
       "text": "Einteilung nach dem letzten statt dem ersten dokumentierten Schritt: Eine Trasse, bei der seit Jahren nichts mehr geschehen ist, erscheint nicht mehr als „begonnen“. Zahlen zunächst nur innerhalb der Gemeindegrenze."
     },
@@ -62,6 +66,16 @@
           "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP17/Drucksachen/Basisdrucksachen/0000011000/0000011209_Bauer_Anlage.pdf"
         }
       ]
+    },
+    {
+      "id": "holzhaeuseln-gehweg",
+      "name": "Gehweg an der St 2045 in Holzhäuseln",
+      "road": "St 2045",
+      "plans": { "kurz": "bestand" },
+      "planLabels": [],
+      "baulast": "unklar",
+      "documented": "Im Lageplan 5/1 rot als vorhandener Geh- und Radweg eingezeichnet (Stand 2024). Vor Ort ist es ein breiter Gehweg innerorts ohne Radweg-Schild (Hinweis Ortskenntnis, November 2026; ebenso Street View 2023). Radfahren ist dort nur Kindern erlaubt; damit es ein Radweg ist, fehlt die Beschilderung.",
+      "events": []
     },
     {
       "id": "ohne-beschriftung-haupt",

@@ -335,7 +335,8 @@
         "weg": "radweg",
         "belag": "asphalt",
         "fromPlan": 0.0,
-        "osmWays": [375967033]
+        "osmWays": [375967033],
+        "hinweis": "Vor Ort (November 2026): eigener Weg neben der Stra\u00dfe, das Radweg-Schild ist entfernt. Radfahren ist erlaubt, aber nicht vorgeschrieben."
       },
       "geometry": {
         "type": "LineString",
@@ -347,31 +348,6 @@
           [11.634341, 48.511479],
           [11.634415, 48.511549],
           [11.634814, 48.511868]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "bestand",
-        "plan": "kurz",
-        "ausbau": "bestand",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 1.0
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.637942, 48.513267],
-          [11.638103, 48.513349],
-          [11.638299, 48.513533],
-          [11.6384, 48.51365],
-          [11.63852, 48.513861],
-          [11.638727, 48.514242],
-          [11.638817, 48.514459],
-          [11.63888, 48.514817],
-          [11.63889, 48.514997]
         ]
       }
     },
@@ -8009,6 +7985,30 @@
           [11.579744, 48.511825],
           [11.580336, 48.511728],
           [11.580917, 48.511605]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "holzhaeuseln-gehweg",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "staatsstrasse",
+        "belag": "asphalt",
+        "fromPlan": 0.0,
+        "osmWays": [514003706],
+        "hinweis": "Vor Ort (November 2026): breiter Gehweg innerorts ohne Radweg-Schild. Der Plan zeichnet hier einen vorhandenen Radweg; Radfahren ist auf dem Gehweg nur Kindern erlaubt. Es fehlt die Beschilderung."
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.637738, 48.513489],
+          [11.638058, 48.51373],
+          [11.6383, 48.514062],
+          [11.638546, 48.51459],
+          [11.638604, 48.514817],
+          [11.638616, 48.515]
         ]
       }
     }

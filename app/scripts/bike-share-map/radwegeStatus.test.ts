@@ -5,6 +5,7 @@ import {
   lastStep,
   lineBedarf,
   vorhandenAuf,
+  vorhandenOhneRadweg,
   lineStatus,
   type RouteEvent,
 } from './radwegeStatus'
@@ -105,5 +106,18 @@ describe('vorhandenAuf', () => {
     expect(vorhandenAuf('freigabe', 'feldweg')).toContain('Feld- oder Waldweg')
     expect(vorhandenAuf('bestand', 'ortsstrasse')).toContain('in OpenStreetMap ist hier keiner')
     expect(vorhandenAuf('bestand', 'kein')).toContain('in OpenStreetMap ist hier keiner')
+  })
+})
+
+describe('vorhandenOhneRadweg', () => {
+  test('an existing line is dashed unless one can ride it as a cycle path', () => {
+    expect(vorhandenOhneRadweg('bestand', 'radweg', 'asphalt')).toBe(false)
+    expect(vorhandenOhneRadweg('bestand', 'radweg', 'schotter')).toBe(false)
+    expect(vorhandenOhneRadweg('bestand', 'feldweg', 'asphalt')).toBe(false)
+    expect(vorhandenOhneRadweg('bestand', 'feldweg', 'schotter')).toBe(true)
+    expect(vorhandenOhneRadweg('bestand', 'feldweg', 'unbekannt')).toBe(true)
+    expect(vorhandenOhneRadweg('bestand', 'ortsstrasse', 'asphalt')).toBe(true)
+    expect(vorhandenOhneRadweg('bestand', 'kein', 'kein')).toBe(true)
+    expect(vorhandenOhneRadweg('nichts', 'staatsstrasse', 'asphalt')).toBe(false)
   })
 })

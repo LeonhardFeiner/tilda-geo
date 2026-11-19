@@ -95,6 +95,43 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(st.length).toBeGreaterThan(0)
     expect(st.every((f) => f.properties.strasse === 'St 2045')).toBe(true)
   })
+  test('a check on site overrides the plan: the Gehweg in Holzhäuseln is no existing path', () => {
+    const f = data.lines.features
+    const geh = f.filter((x) => x.properties.routeId === 'holzhaeuseln-gehweg')
+    expect(geh.length).toBeGreaterThan(0)
+    expect(
+      geh.every((x) => x.properties.status !== 'bestand' && x.properties.bedarf !== 'vorhanden'),
+    ).toBe(true)
+    expect(geh.every((x) => x.properties.weg === 'staatsstrasse' && x.properties.hinweis)).toBe(
+      true,
+    )
+    // the path south-west of it stays, with a note
+    const sw = f.filter(
+      (x) =>
+        x.properties.routeId === 'bestand' && x.properties.hinweis?.includes('Schild ist entfernt'),
+    )
+    expect(sw.length).toBeGreaterThan(0)
+    // it is still a path one can ride: solid, not dashed
+    expect(sw.every((x) => !x.properties.ohneRadweg)).toBe(true)
+  })
+  test('existing lines without a usable cycle path are dashed: the Waldroute, roads, no way', () => {
+    const f = data.lines.features
+    const wald = f.filter((x) => x.properties.routeId === 'pfaffenhofen-schweitenkirchen')
+    expect(wald.length).toBeGreaterThan(0)
+    expect(wald.every((x) => x.properties.status === 'bestand' && x.properties.ohneRadweg)).toBe(
+      true,
+    )
+    const bestand = f.filter((x) => x.properties.routeId === 'bestand')
+    expect(
+      bestand.filter((x) => x.properties.weg === 'radweg').every((x) => !x.properties.ohneRadweg),
+    ).toBe(true)
+    expect(
+      bestand
+        .filter((x) => x.properties.weg === 'ortsstrasse')
+        .every((x) => x.properties.ohneRadweg),
+    ).toBe(true)
+    expect(f.every((x) => !x.properties.ohneRadweg || x.properties.status === 'bestand')).toBe(true)
+  })
   test('combined view with a Trassen filter: a route ergänzend in 5/2 keeps its 5/1 Haupt line', () => {
     // Dietersdorf–Schweitenkirchen: Haupttrasse in 5/1, ergänzend in 5/2. "Beide" + "nur Haupt"
     // must not drop the 5/1 line for a 5/2 line that filter hides.
@@ -157,8 +194,9 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
       /^[\d,]+\skm in \d+ Trassen .*Lageplan 5\/1.*innerhalb der Gemeinde/,
     )
     expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
-    // the interim Waldroute is said apart from the real paths
-    expect(p.q('#groups [data-group="bestand"]').textContent).toContain('Übergangslösung')
+    // what exists without a usable cycle path (Waldroute, roads) is said apart, and dashed
+    expect(p.q('#groups [data-group="bestand"]').textContent).toContain('ohne eigenen Radweg')
+    expect(p.q('#line-legend').textContent).toContain('kein eigener Radweg')
     // who made the page, and where to report errors
     expect(p.q('#about').textContent).toContain('BFS/SPD/Grüne')
     expect(p.q('#korrekturen').hidden).toBe(false)

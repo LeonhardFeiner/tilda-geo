@@ -565,6 +565,27 @@ def onto_ref(utm, ref, max_d):
     return out
 
 
+# "befund" overrides on the Bestand lines ("kurz|bestand"): what a check on site found where the
+# plan draws an existing path. With `from`/`to` the stretch between them leaves the Bestand and
+# becomes route `route` (ausbau `ausbau`, laid onto the road `onto` within `max` m, e.g. a
+# Gehweg without a Radweg sign beside that road); `at` alone only attaches the `hinweis`.
+for bf in OVERRIDES.get('kurz|bestand', {}).get('befund', []):
+    if 'from' not in bf: continue
+    a, b = to_utm.transform(*bf['from']), to_utm.transform(*bf['to'])
+    items = [f for f in final if f['routeId'] == 'bestand']
+    f = min(items, key=lambda f: LineString(f['utm']).distance(Point(a)))
+    line = LineString(f['utm'])
+    ta, tb = sorted((line.project(Point(a)), line.project(Point(b))))
+    final.remove(f)
+    for lo, hi, mid in ((0, ta, False), (ta, tb, True), (tb, line.length, False)):
+        if hi - lo < 20: continue
+        utm = list(substring(line, lo, hi).coords)
+        if not mid:
+            final.append(dict(f, utm=utm)); continue
+        final.append(dict(routeId=bf['route'], plan='kurz', ausbau=bf['ausbau'], utm=utm,
+                          utm_matched=onto_ref(utm, bf['onto'], bf['max']) if bf.get('onto') else utm,
+                          force_ausbau=bf['ausbau'], hinweis=bf.get('hinweis')))
+
 built_set = {r['id'] for r in ROUTES if r.get('built')}
 moved = 0
 for f in final:
@@ -652,10 +673,10 @@ built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
     if f.get('skip_match'): continue
     for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto')):
-        ausbau = f['ausbau']
+        ausbau = f.get('force_ausbau') or f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße
-        if ausbau == 'freigabe' and f['routeId'] not in built_ids and weg in ('kein', 'kreisstrasse', 'staatsstrasse'):
+        if ausbau == 'freigabe' and not f.get('force_ausbau') and f['routeId'] not in built_ids and weg in ('kein', 'kreisstrasse', 'staatsstrasse'):
             ausbau = 'kein-weg'
         coords, spur = drop_spurs(coords)
         if spur: spurs.append((f['routeId'], f['plan'], round(spur), to_wgs.transform(*coords[0])))
@@ -663,6 +684,7 @@ for f in final:
         ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
         props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=ausbau, weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
         if wids: props['osmWays'] = wids
+        if f.get('hinweis'): props['hinweis'] = f['hinweis']
         # a new path beside a road: keep the side the plan draws it on (not for redrawn lines)
         if ausbau in ('voll', 'kein-weg') and weg in ('staatsstrasse', 'kreisstrasse', 'ortsstrasse') \
                 and 'utm_matched' not in f and not f.get('not_drawn'):
@@ -671,6 +693,12 @@ for f in final:
             strasse = next((ways[wi][4].get('ref') or ways[wi][2] for wi in WAY_INDEX_OF(wids) if ways[wi][4].get('ref') or ways[wi][2]), None) if wids else None
             if rs and strasse: props['strasse'] = strasse
         geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
+for bf in OVERRIDES.get('kurz|bestand', {}).get('befund', []):
+    if 'at' not in bf: continue
+    q = Point(to_utm.transform(*bf['at']))
+    for g in geo:
+        if g['properties']['routeId'] == 'bestand' and LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).distance(q) < 25:
+            g['properties']['hinweis'] = bf['hinweis']
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
 km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter()
 for g in geo:

@@ -271,3 +271,14 @@ export const BELAG = [
   },
 ] as const
 export type Belag = (typeof BELAG)[number]['id']
+
+/**
+ * A line counted as "Vorhanden" that is no usable cycle path: the map draws it dashed and the
+ * totals list it apart. Usable is a path of its own (signed or not) or an asphalt farm track;
+ * not usable is riding on the carriageway, on gravel or earth, or where OSM has no way at all.
+ */
+export function vorhandenOhneRadweg(status: StatusGroup, weg: Weg, belag: Belag) {
+  if (status !== 'bestand') return false
+  if (weg === 'radweg') return false
+  return !(weg === 'feldweg' && belag === 'asphalt')
+}

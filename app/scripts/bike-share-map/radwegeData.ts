@@ -17,6 +17,7 @@ import {
   type RouteEvent,
   type StatusGroup,
   WEG,
+  vorhandenOhneRadweg,
   type Weg,
 } from './radwegeStatus'
 
@@ -105,6 +106,8 @@ const LineProps = z.strictObject({
   seite: z.enum(['links', 'rechts']).optional(),
   richtung: z.enum(['nördlich', 'östlich', 'südlich', 'westlich']).optional(),
   strasse: z.string().optional(),
+  /** What a check on site found here (overrides.json "befund"), shown in the popup. */
+  hinweis: z.string().optional(),
 })
 const Position = z.tuple([z.number(), z.number()])
 export const LinesFileSchema = z.object({
@@ -141,6 +144,8 @@ export type RadwegeLineProps = z.infer<typeof LineProps> & {
   kombiErgaenzend: boolean
   /** Inside the Gemeinde boundary (true when there is no boundary). */
   innen: boolean
+  /** Counted as "Vorhanden" but no usable cycle path (carriageway, gravel, no way): drawn dashed. */
+  ohneRadweg: boolean
 }
 export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   routes: RadwegeRoute[]
@@ -311,6 +316,7 @@ export function buildRadwegeData(
       perPlan[f.properties.plan] = (perPlan[f.properties.plan] ?? 0) + m / 1000
       km.set(route.id, perPlan)
       const fid = features.length
+      const status = lineStatus(route, f.properties.ausbau)
       features.push({
         type: 'Feature' as const,
         id: fid,
@@ -318,13 +324,14 @@ export function buildRadwegeData(
           ...f.properties,
           fid,
           netz,
-          status: lineStatus(route, f.properties.ausbau),
+          status,
           bedarf: lineBedarf(route, f.properties.ausbau, f.properties.belag),
           m,
           kombi: Boolean(piece.key & 1),
           kombiHaupt: Boolean(piece.key & 4),
           kombiErgaenzend: Boolean(piece.key & 8),
           innen: Boolean(piece.key & 2),
+          ohneRadweg: vorhandenOhneRadweg(status, f.properties.weg, f.properties.belag),
         },
         geometry,
       })

@@ -40,7 +40,11 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    Liebigstraße, also beyond the Gemeinde (verify.py then lists it as OFF, as intended);
    `line` (`coords`, optional `onto` = a road ref the match is limited to) adds a route the plan
    shows only as context, e.g. the Radweg along the St 2045 to Pfaffenhofen (netz `landkreis`). The
-   `planlage.geojson` layer keeps the drawing. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
+   `planlage.geojson` layer keeps the drawing. `befund` under `kurz|bestand` records what a check on site found where the
+   plan draws an existing path: with `from`/`to` that stretch leaves the Bestand and becomes its own
+   route (`route`, in `routes.json`) with `ausbau`, laid onto the road `onto` (e.g. the Gehweg in
+   Holzhäuseln, no Radweg sign: "Freigabe nötig"); `at` alone puts the `hinweis` on the Bestand
+   piece there. The page shows `hinweis` in the popup; add a line to `korrekturen` as well. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
    The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed

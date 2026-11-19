@@ -132,7 +132,10 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   oder Neubau nötig" (solid in 5/2, and 5/1 pieces that follow no way or only a
   Staats-/Kreisstraße). There is no "Belag/Wegart geplant" mode on purpose: 5/1 paves nothing and
   5/2 only recommends asphalt for new paths, so it would repeat this view; the map popup says per
-  piece what the plan says (`PLAN_SAYS`). The Landkreis network of plan 5/2
+  piece what the plan says (`PLAN_SAYS`). A "Vorhanden" line that is no usable cycle path is
+  dashed in both views and listed apart in the totals (`vorhandenOhneRadweg`): usable is a path of
+  its own, signed or not, or an asphalt farm track; not usable is the carriageway, gravel/earth
+  (the Waldroute) or no OSM way. The Landkreis network of plan 5/2
   (`radwege/landkreis.geojson`) is a context layer, on by default with plan 5/2
   and "Beide" and off with 5/1 (the Lageplan 5/1 does not draw it); `?landkreis=an|aus` overrides
   that until the plan changes.

@@ -688,8 +688,9 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const colourExpr = () => ['match', ['get', mode().key], ...mode().cats.flatMap((g) => [g.id, g.colour]), '#888'];
     const COLOUR = colourExpr();
     // Dashes only mean something in plan 5/2 (existing way, release only)
-    // dashed: plan 5/2 "existing way, release only" in the progress view; "no way" in the others
-    const dashedExpr = () => state.farbe === 'stand' || state.farbe === 'bedarf' ? ['==', ['get', 'ausbau'], 'bestand-weg'] : ['==', ['get', 'weg'], 'kein'];
+    // dashed: plan 5/2 "existing way, release only" and existing lines that are no usable cycle
+    // path in the progress views; "no way" in the OSM views
+    const dashedExpr = () => state.farbe === 'stand' || state.farbe === 'bedarf' ? ['any', ['==', ['get', 'ausbau'], 'bestand-weg'], ['get', 'ohneRadweg']] : ['==', ['get', 'weg'], 'kein'];
     const DASHED = dashedExpr();
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
     // a new path beside a road sits on the side the plan draws it on (positive = right of the line direction)
@@ -793,7 +794,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           if (!p) return;
           const r = routeById.get(p.routeId);
           if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.status === 'bestand' && VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg] ? '<br>' + escHtml(VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg]) : '') + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.status === 'bestand' && VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg] ? '<br>' + escHtml(VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg]) : '') + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + (p.hinweis ? '<br>' + escHtml(p.hinweis) : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
         });
         map.on('mouseleave', id, () => {
           map.getCanvas().style.cursor = '';
@@ -857,10 +858,14 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         const ids = new Set(vis.map((f) => f.properties.routeId));
         $('pr-count').textContent = String(data.pruefen.features.filter((f) => ids.has(f.properties.routeId) && (state.plan === 'beide' || f.properties.plan === state.plan)).length);
       }
-      const dashText = state.farbe === 'stand' || state.farbe === 'bedarf' ? 'gestrichelt: vorhandener Weg, nur Freigabe' : 'gestrichelt: kein Weg in OpenStreetMap';
-      // dashes mean something only in plan 5/2 for Stand/Bedarf, always for the OSM modes
+      const progress = state.farbe === 'stand' || state.farbe === 'bedarf';
+      const dash = (text) => '<i class="sw dash" style="border-color:var(--fg)"></i> ' + text;
+      // dashes for Stand/Bedarf: plan 5/2's release-only ways and, in any plan, existing lines
+      // without a usable cycle path; for the OSM modes: no way
       const legend = [];
-      if (!((state.farbe === 'stand' || state.farbe === 'bedarf') && state.plan === 'kurz')) legend.push('<i class="sw dash" style="border-color:var(--fg)"></i> ' + dashText);
+      if (!progress) legend.push(dash('gestrichelt: kein Weg in OpenStreetMap'));
+      if (progress && state.plan !== 'kurz') legend.push(dash('gestrichelt: vorhandener Weg, nur Freigabe'));
+      if (progress && vis.some((f) => f.properties.ohneRadweg)) legend.push(dash('gestrichelt bei „Vorhanden“: kein eigener Radweg (Fahrbahn, Schotter oder kein Weg erfasst)'));
       if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung (angenommen)');
       $('line-legend').hidden = !legend.length;
       $('line-legend').innerHTML = legend.join('<br>');
@@ -962,7 +967,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       const md = mode();
       const m = Object.fromEntries(md.cats.map((g) => [g.id, 0]));
       // in the progress view, each group also says how much of it is Aus-/Neubau and how much
-      // Freigabe; for what exists, how much of it is only an interim solution
+      // Freigabe; for what exists, how much of it is no usable cycle path (dashed)
       const split = {};
       const routeIds = new Set();
       let innenM = 0;
@@ -973,15 +978,15 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         if (f.properties.innen) innenM += f.properties.m;
         if (state.farbe === 'stand') {
           const s = (split[f.properties.status] = split[f.properties.status] || {});
-          const k = f.properties.status === 'bestand' ? (routeById.get(f.properties.routeId).uebergang ? 'uebergang' : 'fest') : f.properties.bedarf.startsWith('freigabe') ? 'freigabe' : f.properties.bedarf;
+          const k = f.properties.status === 'bestand' ? (f.properties.ohneRadweg ? 'ohne' : 'fest') : f.properties.bedarf.startsWith('freigabe') ? 'freigabe' : f.properties.bedarf;
           s[k] = (s[k] || 0) + f.properties.m;
         }
       }
-      const SPLIT_LABEL = { neubau: 'Aus-/Neubau ', freigabe: 'Freigabe ', uebergang: 'Übergangslösung (nicht ausgebaut) ' };
+      const SPLIT_LABEL = { neubau: 'Aus-/Neubau ', freigabe: 'Freigabe ', ohne: 'ohne eigenen Radweg (gestrichelt) ' };
       const splitText = (id) => {
         const s = split[id];
         if (!s) return '';
-        const parts = ['neubau', 'freigabe', 'uebergang'].filter((id) => s[id]).map((id) => SPLIT_LABEL[id] + km(s[id]));
+        const parts = ['neubau', 'freigabe', 'ohne'].filter((id) => s[id]).map((id) => SPLIT_LABEL[id] + km(s[id]));
         return parts.length ? '<br><small class="muted">davon ' + parts.join(' · ') + '</small>' : '';
       };
       const sum = Object.values(m).reduce((a, b) => a + b, 0);
