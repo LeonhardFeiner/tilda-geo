@@ -703,10 +703,10 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const EMPTY = { type: 'FeatureCollection', features: [] };
     const colourExpr = () => ['match', ['get', mode().key], ...mode().cats.flatMap((g) => [g.id, g.colour]), '#888'];
     const COLOUR = colourExpr();
-    // Dashes only mean something in plan 5/2 (existing way, release only)
-    // dashed: plan 5/2 "existing way, release only" and existing lines that are no usable cycle
-    // path in the progress views; "no way" in the OSM views
-    const dashedExpr = () => state.farbe === 'stand' || state.farbe === 'bedarf' ? ['any', ['==', ['get', 'ausbau'], 'bestand-weg'], ['get', 'ohneRadweg']] : ['==', ['get', 'weg'], 'kein'];
+    // dashed: existing lines that are no usable cycle path (Stand, Bedarf); in Stand also plan 5/2's
+    // dashed "existing asphalt way" (as drawn there; in Bedarf its colour already says release only,
+    // same as a 5/1 release); "no way" in the OSM views
+    const dashedExpr = () => state.farbe === 'stand' ? ['any', ['==', ['get', 'ausbau'], 'bestand-weg'], ['get', 'ohneRadweg']] : state.farbe === 'bedarf' ? ['get', 'ohneRadweg'] : ['==', ['get', 'weg'], 'kein'];
     const DASHED = dashedExpr();
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
     // a new path beside a road sits on the side the plan draws it on (positive = right of the line direction)
@@ -876,11 +876,11 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       }
       const progress = state.farbe === 'stand' || state.farbe === 'bedarf';
       const dash = (text) => '<i class="sw dash" style="border-color:var(--fg)"></i> ' + text;
-      // dashes for Stand/Bedarf: plan 5/2's release-only ways and, in any plan, existing lines
-      // without a usable cycle path; for the OSM modes: no way
+      // dashes for Stand: plan 5/2's dashed ways; Stand/Bedarf: existing lines without a usable
+      // cycle path; for the OSM modes: no way
       const legend = [];
       if (!progress) legend.push(dash('gestrichelt: kein Weg in OpenStreetMap'));
-      if (progress && state.plan !== 'kurz') legend.push(dash('gestrichelt: vorhandener Weg, nur Freigabe'));
+      if (state.farbe === 'stand' && state.plan !== 'kurz') legend.push(dash('gestrichelt: in Lageplan 5/2 als vorhandener asphaltierter Weg gezeichnet (nur Freigabe)'));
       if (progress && vis.some((f) => f.properties.ohneRadweg)) legend.push(dash('gestrichelt bei „Vorhanden“: kein eigener Radweg (Fahrbahn, Schotter oder kein Weg erfasst)'));
       if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung (angenommen)');
       $('line-legend').hidden = !legend.length;
