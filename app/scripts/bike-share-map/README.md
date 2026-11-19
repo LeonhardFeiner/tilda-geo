@@ -133,7 +133,9 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   Staats-/Kreisstraße). There is no "Belag/Wegart geplant" mode on purpose: 5/1 paves nothing and
   5/2 only recommends asphalt for new paths, so it would repeat this view; the map popup says per
   piece what the plan says (`PLAN_SAYS`). The Landkreis network of plan 5/2
-  (`radwege/landkreis.geojson`) is a context layer that can be switched off.
+  (`radwege/landkreis.geojson`) is a context layer, on by default with plan 5/2
+  and "Beide" and off with 5/1 (the Lageplan 5/1 does not draw it); `?landkreis=an|aus` overrides
+  that until the plan changes.
 - Numbers and map stop at the Gemeinde boundary by default (`?gemeinde=alle` shows the parts
   outside). Above the bar: the total km, number of routes, plan and scope (in the OSM modes also
   "laut OpenStreetMap"); each group with km only, the shares are in the bar (tooltip). The checking

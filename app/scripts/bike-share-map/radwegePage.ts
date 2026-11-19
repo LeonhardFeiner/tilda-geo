@@ -478,7 +478,9 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       search: '',
       // Karte or Luftbild (the same map on aerial images), or the duration chart
       view: ['dauer', 'luftbild'].includes(params.get('ansicht')) ? params.get('ansicht') : params.get('hintergrund') === 'luftbild' ? 'luftbild' : 'karte',
-      landkreis: params.get('landkreis') !== 'aus',
+      // the Landkreis network is drawn on plan 5/2 only: shown there by default, off with 5/1;
+      // null follows the plan, a click sets it until the plan changes
+      landkreis: params.get('landkreis') === 'an' ? true : params.get('landkreis') === 'aus' ? false : null,
       planlage: params.get('planlage') === 'an',
       // the concept is the Gemeinde's: by default map and numbers stop at its boundary
       innen: params.get('gemeinde') !== 'alle',
@@ -496,11 +498,13 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     /** Other routes under the last map click, offered in the detail view. */
     let others = [];
     const URL_KEYS = { baulast: 'ohne-baulast' };
+    const landkreisDefault = () => state.plan !== 'kurz';
+    const landkreisOn = () => (state.landkreis === null ? landkreisDefault() : state.landkreis);
     function syncUrl() {
       const p = new URLSearchParams();
       if (state.plan !== 'kurz') p.set('plan', state.plan);
       if (state.view !== 'karte') p.set('ansicht', state.view);
-      if (!state.landkreis) p.set('landkreis', 'aus');
+      if (state.landkreis !== null && state.landkreis !== landkreisDefault()) p.set('landkreis', state.landkreis ? 'an' : 'aus');
       if (state.planlage) p.set('planlage', 'an');
       if (!state.innen) p.set('gemeinde', 'alle');
       if (state.seit) p.set('seit', state.seit);
@@ -576,6 +580,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       input.checked = input.value === state.plan;
       input.addEventListener('change', () => {
         state.plan = input.value;
+        state.landkreis = null;
         render();
       });
     }
@@ -620,7 +625,6 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       state.innen = e.target.checked;
       render();
     });
-    $('lk-toggle').checked = state.landkreis;
     $('lk-toggle').addEventListener('change', (e) => {
       state.landkreis = e.target.checked;
       render();
@@ -806,7 +810,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         else if (ids.length) select(ids[0], false, ids.slice(1));
         else {
           // no route here: the context layers answer a tap (touch screens have no hover)
-          const ctx = ['pruefen', 'querungen', 'landkreis'].filter((id) => map.getLayer(id) && (id === 'querungen' || (id === 'pruefen' ? state.pruefen : state.landkreis)));
+          const ctx = ['pruefen', 'querungen', 'landkreis'].filter((id) => map.getLayer(id) && (id === 'querungen' || (id === 'pruefen' ? state.pruefen : landkreisOn())));
           const hit = ctx.length ? map.queryRenderedFeatures(box, { layers: ctx })[0] : null;
           if (hit && hit.layer && POPUP[hit.layer.id]) {
             if (hoverPopup) hoverPopup.remove();
@@ -821,6 +825,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     // ---- rendering
     function render() {
       syncUrl();
+      $('lk-toggle').checked = landkreisOn();
       const vis = visible();
       if (mapReady) {
         const src = map.getSource('radwege');
@@ -846,7 +851,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
           map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
         }
-        if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', state.landkreis ? 'visible' : 'none');
+        if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', landkreisOn() ? 'visible' : 'none');
       }
       if (data.pruefen) {
         const ids = new Set(vis.map((f) => f.properties.routeId));
@@ -1133,6 +1138,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       // A route only in the other plan: switch plans instead of showing an empty selection
       if (!r.built && id !== 'bestand' && state.plan !== 'beide' && !r.plans[state.plan]) {
         state.plan = r.plans.kurz ? 'kurz' : 'lang';
+        state.landkreis = null;
         for (const input of document.querySelectorAll('input[name=plan]')) input.checked = input.value === state.plan;
       }
       // The group filter must not hide what was just picked

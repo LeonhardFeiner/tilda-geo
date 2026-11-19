@@ -236,9 +236,16 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     click(p, p.q('#only-reset'))
     expect(shownLines(p).length).toBe(all)
 
+    // the Landkreis network is drawn on plan 5/2 only: off with 5/1 unless switched on
+    const lk = p.q<HTMLInputElement>('#lk-toggle')
+    expect(lk.checked).toBe(false)
+    toggle(p, lk)
+    expect(p.window.location.search).toContain('landkreis=an')
     const lang = p.q<HTMLInputElement>('input[name=plan][value=lang]')
     lang.checked = true
     lang.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+    expect(lk.checked).toBe(true)
+    expect(p.window.location.search).not.toContain('landkreis=')
     expect(
       shownLines(p).every((f) => f.properties.plan === 'lang' || f.properties.status === 'bestand'),
     ).toBe(true)
