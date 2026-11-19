@@ -973,6 +973,8 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       const p = page
       await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
       expect(p.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+      // the history line never calls "no change" newly built
+      expect(p.q('#region-detail-meta').textContent).not.toMatch(/keine Veränderung –/)
       expect(p.q('#copy-view-link-feedback').hidden).toBe(true)
       expect(p.errors).toEqual([])
     },

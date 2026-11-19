@@ -2979,14 +2979,16 @@ export function generateViewerHtml(
         since +
         ': ' +
         (Math.abs(km) < 0.05
-          ? 'keine Veränderung'
+          ? 'keine Veränderung in OpenStreetMap.'
           : (km > 0 ? '+' : '−') +
             TildaStats.formatStatKm(Math.abs(km), 1) +
             ' km Radinfrastruktur je Fahrtrichtung (' +
             (pp >= 0 ? '+' : '−') +
             formatUiPct(Math.abs(pp)) +
-            ' km je 100 km Straße)') +
-        ' – neu erfasst oder gebaut, laut OpenStreetMap.';
+            ' km je 100 km Straße)' +
+            // a loss is mostly re-tagging, not demolition
+            (km > 0 ? ' – neu erfasst oder gebaut' : ' – entfernt oder anders eingeordnet') +
+            ', laut OpenStreetMap.');
       regionDetailMeta.appendChild(line);
     }
 
