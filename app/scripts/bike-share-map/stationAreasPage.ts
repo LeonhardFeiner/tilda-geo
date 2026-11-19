@@ -201,6 +201,7 @@ export function stationAreasPageHtml({
       <p id="assumptions" class="muted" hidden></p>
       <p class="muted">Bushaltestellen sind nicht enthalten.</p>
       <fieldset id="categories"><legend>Stationen</legend></fieldset>
+      <p id="categories-note" class="muted" hidden>Zeit und Entfernung gelten für die nächste Station jeder Art, auch Straßenbahn und Fähre; die Auswahl oben ändert nur die Einzugsgebiete in Luftlinie.</p>
       <div id="hover" class="muted">Über die Karte fahren oder tippen, um die nächste Station zu sehen.</div>
       <div id="dot-legend" class="dot-legend" hidden></div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Einwohner: Zensus 2022<span id="timetable-credit" hidden>; Fahrplan: DELFI e.V. / gtfs.de (CC BY 4.0)</span>.</p>
@@ -211,7 +212,8 @@ export function stationAreasPageHtml({
   <script>
   (async function () {
     const CATEGORY_LABELS = ${JSON.stringify(CATEGORY_LABELS)};
-    const DEFAULT_CATEGORIES = [0, 1, 2, 3, 4];
+    // Bahnhof, U-Bahn, S-/Stadtbahn: what people mean by the nearest station; tram and ferry are opt-in
+    const DEFAULT_CATEGORIES = [0, 1, 2];
     // Fallback band bounds; each band file carries its own ("bins" — minutes differ by mode).
     const BANDS = { minutes: ${JSON.stringify(BAND_MINUTES)}, km: ${JSON.stringify(BAND_KM)} };
     let currentBins = null;
@@ -649,6 +651,7 @@ export function stationAreasPageHtml({
         assumptions.textContent = WAYS[way].note;
         assumptions.hidden = !WAYS[way].note;
         fieldset.disabled = !(way === 'luftlinie' && kind === 'areas');
+        document.getElementById('categories-note').hidden = !fieldset.disabled;
         legend.hidden = kind === 'areas';
       }
 
