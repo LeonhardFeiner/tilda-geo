@@ -199,6 +199,13 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(p.q('#keyfact').textContent).toMatch(
       /^Aus- oder Neubau nötig: [\d,]+\skm\. Davon ist bei [\d,]+\skm \(\d+ Trassen\) kein Schritt dokumentiert\..*Freigabe und Schilder/,
     )
+    // since the concept: steps by kind, and whether any of them is a Beschluss
+    expect(p.q('#since').textContent).toMatch(
+      /^Seit dem Konzept vom 07\.06\.2024 dokumentiert: .*\d+ × Grunderwerb.* – zu \d+ Trassen( und zum Radwegenetz allgemein)?\./,
+    )
+    click(p, p.q('#since-list'))
+    expect(p.q('#recent-title').textContent).toMatch(/^Vorgänge seit dem 07\.06\.2024/)
+    click(p, p.q('#recent-more')) // back to the newest only
     // how far each source was searched, so an empty recent list is not read as "nothing happened"
     expect(p.q('#recent-bis').textContent).toMatch(
       /Gemeinderat bis zur Sitzung vom \d\d\.\d\d\.\d{4}/,

@@ -351,6 +351,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         <div id="bar" aria-hidden="true"></div>
         <ul id="groups"></ul>
         <p id="keyfact" hidden></p>
+        <p id="since" class="muted" hidden></p>
         <p id="filter-note" hidden></p>
         <fieldset class="seg" id="f-plan">
           <legend>Plan</legend>
@@ -1132,6 +1133,35 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       $('korr-list').innerHTML = k.map((c) => '<li><span class="when">' + escHtml(deDate(c.date)) + '</span> ' + escHtml(c.text) + '</li>').join('');
     }
     renderKorrekturen();
+    // Since the concept, in one line: which steps, how many, on how many routes. A document about
+    // two routes counts once, as in "Neueste Vorgänge"; network-wide events count without a route.
+    {
+      const seen = new Set();
+      const byKind = new Map();
+      const sinceRoutes = new Set();
+      let network = false;
+      const add = (r, e) => {
+        if (e.uncertain || !STEP_KINDS.includes(e.kind) || e.date < CONCEPT_DATE) return;
+        if (r) sinceRoutes.add(r.id);
+        else network = true;
+        const key = e.date + '|' + e.text;
+        if (seen.has(key)) return;
+        seen.add(key);
+        byKind.set(e.kind, (byKind.get(e.kind) || 0) + 1);
+      };
+      for (const r of routes) for (const e of r.events) add(r, e);
+      for (const e of data.allgemein || []) add(null, e);
+      const parts = STEP_KINDS.filter((k) => byKind.get(k)).map((k) => byKind.get(k) + ' × ' + k);
+      const since = $('since');
+      since.innerHTML = 'Seit dem Konzept vom ' + deDate(CONCEPT_DATE) + ' dokumentiert: ' + (parts.length ? parts.join(', ') : 'kein Schritt') + (byKind.get('Beschluss') ? '' : ', kein Beschluss') + (sinceRoutes.size ? ' – zu ' + sinceRoutes.size + (sinceRoutes.size === 1 ? ' Trasse' : ' Trassen') + (network ? ' und zum Radwegenetz allgemein' : '') : '') + '. <button class="linkbtn" type="button" id="since-list">Alle Vorgänge seitdem</button>';
+      since.hidden = false;
+      $('since-list').addEventListener('click', () => {
+        state.seit = CONCEPT_DATE;
+        $('recent-box').open = true;
+        render();
+        $('recent-box').scrollIntoView?.({ block: 'start' });
+      });
+    }
     // phones start with the list folded (the bottom sheet shows the legend first); a ?seit= link is
     // shared for the list, so it opens
     if (!state.seit && window.matchMedia && window.matchMedia('(max-width: 600px)').matches) $('recent-box').open = false;
