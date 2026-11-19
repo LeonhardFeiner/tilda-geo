@@ -62,8 +62,10 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    at Siebenecken) the plan geometry stays. 2026-11-18: 3.3 of ~143 km left without a way.
    2026-11-18 (evening): the `surface` of 57 ways surveyed that day with StreetComplete was patched
    into a copy of `cache/osm-area.json` from their OSM changesets (the DB extract is from 14.11.) and
-   `assign.py` re-run; tags only, so the matching is unchanged. The next full run replaces this
-   (and picks up the new cycle lane on the Carl-Benz-Straße, which needs the extract).
+   `assign.py` re-run; tags only, so the matching is unchanged. 2026-11-19: likewise the shared
+   path on the Carl-Benz-Straße (way 364362293 v19, `cycleway:left=track`), added as a TILDA
+   bike lane (`footAndCyclewayShared_adjoining`) on the road's geometry. The next full run
+   replaces both patches.
    It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
    which the page can show on request ("Lage wie im Plan gezeichnet").
 5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →

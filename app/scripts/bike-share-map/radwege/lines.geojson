@@ -112,7 +112,7 @@
         "routeId": "bestand",
         "plan": "kurz",
         "ausbau": "bestand",
-        "weg": "ortsstrasse",
+        "weg": "radweg",
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [364362293]
