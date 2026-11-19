@@ -213,10 +213,11 @@ export async function bootViewer(query = '', options: BootOptions = {}): Promise
     : []
   let html = generateViewerHtml('2026-01-01T00:00:00.000Z', '01.01.2026', detourIds)
   if (options.mirror) {
-    const flag = '<meta name="viewer-detour" content="on" />'
-    if (!html.includes(flag))
-      throw new Error('viewer-detour meta not found; keep the workflow in sync')
-    html = html.replace(flag, flag.replace('"on"', '"off"'))
+    for (const name of ['viewer-detour', 'viewer-local-pages']) {
+      const flag = `<meta name="${name}" content="on" />`
+      if (!html.includes(flag)) throw new Error(`${name} meta not found; keep the workflow in sync`)
+      html = html.replace(flag, flag.replace('"on"', '"off"'))
+    }
   }
   return bootPage(html, pageBundles(html), query, {
     ...options,

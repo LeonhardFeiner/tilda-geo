@@ -103,6 +103,36 @@ export const DETOUR_DIR = 'detour'
 export const RADWEGE_PAGE_STEM = 'radwege-schweitenkirchen'
 
 /**
+ * Unlisted local pages the region card offers under "Weitere Auswertungen", only for the regions
+ * named here, so the nationwide comparison stays neutral everywhere else. The Umweg link is added
+ * by Landkreis (CONFIG.detourLandkreise). github.io only: the mirror job in pages-viewer.yml flips
+ * the viewer-local-pages meta to "off". `id` is the link's element id.
+ */
+export const LOCAL_PAGES: ReadonlyArray<{
+  id: string
+  regionIds: readonly string[]
+  href: string
+  label: string
+  title: string
+}> = [
+  {
+    id: 'region-detail-radwege',
+    regionIds: ['relation/396557'], // Schweitenkirchen
+    href: `./${RADWEGE_PAGE_STEM}.html`,
+    label: 'Radwegekonzept: was daraus geworden ist',
+    title:
+      'Jede Trasse des Radwegekonzepts der Gemeinde mit den öffentlich dokumentierten Schritten und Quellen',
+  },
+  {
+    id: 'region-detail-stations',
+    regionIds: ['relation/396557'],
+    href: `./${STATION_AREAS_PAGE_STEM}.html#karte=11/48.503/11.605`,
+    label: 'Wie weit ist der nächste Bahnhof?',
+    title: 'Für jeden Ort die nächste Station, in Luftlinie, zu Fuß, mit dem Rad oder dem Auto',
+  },
+]
+
+/**
  * File names inside output/viewer/ that the build writes and the page fetches. One place, so the
  * build, the page (generateViewerHtml CONFIG), the CSV and the model fit can't drift apart.
  */

@@ -830,6 +830,13 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       expect(link.getAttribute('href')).toBe(
         `./umweg.html?lk=relation%2F62371&gemeinde=${encodeURIComponent(SCHWEITENKIRCHEN)}`,
       )
+      // Schweitenkirchen's own pages sit in the same "Weitere Auswertungen" block
+      const more = p.q('#region-detail-pages')
+      expect(more.textContent).toContain('Weitere Auswertungen')
+      expect(more.querySelector('#region-detail-radwege')?.getAttribute('href')).toBe(
+        './radwege-schweitenkirchen.html',
+      )
+      expect(more.querySelector('#region-detail-stations')).toBeTruthy()
       p.close()
       // Landkreis Freising (no graph): no link.
       page = await bootViewer(
@@ -838,18 +845,20 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       const q = page
       await q.waitFor(() => !q.q('#region-detail').hidden, 'the region card')
       expect(q.window.document.getElementById('region-detail-detour')).toBeNull()
+      expect(q.window.document.getElementById('region-detail-pages')).toBeNull()
       expect(q.errors).toEqual([])
     },
     TIMEOUT,
   )
 
   test(
-    'the mirror build (viewer-detour meta off) shows no detour link even with a routing graph',
+    'the mirror build (viewer-detour and viewer-local-pages off) links no local page',
     async () => {
       page = await bootViewer(IN_LANDKREIS, { mirror: true })
       const p = page
       await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
       expect(p.window.document.getElementById('region-detail-detour')).toBeNull()
+      expect(p.window.document.getElementById('region-detail-pages')).toBeNull()
       expect(p.q('#region-detail-neighbors')).toBeTruthy()
       expect(p.errors).toEqual([])
     },

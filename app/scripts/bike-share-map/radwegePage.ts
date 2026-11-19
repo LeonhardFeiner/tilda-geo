@@ -193,6 +193,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     #howto > summary { cursor: pointer; color: var(--accent); }
     #howto ul { margin: 4px 0 0; padding-left: 18px; }
     #howto li { margin-bottom: 3px; }
+    .page-nav { margin: 0 0 6px; font-size: 12px; }
     #headline { margin: 10px 0 0; font-size: 13px; }
     #keyfact { margin: 6px 0 8px; padding: 6px 8px; border-left: 3px solid #c0392b; background: var(--row-hover); font-size: 13px; }
     #recent-box > summary { cursor: pointer; }
@@ -333,6 +334,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     <summary><h1>Radwege Schweitenkirchen</h1></summary>
     <div class="body">
       <div id="overview">
+        <p class="muted page-nav"><a href="./index.html?region=relation%2F396557">&larr; Schweitenkirchen im Radinfra-Vergleich</a></p>
         <p class="intro">Was aus dem Radwegekonzept der Gemeinde vom ${conceptDe} geworden ist: jede geplante Trasse mit allen öffentlich dokumentierten Schritten und ihren Quellen. Eine Linie anklicken für Details.</p>
         <details id="howto">
           <summary>So ist die Karte zu lesen</summary>

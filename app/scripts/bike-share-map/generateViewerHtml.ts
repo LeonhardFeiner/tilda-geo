@@ -8,6 +8,7 @@ import {
   DEFAULT_OVERLAY_ROAD_MIN_ZOOM_MAJOR,
   DEFAULT_ROAD_OVERLAY_COLOR,
   DETOUR_PAGE_STEM,
+  LOCAL_PAGES,
   OVERLAY_LINE_MIN_ZOOM_LIMITS,
   OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS,
   TILE_ROAD_RESIDENTIAL_MIN_ZOOM,
@@ -162,6 +163,7 @@ export function generateViewerHtml(
     historyUrl: v(`./${VIEWER_FILES.history}`),
     detourPageUrl: `./${DETOUR_PAGE_STEM}.html`,
     detourLandkreise: detourLandkreisIds,
+    localPages: LOCAL_PAGES,
     colorScales: COLOR_SCALES,
     defaultColorScale: DEFAULT_COLOR_SCALE,
     defaultColorCapPct: BIKE_SHARE_COLOR_CAP_PCT,
@@ -197,6 +199,9 @@ export function generateViewerHtml(
        mirror deploy (radweg.bfschweitenkirchen.de) flips this to "off" and drops the detour files;
        see .github/workflows/pages-viewer.yml. -->
   <meta name="viewer-detour" content="on" />
+  <!-- "on": the region card links the unlisted local pages of LOCAL_PAGES (constants.ts); the
+       mirror deploy flips it to "off", like viewer-detour. -->
+  <meta name="viewer-local-pages" content="on" />
   <script>
     // Text size is a per-browser convenience (Einstellungen › Schriftgröße). Applied before the
     // first paint; page zoom stays off because pinches on the panel zoom the map instead.
@@ -1646,6 +1651,8 @@ export function generateViewerHtml(
     .print-sheet .ps-url { word-break: break-all; }
     .region-detail-osm-edit { color: #1565c0; text-decoration: none; }
     .region-detail-osm-edit:hover { text-decoration: underline; }
+    .region-detail-pages { flex-basis: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; margin-top: 4px; }
+    .region-detail-pages-title { font-size: 0.8em; font-weight: 600; color: #475569; text-transform: uppercase; letter-spacing: 0.03em; }
     /* Touch screens: finger-sized controls. 16px inputs also stop iOS from zooming on focus. */
     @media (pointer: coarse) {
       .panel select, #region-search-input {
@@ -2088,6 +2095,8 @@ export function generateViewerHtml(
     // The mirror site is deployed without the detour map (meta flipped to "off" by the workflow).
     const DETOUR_ENABLED =
       (document.querySelector('meta[name="viewer-detour"]') || {}).content === 'on';
+    const LOCAL_PAGES_ENABLED =
+      (document.querySelector('meta[name="viewer-local-pages"]') || {}).content === 'on';
     // Pure helpers from the typed bundles (statsClassSums.ts), aliased once up here so every
     // function below can use them regardless of where it is defined.
     const deNumber = TildaStats.formatDeNumber;
@@ -7650,20 +7659,42 @@ export function generateViewerHtml(
         });
         links.appendChild(neighborButton);
       }
-      // Detour map: only for Landkreise that have a routing graph.
+      // Local pages, under one heading and only where they exist: the detour map for Landkreise
+      // with a routing graph, the pages of CONFIG.localPages for the regions they name.
+      const morePages = [];
       const detourLandkreis =
         String(p.level) === '8' ? String(p.landkreis_id ?? '') : String(p.level) === '6' ? String(p.id) : '';
       if (DETOUR_ENABLED && detourLandkreis && CONFIG.detourLandkreise.includes(detourLandkreis)) {
-        const detour = document.createElement('a');
-        detour.className = 'region-detail-osm-edit';
-        detour.id = 'region-detail-detour';
-        detour.href =
-          CONFIG.detourPageUrl + '?lk=' + encodeURIComponent(detourLandkreis) +
-          (String(p.level) === '8' ? '&gemeinde=' + encodeURIComponent(p.id) : '');
-        detour.textContent = 'Umwege per Rad zu den Nachbarorten';
-        detour.title =
-          'Wie viel länger eine verkehrsarme Radroute als die schnellste Radroute oder die übliche Autostrecke ist';
-        links.appendChild(detour);
+        morePages.push({
+          id: 'region-detail-detour',
+          href:
+            CONFIG.detourPageUrl + '?lk=' + encodeURIComponent(detourLandkreis) +
+            (String(p.level) === '8' ? '&gemeinde=' + encodeURIComponent(p.id) : ''),
+          label: 'Umwege per Rad zu den Nachbarorten',
+          title: 'Wie viel länger eine verkehrsarme Radroute als die schnellste Radroute oder die übliche Autostrecke ist',
+        });
+      }
+      if (LOCAL_PAGES_ENABLED) {
+        for (const lp of CONFIG.localPages) if (lp.regionIds.includes(String(p.id))) morePages.push(lp);
+      }
+      if (morePages.length) {
+        const box = document.createElement('span');
+        box.className = 'region-detail-pages';
+        box.id = 'region-detail-pages';
+        const head = document.createElement('span');
+        head.className = 'region-detail-pages-title';
+        head.textContent = 'Weitere Auswertungen';
+        box.appendChild(head);
+        for (const m of morePages) {
+          const a = document.createElement('a');
+          a.className = 'region-detail-osm-edit';
+          a.id = m.id;
+          a.href = m.href;
+          a.textContent = m.label;
+          a.title = m.title;
+          box.appendChild(a);
+        }
+        links.appendChild(box);
       }
       if (offerOsmEdit) {
         const edit = osmEditLink(feature, 'Radweg fehlt? In OpenStreetMap ergänzen ↗');

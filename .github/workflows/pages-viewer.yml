@@ -177,6 +177,13 @@ jobs:
             exit 1
           fi
           sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
+          # Likewise the card's links to the other unlisted local pages (LOCAL_PAGES in constants.ts).
+          flag='<meta name="viewer-local-pages" content="on" />'
+          if [ "$(grep -cF "$flag" _site/index.html)" != "1" ]; then
+            echo "::error::viewer-local-pages meta not found exactly once in index.html; generateViewerHtml.ts changed? Update this step."
+            exit 1
+          fi
+          sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
           rm -rf _site/umweg.html _site/detour _site/detourRouting.js
           # The Radwege tracker (RADWEGE_PAGE_STEM in constants.ts) stays on github.io only.
           rm -f _site/radwege-schweitenkirchen.html _site/radwege-schweitenkirchen.json
