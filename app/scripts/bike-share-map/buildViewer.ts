@@ -50,6 +50,7 @@ import { generateViewerHtml } from './generateViewerHtml'
 import { legalPageHtml } from './legalPage'
 import { methodologyPageHtml } from './methodologyPage'
 import { minifyInlineScripts } from './minifyPageHtml'
+import { notFoundPageHtml } from './notFoundPage'
 import { loadRadwegeData } from './radwegeData'
 import { radwegePageHtml } from './radwegePage'
 import { buildRegionContextIndexes, type DemographicsRow } from './regionContextIndexes'
@@ -431,6 +432,8 @@ writeFileSync(
   'utf8',
 )
 process.stdout.write(`Impressum: ${viewerDir}/impressum.html\n`)
+// Every missing path; /<name> opens that Gemeinde (notFoundPage.ts).
+writeFileSync(join(viewerDir, '404.html'), notFoundPageHtml(), 'utf8')
 
 // Unlisted nearest-station map: needs output/stations.json (bun run bike-share-map:stations);
 // the foot/bike/car views additionally output/station-access/ (routing/station_access.py).

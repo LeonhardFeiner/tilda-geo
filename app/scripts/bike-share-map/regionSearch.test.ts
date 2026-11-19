@@ -10,7 +10,9 @@ import {
   MATCH_WORD_START,
   rankRegionSearchMatches,
   regionSearchKeys,
+  regionIdsForUrlName,
   regionSearchLevelLabel,
+  regionUrlSlug,
   scoreRegionMatch,
   type RegionSearchEntry,
 } from './regionSearch'
@@ -39,6 +41,40 @@ describe('regionSearchKeys', () => {
     expect(keys).toEqual(expect.arrayContaining(['rosenheim']))
     // The full name stays a key, so searching "landkreis" still finds it.
     expect(keys).toEqual(expect.arrayContaining(['landkreis rosenheim']))
+  })
+})
+
+describe('regionUrlSlug / regionIdsForUrlName', () => {
+  test('turns a name into a URL word', () => {
+    expect(regionUrlSlug('Pfaffenhofen an der Ilm')).toBe('pfaffenhofen-an-der-ilm')
+    expect(regionUrlSlug('München')).toBe('muenchen')
+    expect(regionUrlSlug('Garmisch-Partenkirchen')).toBe('garmisch-partenkirchen')
+    expect(regionUrlSlug(' Weißenburg i. Bay. ')).toBe('weissenburg-i-bay')
+  })
+  const entries = [
+    entry('Schweitenkirchen', '8'),
+    entry('Pfaffenhofen an der Ilm', '8'),
+    entry('Landkreis Pfaffenhofen an der Ilm', '6'),
+    entry('München', '6'),
+    { ...entry('Neuenkirchen', '8'), id: 'relation/1' },
+    { ...entry('Neuenkirchen', '8'), id: 'relation/2' },
+  ].map((e) => ({ ...e, keys: regionSearchKeys(e.name) }))
+  test('one region of that name: its id; the full name beats a stripped Landkreis prefix', () => {
+    expect(regionIdsForUrlName(entries, 'schweitenkirchen')).toEqual(['relation/Schweitenkirchen'])
+    expect(regionIdsForUrlName(entries, 'Schweitenkirchen')).toEqual(['relation/Schweitenkirchen'])
+    expect(regionIdsForUrlName(entries, 'pfaffenhofen-an-der-ilm')).toEqual([
+      'relation/Pfaffenhofen-an-der-Ilm',
+    ])
+    expect(regionIdsForUrlName(entries, 'landkreis-pfaffenhofen-an-der-ilm')).toEqual([
+      'relation/Landkreis-Pfaffenhofen-an-der-Ilm',
+    ])
+  })
+  test('either umlaut spelling; several of a name or none are returned as such', () => {
+    expect(regionIdsForUrlName(entries, 'muenchen')).toHaveLength(1)
+    expect(regionIdsForUrlName(entries, 'munchen')).toHaveLength(1)
+    expect(regionIdsForUrlName(entries, 'neuenkirchen')).toEqual(['relation/1', 'relation/2'])
+    expect(regionIdsForUrlName(entries, 'gibtsnicht')).toEqual([])
+    expect(regionIdsForUrlName(entries, '--')).toEqual([])
   })
 })
 

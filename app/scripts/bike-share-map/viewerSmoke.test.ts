@@ -958,6 +958,39 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'a link with only ?region= opens the Gemeinde in its Landkreis, as the search would',
+    async () => {
+      page = await bootViewer(`?region=${SCHWEITENKIRCHEN}`)
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      expect(p.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+      expect(p.q('#copy-view-link-feedback').hidden).toBe(true)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    '?ort=<name> opens a Gemeinde of that name; an ambiguous name fills the search instead',
+    async () => {
+      page = await bootViewer('?ort=schweitenkirchen')
+      let p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      expect(p.q('#region-detail-title').textContent).toBe('Schweitenkirchen')
+      expect(p.errors).toEqual([])
+      page.close()
+      page = await bootViewer('?ort=neuenkirchen')
+      p = page
+      const input = p.q<HTMLInputElement>('#region-search-input')
+      await p.waitFor(() => input.value === 'neuenkirchen', 'the search box filled')
+      expect(p.q('#region-detail').hidden).toBe(true)
+      expect(p.qAll('#region-search-results li[role="option"]').length).toBeGreaterThan(1)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'clicking the selected region on the map again keeps it selected',
     async () => {
       page = await bootViewer(IN_LANDKREIS)

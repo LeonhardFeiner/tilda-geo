@@ -60,6 +60,36 @@ export function regionSearchKeys(value: string) {
   return [...keys]
 }
 
+/**
+ * A region name as a URL word: "Pfaffenhofen an der Ilm" → "pfaffenhofen-an-der-ilm",
+ * "München" → "muenchen". For links people type off paper (?ort=…, /<name> via 404.html).
+ */
+export function regionUrlSlug(name: string) {
+  return name
+    .toLowerCase()
+    .replace(/[äöüß]/g, (c) => UMLAUT_EXPANSIONS[c] ?? c)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
+
+/**
+ * Regions whose name (or a spelling regionSearchKeys allows: "munchen", without "Landkreis")
+ * is the given URL word. One id: the link is unambiguous. Several ("neuenkirchen"): the caller
+ * shows the search, whose list tells them apart.
+ */
+export function regionIdsForUrlName(entries: RegionSearchEntry[], urlName: string) {
+  const wanted = regionUrlSlug(urlName)
+  if (!wanted) return []
+  // the full name first: "pfaffenhofen-an-der-ilm" is the town, not also its Landkreis
+  const exact = entries.filter((e) => regionUrlSlug(e.name) === wanted)
+  if (exact.length) return exact.map((e) => e.id)
+  return entries
+    .filter((e) => (e.keys ?? regionSearchKeys(e.name)).some((k) => regionUrlSlug(k) === wanted))
+    .map((e) => e.id)
+}
+
 export function scoreRegionMatch(entryKeys: string[], queryKeys: string[]) {
   let best = MATCH_NONE
   for (const entry of entryKeys) {

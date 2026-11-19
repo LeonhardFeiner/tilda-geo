@@ -7971,7 +7971,7 @@ export function generateViewerHtml(
      * A shared link can carry ?region=<osm id> so the recipient lands on the same selected
      * region. Best-effort: only fires when that region is present in the current view.
      */
-    function applySelectedRegionFromUrl() {
+    async function applySelectedRegionFromUrl() {
       if (selectedFeatureId) return;
       const regionId = urlParams().get('region');
       if (!regionId) return;
@@ -7980,7 +7980,43 @@ export function generateViewerHtml(
         // A link lands on the area it was made in, region highlighted — not zoomed into it.
         selectRegionById(regionId, null, false);
         if (!explicitMapPositionPending) fitMapToCurrentView(true);
+        return;
       }
+      // A link with nothing but ?region= (typed by hand, a QR code, a sub-page linking back): open
+      // the area the region sits in, as the search does. A Gemeinde needs the Gemeinden first.
+      const params = urlParams();
+      if (['gebiet', 'untergebiet', 'darstellung', 'focus'].some((k) => params.get(k))) return;
+      if (!regionIndex?.byId.has(regionId)) {
+        try {
+          await ensureGemeindenLoaded();
+        } catch {
+          return;
+        }
+      }
+      if (regionIndex?.byId.has(regionId)) await jumpToRegionBySearch(regionId);
+    }
+
+    /**
+     * ?ort=<name> (also what 404.html makes of /<name>): a link people can type off a flyer. One
+     * region of that name opens like a search pick; several (Neuenkirchen) or none fill the search
+     * box, whose list tells them apart or says there is no match.
+     */
+    async function applyOrtFromUrl() {
+      const ort = urlParams().get('ort');
+      if (!ort || selectedFeatureId) return;
+      try {
+        await ensureGemeindenLoaded();
+      } catch {
+        return;
+      }
+      const ids = RegionSearch.regionIdsForUrlName(regionSearchEntries, ort);
+      if (ids.length === 1) {
+        await jumpToRegionBySearch(ids[0]);
+        return;
+      }
+      if (!regionSearchInput) return;
+      regionSearchInput.value = ort.replace(/-/g, ' ');
+      renderRegionSearchResults(regionSearchInput.value.trim());
     }
 
     function bindRegionMapInteraction() {
@@ -11518,7 +11554,8 @@ export function generateViewerHtml(
         initOverlayColorInputs();
         applyUrlOptions();
         await applyCurrentView();
-        applySelectedRegionFromUrl();
+        await applySelectedRegionFromUrl();
+        await applyOrtFromUrl();
         reportInvalidUrlParams();
         explicitMapPositionPending = false;
         urlSyncEnabled = true;
