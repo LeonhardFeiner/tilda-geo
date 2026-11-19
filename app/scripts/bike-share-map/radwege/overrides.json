@@ -294,6 +294,12 @@
         [567.0, 1095.0],
         [597.3, 1095.5]
       ]
+    ],
+    "geprueft": [
+      {
+        "at": [11.622019, 48.486018],
+        "note": "Flurkarte und Luftbild, 19.11.2026: Es gibt zwei Verbindungen. Der Feldweg in OpenStreetMap (432519407) biegt nach Süden ab; geradeaus führt eine Fahrspur am Südrand des Hopfengartens weiter, wie die Zeichnung (in OSM nicht erfasst, daher folgt die Zuordnung dem Bogen). Laut Flurkarte fehlt zwischen dem Wegeflurstück von der Dietersdorfer Straße und dem Weg durch den Wald ein Wegeflurstück; für den Ausbau wäre vermutlich Grunderwerb nötig (das Konzept sagt „ausschließlich Gemeindewege“). Keine Sperre bekannt. Besuch vor Ort geplant: Zustand der geraden Spur prüfen, ggf. in OSM erfassen und neu zuordnen."
+      }
     ]
   },
   "kurz|ampertshausen-saulhof-kirchdorf": {
@@ -522,6 +528,26 @@
         "at": [11.63386, 48.51064],
         "hinweis": "Vor Ort (November 2026): eigener Weg neben der Straße, das Radweg-Schild ist entfernt. Radfahren ist erlaubt, aber nicht vorgeschrieben.",
         "why": "Hinweis Ortskenntnis, November 2026."
+      },
+      {
+        "from": [11.648717, 48.462261],
+        "to": [11.649187, 48.46166],
+        "route": "bestand",
+        "ausbau": "bestand",
+        "onto": "FS 8",
+        "max": 50,
+        "hinweis": "Vor Ort (November 2026): Gehweg mit „Radfahrer frei“ an der Sternstraße (FS 8) in Kirchdorf. Er beginnt und endet an der Sternstraße und wechselt unterwegs die Straßenseite. Radfahren ist erlaubt, aber nur in Schrittgeschwindigkeit; es ist kein Radweg.",
+        "why": "Hinweis Ortskenntnis, November 2026. Der Plan zeichnet den Gehweg versetzt neben die FS 8; die Zuordnung lief über die Berghofstraße und durch ein Haus. In OpenStreetMap fehlt der Gehweg (Stand 19.11.2026); sobald er dort erfasst ist, diese beiden Einträge entfernen."
+      },
+      {
+        "from": [11.648525, 48.46158],
+        "to": [11.648764, 48.460599],
+        "route": "bestand",
+        "ausbau": "bestand",
+        "onto": "FS 8",
+        "max": 50,
+        "hinweis": "Vor Ort (November 2026): Gehweg mit „Radfahrer frei“ an der Sternstraße (FS 8) in Kirchdorf. Er beginnt und endet an der Sternstraße und wechselt unterwegs die Straßenseite. Radfahren ist erlaubt, aber nur in Schrittgeschwindigkeit; es ist kein Radweg.",
+        "why": "Wie der Eintrag davor (südliches Stück der Zeichnung)."
       }
     ]
   }

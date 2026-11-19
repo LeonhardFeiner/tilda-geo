@@ -336,7 +336,7 @@
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [375967033],
-        "hinweis": "Vor Ort (November 2026): eigener Weg neben der Stra\u00dfe, das Radweg-Schild ist entfernt. Radfahren ist erlaubt, aber nicht vorgeschrieben."
+        "hinweis": "Vor Ort (November 2026): eigener Weg neben der Straße, das Radweg-Schild ist entfernt. Radfahren ist erlaubt, aber nicht vorgeschrieben."
       },
       "geometry": {
         "type": "LineString",
@@ -359,18 +359,17 @@
         "ausbau": "bestand",
         "weg": "kein",
         "belag": "kein",
-        "fromPlan": 0.5,
-        "osmWays": [20153771]
+        "fromPlan": 1.0,
+        "hinweis": "Vor Ort (November 2026): Gehweg mit „Radfahrer frei“ an der Sternstraße (FS 8) in Kirchdorf. Er beginnt und endet an der Sternstraße und wechselt unterwegs die Straßenseite. Radfahren ist erlaubt, aber nur in Schrittgeschwindigkeit; es ist kein Radweg."
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648525, 48.46158],
-          [11.648627, 48.46112],
-          [11.648283, 48.460875],
-          [11.648361, 48.460814],
-          [11.648463, 48.460751],
-          [11.648764, 48.460599]
+          [11.648436, 48.462105],
+          [11.64856, 48.461996],
+          [11.64866, 48.461877],
+          [11.648729, 48.461749],
+          [11.64877, 48.461615]
         ]
       }
     },
@@ -382,14 +381,16 @@
         "ausbau": "bestand",
         "weg": "kein",
         "belag": "kein",
-        "fromPlan": 1.0
+        "fromPlan": 1.0,
+        "hinweis": "Vor Ort (November 2026): Gehweg mit „Radfahrer frei“ an der Sternstraße (FS 8) in Kirchdorf. Er beginnt und endet an der Sternstraße und wechselt unterwegs die Straßenseite. Radfahren ist erlaubt, aber nur in Schrittgeschwindigkeit; es ist kein Radweg."
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648717, 48.462261],
-          [11.649098, 48.461931],
-          [11.649187, 48.46166]
+          [11.648772, 48.461606],
+          [11.648921, 48.460972],
+          [11.64899, 48.460795],
+          [11.649049, 48.460713]
         ]
       }
     },
@@ -404,7 +405,7 @@
         "fromPlan": 0.0,
         "osmWays": [197391444],
         "seite": "rechts",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 27"
       },
       "geometry": {
@@ -591,7 +592,7 @@
         "fromPlan": 0.0,
         "osmWays": [23159964, 272869597],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "PAF 9"
       },
       "geometry": {
@@ -1067,7 +1068,7 @@
         "fromPlan": 0.0,
         "osmWays": [23141414],
         "seite": "rechts",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 25"
       },
       "geometry": {
@@ -1211,7 +1212,7 @@
         "fromPlan": 0.0,
         "osmWays": [37811989, 37811990, 44374777, 208289228, 208428521, 1195266636],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 11"
       },
       "geometry": {
@@ -1325,7 +1326,7 @@
         "fromPlan": 0.0,
         "osmWays": [51396899, 51396900],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 25"
       },
       "geometry": {
@@ -1437,7 +1438,7 @@
         "fromPlan": 0.0,
         "osmWays": [37811990, 37811991, 514017715],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 11"
       },
       "geometry": {
@@ -1550,7 +1551,7 @@
         "fromPlan": 0.0,
         "osmWays": [4439691],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -1620,7 +1621,7 @@
         "fromPlan": 0.0,
         "osmWays": [4439695, 51094839],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -1659,7 +1660,7 @@
         "fromPlan": 0.0,
         "osmWays": [51094841, 66831974, 104383598, 495255305],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -2016,7 +2017,7 @@
         "fromPlan": 0.0,
         "osmWays": [49195270, 197392270, 207451828, 514015530, 1322914606],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "PAF 6"
       },
       "geometry": {
@@ -2339,7 +2340,7 @@
         "fromPlan": 0.0,
         "osmWays": [4264772, 49195274],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 6"
       },
       "geometry": {
@@ -2383,7 +2384,7 @@
         "fromPlan": 0.0,
         "osmWays": [4264773, 4427661],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "FS 4"
       },
       "geometry": {
@@ -2407,7 +2408,7 @@
         "fromPlan": 0.0,
         "osmWays": [4427661, 50058796],
         "seite": "rechts",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "FS 4"
       },
       "geometry": {
@@ -2584,7 +2585,7 @@
         "fromPlan": 0.02,
         "osmWays": [23269506, 197391444],
         "seite": "rechts",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 27"
       },
       "geometry": {
@@ -2660,7 +2661,7 @@
         "fromPlan": 0.0,
         "osmWays": [4356116, 590159219],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -2689,7 +2690,7 @@
         "fromPlan": 0.0,
         "osmWays": [378445283],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -2757,7 +2758,7 @@
         "fromPlan": 0.0,
         "osmWays": [4448994, 23159964, 272869600],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "PAF 9"
       },
       "geometry": {
@@ -2825,7 +2826,7 @@
         "fromPlan": 0.0,
         "osmWays": [23159964, 23679188, 581541205],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 9"
       },
       "geometry": {
@@ -4786,7 +4787,7 @@
         "fromPlan": 0.0,
         "osmWays": [76848314, 644394407],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "Holzhausen"
       },
       "geometry": {
@@ -5013,7 +5014,7 @@
         "fromPlan": 0.0,
         "osmWays": [4356312, 787809488],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "PAF 11"
       },
       "geometry": {
@@ -6032,8 +6033,8 @@
         "fromPlan": 0.0,
         "osmWays": [35164778],
         "seite": "links",
-        "richtung": "\u00f6stlich",
-        "strasse": "Gundolfstra\u00dfe"
+        "richtung": "östlich",
+        "strasse": "Gundolfstraße"
       },
       "geometry": {
         "type": "LineString",
@@ -6058,7 +6059,7 @@
         "fromPlan": 0.0,
         "osmWays": [51219880],
         "seite": "links",
-        "richtung": "\u00f6stlich"
+        "richtung": "östlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6191,7 +6192,7 @@
         "fromPlan": 0.0,
         "osmWays": [4439691],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -6260,7 +6261,7 @@
         "fromPlan": 0.0,
         "osmWays": [4439695, 51094839],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -6299,7 +6300,7 @@
         "fromPlan": 0.0,
         "osmWays": [51094841, 495255305],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -6335,7 +6336,7 @@
         "fromPlan": 0.0,
         "osmWays": [51396898, 658504815, 1387751282],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich"
+        "richtung": "südlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6463,7 +6464,7 @@
         "fromPlan": 0.0,
         "osmWays": [47795473],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich"
+        "richtung": "südlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6655,7 +6656,7 @@
         "fromPlan": 0.0,
         "osmWays": [4439691],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -6678,7 +6679,7 @@
         "fromPlan": 0.0,
         "osmWays": [72051477, 76848314],
         "seite": "links",
-        "richtung": "s\u00fcdlich"
+        "richtung": "südlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6809,7 +6810,7 @@
         "fromPlan": 0.0,
         "osmWays": [50635395],
         "seite": "rechts",
-        "richtung": "\u00f6stlich"
+        "richtung": "östlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6871,7 +6872,7 @@
         "fromPlan": 0.0,
         "osmWays": [197392038],
         "seite": "links",
-        "richtung": "s\u00fcdlich"
+        "richtung": "südlich"
       },
       "geometry": {
         "type": "LineString",
@@ -6908,8 +6909,8 @@
         "fromPlan": 0.0,
         "osmWays": [28405469, 28405754],
         "seite": "links",
-        "richtung": "s\u00fcdlich",
-        "strasse": "D\u00fcrnzhauser Stra\u00dfe"
+        "richtung": "südlich",
+        "strasse": "Dürnzhauser Straße"
       },
       "geometry": {
         "type": "LineString",
@@ -6933,7 +6934,7 @@
         "fromPlan": 0.0,
         "osmWays": [197391448],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 27"
       },
       "geometry": {
@@ -7046,7 +7047,7 @@
         "fromPlan": 0.0,
         "osmWays": [4264772, 49195274],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "PAF 6"
       },
       "geometry": {
@@ -7090,7 +7091,7 @@
         "fromPlan": 0.0,
         "osmWays": [4264773, 4427661],
         "seite": "links",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "FS 4"
       },
       "geometry": {
@@ -7114,7 +7115,7 @@
         "fromPlan": 0.0,
         "osmWays": [4427661, 50058796],
         "seite": "rechts",
-        "richtung": "\u00f6stlich",
+        "richtung": "östlich",
         "strasse": "FS 4"
       },
       "geometry": {
@@ -7186,7 +7187,7 @@
         "fromPlan": 0.0,
         "osmWays": [24012542],
         "seite": "rechts",
-        "richtung": "\u00f6stlich"
+        "richtung": "östlich"
       },
       "geometry": {
         "type": "LineString",
@@ -7278,7 +7279,7 @@
         "fromPlan": 0.0,
         "osmWays": [28410578],
         "seite": "rechts",
-        "richtung": "n\u00f6rdlich"
+        "richtung": "nördlich"
       },
       "geometry": {
         "type": "LineString",
@@ -7306,7 +7307,7 @@
         "fromPlan": 0.0,
         "osmWays": [481269245],
         "seite": "rechts",
-        "richtung": "n\u00f6rdlich"
+        "richtung": "nördlich"
       },
       "geometry": {
         "type": "LineString",
@@ -7327,7 +7328,7 @@
         "fromPlan": 0.0,
         "osmWays": [28410611, 28410633],
         "seite": "links",
-        "richtung": "n\u00f6rdlich",
+        "richtung": "nördlich",
         "strasse": "Loipershausen"
       },
       "geometry": {
@@ -7418,8 +7419,8 @@
         "fromPlan": 0.0,
         "osmWays": [27949461],
         "seite": "rechts",
-        "richtung": "n\u00f6rdlich",
-        "strasse": "Haindlfinger Stra\u00dfe"
+        "richtung": "nördlich",
+        "strasse": "Haindlfinger Straße"
       },
       "geometry": {
         "type": "LineString",
@@ -7714,7 +7715,7 @@
         "fromPlan": 0.0,
         "osmWays": [4356116, 259740243, 378310928, 590159219, 590159222],
         "seite": "rechts",
-        "richtung": "s\u00fcdlich",
+        "richtung": "südlich",
         "strasse": "St 2045"
       },
       "geometry": {
@@ -7848,7 +7849,7 @@
         "fromPlan": 0.0,
         "osmWays": [953799518],
         "seite": "rechts",
-        "richtung": "\u00f6stlich"
+        "richtung": "östlich"
       },
       "geometry": {
         "type": "LineString",
@@ -7874,7 +7875,7 @@
         "fromPlan": 0.0,
         "osmWays": [24012303, 104383591],
         "seite": "rechts",
-        "richtung": "\u00f6stlich"
+        "richtung": "östlich"
       },
       "geometry": {
         "type": "LineString",
