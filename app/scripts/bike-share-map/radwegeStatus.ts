@@ -72,7 +72,7 @@ export const STATUS_GROUPS = [
   },
   {
     id: 'nichts',
-    label: 'Kein Schritt gefunden',
+    label: 'Kein Schritt dokumentiert',
     hint: 'In den ausgewerteten öffentlichen Quellen ist zu dieser Trasse kein Schritt dokumentiert (kein Beschluss, Grunderwerb, keine Planung, kein Programm, Haushaltsansatz oder Bau). Das heißt nicht, dass nichts geschehen ist.',
     colour: '#7c8594',
   },

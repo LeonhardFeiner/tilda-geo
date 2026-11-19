@@ -18,7 +18,7 @@ and the link, never the article text or longer verbatim quotes (UrhG, Presseverl
 § 87f). Events about the whole network (concept, budget) go into the top-level `allgemein`.
 2026-11-18: 51 events added from `schweitenkirchen-research/radwege-schweitenkirchen-2026-11-18.tar.gz`
 (`vorgaenge.json`; its `quote` field stays in the research archive). A finished route gets
-`"built": true`. When a published entry changes (kind, date, route), add a line to `korrekturen`. Update `stand`, then `bun run bike-share-map:viewer`.
+`"built": true`. When a published entry changes (kind, date, route), add a line to `korrekturen`. After searching a source again, move its `bis` (and `bisText`) in `quellen`: the page says how far each source was searched, so a quiet stretch reads as "nothing found" only where it was looked at. Update `stand`, then `bun run bike-share-map:viewer`.
 
 ## Lines from the Lagepläne
 

@@ -86,9 +86,22 @@ export const RoutesFileSchema = z.strictObject({
   allgemein: z.array(EventSchema).optional(),
   /** Corrections to the page, newest shown first; public, so readers see what changed. */
   korrekturen: z.array(z.strictObject({ date: PartialDate, text: z.string().min(1) })).optional(),
-  /** Since when each kind of source was searched; drawn under the duration view. */
+  /**
+   * Which period of each kind of source was searched; drawn under the duration view and named in
+   * the footer. `bis` = the newest material searched (last council session, issue, search date),
+   * `bisText` says it in words ("bis zur Sitzung vom 27.10.2026", "gesucht am 18.11.2026");
+   * without it the page writes "bis <date>".
+   */
   quellen: z
-    .array(z.strictObject({ label: z.string(), from: PartialDate, note: z.string() }))
+    .array(
+      z.strictObject({
+        label: z.string(),
+        from: PartialDate,
+        bis: PartialDate,
+        bisText: z.string().optional(),
+        note: z.string(),
+      }),
+    )
     .optional(),
 })
 

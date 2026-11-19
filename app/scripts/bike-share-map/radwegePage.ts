@@ -194,6 +194,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     #howto ul { margin: 4px 0 0; padding-left: 18px; }
     #howto li { margin-bottom: 3px; }
     #headline { margin: 10px 0 0; font-size: 13px; }
+    #keyfact { margin: 6px 0 8px; padding: 6px 8px; border-left: 3px solid #c0392b; background: var(--row-hover); font-size: 13px; }
     #recent-box > summary { cursor: pointer; }
     #recent-box > summary h2 { display: inline; }
     #about { margin-top: 10px; border-top: 1px solid var(--border); padding-top: 6px; font-size: 12px; }
@@ -337,7 +338,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           <summary>So ist die Karte zu lesen</summary>
           <ul>
             <li><strong>Farbe</strong> = der letzte öffentlich dokumentierte Schritt: Beschluss, Grunderwerb, Planung, Programm, Haushaltsansatz oder Bau. Aussagen, Ankündigungen (auch die Maßnahmenliste des Landkreises, KUS) und Anfragen zählen nicht als Schritt; sie stehen in den Details.</li>
-            <li><strong>„Kein Schritt gefunden“</strong> heißt: in den ausgewerteten öffentlichen Quellen nichts gefunden. Nichtöffentliche Sitzungen und die Arbeit der Verwaltung sind nicht bekannt; es kann also mehr geschehen sein.</li>
+            <li><strong>„Kein Schritt dokumentiert“</strong> heißt: in den ausgewerteten öffentlichen Quellen nichts gefunden (welche und bis wann: unten unter „Stand der Recherche“). Nichtöffentliche Tagesordnungspunkte, etwa zum Grunderwerb, und die Arbeit der Verwaltung sind nicht bekannt; es kann also mehr geschehen sein.</li>
             <li><strong>Zwei Pläne:</strong> kurzfristig (Lageplan 5/1) vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig (Lageplan 5/2) ausbauen. „Beide“ zeigt jede Strecke einmal: wo Plan 5/2 oder ein vorhandener Weg dieselbe Strecke führt, gilt dieser; aus Plan 5/1 kommt nur hinzu, was dort nicht liegt.</li>
             <li><strong>Zahlen</strong> sind Kilometer, zunächst nur innerhalb der Gemeindegrenze.</li>
             <li><strong>Zuständig:</strong> Radwege an Kreis- und Staatsstraßen plant und baut der Landkreis bzw. das Staatliche Bauamt; den Grunderwerb übernimmt dort oft die Gemeinde.</li>
@@ -347,6 +348,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         <p id="headline" aria-live="polite"></p>
         <div id="bar" aria-hidden="true"></div>
         <ul id="groups"></ul>
+        <p id="keyfact" hidden></p>
         <p id="filter-note" hidden></p>
         <fieldset class="seg" id="f-plan">
           <legend>Plan</legend>
@@ -380,6 +382,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         <details id="recent-box" open>
           <summary><h2 id="recent-title">Neueste Vorgänge</h2></summary>
           <ul id="recent"></ul>
+          <p class="muted" id="recent-bis" hidden></p>
           <p class="muted" style="margin:4px 0 0"><button class="linkbtn" type="button" id="recent-more"></button></p>
         </details>
         <details id="more">
@@ -398,7 +401,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           </fieldset>
         </details>
         <footer id="about">
-          <p>Stand der Recherche: <span id="stand"></span>. Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Karte © OpenStreetMap-Mitwirkende.</p>
+          <p>Stand der Recherche: <span id="stand"></span>.<span id="quellen-bis"></span> Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Karte © OpenStreetMap-Mitwirkende.</p>
           <p><strong>Wer steht dahinter?</strong> Ein privates, nicht-kommerzielles Projekt von ${projectLead}, Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen. Damit das nachprüfbar bleibt, steht bei jedem Vorgang die Quelle, und die Einteilung folgt einer festen Regel (siehe „So ist die Karte zu lesen“). ${projectLead} trägt selbst zu OpenStreetMap bei (Benutzer <a href="https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history">${AUTHOR_OSM_USER}</a>). <a href="./impressum.html">Impressum &amp; Datenschutz</a></p>
           <p><strong>Fehler gefunden oder ein Vorgang fehlt?</strong> Bitte an ${LEGAL_CONTACT.email}, mit Quelle. Korrekturen werden hier mit Datum vermerkt.</p>
           <details id="korrekturen" hidden><summary>Korrekturen (<span id="korr-count"></span>)</summary><ul id="korr-list"></ul></details>
@@ -554,6 +557,16 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     const features = data.lines.features;
     if (state.selected && !routeById.has(state.selected)) state.selected = null;
     $('stand').textContent = deDate(data.stand);
+    // how far each source was searched: an empty stretch at the end means "not searched yet", not "nothing happened"
+    {
+      const q = data.quellen || [];
+      const bis = (x) => x.bisText || 'bis ' + deDate(x.bis);
+      if (q.length && q.every((x) => x.bis)) {
+        $('quellen-bis').textContent = ' Ausgewertet: ' + q.map((x) => x.label + ' ab ' + deDate(x.from) + ', ' + bis(x)).join('; ') + '.';
+        $('recent-bis').textContent = 'Durchgesehen: ' + q.map((x) => x.label.replace(/ \\(.*\\)$/, '') + ' ' + bis(x)).join(' · ') + '. Was danach geschah, fehlt hier noch.';
+        $('recent-bis').hidden = false;
+      }
+    }
 
     // ---- filters
     /** Existing paths belong to both plans; "beide" takes each stretch once (kombi, against the 5/2 lines the Trassen filter shows); optionally only inside the Gemeinde. */
@@ -950,11 +963,11 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       }
       // which sources the research could search for which years: gaps mean "not searchable", not "nothing happened"
       if (data.quellen && data.quellen.length) {
-        h += '<h3>Quellenlage</h3><p class="muted" style="margin:0 0 4px">Ab wann die Quellen ausgewertet sind. Wo ein Balken fehlt, gibt es keine durchsuchbaren Unterlagen; dass dort nichts eingetragen ist, heißt nicht, dass nichts geschah.</p>';
+        h += '<h3>Quellenlage</h3><p class="muted" style="margin:0 0 4px">Welcher Zeitraum der Quellen ausgewertet ist. Wo ein Balken fehlt, gibt es keine durchsuchbaren Unterlagen; dass dort nichts eingetragen ist, heißt nicht, dass nichts geschah.</p>';
         for (const q of data.quellen) {
-          const a = Math.max(y0, fy(q.from)), b = fy(data.stand);
+          const a = Math.max(y0, fy(q.from)), b = q.bis ? Math.min(fy(data.stand), fy(q.bis) + (q.bis.length === 4 ? 1 : q.bis.length === 7 ? 1 / 12 : 0)) : fy(data.stand);
           const inner = a < b ? '<i class="d-bar" style="left:' + pos(a) + ';width:' + pos(y0 + b - a) + ';background:var(--muted);opacity:0.35"></i>' : '';
-          h += '<div class="d-row" style="cursor:default" title="' + escHtml(q.note) + '"><span class="d-head"><span>' + escHtml(q.label) + '</span><span class="dur">ab ' + escHtml(deDate(q.from)) + '</span></span>' + track(inner) + '<span class="muted" style="font-size:11px">' + escHtml(q.note) + '</span></div>';
+          h += '<div class="d-row" style="cursor:default" title="' + escHtml(q.note) + '"><span class="d-head"><span>' + escHtml(q.label) + '</span><span class="dur">' + escHtml('ab ' + deDate(q.from) + (q.bis ? ', ' + (q.bisText || 'bis ' + deDate(q.bis)) : '')) + '</span></span>' + track(inner) + '<span class="muted" style="font-size:11px">' + escHtml(q.note) + '</span></div>';
         }
       }
       h += '<p class="muted" style="margin-top:10px">Stand der Recherche: ' + escHtml(deDate(data.stand)) + '. Ein Vorgang mit Jahr oder Monat ist am Anfang des Zeitraums eingezeichnet.</p>';
@@ -1045,6 +1058,32 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
         b.addEventListener('contextmenu', (e) => e.pointerType !== 'mouse' && e.preventDefault());
         li.appendChild(b);
         list.appendChild(li);
+      }
+      // the fair lead: what has to be built and how much of it has no documented step. Freigabe
+      // needs no Beschluss to be started, so it is named but not counted; plan pieces no labelled
+      // route could be tied to (ohne-beschriftung-*) are left out of the "no step" figure.
+      const kf = $('keyfact');
+      kf.hidden = !(state.farbe === 'stand' || state.farbe === 'bedarf');
+      if (!kf.hidden) {
+        let bau = 0, bauNichts = 0, frei = 0, unbeschriftet = 0;
+        const bauNichtsRoutes = new Set();
+        for (const f of features) {
+          const p = f.properties;
+          if (!passesOther(p)) continue;
+          if (p.bedarf.startsWith('freigabe')) frei += p.m;
+          if (p.bedarf !== 'neubau') continue;
+          bau += p.m;
+          if (p.status !== 'nichts') continue;
+          if (p.routeId.startsWith('ohne-beschriftung')) unbeschriftet += p.m;
+          else {
+            bauNichts += p.m;
+            bauNichtsRoutes.add(p.routeId);
+          }
+        }
+        kf.hidden = !bau;
+        kf.innerHTML = 'Aus- oder Neubau nötig: <strong>' + km(bau) + '</strong>. Davon ist bei <strong>' + km(bauNichts) + '</strong> (' + bauNichtsRoutes.size + (bauNichtsRoutes.size === 1 ? ' Trasse' : ' Trassen') + ') kein Schritt dokumentiert.'
+          + (unbeschriftet >= 50 ? ' Nicht mitgezählt sind ' + km(unbeschriftet) + ', die im Plan keiner beschrifteten Trasse zugeordnet sind.' : '')
+          + (frei ? ' <span class="muted">Für ' + km(frei) + ' genügen laut Plan Freigabe und Schilder.</span>' : '');
       }
       const note = $('filter-note');
       note.hidden = !state.only;

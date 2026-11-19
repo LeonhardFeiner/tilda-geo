@@ -194,6 +194,15 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
       /^[\d,]+\skm in \d+ Trassen .*Lageplan 5\/1.*innerhalb der Gemeinde/,
     )
     expect(shownLines(p).every((f) => f.properties.innen)).toBe(true)
+    // the lead figure: Aus-/Neubau and how much of it has no documented step, Freigabe named apart
+    expect(p.q('#keyfact').hidden).toBe(false)
+    expect(p.q('#keyfact').textContent).toMatch(
+      /^Aus- oder Neubau nötig: [\d,]+\skm\. Davon ist bei [\d,]+\skm \(\d+ Trassen\) kein Schritt dokumentiert\..*Freigabe und Schilder/,
+    )
+    // how far each source was searched, so an empty recent list is not read as "nothing happened"
+    expect(p.q('#recent-bis').textContent).toMatch(
+      /Gemeinderat bis zur Sitzung vom \d\d\.\d\d\.\d{4}/,
+    )
     // what exists without a usable cycle path (Waldroute, roads) is said apart, and dashed
     expect(p.q('#groups [data-group="bestand"]').textContent).toContain('ohne eigenen Radweg')
     expect(p.q('#line-legend').textContent).toContain('kein eigener Radweg')

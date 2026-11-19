@@ -1510,21 +1510,29 @@
     {
       "label": "Landkreis (Ratsinformationssystem)",
       "from": "2008",
-      "note": "Kreisausschüsse, online ab 2008"
+      "bis": "2026-11-18",
+      "bisText": "gesucht am 18.11.2026",
+      "note": "Kreisausschüsse, online ab 2008; Stichwortsuche nach den Orten der Gemeinde, den Kreisstraßen PAF 9, 23 und 25 und „Radweg“"
     },
     {
       "label": "Rundschau (Gemeindeblatt)",
       "from": "2019",
+      "bis": "2026",
+      "bisText": "bis Ausgabe 3/2026",
       "note": "Ausgaben online ab 2019; eine Ausgabe von 2012 über das Webarchiv"
     },
     {
       "label": "Gemeinderat",
       "from": "2020-01",
-      "note": "Protokolle 01/2020–04/2021 auf der Gemeindeseite, danach Ratsinformationssystem; Protokolle 2014–2019 sind nicht online"
+      "bis": "2026-10-27",
+      "bisText": "bis zur Sitzung vom 27.10.2026",
+      "note": "Protokolle 01/2020–04/2021 auf der Gemeindeseite, danach Ratsinformationssystem: alle öffentlichen Tagesordnungspunkte durchgesehen; nichtöffentliche (etwa Grunderwerb, Vergaben) sind dort nicht einsehbar; Protokolle 2014–2019 sind nicht online"
     },
     {
       "label": "Pfaffenhofener Kurier",
       "from": "2022",
+      "bis": "2026-11-18",
+      "bisText": "gesucht am 18.11.2026",
       "note": "Online-Archiv erst ab 2022 durchsuchbar; ältere Artikel nur vereinzelt"
     }
   ]
