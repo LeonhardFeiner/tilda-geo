@@ -192,7 +192,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
     async () => {
       // Bayern by Landkreise, Landkreis Pfaffenhofen selected.
       page = await bootViewer(
-        '?gebiet=relation/2145268&darstellung=landkreis_kreisfrei&region=relation/62371',
+        '?gebiet=relation/2145268&darstellung=landkreis_kreisfrei&region=relation/62371&experte=1',
       )
       const { window } = page
       await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
@@ -213,7 +213,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   test(
     'the "Mehr Zahlen" title names only what the region has; the model map opens it',
     async () => {
-      page = await bootViewer(IN_LANDKREIS)
+      page = await bootViewer(IN_LANDKREIS + '&experte=1')
       const { window } = page
       const summary = () => page!.q('#region-detail-more-summary').textContent ?? ''
       await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
@@ -222,7 +222,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       page.close()
 
       // Bayern itself has no model value (the Land fixed effects make it zero by construction).
-      page = await bootViewer('?darstellung=bundeslaender&region=relation/2145268')
+      page = await bootViewer('?darstellung=bundeslaender&region=relation/2145268&experte=1')
       await page.waitFor(
         () => page!.window.document.body.dataset.regionDetail === '1',
         'the Land card',
@@ -243,9 +243,80 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
-    'every map mode colours the regions, ranks them and labels the legend without errors',
+    'the plain view keeps to the bike maps and a card without model or scatter plots',
     async () => {
       page = await bootViewer(IN_LANDKREIS)
+      const { window } = page
+      const body = window.document.body
+      await page.waitFor(() => body.dataset.regionDetail === '1', 'the region card')
+      const select = page.q('#map-metric-select') as HTMLSelectElement
+      const values = () => [...select.options].map((o) => o.value)
+      const toggle = page.q('#expert-toggle') as HTMLInputElement
+      const summary = () => page!.q('#region-detail-more-summary').textContent ?? ''
+      const plotRows = () => page!.qAll('#region-detail-extra .ctx-row--plot').length
+      const setExpert = (on: boolean) => {
+        toggle.checked = on
+        toggle.dispatchEvent(new window.Event('change'))
+      }
+
+      expect(body.classList.contains('ui-expert')).toBe(false)
+      expect(values()).toEqual(['bikeShare', 'busyFederalCovered', 'busyRoadsCovered'])
+      expect(toggle.checked).toBe(false)
+      await page.waitFor(() => page!.qAll('#region-detail-extra .ctx-row').length > 0, 'the rows')
+      expect(plotRows()).toBe(0)
+      expect(page.qAll('#region-detail-extra .ctx-hint')).toHaveLength(0)
+      expect(summary()).not.toMatch(/Erwartungswert|Diagramm/)
+
+      setExpert(true)
+      expect(body.classList.contains('ui-expert')).toBe(true)
+      expect(values()).toEqual([
+        'bikeShare',
+        'modelGap',
+        'busyFederalCovered',
+        'busyRoadsCovered',
+        'mappingDepth',
+        'density',
+        'stationBike',
+        'cars',
+        'rent',
+        'accidents',
+        'commuters',
+      ])
+      expect(plotRows()).toBeGreaterThan(0)
+      expect(summary()).toContain('Umfeld mit Diagrammen')
+      await page.waitFor(() => window.location.search.includes('experte=1'), 'experte=1 in the URL')
+
+      // Leaving the expert view on an expert-only map falls back to the bike map.
+      select.value = 'cars'
+      select.dispatchEvent(new window.Event('change'))
+      await page.waitFor(() => window.location.search.includes('metrik=cars'), 'the cars map')
+      setExpert(false)
+      expect(select.value).toBe('bikeShare')
+      expect(plotRows()).toBe(0)
+      await page.waitFor(
+        () => !/experte|metrik/.test(window.location.search),
+        'a URL without experte and metrik',
+      )
+      page.close()
+
+      // A link to an expert-only map brings the expert view along.
+      page = await bootViewer(IN_LANDKREIS + '&metrik=cars')
+      await page.waitFor(
+        () => page!.window.document.body.dataset.regionDetail === '1',
+        'the region card',
+      )
+      expect(page.window.document.body.classList.contains('ui-expert')).toBe(true)
+      expect((page.q('#map-metric-select') as HTMLSelectElement).value).toBe('cars')
+      expect((page.q('#expert-toggle') as HTMLInputElement).checked).toBe(true)
+      expect(page.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'every map mode colours the regions, ranks them and labels the legend without errors',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS + '&experte=1')
       const { window } = page
       await page.waitFor(() => window.document.body.dataset.regionDetail === '1', 'the region card')
       const select = page.q('#map-metric-select') as HTMLSelectElement

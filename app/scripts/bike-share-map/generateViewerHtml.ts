@@ -965,6 +965,10 @@ export function generateViewerHtml(
       font-size: 0.7rem; font-weight: 700; color: #334155;
     }
     .ctx-hint { margin: 0 0 4px; font-size: 0.75rem; color: #475569; }
+    /* Plain view: no model on the card. By id, so the PDF's id-less copy still prints it. */
+    body:not(.ui-expert) #region-detail-model-gap { display: none !important; }
+    .expert-toggle-label { display: flex !important; align-items: flex-start; gap: 6px; cursor: pointer; }
+    .expert-toggle-label input { margin-top: 2px; }
     .ctx-dtv { margin: 4px 0 6px; font-size: 0.75rem; }
     .ctx-dtv-caption { margin: 0 0 2px; color: #475569; }
     .ctx-dtv table { border-collapse: collapse; width: 100%; }
@@ -1765,14 +1769,14 @@ export function generateViewerHtml(
         <select id="map-metric-select">
           <optgroup label="Radinfrastruktur">
             <option value="bikeShare">km Radinfra je 100 km Straße</option>
-            <option value="modelGap">Modell-Abweichung (über / unter Erwartungswert)</option>
+            <option value="modelGap" data-expert>Modell-Abweichung (über / unter Erwartungswert)</option>
             <option value="busyFederalCovered">Vielbefahrene Bundesstraßen mit Radweg (%)</option>
             <option value="busyRoadsCovered">Vielbefahrene Landstraßen mit Radweg (%, Bayern)</option>
           </optgroup>
-          <optgroup label="Datenlage">
+          <optgroup label="Datenlage" data-expert>
             <option value="mappingDepth">Kartierungstiefe (OSM)</option>
           </optgroup>
-          <optgroup label="Umfeld">
+          <optgroup label="Umfeld" data-expert>
             <option value="density">Einwohner je km²</option>
             <option value="stationBike">Mit dem Rad zum Bahn-/Tramhalt (min)</option>
             <option value="cars">Pkw je 1.000 Einwohner (KBA)</option>
@@ -1892,6 +1896,17 @@ export function generateViewerHtml(
         </div>
       </div>
         </div>
+      </div>
+      <div class="settings-group" id="expert-options">
+        <h2 class="settings-heading">Weitere Auswertungen</h2>
+        <label class="expert-toggle-label" for="expert-toggle">
+          <input type="checkbox" id="expert-toggle" />
+          <span>Zusätzliche Karten, statistisches Modell und Streudiagramme zeigen</span>
+        </label>
+        <p class="hint">
+          Für alle, die tiefer einsteigen wollen: Karten zu Umfeld und Datenlage, der Erwartungswert
+          aus dem <a href="./methodik.html#modell">statistischen Modell</a> und Streudiagramme in „Mehr Zahlen“.
+        </p>
       </div>
     </details>
     <!-- Closed on a computer: the small legend on the map carries the scale. The phone keeps it
@@ -2662,6 +2677,53 @@ export function generateViewerHtml(
     const colorScaleSelect = document.getElementById('color-scale-select');
     const colorScaleHint = document.getElementById('color-scale-hint');
     const mapMetricSelect = document.getElementById('map-metric-select');
+    // ==== Plain and expert view ====
+    // The plain view keeps to the bike-infrastructure maps and a card without model or scatter
+    // plots. "Weitere Auswertungen" (settings, experte=1, or a link to an expert-only map) adds
+    // the rest. Options are taken out of the select rather than hidden: iOS lists hidden ones.
+    const expertToggle = document.getElementById('expert-toggle');
+    const expertMetricNodes = [...mapMetricSelect.querySelectorAll('[data-expert]')].map((node) => ({
+      node,
+      parent: node.parentNode,
+      next: node.nextElementSibling,
+    }));
+    let expertMode = null; // undecided until the first setExpertMode(); the markup holds every option
+    function setExpertMode(on) {
+      on = !!on;
+      if (expertToggle) expertToggle.checked = on;
+      if (on === expertMode) return false;
+      expertMode = on;
+      document.body.classList.toggle('ui-expert', on);
+      if (on) {
+        // Last first: an earlier node's successor may itself be one that was taken out.
+        for (const entry of [...expertMetricNodes].reverse()) {
+          entry.parent.insertBefore(entry.node, entry.next && entry.next.parentNode === entry.parent ? entry.next : null);
+        }
+      } else {
+        for (const entry of expertMetricNodes) entry.node.remove();
+      }
+      mapMetricSelect.value = currentMapMetric;
+      return true;
+    }
+    {
+      // Before the first paint; applyUrlOptions() repeats this once the page is set up.
+      const initial = new URLSearchParams(location.search);
+      setExpertMode(
+        ViewerUrl.parseBoolParam(initial.get('experte'), false) ||
+          ViewerUrl.isExpertMapMetric(initial.get('metrik')),
+      );
+    }
+    /** The open card follows the view: scatter rows and the fold's title depend on it. */
+    function refreshRegionDetailForExpertMode() {
+      if (regionDetailEl.hidden || !selectedFeatureId) return;
+      const selected =
+        lastRankingFeatures.find((f) => f.properties?.id === selectedFeatureId) ||
+        regionIndex?.byId.get(selectedFeatureId);
+      if (!selected) return;
+      if (!expertMode) openContextPlotKey = null;
+      renderRegionExtra(selected.properties || {});
+      syncRegionDetailMore();
+    }
     const legendBar = document.getElementById('legend-bar');
     const bikelaneSwatch = document.getElementById('bikelane-swatch');
     const roadSwatch = document.getElementById('road-swatch');
@@ -2737,9 +2799,9 @@ export function generateViewerHtml(
     /** The fold's title names only what this region has; the parts render (and hide) on their own. */
     function syncRegionDetailMore() {
       const parts = [];
-      if (!regionDetailModelGap.hidden) parts.push('Erwartungswert');
+      if (expertMode && !regionDetailModelGap.hidden) parts.push('Erwartungswert');
       if (!regionDetailAuthority.hidden) parts.push('Zuständigkeiten');
-      if (!regionDetailExtra.hidden) parts.push('Umfeld mit Diagrammen');
+      if (!regionDetailExtra.hidden) parts.push(expertMode ? 'Umfeld mit Diagrammen' : 'Umfeld');
       parts.push('Aufschlüsselung');
       regionDetailMoreSummary.textContent = 'Mehr Zahlen: ' + parts.join(', ');
       if (openMoreForModelGap && !regionDetailModelGap.hidden && currentMapMetric === 'modelGap') {
@@ -7138,10 +7200,12 @@ export function generateViewerHtml(
             caption.append(scope.label);
           }
           regionDetailExtra.appendChild(caption);
-          const hint = document.createElement('p');
-          hint.className = 'ctx-hint';
-          hint.textContent = '▸ Zeile öffnen: Streudiagramm mit der Radinfra je 100 km Straße aller Vergleichsgebiete';
-          regionDetailExtra.appendChild(hint);
+          if (expertMode) {
+            const hint = document.createElement('p');
+            hint.className = 'ctx-hint';
+            hint.textContent = '▸ Zeile öffnen: Streudiagramm mit der Radinfra je 100 km Straße aller Vergleichsgebiete';
+            regionDetailExtra.appendChild(hint);
+          }
         }
         // A heading before the first row of each group that has a value here.
         if (metric.group.title && metric.group.title !== lastGroupTitle) {
@@ -7210,7 +7274,7 @@ export function generateViewerHtml(
           track.appendChild(marker);
           row.appendChild(track);
         }
-        if (!metric.noBar) {
+        if (!metric.noBar && expertMode) {
           row.classList.add('ctx-row--plot');
           row.dataset.metric = metric.key;
           row.tabIndex = 0;
@@ -7267,8 +7331,8 @@ export function generateViewerHtml(
           },
         );
         toggle.classList.add('ctx-scope-toggle');
-        const hintEl = regionDetailExtra.querySelector('.ctx-hint');
-        regionDetailExtra.insertBefore(toggle, hintEl ? hintEl.nextSibling : regionDetailExtra.firstChild);
+        const above = regionDetailExtra.querySelector('.ctx-hint') || regionDetailExtra.querySelector('.ctx-caption');
+        regionDetailExtra.insertBefore(toggle, above ? above.nextSibling : regionDetailExtra.firstChild);
       }
       regionDetailExtra.hidden = !regionDetailExtra.firstChild;
       // Hidden card = first selection: showRegionDetail reopens the plot once the card has a width.
@@ -9423,6 +9487,7 @@ export function generateViewerHtml(
           rankingOpen: rankingDetails.open,
           rankingMode,
           metric: currentMapMetric,
+          expert: expertMode,
           colors: colorScaleSelect.value,
           capPct,
           capEnabled: enabled,
@@ -9442,6 +9507,7 @@ export function generateViewerHtml(
           rankingOpen: true,
           rankingMode: 'topflop',
           metric: 'bikeShare',
+          expert: false,
           colors: CONFIG.defaultColorScale,
           capPct: CONFIG.defaultColorCapPct,
           capEnabled: defaultScaleCapEnabledForView(),
@@ -9907,6 +9973,9 @@ export function generateViewerHtml(
         rankingMode = 'topflop';
         syncRankingModeButtons();
       }
+      // A link to an expert-only map brings the expert view along, whatever experte= says.
+      const expertChanged = setExpertMode(o.expert === true || ViewerUrl.isExpertMapMetric(o.metric));
+      if (expertChanged && live) refreshRegionDetailForExpertMode();
       if (o.metric) {
         currentMapMetric = o.metric;
         if (mapMetricSelect) mapMetricSelect.value = o.metric;
@@ -10875,6 +10944,14 @@ export function generateViewerHtml(
       if (panelMain) {
         panelMain.scrollTop = prevScrollTop;
       }
+    });
+    expertToggle?.addEventListener('change', () => {
+      const leavingExpertMap = !expertToggle.checked && ViewerUrl.isExpertMapMetric(currentMapMetric);
+      if (leavingExpertMap) currentMapMetric = 'bikeShare';
+      if (!setExpertMode(expertToggle.checked)) return;
+      refreshRegionDetailForExpertMode();
+      if (leavingExpertMap) mapMetricSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      else scheduleUrlSync();
     });
     const legendCvdToggle = document.getElementById('legend-cvd-toggle');
     let colorScaleBeforeCvd = null;

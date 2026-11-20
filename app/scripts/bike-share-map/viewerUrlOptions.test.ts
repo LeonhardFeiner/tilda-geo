@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   clampOverlayMinZoom,
+  isExpertMapMetric,
   mapPositionFromUrl,
   parseBoolParam,
   parseHexColorParam,
@@ -29,6 +30,7 @@ const defaults: ViewerOptionDefaults = {
   rankingOpen: true,
   rankingMode: 'topflop',
   metric: 'bikeShare',
+  expert: false,
   colors: 'traffic',
   capPct: 20,
   capEnabled: false,
@@ -71,6 +73,16 @@ describe('parameter parsing', () => {
     expect(o.roadMinZoomFull).toBe(13)
   })
 
+  test('only the bike-infrastructure maps belong to the plain view', () => {
+    expect(isExpertMapMetric('bikeShare')).toBe(false)
+    expect(isExpertMapMetric('busyRoadsCovered')).toBe(false)
+    expect(isExpertMapMetric('modelGap')).toBe(true)
+    expect(isExpertMapMetric('cars')).toBe(true)
+    expect(isExpertMapMetric(null)).toBe(false)
+    expect(readViewerUrlOptions(new URLSearchParams('experte=1'), cfg).expert).toBe(true)
+    expect(readViewerUrlOptions(new URLSearchParams(''), cfg).expert).toBeNull()
+  })
+
   test('unknown basemaps, colour scales and metrics count as absent', () => {
     const o = readViewerUrlOptions(new URLSearchParams('basemap=x&colors=y&metrik=z'), cfg)
     expect([o.basemap, o.colors, o.metric]).toEqual([null, null, null])
@@ -97,6 +109,7 @@ describe('writing', () => {
       rankingOpen: false,
       rankingMode: 'all',
       metric: 'modelGap',
+      expert: true,
       colors: 'colorblind',
       capPct: 15,
       capEnabled: true,

@@ -23,6 +23,20 @@ export const MAP_METRICS = [
   'stationBike',
 ] as const
 export type MapMetric = (typeof MAP_METRICS)[number]
+
+/**
+ * The maps the plain view offers. Every other metric (model gap, mapping depth, the context maps)
+ * belongs to the expert view ("Weitere Auswertungen"); a link to one of them switches it on.
+ */
+export const SIMPLE_MAP_METRICS: readonly MapMetric[] = [
+  'bikeShare',
+  'busyFederalCovered',
+  'busyRoadsCovered',
+]
+
+export function isExpertMapMetric(metric: string | null | undefined) {
+  return !!metric && !(SIMPLE_MAP_METRICS as readonly string[]).includes(metric)
+}
 export type RankingMode = 'topflop' | 'all'
 
 export type ZoomLimits = { min: number; max: number }
@@ -45,6 +59,8 @@ export type ViewerUrlOptions = {
   rankingOpen: boolean | null
   rankingMode: RankingMode | null
   metric: MapMetric | null
+  /** `experte=1`: the expert view. A link to an expert-only map implies it (see the page). */
+  expert: boolean | null
   colors: string | null
   capPct: number | null
   capEnabled: boolean | null
@@ -120,6 +136,7 @@ export function readViewerUrlOptions(
     rankingMode: rankingMode === 'all' || rankingMode === 'topflop' ? rankingMode : null,
     metric:
       metric && (MAP_METRICS as readonly string[]).includes(metric) ? (metric as MapMetric) : null,
+    expert: parseBoolParam(params.get('experte'), null),
     colors: colors && cfg.colorScaleIds.includes(colors) ? colors : null,
     capPct: Number.isFinite(capNum) ? capNum : null,
     capEnabled: parseBoolParam(params.get('capEnabled'), null),
@@ -168,6 +185,7 @@ export type ViewerOptionState = {
   rankingOpen: boolean
   rankingMode: RankingMode
   metric: MapMetric
+  expert: boolean
   colors: string
   capPct: number
   capEnabled: boolean
@@ -210,6 +228,7 @@ export function writeViewerUrlOptions(
   )
   put('rankingMode', state.rankingMode !== defaults.rankingMode ? state.rankingMode : null)
   put('metrik', state.metric !== defaults.metric ? state.metric : null)
+  put('experte', state.expert !== defaults.expert ? (state.expert ? '1' : '0') : null)
   put('colors', state.colors !== defaults.colors ? state.colors : null)
   put('cap', state.capPct !== defaults.capPct ? String(state.capPct) : null)
   put(

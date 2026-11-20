@@ -477,6 +477,9 @@ ${visitCounterHeadScript()}
   werden, schätzt ein <strong>multivariates Regressionsmodell</strong> für jede Gemeinde einen
   statistischen Erwartungswert. Es beschreibt Zusammenhänge, keine Ursachen. Die Miete kann selbst
   Folge guter Radinfrastruktur sein; ihr Beitrag ist deshalb kein ursächlicher Faktor.</p>
+  <p>In der Karte gehören der Erwartungswert, die Karte „Modell-Abweichung“ und die Streudiagramme zu den
+  weiteren Auswertungen. Sie lassen sich unter „Einstellungen“ einschalten oder
+  <a href="./?experte=1">direkt mit diesem Link öffnen</a>.</p>
 
   <p><strong>Wichtig: Der Erwartungswert ist ein statistischer Vergleichswert, kein planerisches Ziel.</strong>
   Das Modell beschreibt bestehende Zusammenhänge im bundesweiten Straßennetz – es liefert keine
