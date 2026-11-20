@@ -260,7 +260,13 @@
   },
   "kurz|frickendorf-oberthann": {
     "branches": [["Frickendorf", [278.2, 623.5]]],
-    "adopt": [[11.580525, 48.515223]]
+    "adopt": [[11.580525, 48.515223]],
+    "geprueft": [
+      {
+        "at": [11.586292, 48.520978],
+        "note": "Gegen den Plan geprüft, 20.11.2026: Der Plan zeichnet dieselbe Ecke (von der Straße aus Norden nach Westen Richtung Oberthann), nur etwa 20 m versetzt; die Zuordnung folgt der einzigen Straße dort."
+      }
+    ]
   },
   "kurz|landkreisgrenze-holzhausen": {
     "branches": [[[959.6, 832.0], "Holzhausen"]]
@@ -489,6 +495,10 @@
       {
         "at": [11.58922, 48.5501],
         "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: der Wirtschaftsweg verläuft im Bogen; die Zeichnung ist nur begradigt."
+      },
+      {
+        "at": [11.58748, 48.538114],
+        "note": "Gegen den Plan geprüft, 20.11.2026: Der Plan zeichnet dieselbe Ecke (von der Straße aus Süden nach Osten), nur etwa 40 m nach Westen versetzt; die Zuordnung folgt der Straße."
       }
     ]
   },

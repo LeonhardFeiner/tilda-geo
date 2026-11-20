@@ -112,22 +112,22 @@
     "relation/62422",
     "relation/62782"
   ],
-  "featureCount": 22997,
-  "osmDataFrom": "2026-11-14T21:20:41.000Z",
+  "featureCount": 23002,
+  "osmDataFrom": "2026-11-19T21:22:20.000Z",
   "datasets": {
     "busy-roads": {
-      "fetchedAt": "2026-11-15T12:39:06.079Z",
+      "fetchedAt": "2026-11-20T08:29:54.566Z",
       "source": "Straßenverkehrszählung 2021, BAYSIS (© Bayerische Straßenbauverwaltung, CC BY 4.0)"
     },
     "gemeinde-demographics": {
-      "fetchedAt": "2026-11-15T12:45:33.603Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:27.292Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/Administrativ/Archiv/GVAuszugQ/AuszugGV4QAktuell.xlsx?__blob=publicationFile"
     },
     "transit-stop-counts": {
-      "fetchedAt": "2026-11-15T12:45:31.989Z",
-      "aggregatedAt": "2026-11-15T13:14:36.692Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:25.797Z",
+      "aggregatedAt": "2026-11-20T08:39:11.758Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "OpenStreetMap public transport stops; Zensus 2022 100 m grid"
     },
     "station-access": {
@@ -136,65 +136,65 @@
       "source": "routing/station_access.py over the OSM road network and Zensus 2022 100 m grid"
     },
     "highway-access": {
-      "fetchedAt": "2026-11-15T12:42:09.906Z",
-      "aggregatedAt": "2026-11-15T13:14:36.698Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:33:04.650Z",
+      "aggregatedAt": "2026-11-20T08:39:11.764Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "OpenStreetMap motorways/motorroads; Zensus 2022 100 m grid"
     },
     "terrain-flatness": {
-      "fetchedAt": "2026-11-15T12:43:24.764Z",
-      "aggregatedAt": "2026-11-15T13:14:36.707Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:34:19.983Z",
+      "aggregatedAt": "2026-11-20T08:39:11.773Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Mapzen/AWS Terrain Tiles (SRTM, EU-DEM) sampled along TILDA roads"
     },
     "zensus-housing-demographics": {
-      "fetchedAt": "2026-11-15T12:45:49.507Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:42.950Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Destatis Zensus 2022 Regionaltabellen"
     },
     "car-density": {
-      "fetchedAt": "2026-11-15T12:45:51.000Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:44.454Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Kraftfahrt-Bundesamt (KBA) Reihe FZ 3, Stand 1. Januar 2026"
     },
     "calmed-roads": {
-      "fetchedAt": "2026-11-15T12:33:17.356Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:24:12.528Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "TILDA / OSM aggregated_lengths"
     },
     "accidents": {
-      "fetchedAt": "2026-11-15T12:45:52.150Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:45.574Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Statistische Ämter des Bundes und der Länder – Unfallatlas 2025"
     },
     "commuters": {
-      "fetchedAt": "2026-11-15T12:46:05.641Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:36:59.165Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Bundesagentur für Arbeit (BA) – Gemeindedaten der sozialversicherungspflichtig Beschäftigten nach Wohn- und Arbeitsort (Stichtag 30.06.2025)"
     },
     "mapping-completeness": {
-      "fetchedAt": "2026-11-15T12:35:17.327Z",
-      "osmDataFrom": "2026-11-14T21:20:41Z",
+      "fetchedAt": "2026-11-20T08:26:12.590Z",
+      "osmDataFrom": "2026-11-19T21:22:20Z",
       "source": "OpenStreetMap via TILDA roads (maxspeed/surface/lit tags)"
     },
     "traffic-volumes": {
-      "fetchedAt": "2026-11-15T12:39:06.082Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:29:54.569Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Straßenverkehrszählung 2021, BAYSIS (© Bayerische Straßenbauverwaltung, CC BY 4.0)"
     },
     "traffic-federal": {
-      "fetchedAt": "2026-11-15T12:39:06.097Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:29:54.583Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Straßenverkehrszählung 2021: BAYSIS (Bayern, CC BY 4.0) und BASt (übrige Länder, Bundesstraßen)"
     },
     "regiostar": {
-      "fetchedAt": "2026-11-15T12:46:09.601Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:37:03.096Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "BMDV/BBSR RegioStaR, Gebietsstand 31.12.2020"
     },
     "deutschlandatlas": {
-      "fetchedAt": "2026-11-15T12:46:10.583Z",
-      "osmDataFrom": "2026-11-14T21:20:41.000Z",
+      "fetchedAt": "2026-11-20T08:37:04.063Z",
+      "osmDataFrom": "2026-11-19T21:22:20.000Z",
       "source": "Deutschlandatlas HA26 (BMWSB/BBSR)"
     },
     "stations": {
