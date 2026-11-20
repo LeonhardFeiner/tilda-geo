@@ -45,6 +45,7 @@ const pages: Record<string, string> = {
   'radwege-schweitenkirchen.html': radwegePageHtml({
     dataHref: './radwege-schweitenkirchen.json',
     projectLead: 'Test',
+    konzeptUrl: 'https://example.org/radwegekonzept',
   }),
 }
 

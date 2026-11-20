@@ -13,7 +13,11 @@ import type { ViewerPage } from './viewerHarness'
 
 export const dataFile = join(import.meta.dirname, 'output', 'viewer', `${RADWEGE_PAGE_STEM}.json`)
 export const html = () =>
-  radwegePageHtml({ dataHref: `./${RADWEGE_PAGE_STEM}.json`, projectLead: PROJECT_LEAD })
+  radwegePageHtml({
+    dataHref: `./${RADWEGE_PAGE_STEM}.json`,
+    projectLead: PROJECT_LEAD,
+    konzeptUrl: 'https://example.org/radwegekonzept',
+  })
 
 export type Line = {
   properties: {

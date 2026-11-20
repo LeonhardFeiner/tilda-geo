@@ -18,6 +18,8 @@ export type RadwegePageInput = {
   dataHref: string
   /** Author, named on the page with the political affiliation (see legalPage.ts). */
   projectLead: string
+  /** The Gemeinde's page on the Radwegekonzept (routes.json sources.konzeptseite). */
+  konzeptUrl: string
 }
 
 const PLAN_LABEL = {
@@ -58,7 +60,7 @@ const LANDKREIS = {
  * with what has publicly happened to it. One plan at a time; a bar of the progress groups is
  * summary, legend and filter at once; a click on a line replaces the overview with that route.
  */
-export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
+export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePageInput) {
   const style = JSON.stringify(buildBasemapStyleJson('light'))
   const conceptDe = CONCEPT_DATE.split('-').reverse().join('.')
   const checkbox = (name: string, value: string, label: string) =>
@@ -335,12 +337,12 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
     <div class="body">
       <div id="overview">
         <p class="muted page-nav"><a href="./index.html?region=relation%2F396557">&larr; Schweitenkirchen im Radinfra-Vergleich</a></p>
-        <p class="intro">Was aus dem Radwegekonzept der Gemeinde vom ${conceptDe} geworden ist: jede geplante Trasse mit allen öffentlich dokumentierten Schritten und ihren Quellen. Eine Linie anklicken für Details.</p>
+        <p class="intro">Was aus dem <a href="${konzeptUrl}" target="_blank" rel="noopener">Radwegekonzept der Gemeinde</a> vom ${conceptDe} geworden ist: jede geplante Trasse mit allen öffentlich dokumentierten Schritten und ihren Quellen. Eine Linie anklicken für Details.</p>
         <details id="howto">
           <summary>So ist die Karte zu lesen</summary>
           <ul>
-            <li><strong>Farbe</strong> = der letzte öffentlich dokumentierte Schritt: Beschluss, Grunderwerb, Planung, Programm, Haushaltsansatz oder Bau. Aussagen, Ankündigungen (auch die Maßnahmenliste des Landkreises, KUS) und Anfragen zählen nicht als Schritt; sie stehen in den Details.</li>
-            <li><strong>„Kein Schritt dokumentiert“</strong> heißt: in den ausgewerteten öffentlichen Quellen nichts gefunden (welche und bis wann: unten unter „Stand der Recherche“). Nichtöffentliche Tagesordnungspunkte, etwa zum Grunderwerb, und die Arbeit der Verwaltung sind nicht bekannt; es kann also mehr geschehen sein.</li>
+            <li><strong>Farbe</strong> = der letzte öffentlich dokumentierte Schritt: Beschluss, Grunderwerb, Planung, Programm, Haushaltsansatz oder Bau (seit 18.11.2026; vorher galt der erste, sodass eine Trasse, bei der seit Jahren nichts geschehen ist, als „begonnen“ erschien). Aussagen, Ankündigungen (auch die Maßnahmenliste des Landkreises, KUS) und Anfragen zählen nicht als Schritt; sie stehen in den Details.</li>
+            <li><strong>„Kein Schritt dokumentiert“</strong> heißt: in den ausgewerteten öffentlichen Quellen nichts gefunden (welche und bis wann: unten unter „Welche Quellen, bis wann“). Nichtöffentliche Tagesordnungspunkte, etwa zum Grunderwerb, und die Arbeit der Verwaltung sind nicht bekannt; es kann also mehr geschehen sein.</li>
             <li><strong>Zwei Pläne:</strong> kurzfristig (Lageplan 5/1) vor allem vorhandene Wege für Räder freigeben und beschildern, langfristig (Lageplan 5/2) ausbauen. „Beide“ zeigt jede Strecke einmal: wo Plan 5/2 oder ein vorhandener Weg dieselbe Strecke führt, gilt dieser; aus Plan 5/1 kommt nur hinzu, was dort nicht liegt.</li>
             <li><strong>Zahlen</strong> sind Kilometer, zunächst nur innerhalb der Gemeindegrenze.</li>
             <li><strong>Zuständig:</strong> Radwege an Kreis- und Staatsstraßen plant und baut der Landkreis bzw. das Staatliche Bauamt; den Grunderwerb übernimmt dort oft die Gemeinde.</li>
@@ -404,8 +406,9 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
           </fieldset>
         </details>
         <footer id="about">
-          <p>Stand der Recherche: <span id="stand"></span>.<span id="quellen-bis"></span> Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Karte © OpenStreetMap-Mitwirkende.</p>
-          <p><strong>Wer steht dahinter?</strong> Ein privates, nicht-kommerzielles Projekt von ${projectLead}, Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen. Damit das nachprüfbar bleibt, steht bei jedem Vorgang die Quelle, und die Einteilung folgt einer festen Regel (siehe „So ist die Karte zu lesen“). ${projectLead} trägt selbst zu OpenStreetMap bei (Benutzer <a href="https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history">${AUTHOR_OSM_USER}</a>). <a href="./impressum.html">Impressum &amp; Datenschutz</a></p>
+          <p>Stand der Recherche: <span id="stand"></span>. Wege und Karte © OpenStreetMap-Mitwirkende.</p>
+          <details id="quellen"><summary>Welche Quellen, bis wann</summary><p><span id="quellen-bis"></span> Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Lage und Art der Wege aus OpenStreetMap; ${projectLead} trägt dort selbst bei (Benutzer <a href="https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history">${AUTHOR_OSM_USER}</a>).</p></details>
+          <p><strong>Wer steht dahinter?</strong> Ein privates, nicht-kommerzielles Projekt von ${projectLead}, Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen. Jeder Vorgang mit Quelle; die Einteilung folgt einer festen Regel (siehe „So ist die Karte zu lesen“). <a href="./impressum.html">Impressum &amp; Datenschutz</a></p>
           <p><strong>Fehler gefunden oder ein Vorgang fehlt?</strong> Bitte an ${LEGAL_CONTACT.email}, mit Quelle. Korrekturen werden hier mit Datum vermerkt.</p>
           <details id="korrekturen" hidden><summary>Korrekturen (<span id="korr-count"></span>)</summary><ul id="korr-list"></ul></details>
         </footer>
@@ -565,7 +568,7 @@ export function radwegePageHtml({ dataHref, projectLead }: RadwegePageInput) {
       const q = data.quellen || [];
       const bis = (x) => x.bisText || 'bis ' + deDate(x.bis);
       if (q.length && q.every((x) => x.bis)) {
-        $('quellen-bis').textContent = ' Ausgewertet: ' + q.map((x) => x.label + ' ab ' + deDate(x.from) + ', ' + bis(x)).join('; ') + '.';
+        $('quellen-bis').textContent = 'Ausgewertet: ' + q.map((x) => x.label + ' ab ' + deDate(x.from) + ', ' + bis(x)).join('; ') + '.';
         $('recent-bis').textContent = 'Durchgesehen: ' + q.map((x) => x.label.replace(/ \\(.*\\)$/, '') + ' ' + bis(x)).join(' · ') + '. Was danach geschah, fehlt hier noch.';
         $('recent-bis').hidden = false;
       }

@@ -576,12 +576,14 @@ if (detourLandkreise.length) {
 // Unlisted Radwege tracker (github.io only, see RADWEGE_PAGE_STEM): routes + lines from radwege/.
 {
   const dataPath = join(viewerDir, `${RADWEGE_PAGE_STEM}.json`)
-  writeFileSync(dataPath, JSON.stringify(loadRadwegeData()))
+  const radwege = loadRadwegeData()
+  writeFileSync(dataPath, JSON.stringify(radwege))
   writeFileSync(
     join(viewerDir, `${RADWEGE_PAGE_STEM}.html`),
     radwegePageHtml({
       dataHref: `./${RADWEGE_PAGE_STEM}.json?v=${contentHash([dataPath])}`,
       projectLead: PROJECT_LEAD,
+      konzeptUrl: radwege.sources.konzeptseite,
     }),
     'utf8',
   )

@@ -18,7 +18,10 @@ and the link, never the article text or longer verbatim quotes (UrhG, Presseverl
 § 87f). Events about the whole network (concept, budget) go into the top-level `allgemein`.
 2026-11-18: 51 events added from `schweitenkirchen-research/radwege-schweitenkirchen-2026-11-18.tar.gz`
 (`vorgaenge.json`; its `quote` field stays in the research archive). A finished route gets
-`"built": true`. When a published entry changes (kind, date, route), add a line to `korrekturen`. After searching a source again, move its `bis` (and `bisText`) in `quellen`: the page says how far each source was searched, so a quiet stretch reads as "nothing found" only where it was looked at. Update `stand`, then `bun run bike-share-map:viewer`.
+`"built": true`. When a published entry changes (kind, date, route), add a line to `korrekturen`:
+only for what a reader may have cited (an event's classification or date, a route's status, the
+km figures), not for line geometry that changes neither; short, saying what is right now. A
+changed rule goes into "So ist die Karte zu lesen" with its date instead. After searching a source again, move its `bis` (and `bisText`) in `quellen`: the page says how far each source was searched, so a quiet stretch reads as "nothing found" only where it was looked at. Update `stand`, then `bun run bike-share-map:viewer`.
 
 ## Lines from the Lagepläne
 
@@ -44,7 +47,7 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    plan draws an existing path: with `from`/`to` that stretch leaves the Bestand and becomes its own
    route (`route`, in `routes.json`) with `ausbau`, laid onto the road `onto` (e.g. the Gehweg in
    Holzhäuseln, no Radweg sign: "Freigabe nötig"); `at` alone puts the `hinweis` on the Bestand
-   piece there. The page shows `hinweis` in the popup; add a line to `korrekturen` as well. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
+   piece there. The page shows `hinweis` in the popup; add a line to `korrekturen` when it changes a status or the counts. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
    The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed
