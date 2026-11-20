@@ -193,7 +193,12 @@
     }
   },
   "kurz|st2045-preinersdorf-landkreisgrenze": {
-    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]],
+    "branches": [
+      [
+        [595.6, 752.7],
+        [1006.7, 451.3]
+      ]
+    ],
     "geprueft": [
       {
         "at": [11.65368, 48.52164],
@@ -202,7 +207,12 @@
     ]
   },
   "lang|st2045-preinersdorf-landkreisgrenze": {
-    "branches": [[[595.6, 752.7], "Sünzhausen", [1006.7, 451.3]]],
+    "branches": [
+      [
+        [595.6, 752.7],
+        [1006.7, 451.3]
+      ]
+    ],
     "geprueft": [
       {
         "at": [11.65368, 48.52164],

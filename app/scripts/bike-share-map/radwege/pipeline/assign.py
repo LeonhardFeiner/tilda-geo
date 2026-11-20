@@ -667,6 +667,22 @@ def road_side(coords, drawing):
     return ('links' if left >= 0.85 else 'rechts', word)
 
 
+def side_split(coords, drawing):
+    """Where a long piece has the drawing on one side of the road for one stretch and on the other
+    side for the next (e.g. the St 2045 at Sünzhausen), the distance along it to cut at, else None.
+    Both stretches must be >= 150 m and get a side from road_side on their own."""
+    g = LineString(coords)
+    if g.length < 300: return None
+    best = None
+    for k in range(15, int(g.length // 10) - 14):
+        s = k * 10.0
+        a, b = road_side(list(substring(g, 0, s).coords), drawing), road_side(list(substring(g, s, g.length).coords), drawing)
+        if a and b and a[0] != b[0]:
+            # the cut nearest the middle of the switch: keep the first and last valid cut
+            best = (best[0], s) if best else (s, s)
+    return None if best is None else (best[0] + best[1]) / 2
+
+
 spurs = []
 geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
@@ -686,12 +702,26 @@ for f in final:
         if wids: props['osmWays'] = wids
         if f.get('hinweis'): props['hinweis'] = f['hinweis']
         # a new path beside a road: keep the side the plan draws it on (not for redrawn lines)
+        parts = [(coords, ll)]
         if ausbau in ('voll', 'kein-weg') and weg in ('staatsstrasse', 'kreisstrasse', 'ortsstrasse') \
                 and 'utm_matched' not in f and not f.get('not_drawn'):
-            rs = road_side(coords, LineString(f['utm']))
-            if rs: props['seite'], props['richtung'] = rs
+            drawing = LineString(f['utm'])
+            # the drawing switches sides along the piece: one feature per side
+            def split_sides(c):
+                cut = side_split(c, drawing)
+                if cut is None: return [c]
+                g = LineString(c)
+                return split_sides(list(substring(g, 0, cut).coords)) + split_sides(list(substring(g, cut, g.length).coords))
+            cs = split_sides(coords)
+            if len(cs) > 1: parts = [(c, [[round(v, 6) for v in to_wgs.transform(*q)] for q in c]) for c in cs]
             strasse = next((ways[wi][4].get('ref') or ways[wi][2] for wi in WAY_INDEX_OF(wids) if ways[wi][4].get('ref') or ways[wi][2]), None) if wids else None
-            if rs and strasse: props['strasse'] = strasse
+            for c, l in parts:
+                pp = dict(props)
+                rs = road_side(c, drawing)
+                if rs: pp['seite'], pp['richtung'] = rs
+                if rs and strasse: pp['strasse'] = strasse
+                geo.append(dict(type='Feature', properties=pp, geometry=dict(type='LineString', coordinates=l)))
+            continue
         geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=ll)))
 for bf in OVERRIDES.get('kurz|bestand', {}).get('befund', []):
     if 'at' not in bf: continue
