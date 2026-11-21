@@ -16,7 +16,7 @@ import numpy as np
 from scipy.spatial import cKDTree
 from pyproj import Transformer
 from shapely.geometry import Polygon, LineString, Point
-from shapely.ops import substring
+from shapely.ops import substring, nearest_points
 
 W, OSMF, ROUTESF, OUT = sys.argv[1:5]
 G = json.load(open(f'{W}/georef.json'))
@@ -354,6 +354,18 @@ NO_BIKES = {i for i, w in enumerate(ways) if w[1] in ('motorway', 'motorway_link
 SIGMA = 25.0    # m; emission cost (d / SIGMA)^2
 ANGLE = 4.0     # extra emission cost of a way running across the drawn line
 NONE_COST = (70 / SIGMA) ** 2  # "no way" beats a way farther than ~70 m (with the angle term, less)
+JUMP_NO_WAY = 25.0  # m; a jump between two ways longer than this is drawn as "no way"
+
+def on_ways(a, b, tol=8.0):
+    """Whether the straight connection a-b runs along OSM ways all the way (e.g. a short junction
+    piece the matcher folded into its neighbour), i.e. is no gap in OSM."""
+    chord = LineString([a, b])
+    for k in range(int(chord.length // 5) + 1):
+        q = chord.interpolate(min(chord.length, k * 5.0))
+        near = {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), CORR)} - NO_BIKES
+        if not any(ways[w][3].distance(q) < tol for w in near): return False
+    return True
+
 
 def match(utm, built=False, onto=None, blocked=()):
     """Pieces [(weg, belag, coords, fromPlan, osm way ids)] of one plan line: a hidden Markov
@@ -444,6 +456,21 @@ def match(utm, built=False, onto=None, blocked=()):
                 if chord + 2 < along <= max(3 * chord, chord + 80):
                     for v in substring(ls, prev[1], t).coords[1:-1]:
                         seq.append((v[0], v[1], weg, belag, ways[wi][0]))
+            # a switch to another way: where the two ways meet, through their junction (no corner
+            # cut); where they do not meet and the jump is long (a gap in OSM, e.g. through a
+            # farmyard), the straight connection is no way and drawn as such
+            elif prev and seq:
+                pls = ways[prev[0]][3]
+                if pls.distance(ls) < 3:
+                    j = nearest_points(pls, ls)[0]
+                    a, jd = seq[-1][:2], math.dist(seq[-1][:2], xy)
+                    # only a junction on the way between them (not one the line has passed already)
+                    if LineString([a, xy]).distance(j) > 2 and math.dist(a, (j.x, j.y)) + math.dist((j.x, j.y), xy) <= 1.5 * jd + 10:
+                        pweg, pbelag = way_class(prev[0])
+                        seq.append((j.x, j.y, pweg, pbelag, ways[prev[0]][0]))
+                elif math.dist(seq[-1][:2], xy) > JUMP_NO_WAY and not on_ways(seq[-1][:2], xy):
+                    seq.append((seq[-1][0], seq[-1][1], 'kein', 'kein', None))
+                    seq.append((xy[0], xy[1], 'kein', 'kein', None))
             seq.append((xy[0], xy[1], weg, belag, ways[wi][0])); prev = (wi, t)
     # smooth classes along the line: runs shorter than MIN_RUN join their neighbour
     cls = [(w, b) for _, _, w, b, _ in seq]

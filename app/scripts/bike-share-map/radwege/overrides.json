@@ -544,17 +544,26 @@
     "hinweis": [
       {
         "at": [11.6148, 48.5036],
-        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor. Zwischen dem Feldweg im Norden und der Thomashecke fehlt heute ein Weg; über den Hof führt nur private Fläche."
       },
       {
         "at": [11.614517, 48.502605],
-        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor. Zwischen dem Feldweg im Norden und der Thomashecke fehlt heute ein Weg; über den Hof führt nur private Fläche."
       },
       {
         "at": [11.6143, 48.5015],
-        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor. Zwischen dem Feldweg im Norden und der Thomashecke fehlt heute ein Weg; über den Hof führt nur private Fläche."
       }
-    ]
+    ],
+    "ohneWeg": {
+      "lines": [
+        [
+          [11.614273, 48.502023],
+          [11.614782, 48.503011]
+        ]
+      ],
+      "why": "Zwischen dem Feldweg im Norden und der Straße Thomashecke gibt es keinen Weg: am Feldrand östlich des Hofs ist keiner zu sehen, die Verbindung über den Hof (Gewächshäuser) ist privat (Luftbild, Flurkarte, OpenStreetMap, 22.11.2026). Die Linie bleibt dort wie gezeichnet."
+    }
   },
   "kurz|geisenhausen-altkaslehen": {
     "geprueft": [

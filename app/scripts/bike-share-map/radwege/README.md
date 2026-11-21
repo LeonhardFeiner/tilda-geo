@@ -53,7 +53,7 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed
    apart), so each line is map-matched onto OSM: a hidden Markov model over the ways within 90 m
    of each 5 m sample (cost: squared distance, a way running across the line, switching ways and
-   sideways jumps; motorways excluded; stays < 25 m dropped). Between two samples on the same way the line follows that way, so a bend away from the drawing (e.g. round a field corner west of Preinersdorf) is not cut off. Each piece gets the matched way's
+   sideways jumps; motorways excluded; stays < 25 m dropped). Between two samples on the same way the line follows that way, so a bend away from the drawing (e.g. round a field corner west of Preinersdorf) is not cut off. Where it switches to another way, it goes through their junction if they meet there; if they do not meet and no OSM way runs along the jump (> 25 m, e.g. across the farmyard at Thomashecke), the jump is "no way" (`kein`). Each piece gets the matched way's
    class `weg` (radweg, feldweg, ortsstrasse, kreisstrasse by PAF/FS ref or tertiary,
    staatsstrasse by St/B ref or secondary+, kein) and surface `belag` (asphalt, schotter, natur,
    unbekannt; classified roads count as asphalt); runs < 60 m join their neighbour. `fromPlan` is
