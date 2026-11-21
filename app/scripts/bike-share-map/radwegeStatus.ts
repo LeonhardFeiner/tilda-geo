@@ -282,7 +282,11 @@ export function vorhandenAuf(ausbau: Ausbau, weg: Weg) {
   return 'Kein eigener Radweg: gefahren wird auf der Fahrbahn'
 }
 
-/** Surface of that OSM way; classified roads without a tag count as asphalt. */
+/**
+ * Surface of the way the route uses; classified roads without a tag count as asphalt. Where the
+ * route has no way of its own yet (on a Kreis-/Staatsstraße, or a new path the plan draws beside a
+ * road), the matched way is the road: its surface says nothing about the route, so `fahrbahn`.
+ */
 export const BELAG = [
   { id: 'asphalt', label: 'Asphalt oder Pflaster', hint: 'Befestigt.', colour: '#1f5fae' },
   {
@@ -298,6 +302,12 @@ export const BELAG = [
     colour: '#8e4a1c',
   },
   {
+    id: 'fahrbahn',
+    label: 'Nur Fahrbahn, Radweg fehlt',
+    hint: 'Die Linie liegt auf einer Kreis- oder Staatsstraße, oder der Plan zeichnet hier einen neuen Weg neben einer Straße. Einen eigenen Weg gibt es noch nicht; der Belag der Fahrbahn sagt über ihn nichts.',
+    colour: '#9b4dca',
+  },
+  {
     id: 'unbekannt',
     label: 'Belag nicht erfasst',
     hint: 'In OpenStreetMap ist für diesen Weg kein Belag eingetragen.',
@@ -311,6 +321,12 @@ export const BELAG = [
   },
 ] as const
 export type Belag = (typeof BELAG)[number]['id']
+
+/** The surface the page shows: the road's own surface is no answer where the cycle path is missing. */
+export function belagHeute(weg: Weg, belag: Belag, seite?: string): Belag {
+  if (weg === 'kreisstrasse' || weg === 'staatsstrasse' || seite != null) return 'fahrbahn'
+  return belag
+}
 
 /**
  * A line counted as "Vorhanden" that is no usable cycle path: the map draws it dashed and the

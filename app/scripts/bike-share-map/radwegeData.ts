@@ -9,6 +9,7 @@ import {
   type Bedarf,
   BELAG,
   type Belag,
+  belagHeute,
   EVENT_KINDS,
   firstStep,
   lastStep,
@@ -179,7 +180,12 @@ export type RadwegeData = Omit<z.infer<typeof RoutesFileSchema>, 'routes'> & {
   /** Gemeinde boundary (radwege/gemeinde.geojson), drawn as context. */
   outline: z.infer<typeof OutlineSchema> | null
   /** Landkreis network shown in Lageplan 5/2 (radwege/landkreis.geojson), drawn as context. */
-  landkreis: z.infer<typeof LandkreisSchema> | null
+  landkreis: {
+    type: 'FeatureCollection'
+    features: (z.infer<typeof LandkreisSchema>['features'][number] & {
+      properties: { grund?: Grund }
+    })[]
+  } | null
   /** The route lines as drawn in the Lagepläne, georeferenced but not matched onto OSM. */
   planlage: z.infer<typeof PlanlageSchema> | null
   /** Spots to check on site (radwege/pipeline/check.py). */
@@ -194,7 +200,16 @@ const LandkreisSchema = z.object({
     z.object({
       type: z.literal('Feature'),
       /** vorrang: Radvorrangroute, basis: Basisradnetz (Mobilitätskonzept des Landkreises, 2023) */
-      properties: z.object({ netz: z.enum(['vorrang', 'basis']) }),
+      /** weg, belag, flur: the matched OSM way and the land under it, as for the route lines
+       * (assign.py, flur.py); missing when landkreis.geojson holds the drawing only. */
+      properties: z.object({
+        netz: z.enum(['vorrang', 'basis']),
+        weg: z.enum(WEG.map((w) => w.id) as [Weg, ...Weg[]]).optional(),
+        belag: z.enum(BELAG.map((b) => b.id) as [Belag, ...Belag[]]).optional(),
+        flur: z.enum(['weg', 'genutzt', 'kein']).optional(),
+        fromPlan: z.number().optional(),
+        osmWays: z.array(z.number().int()).optional(),
+      }),
       geometry: z.object({ type: z.literal('LineString'), coordinates: z.array(Position).min(2) }),
     }),
   ),
@@ -351,6 +366,8 @@ export function buildRadwegeData(
           kombiErgaenzend: Boolean(piece.key & 8),
           innen: Boolean(piece.key & 2),
           ohneRadweg: vorhandenOhneRadweg(status, f.properties.weg, f.properties.belag),
+          // after bedarf and ohneRadweg, which need the road's own surface
+          belag: belagHeute(f.properties.weg, f.properties.belag, f.properties.seite),
         },
         geometry,
       })
@@ -364,7 +381,25 @@ export function buildRadwegeData(
     }
   }
 
-  const landkreis = landkreisFile == null ? null : LandkreisSchema.parse(landkreisFile)
+  const landkreisRaw = landkreisFile == null ? null : LandkreisSchema.parse(landkreisFile)
+  // the Landkreis plans Geh- und Radwege: beside its roads they are new paths, so the land there is
+  // not assessed (as for the routes' new paths) and the road's surface is no answer
+  const landkreis = landkreisRaw && {
+    ...landkreisRaw,
+    features: landkreisRaw.features.map((f) => {
+      const { weg, belag, flur } = f.properties
+      if (weg == null || belag == null) return f
+      const fahrbahn = belagHeute(weg, belag) === 'fahrbahn'
+      return {
+        ...f,
+        properties: {
+          ...f.properties,
+          belag: belagHeute(weg, belag),
+          grund: lineGrund(fahrbahn || weg === 'kein' ? 'voll' : 'freigabe', flur),
+        },
+      }
+    }),
+  }
   const byDate = (a: { date: string }, b: { date: string }) =>
     a.date < b.date ? -1 : a.date > b.date ? 1 : 0
   return {

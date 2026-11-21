@@ -62,12 +62,19 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(data.planlage!.features.length).toBeGreaterThan(100)
     const netz = new Set(data.landkreis!.features.map((f) => f.properties.netz))
     expect(netz).toEqual(new Set(['vorrang', 'basis']))
+    // matched onto OSM like the routes; beside its roads the surface is "Fahrbahn", the land not assessed
+    const lk = data.landkreis!.features.map((f) => f.properties)
+    expect(lk.every((p) => p.weg && p.belag && p.grund)).toBe(true)
+    const road = lk.filter((p) => p.weg === 'kreisstrasse' || p.weg === 'staatsstrasse')
+    expect(road.length).toBeGreaterThan(10)
+    expect(road.every((p) => p.belag === 'fahrbahn' && p.grund === 'neubau')).toBe(true)
   })
   test('the Radweg along the St 2045 to Pfaffenhofen is its own route, on the road', () => {
     const st = data.lines.features.filter(
       (f) => f.properties.routeId === 'st2045-pfaffenhofen-schweitenkirchen',
     )
     expect(st.every((f) => f.properties.weg === 'staatsstrasse')).toBe(true)
+    expect(st.every((f) => f.properties.belag === 'fahrbahn')).toBe(true)
     expect(st.every((f) => f.properties.plan === 'lang' && f.properties.netz === 'landkreis')).toBe(
       true,
     )

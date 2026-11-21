@@ -1,9 +1,9 @@
 """The Landkreis network that Lageplan 5/2 shows "nachrichtlich" (Mobilitätskonzept zum Radverkehr im
 Landkreis Pfaffenhofen, 2023): Radvorrangrouten (orange) and Basisradnetz (light green), as plan
 geometry in WGS 84. Context layer of the tracker page; the routes are the Landkreis's, planned as
-Geh- und Radwege (Erläuterung 2.3.1).
+Geh- und Radwege (Erläuterung 2.3.1). assign.py matches these lines onto OSM (radwege/landkreis.geojson).
 
-  landkreis.py <cache dir> <out landkreis.geojson>
+  landkreis.py <cache dir> <out landkreis-plan.geojson>
 """
 import json, math, sys
 

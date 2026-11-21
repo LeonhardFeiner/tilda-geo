@@ -11,7 +11,7 @@ beside their road, parallel lines pushed apart), so every line is map-matched on
 within 60 m (hidden Markov model, see match()); each piece gets the way's class (weg) and
 surface (belag), and fromPlan is the share left in plan geometry where no way is near.
 """
-import json, math, re, sys, html, heapq, collections
+import json, math, os, re, sys, html, heapq, collections
 import numpy as np
 from scipy.spatial import cKDTree
 from pyproj import Transformer
@@ -756,6 +756,26 @@ for key, ov in OVERRIDES.items():
             if pr['routeId'] == rid and pr['plan'] == plan and LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).distance(q) < 30:
                 pr['hinweis'] = h['text']
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
+
+# The Landkreis network of plan 5/2 (landkreis.py: Radvorrangrouten, Basisradnetz, as drawn) is
+# matched like a new route: the Landkreis plans it as Geh- und Radwege, mostly beside its roads,
+# so a drawing beside a Kreis-/Staatsstraße goes onto that road first (beside_road). The page
+# colours it by way, surface and land like the routes, as context (not counted).
+LK_PLAN = f'{W}/landkreis-plan.geojson'
+lk_geo, lk_km = [], collections.Counter()
+for f in json.load(open(LK_PLAN))['features'] if os.path.exists(LK_PLAN) else []:
+    utm = [to_utm.transform(*q) for q in f['geometry']['coordinates']]
+    utm = beside_road(utm)[0]
+    for weg, belag, coords, fromPlan, wids in match(utm):
+        coords, _ = drop_spurs(coords)
+        if len(coords) < 2: continue
+        props = dict(netz=f['properties']['netz'], weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
+        if wids: props['osmWays'] = wids
+        lk_km[(weg, belag)] += LineString(coords).length / 1000
+        lk_geo.append(dict(type='Feature', properties=props, geometry=dict(type='LineString', coordinates=[[round(v, 6) for v in to_wgs.transform(*c)] for c in coords])))
+if lk_geo:
+    json.dump(dict(type='FeatureCollection', features=lk_geo), open(sys.argv[5].replace('lines.geojson', 'landkreis.geojson'), 'w'), separators=(',', ':'))
+    print('Landkreis network km by weg/belag', {f'{w}/{b}': round(v, 1) for (w, b), v in lk_km.most_common()})
 km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter()
 for g in geo:
     L = LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).length / 1000

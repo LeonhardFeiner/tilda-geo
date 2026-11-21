@@ -73,9 +73,18 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    (2026-11-21: 109 ways surveyed or tagged from aerial images that day, Overpass state 21:37 UTC). The next full run replaces the patch.
    It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
    which the page can show on request ("Lage wie im Plan gezeichnet").
-5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
-   `landkreis.geojson`, a context layer on the page (the Landkreis plans them as Geh- und
-   Radwege, Erläuterung 2.3.1).
+5. `landkreis.py` (runs before `assign.py`): Radvorrangrouten (orange) and Basisradnetz (light
+   green) of plan 5/2 as drawn → `cache/landkreis-plan.geojson`. `assign.py` matches them like a
+   new route (a drawing beside a Kreis-/Staatsstraße goes onto that road first) →
+   `landkreis.geojson` with `weg`/`belag`, and `flur.py` adds `flur`. A context layer on the page
+   (the Landkreis plans them as Geh- und Radwege, Erläuterung 2.3.1), coloured like the routes in
+   the Wegart/Belag/Grundstück views but not counted. 2026-11-22: 37 of 50 km on Kreis-/
+   Staatsstraßen, 0.4 km on an existing Radweg.
+
+"Belag heute" on the page (`belagHeute` in `radwegeStatus.ts`): a piece on a Kreis-/Staatsstraße,
+or a new path the plan draws beside a road (`seite`), shows "Nur Fahrbahn, Radweg fehlt" instead
+of the road's surface; `lines.geojson` keeps the road's `belag` (Bedarf and the dashed "Vorhanden"
+use it).
 
 ```sh
 scripts/bike-share-map/radwege/pipeline/run.sh \

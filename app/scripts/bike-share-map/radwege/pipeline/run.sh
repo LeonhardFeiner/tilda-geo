@@ -40,12 +40,13 @@ done
 # 3. plan coordinates → UTM 32 (similarity transform: place labels, then ICP on road centrelines)
 "$PY" -I "$HERE/georef.py" "$WORK" "$WORK/osm-area.json"
 
-# 4. routes, Bestand, leftovers, snapped onto OSM
+# 4. the Landkreis network that plan 5/2 shows (Radvorrangrouten, Basisradnetz), as drawn;
+# assign.py matches it onto OSM like the routes → landkreis.geojson, a context layer
+"$PY" -I "$HERE/landkreis.py" "$WORK" "$WORK/landkreis-plan.geojson"
+
+# 5. routes, Bestand, leftovers (and the Landkreis network), snapped onto OSM
 "$PY" -I "$HERE/assign.py" "$WORK" "$WORK/osm-area.json" "$RADWEGE/routes.json" \
   "$WORK/assigned.geojson" "$RADWEGE/lines.geojson" "$RADWEGE/overrides.json" | tee "$WORK/assign.log"
-
-# 5. the Landkreis network that plan 5/2 shows (Radvorrangrouten, Basisradnetz), context layer
-"$PY" -I "$HERE/landkreis.py" "$WORK" "$RADWEGE/landkreis.geojson"
 
 # 6. check against the plan strokes (review aid; see ../README.md)
 "$PY" -I "$HERE/verify.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/routes.json" \
@@ -76,6 +77,7 @@ for kreis in 09186 09178; do
   fi
 done
 "$PY" -I "$HERE/flur.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/lines.geojson"
+"$PY" -I "$HERE/flur.py" "$WORK" "$RADWEGE/landkreis.geojson" "$RADWEGE/landkreis.geojson"
 
 # 8. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then

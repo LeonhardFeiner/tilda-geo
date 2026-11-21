@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import {
   announcedYear,
+  belagHeute,
   firstStep,
   lastStep,
   lineBedarf,
@@ -130,5 +131,16 @@ describe('lineGrund', () => {
     expect(lineGrund('bestand-weg', 'kein')).toBe('kein')
     expect(lineGrund('voll', 'weg')).toBe('neubau')
     expect(lineGrund('kein-weg', 'kein')).toBe('neubau')
+  })
+})
+
+describe('belagHeute', () => {
+  test('the road surface is no answer where the cycle path is missing', () => {
+    expect(belagHeute('kreisstrasse', 'asphalt')).toBe('fahrbahn')
+    expect(belagHeute('staatsstrasse', 'asphalt')).toBe('fahrbahn')
+    expect(belagHeute('ortsstrasse', 'asphalt', 'links')).toBe('fahrbahn')
+    expect(belagHeute('ortsstrasse', 'asphalt')).toBe('asphalt')
+    expect(belagHeute('feldweg', 'schotter')).toBe('schotter')
+    expect(belagHeute('radweg', 'asphalt')).toBe('asphalt')
   })
 })

@@ -348,6 +348,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
             <li><strong>Zahlen</strong> sind Kilometer, zunächst nur innerhalb der Gemeindegrenze.</li>
             <li><strong>Zuständig:</strong> Radwege an Kreis- und Staatsstraßen plant und baut der Landkreis bzw. das Staatliche Bauamt; den Grunderwerb übernimmt dort oft die Gemeinde.</li>
             <li><strong>Lage:</strong> Die Lagepläne zeichnen schematisch. Jede Trasse ist deshalb auf den passenden Weg in OpenStreetMap gelegt (bis 60 m vom gezeichneten Verlauf); blasser gezeichnet: kein Weg in der Nähe, Lage nur aus dem Plan.</li>
+            <li><strong>Belag heute</strong> ist der Belag des Weges, auf dem die Trasse heute verläuft. Liegt sie auf einer Kreis- oder Staatsstraße oder zeichnet der Plan einen neuen Weg neben einer Straße, heißt es „Nur Fahrbahn, Radweg fehlt“ (seit 22.11.2026; vorher stand dort der Belag der Fahrbahn, meist Asphalt). In den Ansichten Wegart, Belag und Grundstück ist auch das Radnetz des Landkreises so eingefärbt, auf OpenStreetMap gelegt wie die Trassen, aber nicht mitgezählt.</li>
           </ul>
         </details>
         <p id="headline" aria-live="polite"></p>
@@ -714,6 +715,10 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
     // same as a 5/1 release); "no way" in the OSM views
     const dashedExpr = () => state.farbe === 'stand' ? ['any', ['==', ['get', 'ausbau'], 'bestand-weg'], ['get', 'ohneRadweg']] : state.farbe === 'bedarf' ? ['get', 'ohneRadweg'] : ['==', ['get', 'weg'], 'kein'];
     const DASHED = dashedExpr();
+    // the Landkreis network: its own colours in Stand/Bedarf; in the OSM views (way, surface, land)
+    // those of the mode, from its matched ways (landkreis.geojson), as context beneath the routes
+    const osmMode = () => state.farbe === 'weg' || state.farbe === 'belag' || state.farbe === 'grund';
+    const landkreisColour = () => osmMode() ? colourExpr() : ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.colour, LANDKREIS.basis.colour];
     const width = (w) => ['interpolate', ['linear'], ['zoom'], 11, w, 16, w * 2];
     // a new path beside a road sits on the side the plan draws it on (positive = right of the line direction)
     const side = (px) => ['match', ['get', 'seite'], 'links', -px, 'rechts', px, 0];
@@ -726,7 +731,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
     let clickAt = null;
     /** Popup text of the context layers; on hover with a mouse, on tap with a finger. */
     const POPUP = {
-      landkreis: (p) => '<strong>' + escHtml(LANDKREIS[p.netz].label) + '</strong><br>Mobilitätskonzept des Landkreises (2023), im Radwegekonzept nachrichtlich übernommen; als Geh- und Radweg vorgesehen.',
+      landkreis: (p) => '<strong>' + escHtml(LANDKREIS[p.netz].label) + '</strong><br>Mobilitätskonzept des Landkreises (2023), im Radwegekonzept nachrichtlich übernommen; als Geh- und Radweg vorgesehen.' + (p.weg ? '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + (state.farbe === 'grund' && p.grund ? ', ' + escHtml(MODES.grund.byId[p.grund].label) : '') + '</span>' : ''),
       querungen: (p) => '<strong>Querung (Annahme)</strong><br>' + escHtml(p.text),
       pruefen: (p) => '<strong>Unsichere Stelle: ' + escHtml(routeById.get(p.routeId).name) + '</strong><br>' + escHtml(p.text),
     };
@@ -758,7 +763,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       if (data.landkreis) {
         map.addSource('landkreis', { type: 'geojson', data: data.landkreis });
         map.addLayer({ id: 'landkreis', type: 'line', source: 'landkreis', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: {
-          'line-color': ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.colour, LANDKREIS.basis.colour],
+          'line-color': landkreisColour(),
           // zoom must be the outer expression: MapLibre rejects an interpolate inside a match
           'line-width': ['interpolate', ['linear'], ['zoom'], 11, ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.width, LANDKREIS.basis.width], 16, ['match', ['get', 'netz'], 'vorrang', LANDKREIS.vorrang.width * 2, LANDKREIS.basis.width * 2]],
           'line-opacity': 0.4,
@@ -879,7 +884,11 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
           map.setLayoutProperty('pruefen', 'visibility', state.pruefen ? 'visible' : 'none');
           map.setFilter('pruefen', ['all', ['in', ['get', 'routeId'], ['literal', [...new Set(vis.map((f) => f.properties.routeId))]]], state.plan === 'beide' ? true : ['==', ['get', 'plan'], state.plan]]);
         }
-        if (map.getLayer('landkreis')) map.setLayoutProperty('landkreis', 'visibility', landkreisOn() ? 'visible' : 'none');
+        if (map.getLayer('landkreis')) {
+          map.setLayoutProperty('landkreis', 'visibility', landkreisOn() ? 'visible' : 'none');
+          map.setPaintProperty('landkreis', 'line-color', landkreisColour());
+          map.setPaintProperty('landkreis', 'line-opacity', osmMode() ? 0.55 : 0.4);
+        }
       }
       if (data.pruefen) {
         const ids = new Set(vis.map((f) => f.properties.routeId));
@@ -893,6 +902,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       if (!progress) legend.push(dash('gestrichelt: kein Weg in OpenStreetMap'));
       if (state.farbe === 'stand' && state.plan !== 'kurz') legend.push(dash('gestrichelt: in Lageplan 5/2 als vorhandener asphaltierter Weg gezeichnet (nur Freigabe)'));
       if (progress && vis.some((f) => f.properties.ohneRadweg)) legend.push(dash('gestrichelt bei „Vorhanden“: kein eigener Radweg (Fahrbahn, Schotter oder kein Weg erfasst)'));
+      if (osmMode() && landkreisOn() && data.landkreis && data.landkreis.features.some((f) => f.properties.weg)) legend.push('<i class="sw band" style="background:var(--fg);opacity:0.4"></i> breit und blass: Radnetz des Landkreises (nicht mitgezählt), in denselben Farben');
       if (state.farbe === 'grund') legend.push('Grundstück automatisch abgeleitet aus ALKIS (Tatsächliche Nutzung, Parzellarkarte), © <a href="https://geodaten.bayern.de/opengeodata/" target="_blank" rel="noopener">Bayerische Vermessungsverwaltung</a> (CC BY 4.0). Sagt nichts über Eigentum; die Flurkarte zeigt der Link „Luftbild mit Flurkarte“ bei jeder Trasse.');
       if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung (angenommen)');
       $('line-legend').hidden = !legend.length;

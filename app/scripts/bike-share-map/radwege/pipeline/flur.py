@@ -198,5 +198,5 @@ for f, g in zip(feats, geoms):
         res.append(dict(type='Feature', properties=pr, geometry=dict(type='LineString', coordinates=[[round(v, 6) for v in to_wgs(*q)] for q in seg.coords])))
 json.dump(dict(type='FeatureCollection', features=res), open(out_path, 'w'), separators=(',', ':'))
 km = collections.Counter()
-for x in res: km[(x['properties']['plan'], x['properties']['flur'])] += LineString([to_utm(*c) for c in x['geometry']['coordinates']]).length / 1000
+for x in res: km[(x['properties'].get('plan', 'landkreis'), x['properties']['flur'])] += LineString([to_utm(*c) for c in x['geometry']['coordinates']]).length / 1000
 print('km', {f'{p}/{c}': round(v, 1) for (p, c), v in sorted(km.items())}, file=sys.stderr)
