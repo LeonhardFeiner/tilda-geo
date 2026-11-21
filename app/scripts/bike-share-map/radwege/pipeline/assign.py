@@ -422,17 +422,25 @@ def match(utm, built=False, onto=None):
                 for k in range(k0, k1): state[k] = state[nb[0]]
                 changed = True; break
     seq = []  # (x, y, weg, belag, way id or None)
+    prev = None  # (way index, position along it) of the last sample on a way
     for k, wi in enumerate(state):
         q = pts[k]
         if wi >= 0:
-            ls = ways[wi][3]; pr = ls.interpolate(ls.project(q))
+            ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t)
             xy = (pr.x, pr.y) if pr.distance(q) <= CORR * 1.5 else None
             if xy is None: wi = -1
         if wi < 0: xy = (q.x, q.y)
-        if wi < 0: seq.append((xy[0], xy[1], 'kein', 'kein', None))
+        if wi < 0: seq.append((xy[0], xy[1], 'kein', 'kein', None)); prev = None
         else:
             weg, belag = way_class(wi)
-            seq.append((xy[0], xy[1], weg, belag, ways[wi][0]))
+            # two samples on the same way: follow the way between them, so a bend of the way away
+            # from the drawing (e.g. round a field corner) is not cut off by a straight chord
+            if prev and prev[0] == wi and seq:
+                along = abs(t - prev[1]); chord = math.dist(seq[-1][:2], xy)
+                if chord + 2 < along <= max(3 * chord, chord + 80):
+                    for v in substring(ls, prev[1], t).coords[1:-1]:
+                        seq.append((v[0], v[1], weg, belag, ways[wi][0]))
+            seq.append((xy[0], xy[1], weg, belag, ways[wi][0])); prev = (wi, t)
     # smooth classes along the line: runs shorter than MIN_RUN join their neighbour
     cls = [(w, b) for _, _, w, b, _ in seq]
     dist = [0.0]
