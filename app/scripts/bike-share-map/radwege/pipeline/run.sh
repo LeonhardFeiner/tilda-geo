@@ -65,6 +65,18 @@ head -8 "$WORK/review.log"
 # where the plan changes the side of a road: crossings (an assumption the page labels as such)
 "$PY" -I "$HERE/querung.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/pruefen.geojson" "$RADWEGE/querungen.geojson"
 
+# 7c. land under each line (ALKIS Tatsächliche Nutzung + Parzellarkarte, CC BY 4.0): splits the
+# lines by class (`flur`), so it runs last. TN per Landkreis (Pfaffenhofen, Freising), downloaded once.
+for kreis in 09186 09178; do
+  d="$WORK/alkis/tn_$kreis"
+  if [ ! -s "$d/Nutzung.shp" ]; then
+    mkdir -p "$d"
+    curl -fsS -A "radwege-tracker/1.0" -o "$d.zip" "https://download1.bayernwolke.de/a/tn/lkr/tn_$kreis.zip"
+    unzip -o -q "$d.zip" -d "$d" && rm "$d.zip"
+  fi
+done
+"$PY" -I "$HERE/flur.py" "$WORK" "$RADWEGE/lines.geojson" "$RADWEGE/lines.geojson"
+
 # 8. optional check images: assigned lines (colour per route) and unassigned ones (black) over the plans
 if [ -n "$CHECK" ]; then
   mkdir -p "$CHECK"

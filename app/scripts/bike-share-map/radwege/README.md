@@ -47,7 +47,7 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    plan draws an existing path: with `from`/`to` that stretch leaves the Bestand and becomes its own
    route (`route`, in `routes.json`) with `ausbau`, laid onto the road `onto` (e.g. the Gehweg in
    Holzhäuseln, no Radweg sign: "Freigabe nötig"); `at` alone puts the `hinweis` on the Bestand
-   piece there. The page shows `hinweis` in the popup; add a line to `korrekturen` when it changes a status or the counts. Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
+   piece there. The page shows `hinweis` in the popup; add a line to `korrekturen` when it changes a status or the counts. On any other route, `"<plan>|<route>": {"hinweis": [{"at", "text"}]}` puts a note on the pieces within 30 m of `at` (e.g. where the plan draws a path along a Wegeflurstück that is farmland on the ground). Unassigned plan lines ≥ 150 m become `ohne-beschriftung-*`.
    Solid/dashed in 5/2 comes from the gaps along the path: dash gaps are 25–60 units (measured
    40–48), a run between two of them shorter than 250 units is a dash, a longer one solid.
    The plans are schematic (a route is drawn beside the road it uses, parallel lines are pushed
@@ -67,6 +67,10 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    18./19.11. and the Carl-Benz-Straße shared path, earlier patched in by hand). After a data
    refresh, check that the extract is really the new one (`refresh-data.log`: "DB now has OSM data
    from"): right after Geofabrik publishes, a mirror can still serve the previous day's file.
+   Edits newer than the extract can go in before the next one: fetch the changed ways from
+   Overpass (`way(bbox)[highway](newer:"<DB OSM date>"); out meta geom;`), apply them with
+   `pipeline/patch_osm.py` to a copy of `cache/osm-area.json` and re-run from `assign.py`
+   (2026-11-21: 50 ways surveyed that day). The next full run replaces the patch.
    It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
    which the page can show on request ("Lage wie im Plan gezeichnet").
 5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
@@ -113,6 +117,11 @@ offset they would show as a path on both sides of the road. Override `beside` (`
 `why`) moves a drawing onto one road where the automatic rule does not apply (e.g. Güntersdorf:
 the drawing touches the Blumenstraße only because of its offset from the PAF 6).
 Spots checked by someone (aerial images or on site) go into `overrides.json` as `geprueft`
-(`at`, `note`) and drop out of `pruefen.geojson`; with none left, the page hides the Prüfstellen row. `querung.py` writes `querungen.geojson`: where
+(`at`, `note`) and drop out of `pruefen.geojson`; with none left, the page hides the Prüfstellen row. `flur.py` (last step) checks the land under each line from open ALKIS data (Tatsächliche Nutzung
+shapefiles per Landkreis, Parzellarkarte WMS; © Bayerische Vermessungsverwaltung, CC BY 4.0): on a
+road or a narrow path-like parcel (`weg`), on a TN path area that has no parcel of its own
+(`genutzt`, TN records the use, also inside field or forest plots), or neither (`kein`). It splits
+the lines by class (`flur`), which the page shows as "Grundstück"; new paths are not assessed
+there. It says nothing about ownership. `querung.py` writes `querungen.geojson`: where
 the drawing of a new path changes the side of a Kreis-/Staatsstraße, a crossing at the junction
 where the drawing crosses the road (an assumption, shown as such).

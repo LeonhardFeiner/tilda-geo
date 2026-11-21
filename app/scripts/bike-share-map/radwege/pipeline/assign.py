@@ -729,6 +729,16 @@ for bf in OVERRIDES.get('kurz|bestand', {}).get('befund', []):
     for g in geo:
         if g['properties']['routeId'] == 'bestand' and LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).distance(q) < 25:
             g['properties']['hinweis'] = bf['hinweis']
+# a note on any route: overrides "<plan>|<route>": {"hinweis": [{"at": [lon, lat], "text": …}]}
+# goes onto that route's pieces within 30 m of `at` (shown in the map popup)
+for key, ov in OVERRIDES.items():
+    for h in ov.get('hinweis', []) if isinstance(ov, dict) else []:
+        plan, rid = key.split('|', 1)
+        q = Point(to_utm.transform(*h['at']))
+        for g in geo:
+            pr = g['properties']
+            if pr['routeId'] == rid and pr['plan'] == plan and LineString([to_utm.transform(*c) for c in g['geometry']['coordinates']]).distance(q) < 30:
+                pr['hinweis'] = h['text']
 json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), separators=(',', ':'))
 km = collections.Counter(); kw = collections.Counter(); kb = collections.Counter()
 for g in geo:

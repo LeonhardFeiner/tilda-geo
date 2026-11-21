@@ -570,5 +570,13 @@
         "why": "Wie der Eintrag davor (südliches Stück der Zeichnung)."
       }
     ]
+  },
+  "kurz|ohne-beschriftung-ergaenzend": {
+    "hinweis": [
+      {
+        "at": [11.622277, 48.504022],
+        "text": "Der Plan zeichnet den Weg hier am Feldrand entlang eines Wegeflurstücks. Dort ist laut Luftbild und tatsächlicher Nutzung (Flurkarte) Acker, kein Weg (vor Ort bestätigt, November 2026). Die Linie folgt dem vorhandenen Weg südlich davon; ein Weg wie im Plan müsste erst angelegt werden."
+      }
+    ]
   }
 }

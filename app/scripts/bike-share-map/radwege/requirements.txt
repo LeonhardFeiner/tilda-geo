@@ -3,3 +3,4 @@ scipy>=1.13
 shapely>=2.0
 pyproj>=3.6
 pillow>=10
+pyshp>=2.3
