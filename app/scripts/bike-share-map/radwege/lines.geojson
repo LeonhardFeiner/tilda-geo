@@ -2744,9 +2744,9 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "natur",
         "fromPlan": 0.0,
-        "osmWays": [24012580, 334818641],
+        "osmWays": [24012580],
         "flur": "weg"
       },
       "geometry": {
@@ -2754,7 +2754,7 @@
         "coordinates": [
           [11.634029, 48.47716],
           [11.633983, 48.477151],
-          [11.633761, 48.47714]
+          [11.63376, 48.47714]
         ]
       }
     },
@@ -2765,17 +2765,18 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "natur",
         "fromPlan": 0.0,
-        "osmWays": [24012580, 334818641],
+        "osmWays": [24012580],
         "flur": "genutzt"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.633761, 48.47714],
+          [11.63376, 48.47714],
           [11.632927, 48.477099],
-          [11.632823, 48.47707]
+          [11.632823, 48.47707],
+          [11.632821, 48.477068]
         ]
       }
     },
@@ -2786,28 +2787,46 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "natur",
         "fromPlan": 0.0,
-        "osmWays": [24012580, 334818641],
+        "osmWays": [24012580],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.632823, 48.47707],
-          [11.632823, 48.47707],
+          [11.632821, 48.477068],
           [11.632755, 48.477008],
           [11.632717, 48.47691],
           [11.632642, 48.476329],
           [11.632662, 48.475832],
           [11.632755, 48.475295],
           [11.63295, 48.47477],
-          [11.633012, 48.474502],
-          [11.633085, 48.473701],
-          [11.633047, 48.473492],
+          [11.633021, 48.474457],
+          [11.633084, 48.47367],
+          [11.633036, 48.473454],
           [11.632968, 48.473267],
-          [11.632951, 48.473087],
+          [11.632952, 48.473036],
           [11.632961, 48.472768],
+          [11.633074, 48.472764]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "ampertshausen-saulhof-kirchdorf",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [334818641, 1582797470],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
           [11.633074, 48.472764],
           [11.634461, 48.472627],
           [11.634922, 48.472563],
@@ -6473,7 +6492,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "schotter",
         "fromPlan": 0.0,
         "osmWays": [39700356],
         "flur": "weg"
@@ -6493,7 +6512,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "schotter",
         "fromPlan": 0.0,
         "osmWays": [39700356],
         "flur": "genutzt"
@@ -6517,7 +6536,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "schotter",
         "fromPlan": 0.0,
         "osmWays": [39700356],
         "flur": "weg"
@@ -6539,7 +6558,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "schotter",
         "fromPlan": 0.0,
         "osmWays": [39700356],
         "flur": "genutzt"
@@ -6560,7 +6579,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "feldweg",
-        "belag": "unbekannt",
+        "belag": "schotter",
         "fromPlan": 0.0,
         "osmWays": [39700356],
         "flur": "weg"
