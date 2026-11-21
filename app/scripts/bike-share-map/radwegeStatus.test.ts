@@ -4,6 +4,7 @@ import {
   firstStep,
   lastStep,
   lineBedarf,
+  lineGrund,
   vorhandenAuf,
   vorhandenOhneRadweg,
   lineStatus,
@@ -119,5 +120,15 @@ describe('vorhandenOhneRadweg', () => {
     expect(vorhandenOhneRadweg('bestand', 'ortsstrasse', 'asphalt')).toBe(true)
     expect(vorhandenOhneRadweg('bestand', 'kein', 'kein')).toBe(true)
     expect(vorhandenOhneRadweg('nichts', 'staatsstrasse', 'asphalt')).toBe(false)
+  })
+})
+
+describe('lineGrund', () => {
+  test('existing ways by the land under them; new paths are not assessed', () => {
+    expect(lineGrund('freigabe', 'weg')).toBe('weggrund')
+    expect(lineGrund('bestand', 'genutzt')).toBe('genutzt')
+    expect(lineGrund('bestand-weg', 'kein')).toBe('kein')
+    expect(lineGrund('voll', 'weg')).toBe('neubau')
+    expect(lineGrund('kein-weg', 'kein')).toBe('neubau')
   })
 })

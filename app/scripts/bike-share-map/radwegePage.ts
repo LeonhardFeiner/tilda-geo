@@ -3,6 +3,7 @@ import { AUTHOR_OSM_USER, LEGAL_CONTACT } from './legalPage'
 import {
   BEDARF,
   BELAG,
+  GRUND,
   CONCEPT_DATE,
   PLAN_SAYS,
   STATUS_GROUPS,
@@ -379,6 +380,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
           <label><input type="radio" name="farbe" value="bedarf"><span>Was zu tun ist</span></label>
           <label><input type="radio" name="farbe" value="weg"><span>Wegart heute</span></label>
           <label><input type="radio" name="farbe" value="belag"><span>Belag heute</span></label>
+          <label><input type="radio" name="farbe" value="grund"><span>Grundstück</span></label>
         </fieldset>
         <p id="status" class="muted" aria-live="polite">Lade Daten …</p>
         <label class="muted" id="innen-row"><input type="checkbox" id="innen-toggle" /><span>Nur innerhalb der Gemeindegrenze</span></label>
@@ -407,7 +409,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
         </details>
         <footer id="about">
           <p>Stand der Recherche: <span id="stand"></span>. Wege und Karte © OpenStreetMap-Mitwirkende.</p>
-          <details id="quellen"><summary>Welche Quellen, bis wann</summary><p><span id="quellen-bis"></span> Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Lage und Art der Wege aus OpenStreetMap; ${projectLead} trägt dort selbst bei (Benutzer <a href="https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history">${AUTHOR_OSM_USER}</a>).</p></details>
+          <details id="quellen"><summary>Welche Quellen, bis wann</summary><p><span id="quellen-bis"></span> Quellen: Gemeinderat (Protokolle, Ratsinformationssystem), Rundschau, Landkreis, Landtag, Pfaffenhofener Kurier – jeder Vorgang mit Link. Grundstücke aus ALKIS (Tatsächliche Nutzung, Parzellarkarte), © Bayerische Vermessungsverwaltung, CC BY 4.0. Lage und Art der Wege aus OpenStreetMap; ${projectLead} trägt dort selbst bei (Benutzer <a href="https://www.openstreetmap.org/user/${AUTHOR_OSM_USER}/history">${AUTHOR_OSM_USER}</a>).</p></details>
           <p><strong>Wer steht dahinter?</strong> Ein privates, nicht-kommerzielles Projekt von ${projectLead}, Kandidat auf der Liste BFS/SPD/Grüne in Schweitenkirchen. Jeder Vorgang mit Quelle; die Einteilung folgt einer festen Regel (siehe „So ist die Karte zu lesen“). <a href="./impressum.html">Impressum &amp; Datenschutz</a></p>
           <p><strong>Fehler gefunden oder ein Vorgang fehlt?</strong> Bitte an ${LEGAL_CONTACT.email}, mit Quelle. Korrekturen werden hier mit Datum vermerkt.</p>
           <details id="korrekturen" hidden><summary>Korrekturen (<span id="korr-count"></span>)</summary><ul id="korr-list"></ul></details>
@@ -447,6 +449,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       bedarf: { key: 'bedarf', cats: ${JSON.stringify(BEDARF)}, param: 'nur' },
       weg: { key: 'weg', cats: ${JSON.stringify(WEG)}, param: 'nur' },
       belag: { key: 'belag', cats: ${JSON.stringify(BELAG)}, param: 'nur' },
+      grund: { key: 'grund', cats: ${JSON.stringify(GRUND)}, param: 'nur' },
     };
     for (const m of Object.values(MODES)) m.byId = Object.fromEntries(m.cats.map((c) => [c.id, c]));
     const $ = (id) => document.getElementById(id);
@@ -719,6 +722,8 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
     let mapReady = false;
     let hoverPopup = null;
     let tapPopup = null;
+    // where a route was clicked on the map: the BayernAtlas link in its detail view points there
+    let clickAt = null;
     /** Popup text of the context layers; on hover with a mouse, on tap with a finger. */
     const POPUP = {
       landkreis: (p) => '<strong>' + escHtml(LANDKREIS[p.netz].label) + '</strong><br>Mobilitätskonzept des Landkreises (2023), im Radwegekonzept nachrichtlich übernommen; als Geh- und Radweg vorgesehen.',
@@ -813,7 +818,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
           if (!p) return;
           const r = routeById.get(p.routeId);
           if (!hoverPopup) hoverPopup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, offset: 10 });
-          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.status === 'bestand' && VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg] ? '<br>' + escHtml(VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg]) : '') + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + (p.hinweis ? '<br>' + escHtml(p.hinweis) : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
+          hoverPopup.setLngLat(e.lngLat).setHTML('<strong>' + escHtml(r.name) + '</strong>' + (state.plan === 'beide' && p.status !== 'bestand' ? ' <span style="color:#5a6068">(' + (p.plan === 'kurz' ? 'Plan 5/1' : 'Plan 5/2') + ')</span>' : '') + '<br>' + escHtml(GROUP_BY_ID[p.status].label) + (p.status === 'bestand' && VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg] ? '<br>' + escHtml(VORHANDEN_AUF[p.ausbau === 'bestand' ? 'bestand' : 'freigabe'][p.weg]) : '') + (p.ausbau === 'bestand' ? '' : '<br>' + escHtml(PLAN_SAYS[p.ausbau])) + (p.richtung ? '<br>Laut Plan neuer Weg ' + escHtml(p.richtung) + (p.strasse ? ' der ' + escHtml(p.strasse) : ' der Straße') : '') + (p.hinweis ? '<br>' + escHtml(p.hinweis) : '') + (state.farbe === 'grund' ? '<br>Grundstück: ' + escHtml(MODES.grund.byId[p.grund].label) : '') + '<br><span style="color:#5a6068">Heute: ' + escHtml(MODES.weg.byId[p.weg].label) + ', ' + escHtml(MODES.belag.byId[p.belag].label) + '</span>').addTo(map);
         });
         map.on('mouseleave', id, () => {
           map.getCanvas().style.cursor = '';
@@ -827,7 +832,10 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
         if (tapPopup) tapPopup.remove();
         // a click on the selected route again closes it
         if (state.selected && ids.includes(state.selected)) closeDetail();
-        else if (ids.length) select(ids[0], false, ids.slice(1));
+        else if (ids.length) {
+          clickAt = e.lngLat ? { id: ids[0], lng: e.lngLat.lng, lat: e.lngLat.lat } : null;
+          select(ids[0], false, ids.slice(1));
+        }
         else {
           // no route here: the context layers answer a tap (touch screens have no hover)
           const ctx = ['pruefen', 'querungen', 'landkreis'].filter((id) => map.getLayer(id) && (id === 'querungen' || (id === 'pruefen' ? state.pruefen : landkreisOn())));
@@ -885,6 +893,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       if (!progress) legend.push(dash('gestrichelt: kein Weg in OpenStreetMap'));
       if (state.farbe === 'stand' && state.plan !== 'kurz') legend.push(dash('gestrichelt: in Lageplan 5/2 als vorhandener asphaltierter Weg gezeichnet (nur Freigabe)'));
       if (progress && vis.some((f) => f.properties.ohneRadweg)) legend.push(dash('gestrichelt bei „Vorhanden“: kein eigener Radweg (Fahrbahn, Schotter oder kein Weg erfasst)'));
+      if (state.farbe === 'grund') legend.push('Grundstück automatisch abgeleitet aus ALKIS (Tatsächliche Nutzung, Parzellarkarte), © <a href="https://geodaten.bayern.de/opengeodata/" target="_blank" rel="noopener">Bayerische Vermessungsverwaltung</a> (CC BY 4.0). Sagt nichts über Eigentum; die Flurkarte zeigt der Link „Luftbild mit Flurkarte“ bei jeder Trasse.');
       if (data.querungen) legend.push('<i class="sw" style="background:#fff;border:2px solid var(--fg);border-radius:50%;box-sizing:border-box"></i> Querung (angenommen)');
       $('line-legend').hidden = !legend.length;
       $('line-legend').innerHTML = legend.join('<br>');
@@ -1012,7 +1021,7 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       const total = sum || 1;
       const PLAN_TEXT = { kurz: 'im kurzfristigen Plan (Lageplan 5/1)', lang: 'im langfristigen Plan (Lageplan 5/2)', beide: 'in beiden Plänen, jede Strecke einmal' };
       // the OSM modes say where their colours come from (the © is in the map attribution)
-      const OSM_TEXT = { weg: ', Wegart heute laut OpenStreetMap', belag: ', Belag heute laut OpenStreetMap' };
+      const OSM_TEXT = { weg: ', Wegart heute laut OpenStreetMap', belag: ', Belag heute laut OpenStreetMap', grund: ', Grundstück laut Liegenschaftskataster (ALKIS, offene Daten)' };
       $('headline').innerHTML = '<strong>' + km(sum) + '</strong> in ' + routeIds.size + ' Trassen und vorhandenen Wegen ' + PLAN_TEXT[state.plan] + (state.innen ? ', innerhalb der Gemeinde' : ', einschließlich der Stücke außerhalb der Gemeinde' + (innenM < sum ? ' (davon ' + km(innenM) + ' innerhalb)' : '')) + (state.netz === 'alle' ? '' : state.netz === 'haupt' ? ', nur Haupttrassen' : ', nur ergänzende Trassen') + (OSM_TEXT[state.farbe] || '') + ':';
       const pct = (v) => {
         const x = (100 * v) / total;
@@ -1346,6 +1355,13 @@ export function radwegePageHtml({ dataHref, projectLead, konzeptUrl }: RadwegePa
       if (r.plans.lang) links.push(link(data.sources.lang, 'Lageplan 5/2'));
       links.push(link(data.sources.erlaeuterung, 'Erläuterung'));
       h += '<p>Konzept: ' + links.join(' · ') + '</p>';
+      // aerial image with the parcel map at the clicked spot (else the middle of the longest piece)
+      let at = clickAt && clickAt.id === r.id ? [clickAt.lng, clickAt.lat] : null;
+      if (!at && fs.length) {
+        const c = fs.reduce((a, b) => (b.properties.m > a.properties.m ? b : a)).geometry.coordinates;
+        at = c[Math.floor(c.length / 2)];
+      }
+      if (at) h += '<p>' + link('https://atlas.bayern.de/?c=' + at[0].toFixed(6) + ',' + at[1].toFixed(6) + '&z=18&l=luftbild_parz&crh=true', 'Luftbild mit Flurkarte (BayernAtlas)') + (clickAt && clickAt.id === r.id ? ' an der angeklickten Stelle' : '') + '</p>';
       box.innerHTML = h;
       $('detail-close').addEventListener('click', closeDetail);
       $('copy-link').addEventListener('click', (e) => {

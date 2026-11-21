@@ -13,6 +13,8 @@ import {
   firstStep,
   lastStep,
   lineBedarf,
+  lineGrund,
+  type Grund,
   lineStatus,
   type RouteEvent,
   type StatusGroup,
@@ -121,6 +123,8 @@ const LineProps = z.strictObject({
   strasse: z.string().optional(),
   /** What a check on site found here (overrides.json "befund"), shown in the popup. */
   hinweis: z.string().optional(),
+  /** Land under the line (pipeline/flur.py, open ALKIS data). */
+  flur: z.enum(['weg', 'genutzt', 'kein']).optional(),
 })
 const Position = z.tuple([z.number(), z.number()])
 export const LinesFileSchema = z.object({
@@ -149,6 +153,7 @@ export type RadwegeLineProps = z.infer<typeof LineProps> & {
   netz: z.infer<typeof Netz>
   status: StatusGroup
   bedarf: Bedarf
+  grund: Grund
   m: number
   /** Part of the combined view: a short-term piece is left out where plan 5/2 or Bestand covers it. */
   kombi: boolean
@@ -339,6 +344,7 @@ export function buildRadwegeData(
           netz,
           status,
           bedarf: lineBedarf(route, f.properties.ausbau, f.properties.belag),
+          grund: lineGrund(f.properties.ausbau, f.properties.flur),
           m,
           kombi: Boolean(piece.key & 1),
           kombiHaupt: Boolean(piece.key & 4),

@@ -162,6 +162,46 @@ export const BEDARF = [
 export type Bedarf = (typeof BEDARF)[number]['id']
 
 /**
+ * Land under a line, from open ALKIS data (radwege/pipeline/flur.py: Tatsächliche Nutzung and
+ * Parzellarkarte, © Bayerische Vermessungsverwaltung, CC BY 4.0). Derived automatically; it says
+ * nothing about who owns a plot. New paths are not assessed: beside a road the line lies on the
+ * road, while the land needed is the strip next to it.
+ */
+export const GRUND = [
+  {
+    id: 'weggrund',
+    label: 'Auf Weg- oder Straßengrund',
+    hint: 'Die Linie liegt auf einer Straßenfläche oder einem schmalen Flurstück, wie es Wege im Kataster haben (bis 10 m daneben, weil Wege in OpenStreetMap oft ein paar Meter versetzt liegen).',
+    colour: '#1a7f37',
+  },
+  {
+    id: 'genutzt',
+    label: 'Als Weg genutzt, ohne eigenes Flurstück',
+    hint: 'Die tatsächliche Nutzung verzeichnet hier einen Weg, er liegt aber auf einem größeren Flurstück (Acker, Wald, Hof) und hat kein eigenes Wegeflurstück.',
+    colour: '#d4a017',
+  },
+  {
+    id: 'kein',
+    label: 'Kein Weg im Kataster',
+    hint: 'Weder ein Wegeflurstück noch eine Wegfläche in der tatsächlichen Nutzung; die Linie quert gewöhnliche Flurstücke.',
+    colour: '#c0392b',
+  },
+  {
+    id: 'neubau',
+    label: 'Neubau (nicht bewertet)',
+    hint: 'Plan 5/2 Vollausbau oder Plan 5/1 ohne Weg: Ein neuer Weg neben einer Straße braucht den Streifen daneben, den diese Auswertung nicht prüft.',
+    colour: '#9aa0a6',
+  },
+] as const
+export type Grund = (typeof GRUND)[number]['id']
+export type Flur = 'weg' | 'genutzt' | 'kein'
+
+export function lineGrund(ausbau: Ausbau, flur: Flur | undefined): Grund {
+  if (ausbau === 'voll' || ausbau === 'kein-weg' || flur == null) return 'neubau'
+  return flur === 'weg' ? 'weggrund' : flur
+}
+
+/**
  * Freigabe lines by the surface of their OSM way. A dashed 5/2 line without a surface in OSM counts
  * as asphalt, since the plan's legend says so ("best. asph. Weg"); where OSM records gravel or soil
  * there, OSM wins and the conflict shows.
