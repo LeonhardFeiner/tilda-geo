@@ -699,49 +699,9 @@
           [11.610026, 48.516583],
           [11.610153, 48.516509],
           [11.610198, 48.51647],
-          [11.610689, 48.515916]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.610689, 48.515916],
           [11.610847, 48.515738],
           [11.611256, 48.515371],
           [11.611589, 48.515087],
-          [11.611656, 48.515023]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.611656, 48.515023],
           [11.611745, 48.514939],
           [11.611797, 48.514936]
         ]
@@ -784,7 +744,7 @@
         "plan": "kurz",
         "ausbau": "freigabe",
         "weg": "ortsstrasse",
-        "belag": "unbekannt",
+        "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [28667016],
         "flur": "weg"
@@ -793,52 +753,12 @@
         "type": "LineString",
         "coordinates": [
           [11.616923, 48.50482],
-          [11.617382, 48.50437]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "ortsstrasse",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [28667016],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.617382, 48.50437],
           [11.617606, 48.504149],
           [11.61766, 48.504132],
-          [11.617677, 48.504131]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "ortsstrasse",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [28667016],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.617677, 48.504131],
           [11.618507, 48.504073],
           [11.61909, 48.503975],
           [11.619834, 48.503955],
-          [11.620429, 48.50396],
+          [11.620399, 48.504004],
           [11.620434, 48.504019]
         ]
       }
@@ -865,7 +785,7 @@
           [11.621845, 48.504092],
           [11.621948, 48.504026],
           [11.621941, 48.503974],
-          [11.622006, 48.503933]
+          [11.621956, 48.503964]
         ]
       }
     },
@@ -885,7 +805,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.622006, 48.503933],
+          [11.621956, 48.503964],
           [11.622399, 48.503686]
         ]
       }
@@ -952,8 +872,7 @@
           [11.622878, 48.486369],
           [11.62282, 48.486305],
           [11.622588, 48.485937],
-          [11.622081, 48.485266],
-          [11.622024, 48.484886]
+          [11.622496, 48.485816]
         ]
       }
     },
@@ -972,12 +891,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.622024, 48.484886],
-          [11.621994, 48.484685],
-          [11.621975, 48.484625],
-          [11.62163, 48.483946],
-          [11.621342, 48.483297],
-          [11.621329, 48.483279]
+          [11.622496, 48.485816],
+          [11.622282, 48.485532]
         ]
       }
     },
@@ -996,7 +911,52 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.621329, 48.483279],
+          [11.622282, 48.485532],
+          [11.622081, 48.485266],
+          [11.622051, 48.485066]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "ohne-beschriftung-ergaenzend",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [432519406, 432519409],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.622051, 48.485066],
+          [11.621994, 48.484685],
+          [11.621975, 48.484625],
+          [11.62163, 48.483946],
+          [11.621342, 48.483297],
+          [11.621244, 48.483155]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "ohne-beschriftung-ergaenzend",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [432519406, 432519409],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.621244, 48.483155],
           [11.621122, 48.48298],
           [11.621091, 48.482872],
           [11.621181, 48.482621],
@@ -1042,46 +1002,6 @@
           [11.626553, 48.484999],
           [11.626556, 48.484999],
           [11.626928, 48.485048],
-          [11.627075, 48.484993]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [78606155, 826834670],
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.627075, 48.484993],
-          [11.627375, 48.484881]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "ohne-beschriftung-ergaenzend",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [78606155, 826834670],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.627375, 48.484881],
           [11.627468, 48.484847],
           [11.627476, 48.484832],
           [11.627583, 48.484751],
@@ -1399,49 +1319,9 @@
           [11.608906, 48.544698],
           [11.608954, 48.544663],
           [11.608874, 48.544484],
-          [11.608715, 48.544196]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-preinerszell",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44373380, 561123413, 658504811, 658504814],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.608715, 48.544196],
           [11.60871, 48.544187],
           [11.60862, 48.544091],
-          [11.608525, 48.54401]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-preinerszell",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44373380, 561123413, 658504811, 658504814],
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.608525, 48.54401],
-          [11.608235, 48.54376]
+          [11.608484, 48.543974]
         ]
       }
     },
@@ -1460,7 +1340,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.608235, 48.54376],
+          [11.608484, 48.543974],
           [11.608176, 48.54371],
           [11.607725, 48.543281],
           [11.607734, 48.542395],
@@ -2091,7 +1971,7 @@
           [11.537972, 48.520882],
           [11.537998, 48.520841],
           [11.538127, 48.520738],
-          [11.538278, 48.520641]
+          [11.53818, 48.520704]
         ]
       }
     },
@@ -2110,9 +1990,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.538278, 48.520641],
-          [11.539443, 48.519894],
-          [11.539576, 48.519777]
+          [11.53818, 48.520704],
+          [11.539209, 48.520044]
         ]
       }
     },
@@ -2131,7 +2010,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.539576, 48.519777],
+          [11.539209, 48.520044],
+          [11.539443, 48.519894],
           [11.539606, 48.519751],
           [11.539703, 48.519633],
           [11.539799, 48.519464],
@@ -2142,7 +2022,47 @@
           [11.53996, 48.518685],
           [11.539998, 48.518649],
           [11.540183, 48.518517],
+          [11.540592, 48.518314]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "pfaffenhofen-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "ortsstrasse",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [28475683, 28475684],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.540592, 48.518314],
           [11.540725, 48.518248],
+          [11.540847, 48.518165]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "pfaffenhofen-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "ortsstrasse",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [28475683, 28475684],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.540847, 48.518165],
           [11.540914, 48.51812],
           [11.541315, 48.517651],
           [11.542989, 48.516069],
@@ -2168,46 +2088,6 @@
           [11.543252, 48.515807],
           [11.54348, 48.515583],
           [11.543524, 48.51555],
-          [11.543619, 48.515484]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [41220872, 279795823, 883239536, 883239537, 1213817509],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.543619, 48.515484],
-          [11.543947, 48.515257]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [41220872, 279795823, 883239536, 883239537, 1213817509],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.543947, 48.515257],
           [11.545728, 48.514025],
           [11.546003, 48.513895],
           [11.54639, 48.513813],
@@ -2222,7 +2102,7 @@
           [11.547217, 48.514373],
           [11.54729, 48.514498],
           [11.547424, 48.514654],
-          [11.547777, 48.514941]
+          [11.547605, 48.514801]
         ]
       }
     },
@@ -2241,11 +2121,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.547777, 48.514941],
+          [11.547605, 48.514801],
           [11.548152, 48.515246],
-          [11.548315, 48.515326],
-          [11.548433, 48.51537],
-          [11.548514, 48.515387]
+          [11.548165, 48.515253]
         ]
       }
     },
@@ -2264,7 +2142,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.548514, 48.515387],
+          [11.548165, 48.515253],
+          [11.548315, 48.515326],
+          [11.548433, 48.51537],
           [11.548562, 48.515397],
           [11.548696, 48.515389],
           [11.548826, 48.515364],
@@ -2354,48 +2234,8 @@
           [11.558461, 48.513794],
           [11.558639, 48.513857],
           [11.55897, 48.514014],
-          [11.559278, 48.514231]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [41220872, 279795823, 883239536, 883239537, 1213817509],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.559278, 48.514231],
           [11.559338, 48.514274],
           [11.559475, 48.514279],
-          [11.559587, 48.514267]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "pfaffenhofen-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "schotter",
-        "fromPlan": 0.0,
-        "osmWays": [41220872, 279795823, 883239536, 883239537, 1213817509],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.559587, 48.514267],
           [11.559742, 48.51425],
           [11.560554, 48.514233],
           [11.561229, 48.514262],
@@ -2529,7 +2369,7 @@
           [11.564636, 48.516599],
           [11.564965, 48.516562],
           [11.565166, 48.51655],
-          [11.568506, 48.515521]
+          [11.568444, 48.51554]
         ]
       }
     },
@@ -2550,7 +2390,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.568506, 48.515521],
+          [11.568444, 48.51554],
           [11.568543, 48.515509],
           [11.568561, 48.515495],
           [11.568547, 48.515316],
@@ -2907,13 +2747,33 @@
         "belag": "unbekannt",
         "fromPlan": 0.0,
         "osmWays": [24012580, 334818641],
-        "flur": "genutzt"
+        "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [11.634029, 48.47716],
           [11.633983, 48.477151],
+          [11.633761, 48.47714]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "ampertshausen-saulhof-kirchdorf",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "unbekannt",
+        "fromPlan": 0.0,
+        "osmWays": [24012580, 334818641],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.633761, 48.47714],
           [11.632927, 48.477099],
           [11.632823, 48.47707]
         ]
@@ -3249,47 +3109,7 @@
           [11.616899, 48.498781],
           [11.616631, 48.499246],
           [11.616517, 48.499636],
-          [11.616497, 48.499749]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "dietersdorf-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "natur",
-        "fromPlan": 0.0,
-        "osmWays": [28667004, 1582649216],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.616497, 48.499749],
           [11.616461, 48.49996],
-          [11.616443, 48.499965]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "dietersdorf-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "natur",
-        "fromPlan": 0.0,
-        "osmWays": [28667004, 1582649216],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.616443, 48.499965],
           [11.615679, 48.500151]
         ]
       }
@@ -3330,6 +3150,7 @@
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [28407604, 1582654034],
+        "hinweis": "Der Plan zeichnet den Weg \u00f6stlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurst\u00fcck, die Erl\u00e4uterung spricht von Gemeindewegen. Westlich des Hofs verl\u00e4uft ein schmales Wegeflurst\u00fcck zwischen den beiden Stra\u00dfen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor.",
         "flur": "genutzt"
       },
       "geometry": {
@@ -3352,6 +3173,7 @@
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [28407604, 1582654034],
+        "hinweis": "Der Plan zeichnet den Weg \u00f6stlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurst\u00fcck, die Erl\u00e4uterung spricht von Gemeindewegen. Westlich des Hofs verl\u00e4uft ein schmales Wegeflurst\u00fcck zwischen den beiden Stra\u00dfen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor.",
         "flur": "kein"
       },
       "geometry": {
@@ -3360,7 +3182,7 @@
           [11.614137, 48.501668],
           [11.613888, 48.502001],
           [11.614517, 48.502605],
-          [11.614563, 48.50267]
+          [11.614592, 48.502711]
         ]
       }
     },
@@ -3374,14 +3196,40 @@
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [28407604, 1582654034],
+        "hinweis": "Der Plan zeichnet den Weg \u00f6stlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurst\u00fcck, die Erl\u00e4uterung spricht von Gemeindewegen. Westlich des Hofs verl\u00e4uft ein schmales Wegeflurst\u00fcck zwischen den beiden Stra\u00dfen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor.",
         "flur": "genutzt"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.614563, 48.50267],
+          [11.614592, 48.502711],
           [11.614764, 48.502955],
           [11.614786, 48.503001]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "dietersdorf-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [44311639],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.614786, 48.503001],
+          [11.614755, 48.503044],
+          [11.613949, 48.503456],
+          [11.613911, 48.503481],
+          [11.613563, 48.503861],
+          [11.613194, 48.504183],
+          [11.613142, 48.504266]
         ]
       }
     },
@@ -3400,12 +3248,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.614786, 48.503001],
-          [11.614755, 48.503044],
-          [11.613949, 48.503456],
-          [11.613911, 48.503481],
-          [11.613563, 48.503861],
-          [11.613194, 48.504183],
+          [11.613142, 48.504266],
           [11.613036, 48.504435]
         ]
       }
@@ -3455,51 +3298,13 @@
         "weg": "kein",
         "belag": "kein",
         "fromPlan": 0.98,
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.583573, 48.506863],
-          [11.583646, 48.506689]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.98,
         "flur": "kein"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.583646, 48.506689],
+          [11.583573, 48.506863],
           [11.584316, 48.505084],
-          [11.584489, 48.504836]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.98,
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.584489, 48.504836],
           [11.584603, 48.504672]
         ]
       }
@@ -3747,7 +3552,7 @@
         "belag": "unbekannt",
         "fromPlan": 0.01,
         "osmWays": [61964054],
-        "flur": "genutzt"
+        "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
@@ -3760,94 +3565,14 @@
           [11.589358, 48.549984],
           [11.589401, 48.549918],
           [11.589461, 48.549668],
-          [11.589475, 48.549544]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-altkaslehen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.01,
-        "osmWays": [61964054],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.589475, 48.549544],
           [11.589499, 48.549325],
-          [11.589497, 48.549272]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-altkaslehen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.01,
-        "osmWays": [61964054],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.589497, 48.549272],
           [11.589485, 48.548964],
           [11.589531, 48.54886],
           [11.589623, 48.548824],
           [11.58973, 48.548818],
           [11.589933, 48.54887],
-          [11.590085, 48.548922]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-altkaslehen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.01,
-        "osmWays": [61964054],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.590085, 48.548922],
           [11.590515, 48.549068],
           [11.590546, 48.549049],
-          [11.590586, 48.548995]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-altkaslehen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.01,
-        "osmWays": [61964054],
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.590586, 48.548995],
           [11.590974, 48.548464]
         ]
       }
@@ -3888,7 +3613,7 @@
         "type": "LineString",
         "coordinates": [
           [11.591088, 48.547568],
-          [11.591069, 48.547208]
+          [11.591064, 48.547118]
         ]
       }
     },
@@ -3906,9 +3631,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.591069, 48.547208],
+          [11.591064, 48.547118],
           [11.591054, 48.546941],
-          [11.591019, 48.546804]
+          [11.591053, 48.546937]
         ]
       }
     },
@@ -3926,27 +3651,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.591019, 48.546804],
+          [11.591053, 48.546937],
           [11.590757, 48.545787],
-          [11.59054, 48.545402]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "geisenhausen-altkaslehen",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.98,
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.59054, 48.545402],
           [11.590469, 48.545275]
         ]
       }
@@ -4762,33 +4468,13 @@
         "belag": "asphalt",
         "fromPlan": 0.0,
         "osmWays": [28173702, 51191011, 51191013],
-        "flur": "genutzt"
+        "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [11.655949, 48.522142],
           [11.655725, 48.52192],
-          [11.655723, 48.521917]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "loipertshausen-suenzhausen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "ortsstrasse",
-        "belag": "asphalt",
-        "fromPlan": 0.0,
-        "osmWays": [28173702, 51191011, 51191013],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.655723, 48.521917],
           [11.655692, 48.521866],
           [11.655692, 48.521738],
           [11.655697, 48.521686],
@@ -5305,32 +4991,12 @@
         "belag": "unbekannt",
         "fromPlan": 0.0,
         "osmWays": [44315575, 44315580],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.611797, 48.514936],
-          [11.612064, 48.51497]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315575, 44315580],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.612064, 48.51497],
+          [11.611797, 48.514936],
           [11.612117, 48.514977],
           [11.612613, 48.515115],
           [11.613138, 48.515247],
@@ -5589,7 +5255,7 @@
         "coordinates": [
           [11.649696, 48.514312],
           [11.649175, 48.513429],
-          [11.649014, 48.513346]
+          [11.649068, 48.513373]
         ]
       }
     },
@@ -5608,7 +5274,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.649014, 48.513346],
+          [11.649068, 48.513373],
           [11.648478, 48.513068]
         ]
       }
@@ -5650,7 +5316,8 @@
           [11.648412, 48.5128],
           [11.648114, 48.511193],
           [11.648268, 48.510525],
-          [11.648304, 48.510421]
+          [11.648418, 48.510086],
+          [11.648584, 48.509817]
         ]
       }
     },
@@ -5668,11 +5335,10 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648304, 48.510421],
-          [11.648418, 48.510086],
+          [11.648584, 48.509817],
           [11.648701, 48.509627],
           [11.648908, 48.509344],
-          [11.648948, 48.509049]
+          [11.64893, 48.509185]
         ]
       }
     },
@@ -5690,7 +5356,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648948, 48.509049],
+          [11.64893, 48.509185],
           [11.648973, 48.508869]
         ]
       }
@@ -5734,7 +5400,7 @@
           [11.648432, 48.508817],
           [11.648418, 48.508778],
           [11.648568, 48.508489],
-          [11.648901, 48.508184]
+          [11.648981, 48.508111]
         ]
       }
     },
@@ -5753,8 +5419,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648901, 48.508184],
-          [11.649421, 48.50771]
+          [11.648981, 48.508111],
+          [11.649301, 48.507819]
         ]
       }
     },
@@ -5773,8 +5439,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.649421, 48.50771],
-          [11.65014, 48.507053]
+          [11.649301, 48.507819],
+          [11.650539, 48.506688]
         ]
       }
     },
@@ -5793,7 +5459,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.65014, 48.507053],
+          [11.650539, 48.506688],
           [11.650559, 48.50667],
           [11.650775, 48.506442],
           [11.650942, 48.5061],
@@ -6094,9 +5760,7 @@
           [11.588744, 48.503781],
           [11.587684, 48.503503],
           [11.587618, 48.503472],
-          [11.587282, 48.503211],
-          [11.587269, 48.503197],
-          [11.587269, 48.503129]
+          [11.587288, 48.503216]
         ]
       }
     },
@@ -6114,7 +5778,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.587269, 48.503129],
+          [11.587288, 48.503216],
+          [11.587282, 48.503211],
+          [11.587269, 48.503197],
           [11.587271, 48.502583]
         ]
       }
@@ -6684,7 +6350,7 @@
         "belag": "natur",
         "fromPlan": 0.0,
         "osmWays": [78606157, 1582676472],
-        "flur": "weg"
+        "flur": "kein"
       },
       "geometry": {
         "type": "LineString",
@@ -6692,26 +6358,6 @@
           [11.621453, 48.482657],
           [11.621423, 48.482688],
           [11.621394, 48.482779],
-          [11.621522, 48.482943]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "aufham-ampertshausen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "radweg",
-        "belag": "natur",
-        "fromPlan": 0.0,
-        "osmWays": [78606157, 1582676472],
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.621522, 48.482943],
           [11.621796, 48.483295],
           [11.622335, 48.483918],
           [11.622484, 48.484071],
@@ -6773,8 +6419,48 @@
           [11.620091, 48.469298],
           [11.620471, 48.469356],
           [11.620529, 48.469375],
+          [11.62067, 48.469445]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "aufham-saulhof",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "ortsstrasse",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [24012572],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.62067, 48.469445],
           [11.620848, 48.469534],
           [11.620893, 48.469567],
+          [11.620921, 48.469598]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "aufham-saulhof",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "ortsstrasse",
+        "belag": "schotter",
+        "fromPlan": 0.0,
+        "osmWays": [24012572],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.620921, 48.469598],
           [11.621073, 48.469764],
           [11.621238, 48.470004]
         ]
@@ -6796,9 +6482,7 @@
         "type": "LineString",
         "coordinates": [
           [11.621238, 48.470004],
-          [11.621436, 48.470249],
-          [11.621611, 48.470402],
-          [11.621846, 48.470538]
+          [11.621431, 48.470243]
         ]
       }
     },
@@ -6817,11 +6501,12 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.621846, 48.470538],
+          [11.621431, 48.470243],
+          [11.621436, 48.470249],
+          [11.621611, 48.470402],
           [11.622075, 48.47067],
           [11.622415, 48.470842],
-          [11.623442, 48.471187],
-          [11.623901, 48.47131]
+          [11.623338, 48.471152]
         ]
       }
     },
@@ -6840,9 +6525,50 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.623901, 48.47131],
+          [11.623338, 48.471152],
+          [11.623442, 48.471187],
           [11.624075, 48.471356],
+          [11.62477, 48.471565]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "aufham-saulhof",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "unbekannt",
+        "fromPlan": 0.0,
+        "osmWays": [39700356],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.62477, 48.471565],
           [11.625185, 48.471689],
+          [11.625259, 48.471721]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "aufham-saulhof",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "unbekannt",
+        "fromPlan": 0.0,
+        "osmWays": [39700356],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.625259, 48.471721],
           [11.625767, 48.471936],
           [11.626021, 48.471997],
           [11.627593, 48.47229],
@@ -7118,7 +6844,7 @@
           [11.657311, 48.502867],
           [11.6566, 48.502999],
           [11.656285, 48.503148],
-          [11.65572, 48.503515]
+          [11.655962, 48.503358]
         ]
       }
     },
@@ -7137,8 +6863,8 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.65572, 48.503515],
-          [11.655186, 48.503861]
+          [11.655962, 48.503358],
+          [11.655235, 48.503829]
         ]
       }
     },
@@ -7157,7 +6883,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.655186, 48.503861],
+          [11.655235, 48.503829],
           [11.654878, 48.504061],
           [11.654743, 48.504161],
           [11.654698, 48.504254],
@@ -7632,49 +7358,9 @@
         "type": "LineString",
         "coordinates": [
           [11.5883, 48.51862],
-          [11.58839, 48.518401]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "frickendorf-schmiedhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.64,
-        "osmWays": [379563179],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.58839, 48.518401],
           [11.588604, 48.517883],
           [11.588557, 48.517217],
           [11.588634, 48.517082],
-          [11.588637, 48.51707]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "frickendorf-schmiedhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.64,
-        "osmWays": [379563179],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.588637, 48.51707],
           [11.588666, 48.516957],
           [11.588677, 48.516947],
           [11.588757, 48.516957]
@@ -7759,32 +7445,12 @@
         "belag": "unbekannt",
         "fromPlan": 0.01,
         "osmWays": [51191007, 631671471],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.651928, 48.515374],
-          [11.651809, 48.515212]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "suenzhausen-holzhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.01,
-        "osmWays": [51191007, 631671471],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.651809, 48.515212],
+          [11.651928, 48.515374],
           [11.651784, 48.515177],
           [11.651144, 48.514508],
           [11.651058, 48.514466],
@@ -7793,7 +7459,7 @@
           [11.649978, 48.514623],
           [11.649954, 48.514621],
           [11.649849, 48.514564],
-          [11.649667, 48.514258]
+          [11.649742, 48.514384]
         ]
       }
     },
@@ -7812,9 +7478,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.649667, 48.514258],
+          [11.649742, 48.514384],
           [11.649171, 48.513427],
-          [11.649003, 48.513337]
+          [11.649056, 48.513365]
         ]
       }
     },
@@ -7833,7 +7499,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.649003, 48.513337],
+          [11.649056, 48.513365],
           [11.648474, 48.513054]
         ]
       }
@@ -7853,8 +7519,7 @@
         "type": "LineString",
         "coordinates": [
           [11.648474, 48.513054],
-          [11.648418, 48.512832],
-          [11.648409, 48.512787]
+          [11.648429, 48.512876]
         ]
       }
     },
@@ -7872,10 +7537,12 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648409, 48.512787],
+          [11.648429, 48.512876],
+          [11.648418, 48.512832],
           [11.648112, 48.511221],
           [11.648272, 48.510508],
-          [11.648318, 48.510372]
+          [11.648406, 48.510112],
+          [11.648585, 48.509815]
         ]
       }
     },
@@ -7893,11 +7560,10 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648318, 48.510372],
-          [11.648406, 48.510112],
+          [11.648585, 48.509815],
           [11.648684, 48.509652],
           [11.648891, 48.509368],
-          [11.648928, 48.509093]
+          [11.648922, 48.509138]
         ]
       }
     },
@@ -7915,7 +7581,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648928, 48.509093],
+          [11.648922, 48.509138],
           [11.648958, 48.508868]
         ]
       }
@@ -7937,7 +7603,7 @@
         "coordinates": [
           [11.649282, 48.50888],
           [11.648415, 48.508849],
-          [11.648417, 48.508837]
+          [11.648423, 48.508792]
         ]
       }
     },
@@ -7956,72 +7622,32 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.648417, 48.508837],
+          [11.648423, 48.508792],
           [11.648427, 48.50876],
-          [11.648526, 48.508577]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "suenzhausen-holzhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [644404039, 766577241, 766577242],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.648526, 48.508577],
           [11.648583, 48.508472],
-          [11.649687, 48.507464]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "suenzhausen-holzhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [644404039, 766577241, 766577242],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.649687, 48.507464],
           [11.649984, 48.507192],
-          [11.650213, 48.50699]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "suenzhausen-holzhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [644404039, 766577241, 766577242],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.650213, 48.50699],
           [11.65031, 48.506905],
           [11.65065, 48.50658],
+          [11.650714, 48.506505]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "suenzhausen-holzhausen",
+        "plan": "lang",
+        "ausbau": "voll",
+        "weg": "feldweg",
+        "belag": "unbekannt",
+        "fromPlan": 0.0,
+        "osmWays": [644404039, 766577241, 766577242],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.650714, 48.506505],
           [11.650797, 48.506408],
           [11.650949, 48.506082]
         ]
@@ -8756,7 +8382,7 @@
           [11.620972, 48.486353],
           [11.621035, 48.486326],
           [11.621139, 48.486243],
-          [11.62127, 48.486171]
+          [11.621218, 48.4862]
         ]
       }
     },
@@ -8775,10 +8401,10 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.62127, 48.486171],
+          [11.621218, 48.4862],
           [11.621374, 48.486114],
           [11.622225, 48.485987],
-          [11.622491, 48.486138]
+          [11.6228, 48.486314]
         ]
       }
     },
@@ -8797,7 +8423,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.622491, 48.486138],
+          [11.6228, 48.486314],
           [11.622839, 48.486336],
           [11.623789, 48.487153],
           [11.623802, 48.487191],
@@ -8813,62 +8439,23 @@
         "plan": "lang",
         "ausbau": "voll",
         "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [411425245],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.613797, 48.47875],
-          [11.61404, 48.478668]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "aufham-guentersdorf-dietersdorf-ampertshausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [411425245],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.61404, 48.478668],
-          [11.614407, 48.478543],
-          [11.614442, 48.478516],
-          [11.614508, 48.478362],
-          [11.614617, 48.478353]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "aufham-guentersdorf-dietersdorf-ampertshausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
         "belag": "schotter",
         "fromPlan": 0.0,
-        "osmWays": [1582704321],
+        "osmWays": [411425245, 1582704321],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.614617, 48.478353],
-          [11.614661, 48.478349],
-          [11.615472, 48.47837],
-          [11.61573, 48.478397],
-          [11.616376, 48.478512],
+          [11.613794, 48.478751],
+          [11.614422, 48.478537],
+          [11.614439, 48.478523],
+          [11.614505, 48.478385],
+          [11.614504, 48.478367],
+          [11.614658, 48.478349],
+          [11.615473, 48.478371],
+          [11.615714, 48.478396],
+          [11.616371, 48.478511],
           [11.617201, 48.478685]
         ]
       }
@@ -9062,87 +8649,7 @@
           [11.610046, 48.516577],
           [11.61015, 48.516512],
           [11.610195, 48.516473],
-          [11.610292, 48.516364]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "bestand-weg",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.610292, 48.516364],
-          [11.610429, 48.516209]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "bestand-weg",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.610429, 48.516209],
-          [11.610636, 48.515975]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "bestand-weg",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.610636, 48.515975],
           [11.61085, 48.515734],
-          [11.611249, 48.515381]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "bestand-weg",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315574, 44315575],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.611249, 48.515381],
           [11.611698, 48.514984],
           [11.61189, 48.514948],
           [11.612103, 48.514974],
@@ -9172,48 +8679,8 @@
           [11.615132, 48.515637],
           [11.615211, 48.515659],
           [11.615463, 48.515718],
-          [11.615882, 48.515761]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315575, 44315580],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.615882, 48.515761],
           [11.615953, 48.515768],
           [11.616085, 48.515728],
-          [11.616125, 48.515703]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "schmiedhausen-hirschhausen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [44315575, 44315580],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.616125, 48.515703],
           [11.616173, 48.515672],
           [11.616454, 48.515068],
           [11.616489, 48.515028],
@@ -9431,47 +8898,7 @@
           [11.616904, 48.498773],
           [11.616635, 48.499235],
           [11.616519, 48.499628],
-          [11.616499, 48.499741]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "dietersdorf-schweitenkirchen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "natur",
-        "fromPlan": 0.0,
-        "osmWays": [28667004, 1582649216],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.616499, 48.499741],
           [11.616461, 48.49996],
-          [11.616454, 48.499962]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "dietersdorf-schweitenkirchen",
-        "plan": "lang",
-        "ausbau": "voll",
-        "weg": "feldweg",
-        "belag": "natur",
-        "fromPlan": 0.0,
-        "osmWays": [28667004, 1582649216],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.616454, 48.499962],
           [11.61569, 48.500149]
         ]
       }

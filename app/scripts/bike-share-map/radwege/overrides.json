@@ -349,6 +349,20 @@
         [619.5, 937.3],
         [534.0, 826.8]
       ]
+    ],
+    "hinweis": [
+      {
+        "at": [11.6148, 48.5036],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+      },
+      {
+        "at": [11.614517, 48.502605],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+      },
+      {
+        "at": [11.6143, 48.5015],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+      }
     ]
   },
   "lang|hirschhausen-reisdorf-schweitenkirchen": {
@@ -497,6 +511,20 @@
       {
         "at": [11.614, 48.50211],
         "note": "Am Luftbild (DOP20) geprüft, 18.11.2026: am Feldrand entlang der Zeichnung ist kein Weg zu sehen; der vorhandene Weg führt am Hof Thomashecke vorbei."
+      }
+    ],
+    "hinweis": [
+      {
+        "at": [11.6148, 48.5036],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+      },
+      {
+        "at": [11.614517, 48.502605],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
+      },
+      {
+        "at": [11.6143, 48.5015],
+        "text": "Der Plan zeichnet den Weg östlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurstück, die Erläuterung spricht von Gemeindewegen. Westlich des Hofs verläuft ein schmales Wegeflurstück zwischen den beiden Straßen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor."
       }
     ]
   },

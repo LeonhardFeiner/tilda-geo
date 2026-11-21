@@ -1,21 +1,25 @@
 """Land check of the matched lines: does each stretch run on a path or road plot?
 
 For every 5 m of lines.geojson:
-- `weg`: on a road (ALKIS Tatsächliche Nutzung Straßenverkehr/Platz within 4 m) or in a narrow
-  parcel (two neighbouring parcel boundaries 1.5-25 m apart across the line, read from the ALKIS
-  Parzellarkarte, within 10 m; OSM ways often lie a few metres beside the cadastre): typically a
-  Wegeflurstück;
+- `weg`: on a road (ALKIS Tatsächliche Nutzung Straßenverkehr/Platz within 4 m) or by a narrow
+  parcel, typically a Wegeflurstück, read from the ALKIS Parzellarkarte in two ways: two
+  neighbouring parcel boundaries 1.5-20 m apart on the cross-section through the point (within
+  10 m), or a parcel area that is at most 20 m wide and at least six times as long (within 6 m;
+  this also catches parcels where the cross-section misses one boundary). OSM ways often lie a few
+  metres beside the cadastre, hence the margins;
 - `genutzt`: not that, but a Tatsächliche Nutzung area of type Weg within 6 m: a path in use that
   has no plot of its own (it crosses a field or forest plot). TN Weg alone is not taken as a path
   plot: TN records the use, also inside larger plots;
 - `kein`: neither.
-Runs shorter than 20 m join their neighbours. Each line is split where the class changes and
+Each point takes the majority class of the points within 30 m along the line (single points
+are mostly noise), then runs shorter than 20 m join their neighbours. Each line is split where the class changes and
 gets it as `flur` (the page's "Grundstück" view); everything else stays as it was.
 
 Sources (CC BY 4.0, Bayerische Vermessungsverwaltung): TN shapefile of the Landkreis
 (cache/alkis/tn_<Kreis>/Nutzung.*, from https://download1.bayernwolke.de/a/tn/lkr/tn_09186.zip
 for Pfaffenhofen and …/tn_09178.zip for Freising) and the
-Parzellarkarte WMS (outline layer), cached as 500 m tiles in cache/alkis/parz/.
+Parzellarkarte WMS (outline layer), cached as 500 m tiles in cache/alkis/parz/; the distance to the
+nearest narrow parcel area per tile in cache/alkis/stripdist/.
 
 usage: flur.py cache_dir lines.geojson out.geojson  (run.sh writes lines.geojson in place)
 """
@@ -24,6 +28,7 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 import shapefile
 from PIL import Image
+from scipy import ndimage
 from pyproj import Transformer
 from shapely.geometry import LineString, shape, box
 from shapely.strtree import STRtree
@@ -34,8 +39,9 @@ to_utm = Transformer.from_crs(4326, 25832, always_xy=True).transform
 to_wgs = Transformer.from_crs(25832, 4326, always_xy=True).transform
 STEP, TILE, RES = 5.0, 500, 0.25  # sample spacing m, tile size m, raster m/px
 WAY_USE = {'Weg', 'Straßenverkehr', 'Platz'}
-TOL_ROAD, TOL_WEG, TOL_STRIP = 4.0, 6.0, 10.0  # m; OSM ways lie a few metres beside the cadastre
-STRIP_MIN, STRIP_MAX = 1.5, 25.0  # width of a path or road plot, m
+TOL_ROAD, TOL_WEG, TOL_STRIP, TOL_AREA = 4.0, 6.0, 10.0, 6.0  # m; OSM ways lie beside the cadastre
+STRIP_MIN, STRIP_MAX = 1.5, 20.0  # width of a path or road plot, m
+SMOOTH = 6  # majority over +-6 samples (30 m)
 
 feats = json.load(open(lines_path))['features']
 geoms = [LineString([to_utm(*c) for c in f['geometry']['coordinates']]) for f in feats]
@@ -92,6 +98,53 @@ def boundary(x, y):
     return 0 <= px < N and 0 <= py < N and bool(a[py, px])
 
 
+# narrow parcel areas: label the areas between boundary lines (0.5 m pixels, the tile with its
+# neighbours so parcels are not cut at the tile edge), keep those at most STRIP_MAX wide (twice
+# the largest distance to their edge) and at least six times as long; per tile the distance to
+# the nearest such area, in quarter metres (uint8, capped at 63.75 m)
+sdir = os.path.join(work, 'alkis', 'stripdist'); os.makedirs(sdir, exist_ok=True)
+F = 2; n = N // F; PX = RES * F
+masks = {}
+
+
+def outline(t):
+    if t not in masks:
+        fn = os.path.join(pdir, f'{t[0]}_{t[1]}.png')
+        masks[t] = (np.array(Image.open(fn).convert('RGBA'))[:, :, 3] > 40).reshape(n, F, n, F).max(axis=(1, 3)) if os.path.exists(fn) else None
+    return masks[t]
+
+
+for t in sorted(need):
+    fn = os.path.join(sdir, f'{t[0]}_{t[1]}.png')
+    if os.path.exists(fn) and os.path.getmtime(fn) >= os.path.getmtime(os.path.join(pdir, f'{t[0]}_{t[1]}.png')): continue
+    big = np.zeros((3 * n, 3 * n), bool); known = np.zeros((3 * n, 3 * n), bool)
+    for dx in (-1, 0, 1):
+        for dy in (-1, 0, 1):
+            m = outline((t[0] + dx, t[1] + dy))
+            r0, c0 = (1 - dy) * n, (dx + 1) * n  # image rows run north to south
+            if m is not None: big[r0:r0 + n, c0:c0 + n] = m; known[r0:r0 + n, c0:c0 + n] = True
+    lab, k = ndimage.label(~big)
+    idx = np.arange(1, k + 1)
+    w = 2 * ndimage.maximum(ndimage.distance_transform_edt(~big) * PX, lab, idx)
+    area = ndimage.sum(np.ones_like(lab), lab, idx) * PX * PX
+    unknown = ndimage.maximum((~known).astype(np.uint8), lab, idx)
+    narrow = np.zeros(k + 1, bool)
+    narrow[1:] = (w >= 1) & (w <= STRIP_MAX) & (area / np.maximum(w, 1e-6) >= 6 * w) & (unknown == 0)
+    d = ndimage.distance_transform_edt(~narrow[lab]) * PX
+    Image.fromarray(np.clip(d[n:2 * n, n:2 * n] * 4, 0, 255).astype(np.uint8)).save(fn)
+sdist = {}
+
+
+def area_strip(x, y):
+    t = (int(x // TILE), int(y // TILE))
+    if t not in sdist:
+        fn = os.path.join(sdir, f'{t[0]}_{t[1]}.png')
+        sdist[t] = np.array(Image.open(fn)) if os.path.exists(fn) else None
+    a = sdist[t]
+    if a is None: return 99.0
+    return a[min(n - 1, int(((t[1] + 1) * TILE - y) / PX)), min(n - 1, int((x - t[0] * TILE) / PX))] / 4
+
+
 def strips(p, d):
     """Narrow parcels across the line: pairs of neighbouring parcel boundaries on the
     perpendicular through p, as (near edge, far edge) in signed metres (OSM ways often lie a few
@@ -114,10 +167,12 @@ for f, g in zip(feats, geoms):
         a, b = g.interpolate(max(0, s - 3)), g.interpolate(min(g.length, s + 3))
         L = math.hypot(b.x - a.x, b.y - a.y) or 1; d = ((b.x - a.x) / L, (b.y - a.y) / L)
         near = [(ways[i].distance(p), kinds[i]) for i in tree.query(p.buffer(TOL_WEG))]
-        if any(x < TOL_ROAD and t != 'Weg' for x, t in near) or any(a - TOL_STRIP <= 0 <= b + TOL_STRIP for a, b in strips(p, d)):
+        if any(x < TOL_ROAD and t != 'Weg' for x, t in near) or area_strip(p.x, p.y) <= TOL_AREA \
+                or any(a - TOL_STRIP <= 0 <= b + TOL_STRIP for a, b in strips(p, d)):
             cls.append('weg')
         else:
             cls.append('genutzt' if any(x < TOL_WEG and t == 'Weg' for x, t in near) else 'kein')
+    cls = [collections.Counter(cls[max(0, k - SMOOTH):k + SMOOTH + 1]).most_common(1)[0][0] for k in range(len(cls))]
     # runs; short ones join the longer neighbour
     runs = []
     for k, c in enumerate(cls):

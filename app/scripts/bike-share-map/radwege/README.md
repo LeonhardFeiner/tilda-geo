@@ -70,7 +70,7 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    Edits newer than the extract can go in before the next one: fetch the changed ways from
    Overpass (`way(bbox)[highway](newer:"<DB OSM date>"); out meta geom;`), apply them with
    `pipeline/patch_osm.py` to a copy of `cache/osm-area.json` and re-run from `assign.py`
-   (2026-11-21: 50 ways surveyed that day). The next full run replaces the patch.
+   (2026-11-21: 52 ways surveyed that day, Overpass state 13:30 UTC). The next full run replaces the patch.
    It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
    which the page can show on request ("Lage wie im Plan gezeichnet").
 5. `landkreis.py`: Radvorrangrouten (orange) and Basisradnetz (light green) of plan 5/2 →
