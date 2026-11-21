@@ -355,16 +355,19 @@ SIGMA = 25.0    # m; emission cost (d / SIGMA)^2
 ANGLE = 4.0     # extra emission cost of a way running across the drawn line
 NONE_COST = (70 / SIGMA) ** 2  # "no way" beats a way farther than ~70 m (with the angle term, less)
 
-def match(utm, built=False, onto=None):
+def match(utm, built=False, onto=None, blocked=()):
     """Pieces [(weg, belag, coords, fromPlan, osm way ids)] of one plan line: a hidden Markov
     model over the OSM ways near each sample point (Viterbi). Staying on a way is free, switching
     costs a little plus the square of the jump between the two projections, so the match follows
-    connected ways and does not zigzag between parallel ones; "no way" wins beyond CORR."""
+    connected ways and does not zigzag between parallel ones; "no way" wins beyond CORR.
+    Samples within 12 m of a `blocked` line (override ohneWeg) take no way: the drawing stays."""
     line = LineString(utm)
     n = max(2, int(line.length / STEP) + 1)
     pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
     cands = []  # per point: list of (way index or -1, projected (x, y), emission cost)
+    no_way = {k for k, q in enumerate(pts) if any(b.distance(q) < 12 for b in blocked)}
     for k, q in enumerate(pts):
+        if k in no_way: cands.append([(-1, (q.x, q.y), 0.0, 0.0)]); continue
         a, b = pts[max(0, k - 2)], pts[min(n - 1, k + 2)]
         dx, dy = b.x - a.x, b.y - a.y; dn = math.hypot(dx, dy) or 1.0
         ws = {int(wid[j]) for j in wtree.query_ball_point((q.x, q.y), 200 if onto else CORR_BUILT if built else CORR)} - NO_BIKES
@@ -425,6 +428,7 @@ def match(utm, built=False, onto=None):
     prev = None  # (way index, position along it) of the last sample on a way
     for k, wi in enumerate(state):
         q = pts[k]
+        if k in no_way: wi = -1
         if wi >= 0:
             ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t)
             xy = (pr.x, pr.y) if pr.distance(q) <= CORR * 1.5 else None
@@ -696,7 +700,11 @@ geo = []
 built_ids = {r['id'] for r in ROUTES if r.get('built')}
 for f in final:
     if f.get('skip_match'): continue
-    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto')):
+    # override ohneWeg: stretches of the drawing where the nearby OSM way is not the one meant
+    # (e.g. the plan follows a path parcel without a way, the match would take a forest track)
+    blocked = [LineString([to_utm.transform(*q) for q in seg])
+               for seg in OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('ohneWeg', {}).get('lines', [])]
+    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto'), blocked=blocked):
         ausbau = f.get('force_ausbau') or f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße

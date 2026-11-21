@@ -38,7 +38,7 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    named places; `overrides.json` pins stops where names are not enough (branching routes, ends at
    a road or the Landkreisgrenze, the unlabelled PAF 25 piece); its `adopt` points give a
    leftover piece to a route; `redraw` (cut at `from`, continue along `via`, with the source in
-   `why`) fixes an end the plan only sketches; `replace` (`coords`, `why`) swaps the whole
+   `why`) fixes an end the plan only sketches; `ohneWeg` (`lines`, `why`) keeps the drawing where the nearest OSM way is not the one meant (the match takes no way within 12 m of those lines, e.g. Oberthann: a path parcel at the forest edge instead of the forest track); `replace` (`coords`, `why`) swaps the whole
    drawing of a built route for its real course, e.g. the Waldroute = OSM relation 16448191 plus
    Liebigstraße, also beyond the Gemeinde (verify.py then lists it as OFF, as intended);
    `line` (`coords`, optional `onto` = a road ref the match is limited to) adds a route the plan

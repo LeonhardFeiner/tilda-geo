@@ -1,15 +1,1 @@
-{
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen-alternative",
-        "plan": "kurz",
-        "grund": "kurve",
-        "text": "Die zugeordnete Linie macht hier eine Kurve oder Ecke, die Zeichnung im Plan verläuft gerade – vermutlich ein anderer Weg gemeint."
-      },
-      "geometry": { "type": "Point", "coordinates": [11.586112, 48.502607] }
-    }
-  ]
-}
+{ "type": "FeatureCollection", "features": [] }

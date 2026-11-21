@@ -1063,6 +1063,7 @@
         "weg": "kein",
         "belag": "kein",
         "fromPlan": 0.95,
+        "hinweis": "Der Plan f\u00fchrt den Weg hier \u00fcber ein schmales Wegeflurst\u00fcck am Westrand des Feldes. Es wird als Acker bewirtschaftet; im Luftbild ist kein Weg zu sehen. Ein Weg m\u00fcsste erst angelegt werden.",
         "flur": "weg"
       },
       "geometry": {
@@ -5808,61 +5809,23 @@
         "ausbau": "kein-weg",
         "weg": "kein",
         "belag": "kein",
-        "fromPlan": 0.98,
+        "fromPlan": 0.99,
+        "hinweis": "Der Plan f\u00fchrt den Weg hier gerade \u00fcber ein schmales Wegeflurst\u00fcck am Waldrand. Einen Weg gibt es dort in OpenStreetMap nicht; der Waldweg s\u00fcdlich davon ist nicht gemeint.",
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.588892, 48.504073],
-          [11.588744, 48.503781],
-          [11.587684, 48.503503],
-          [11.587618, 48.503472],
-          [11.587288, 48.503216]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen-alternative",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.98,
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.587288, 48.503216],
-          [11.587282, 48.503211],
-          [11.587269, 48.503197],
-          [11.587271, 48.502583]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen-alternative",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "feldweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [1243619616],
-        "flur": "genutzt"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.587271, 48.502583],
-          [11.587105, 48.502518],
-          [11.586956, 48.502507],
-          [11.586806, 48.502534],
-          [11.586459, 48.502651]
+          [11.588893, 48.504077],
+          [11.588743, 48.503788],
+          [11.588726, 48.503776],
+          [11.587668, 48.503498],
+          [11.587607, 48.503463],
+          [11.58655, 48.502644],
+          [11.586508, 48.502622],
+          [11.586486, 48.502624],
+          [11.586328, 48.502693],
+          [11.585979, 48.502555]
         ]
       }
     },
@@ -5881,14 +5844,13 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.586459, 48.502651],
-          [11.58633, 48.502694],
-          [11.585658, 48.502425],
-          [11.584975, 48.502057],
-          [11.584864, 48.501975],
-          [11.584817, 48.501921],
-          [11.584577, 48.501501],
-          [11.58443, 48.501308]
+          [11.585979, 48.502555],
+          [11.585686, 48.502439],
+          [11.584944, 48.50204],
+          [11.5849, 48.502006],
+          [11.584823, 48.501932],
+          [11.584581, 48.501508],
+          [11.584428, 48.501306]
         ]
       }
     },
