@@ -419,7 +419,8 @@ describe.skipIf(!existsSync(dataFile))('radwege page (jsdom)', () => {
     expect(detail.textContent).toContain('Schritte seit dem Konzept')
     const summary = detail.querySelector('.summary')!.textContent!
     expect(summary).toContain('2029')
-    expect(summary).toMatch(/Letzter dokumentierter Schritt: 22\.01\.2026 \(Grunderwerb\)/)
+    expect(summary).toMatch(/Letzter dokumentierter Schritt: 13\.04\.2026 \(Haushalt\)/)
+    expect(summary).toContain('Erster: 03.02.2016 (Beschluss)')
     expect(summary).toContain('Grunderwerb: Gemeinde')
     // keyboard focus moves into the details and back
     expect(p.window.document.activeElement).toBe(detail.querySelector('h2'))
