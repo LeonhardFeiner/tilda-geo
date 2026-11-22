@@ -524,7 +524,18 @@
       "ref": "St 2045",
       "max": 120,
       "why": "Die Zeichnung quert die A9 rund 70–90 m südlich der St 2045, wo es keine Unterführung gibt; die einzige Unterführung ist die der St 2045 (Hinweis Ortskenntnis). Der Weg ist daher direkt an der St 2045 gemeint; die Zeichnung liegt vermutlich wegen der Autobahnauffahrt südlich davon."
-    }
+    },
+    "andereSeite": {
+      "at": [[11.5955, 48.5046]],
+      "radius": 350,
+      "why": "Der Plan zeichnet den Weg zwischen Giegenhausen und der Robert-Koch-Straße südlich der St 2045 als Vollausbau. Auf der Nordseite liegt seit 2015 ein Geh- und Radweg; gemeint ist vermutlich dieser (die Pläne sind schematisch, auch bei Preinersdorf liegt die Zeichnung auf der anderen Straßenseite als der Radweg). Zugeordnet ist der vorhandene Weg (Luftbild und OpenStreetMap, 22.11.2026)."
+    },
+    "hinweis": [
+      {
+        "at": [11.5955, 48.5046],
+        "text": "Der Plan zeichnet den Weg hier südlich der St 2045 als Vollausbau; vorhanden ist der Geh- und Radweg auf der Nordseite (gebaut 2015). Die Karte ordnet die Linie diesem Weg zu und zählt das Stück als vorhanden. Dass das Konzept einen zweiten Weg auf der Südseite meint, ist unwahrscheinlich, aber nicht ausgeschlossen."
+      }
+    ]
   },
   "kurz|weikenhausen-gundelshausen": {
     "geprueft": [

@@ -8787,7 +8787,7 @@
         "weg": "staatsstrasse",
         "belag": "asphalt",
         "fromPlan": 0.0,
-        "osmWays": [4356116, 259740243, 378310928, 590159219, 590159222],
+        "osmWays": [4356116, 590159219, 590159222],
         "seite": "rechts",
         "richtung": "s\u00fcdlich",
         "strasse": "St 2045",
@@ -8796,21 +8796,49 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.587014, 48.505634],
-          [11.587484, 48.50515],
-          [11.587569, 48.505079],
-          [11.587764, 48.504954],
-          [11.588058, 48.504826],
-          [11.588306, 48.504753],
-          [11.588565, 48.504701],
-          [11.58878, 48.504681],
-          [11.589186, 48.504662],
-          [11.592165, 48.504594],
-          [11.595413, 48.504491],
-          [11.596901, 48.504428],
-          [11.598308, 48.504378],
-          [11.598796, 48.50437],
-          [11.599337, 48.50439]
+          [11.587015, 48.505633],
+          [11.587485, 48.505148],
+          [11.587571, 48.505077],
+          [11.587767, 48.504953],
+          [11.588063, 48.504825],
+          [11.588362, 48.504739],
+          [11.588545, 48.504704],
+          [11.58876, 48.504682],
+          [11.589166, 48.504663],
+          [11.590904, 48.504625],
+          [11.592123, 48.504676]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "lang",
+        "ausbau": "bestand",
+        "weg": "radweg",
+        "belag": "asphalt",
+        "fromPlan": 0.0,
+        "andereSeite": true,
+        "osmWays": [48057070],
+        "hinweis": "Der Plan zeichnet den Weg hier s\u00fcdlich der St 2045 als Vollausbau; vorhanden ist der Geh- und Radweg auf der Nordseite (gebaut 2015). Die Karte ordnet die Linie diesem Weg zu und z\u00e4hlt das St\u00fcck als vorhanden. Dass das Konzept einen zweiten Weg auf der S\u00fcdseite meint, ist unwahrscheinlich, aber nicht ausgeschlossen.",
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.592123, 48.504676],
+          [11.593138, 48.504649],
+          [11.593812, 48.504612],
+          [11.594082, 48.504619],
+          [11.594959, 48.504564],
+          [11.596782, 48.504487],
+          [11.597323, 48.504478],
+          [11.597864, 48.504459],
+          [11.598744, 48.504462],
+          [11.599281, 48.504474],
+          [11.599376, 48.504463],
+          [11.599413, 48.504435]
         ]
       }
     },

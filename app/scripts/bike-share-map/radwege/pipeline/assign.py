@@ -562,8 +562,9 @@ def path_along(q, near, dmax=30.0):
 
 
 def beside_road(utm, to_path=False):
-    """to_path: where an existing cycle path runs along that road (within 30 m of it), move the
-    drawing onto the path instead of the road (the Landkreis network includes its existing paths)."""
+    """to_path (True, or a test on a point): where an existing cycle path runs along that road
+    (within 30 m of it), move the drawing onto the path instead of the road (the Landkreis network
+    includes its existing paths; override andereSeite for a route drawn on the wrong side)."""
     line = LineString(utm)
     n = max(2, int(line.length // 10) + 1)
     pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
@@ -583,7 +584,7 @@ def beside_road(utm, to_path=False):
                 other = min(other, d)
         # an existing path right on the drawing is what the plan means
         best = best if best and other > min(8, best[0]) else None
-        if best and to_path:
+        if best and to_path and (to_path is True or to_path(q)):
             rw = path_along(q, best[1])
             if rw is not None: best = (best[0], rw, best[2])
         hit.append(best)
@@ -596,7 +597,7 @@ def beside_road(utm, to_path=False):
                 for i in range(k, j):
                     ls_ref = hit[k - 1]
                     on_road = nearest_on_ref(pts[i], ls_ref[2])
-                    rw = path_along(pts[i], on_road) if to_path else None
+                    rw = path_along(pts[i], on_road) if to_path and (to_path is True or to_path(pts[i])) else None
                     hit[i] = (ls_ref[0], rw if rw is not None else on_road, ls_ref[2])
     out, k, moved = [], 0, 0
     while k < n:
@@ -644,14 +645,30 @@ for bf in OVERRIDES.get('kurz|bestand', {}).get('befund', []):
                           force_ausbau=bf['ausbau'], hinweis=bf.get('hinweis')))
 
 built_set = {r['id'] for r in ROUTES if r.get('built')}
+
+
+def other_side(f):
+    """Override andereSeite: where the plan draws a new path on the side of the road opposite an
+    existing cycle path, that path is meant (the plans are schematic). A test on a UTM point, or None."""
+    ov = OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('andereSeite')
+    if not ov: return None
+    at = [Point(to_utm.transform(*q)) for q in ov['at']]
+    return lambda q: any(q.distance(a) < ov.get('radius', 300) for a in at)
+
+
 moved = 0
 for f in final:
     if 'utm_matched' in f or f.get('not_drawn') or f['routeId'] in built_set: continue
     ov = OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('beside')
     if ov:
-        f['utm_beside'] = onto_ref(f['utm'], ov['ref'], ov['max']); continue
+        f['utm_beside'] = onto_ref(f['utm'], ov['ref'], ov['max'])
+        near_other = other_side(f)
+        if near_other:  # onto the existing path along that road instead
+            f['utm_beside'] = [(lambda rw: (rw.x, rw.y) if rw is not None else c)(path_along(Point(c), Point(c)))
+                               if near_other(Point(c)) else c for c in f['utm_beside']]
+        continue
     if f['ausbau'] not in ('voll', 'freigabe'): continue
-    new, m = beside_road(f['utm'])
+    new, m = beside_road(f['utm'], to_path=other_side(f) or False)
     if m: f['utm_beside'] = new; moved += m
 print('drawing moved onto the road beside it:', round(moved / 1000, 1), 'km')
 
@@ -758,8 +775,13 @@ for f in final:
         coords, spur = drop_spurs(coords)
         if spur: spurs.append((f['routeId'], f['plan'], round(spur), to_wgs.transform(*coords[0])))
         if len(coords) < 2: continue
+        near_other = other_side(f)
+        andere = bool(near_other and weg == 'radweg' and ausbau in ('voll', 'kein-weg', 'freigabe')
+                      and near_other(LineString(coords).interpolate(0.5, normalized=True)))
+        if andere: ausbau = 'bestand'  # the existing path on the other side of the road
         ll = [[round(v, 6) for v in to_wgs.transform(*c)] for c in coords]
         props = dict(routeId=f['routeId'], plan=f['plan'], ausbau=ausbau, weg=weg, belag=belag, fromPlan=round(fromPlan, 2))
+        if andere: props['andereSeite'] = True
         if wids: props['osmWays'] = wids
         if f.get('hinweis'): props['hinweis'] = f['hinweis']
         # a new path beside a road: keep the side the plan draws it on (not for redrawn lines)

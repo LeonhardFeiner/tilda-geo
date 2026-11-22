@@ -128,7 +128,12 @@ follows the road rather than side tracks; the side comes from the original drawi
 Stretches where a match runs out and back along itself are cut out (`drop_spurs`): with the side
 offset they would show as a path on both sides of the road. Override `beside` (`ref`, `max`,
 `why`) moves a drawing onto one road where the automatic rule does not apply (e.g. Güntersdorf:
-the drawing touches the Blumenstraße only because of its offset from the PAF 6).
+the drawing touches the Blumenstraße only because of its offset from the PAF 6). Override
+`andereSeite` (`at`, `radius`, `why`) marks where the plan draws a new path on the side of the road
+opposite an existing cycle path that is meant (the plans are schematic): within `radius` of `at` the
+drawing goes onto that path, the pieces on it count as `bestand` and carry `andereSeite: true`; add a
+`hinweis` there so the popup says so (Oberthann – Schweitenkirchen at Giegenhausen, 2026-11-22). The
+Landkreis network always prefers an existing path along its road (`beside_road(to_path=True)`).
 Spots checked by someone (aerial images or on site) go into `overrides.json` as `geprueft`
 (`at`, `note`) and drop out of `pruefen.geojson`; with none left, the page hides the Prüfstellen row. `flur.py` (last step) checks the land under each line from open ALKIS data (Tatsächliche Nutzung
 shapefiles per Landkreis, Parzellarkarte WMS; © Bayerische Vermessungsverwaltung, CC BY 4.0): on a

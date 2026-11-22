@@ -122,6 +122,8 @@ const LineProps = z.strictObject({
   seite: z.enum(['links', 'rechts']).optional(),
   richtung: z.enum(['nördlich', 'östlich', 'südlich', 'westlich']).optional(),
   strasse: z.string().optional(),
+  /** The plan draws a new path on the other side of the road; the existing path there is meant (overrides.json "andereSeite"). */
+  andereSeite: z.literal(true).optional(),
   /** What a check on site found here (overrides.json "befund"), shown in the popup. */
   hinweis: z.string().optional(),
   /** Land under the line (pipeline/flur.py, open ALKIS data). */
