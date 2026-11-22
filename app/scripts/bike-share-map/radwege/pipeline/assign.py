@@ -551,7 +551,19 @@ def nearest_on_ref(q, ref):
     return best or q
 
 
-def beside_road(utm):
+def path_along(q, near, dmax=30.0):
+    """Nearest point on an existing cycle path (weg radweg) within dmax of `near`, or None."""
+    best = None
+    for wi in {int(wid[j]) for j in wtree.query_ball_point((near.x, near.y), dmax)}:
+        if way_class(wi)[0] != 'radweg': continue
+        pr = ways[wi][3].interpolate(ways[wi][3].project(q))
+        if pr.distance(near) <= dmax and (best is None or pr.distance(q) < best.distance(q)): best = pr
+    return best
+
+
+def beside_road(utm, to_path=False):
+    """to_path: where an existing cycle path runs along that road (within 30 m of it), move the
+    drawing onto the path instead of the road (the Landkreis network includes its existing paths)."""
     line = LineString(utm)
     n = max(2, int(line.length // 10) + 1)
     pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
@@ -570,7 +582,11 @@ def beside_road(utm):
             else:
                 other = min(other, d)
         # an existing path right on the drawing is what the plan means
-        hit.append(best if best and other > min(8, best[0]) else None)
+        best = best if best and other > min(8, best[0]) else None
+        if best and to_path:
+            rw = path_along(q, best[1])
+            if rw is not None: best = (best[0], rw, best[2])
+        hit.append(best)
     # bridge short gaps (a crossing, a field path touching the drawing) within one road's run
     for k in range(1, n):
         if hit[k] is None and hit[k - 1] is not None:
@@ -579,7 +595,9 @@ def beside_road(utm):
             if j < n and hit[j] is not None and hit[j][2] == hit[k - 1][2]:
                 for i in range(k, j):
                     ls_ref = hit[k - 1]
-                    hit[i] = (ls_ref[0], nearest_on_ref(pts[i], ls_ref[2]), ls_ref[2])
+                    on_road = nearest_on_ref(pts[i], ls_ref[2])
+                    rw = path_along(pts[i], on_road) if to_path else None
+                    hit[i] = (ls_ref[0], rw if rw is not None else on_road, ls_ref[2])
     out, k, moved = [], 0, 0
     while k < n:
         if hit[k] is None: out.append((pts[k].x, pts[k].y)); k += 1; continue
@@ -786,13 +804,14 @@ json.dump(dict(type='FeatureCollection', features=geo), open(sys.argv[5], 'w'), 
 
 # The Landkreis network of plan 5/2 (landkreis.py: Radvorrangrouten, Basisradnetz, as drawn) is
 # matched like a new route: the Landkreis plans it as Geh- und Radwege, mostly beside its roads,
-# so a drawing beside a Kreis-/Staatsstraße goes onto that road first (beside_road). The page
+# so a drawing beside a Kreis-/Staatsstraße goes onto that road first (beside_road), or onto the
+# existing cycle path along it where there is one (to_path). The page
 # colours it by way, surface and land like the routes, as context (not counted).
 LK_PLAN = f'{W}/landkreis-plan.geojson'
 lk_geo, lk_km = [], collections.Counter()
 for f in json.load(open(LK_PLAN))['features'] if os.path.exists(LK_PLAN) else []:
     utm = [to_utm.transform(*q) for q in f['geometry']['coordinates']]
-    utm = beside_road(utm)[0]
+    utm = beside_road(utm, to_path=True)[0]
     for weg, belag, coords, fromPlan, wids in match(utm):
         coords, _ = drop_spurs(coords)
         if len(coords) < 2: continue
