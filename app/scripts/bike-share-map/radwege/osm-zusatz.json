@@ -1,0 +1,14 @@
+{
+  "ways": [
+    {
+      "id": 48043051,
+      "highway": "service_parking_aisle",
+      "surface": "asphalt",
+      "coords": [
+        [11.6066957, 48.5095962],
+        [11.6066974, 48.508656]
+      ],
+      "why": "Fahrgasse des Friedhofsparkplatzs an der Schmiedhauser Straße (highway=service, service=parking_aisle). Sie verbindet die beiden Stücke des Geh- und Radwegs; TILDA zählt Parkplatzgassen nicht zum Straßennetz. Kein Radweg, aber befahrbar (Ortskenntnis, 22.11.2026)."
+    }
+  ]
+}

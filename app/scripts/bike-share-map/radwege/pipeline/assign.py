@@ -21,6 +21,15 @@ from shapely.ops import substring, nearest_points
 W, OSMF, ROUTESF, OUT = sys.argv[1:5]
 G = json.load(open(f'{W}/georef.json'))
 OSM = json.load(open(OSMF))
+# OSM ways TILDA leaves out of its road tables but a route uses (e.g. a car park aisle,
+# service=parking_aisle): ../osm-zusatz.json, with geometry and reason, added before matching
+ZUSATZ = os.path.join(os.path.dirname(ROUTESF), 'osm-zusatz.json')
+ZUSATZ_IDS = set()
+if os.path.exists(ZUSATZ):
+    have = {w['id'] for w in OSM['ways']}
+    ZUSATZ_IDS = {z['id'] for z in json.load(open(ZUSATZ))['ways']}
+    OSM['ways'] += [dict(id=z['id'], tags=dict(highway=z['highway'], name=z.get('name'), surface=z.get('surface'), ref=None), coords=z['coords'])
+                    for z in json.load(open(ZUSATZ))['ways'] if z['id'] not in have]
 ROUTES = json.load(open(ROUTESF))['routes']
 to_utm = Transformer.from_crs(4326, 25832, always_xy=True)
 to_wgs = Transformer.from_crs(25832, 4326, always_xy=True)
@@ -320,7 +329,7 @@ STEP = 5.0      # m, sampling of the plan line
 MIN_RUN = 60    # m; shorter runs of one class join their neighbour (junctions, villages)
 
 BIG = {'primary', 'secondary', 'tertiary', 'primary_link', 'secondary_link', 'tertiary_link', 'trunk', 'trunk_link'}
-TOWN = {'residential', 'unclassified', 'service_road', 'service_alley', 'service_driveway', 'service_uncategorized',
+TOWN = {'residential', 'unclassified', 'service_road', 'service_alley', 'service_driveway', 'service_uncategorized', 'service_parking_aisle',
         'service_emergency_access', 'living_street', 'bicycle_road', 'residential_priority_road', 'pedestrian'}
 PAVED = {'asphalt', 'concrete', 'paved', 'paving_stones', 'sett', 'concrete:plates', 'concrete:lanes', 'chipseal', 'metal'}
 LOOSE = {'gravel', 'fine_gravel', 'compacted', 'pebblestone'}
@@ -552,10 +561,11 @@ def nearest_on_ref(q, ref):
 
 
 def path_along(q, near, dmax=30.0):
-    """Nearest point on an existing cycle path (weg radweg) within dmax of `near`, or None."""
+    """Nearest point on an existing cycle path (weg radweg, or a connecting way from
+    osm-zusatz.json such as a car park aisle between two of its pieces) within dmax of `near`, or None."""
     best = None
     for wi in {int(wid[j]) for j in wtree.query_ball_point((near.x, near.y), dmax)}:
-        if way_class(wi)[0] != 'radweg': continue
+        if way_class(wi)[0] != 'radweg' and ways[wi][0] not in ZUSATZ_IDS: continue
         pr = ways[wi][3].interpolate(ways[wi][3].project(q))
         if pr.distance(near) <= dmax and (best is None or pr.distance(q) < best.distance(q)): best = pr
     return best
@@ -668,7 +678,8 @@ for f in final:
                                if near_other(Point(c)) else c for c in f['utm_beside']]
         continue
     if f['ausbau'] not in ('voll', 'freigabe'): continue
-    new, m = beside_road(f['utm'], to_path=other_side(f) or False)
+    # plan 5/1 (freigabe) releases an existing way: a cycle path along the road is that way
+    new, m = beside_road(f['utm'], to_path=True if f['ausbau'] == 'freigabe' else other_side(f) or False)
     if m: f['utm_beside'] = new; moved += m
 print('drawing moved onto the road beside it:', round(moved / 1000, 1), 'km')
 

@@ -238,6 +238,22 @@
         [500.8, 641.5],
         [504.0, 757.6]
       ]
+    ],
+    "geprueft": [
+      {
+        "at": [11.606697, 48.508782],
+        "note": "Ortskenntnis und OpenStreetMap, 22.11.2026: Zwischen den beiden Stücken des Geh- und Radwegs führt die Verbindung durch die Fahrgasse des Friedhofsparkplatzes (osm-zusatz.json); die Ecke ist die Parkplatzeinfahrt."
+      },
+      {
+        "at": [11.606802, 48.50976],
+        "note": "Wie oben: nördliche Parkplatzeinfahrt, Übergang von der Fahrgasse auf den Geh- und Radweg."
+      }
+    ],
+    "hinweis": [
+      {
+        "at": [11.6067, 48.5091],
+        "text": "Am Friedhof hat der Geh- und Radweg eine Lücke von rund 100 m. Radfahrer können durch die Fahrgasse des Parkplatzes fahren; ein Radweg ist das nicht, Schilder fehlen."
+      }
     ]
   },
   "kurz|preinerszell-hirschhausen-hellblau": {

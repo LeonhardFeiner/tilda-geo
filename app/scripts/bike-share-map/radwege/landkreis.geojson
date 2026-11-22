@@ -1162,19 +1162,39 @@
       "type": "Feature",
       "properties": {
         "netz": "vorrang",
-        "weg": "kreisstrasse",
+        "weg": "radweg",
         "belag": "asphalt",
         "fromPlan": 0.0,
-        "osmWays": [48043049, 51264300],
+        "osmWays": [155847379],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.606832, 48.507822],
-          [11.606899, 48.509145],
-          [11.606898, 48.509508],
-          [11.606823, 48.510101]
+          [11.606782, 48.507823],
+          [11.606826, 48.508601],
+          [11.606697, 48.508665]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "netz": "vorrang",
+        "weg": "ortsstrasse",
+        "belag": "asphalt",
+        "fromPlan": 0.0,
+        "osmWays": [48043051, 155847383],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.606697, 48.508665],
+          [11.606696, 48.509596],
+          [11.606804, 48.509656],
+          [11.606803, 48.509828],
+          [11.606757, 48.510097]
         ]
       }
     },

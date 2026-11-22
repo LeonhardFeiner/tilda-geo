@@ -133,7 +133,11 @@ the drawing touches the Blumenstraße only because of its offset from the PAF 6)
 opposite an existing cycle path that is meant (the plans are schematic): within `radius` of `at` the
 drawing goes onto that path, the pieces on it count as `bestand` and carry `andereSeite: true`; add a
 `hinweis` there so the popup says so (Oberthann – Schweitenkirchen at Giegenhausen, 2026-11-22). The
-Landkreis network always prefers an existing path along its road (`beside_road(to_path=True)`).
+Landkreis network always prefers an existing path along its road (`beside_road(to_path=True)`). So do plan 5/1
+lines (Freigabe means an existing way, and a cycle path beside the road is one). `osm-zusatz.json`
+adds OSM ways TILDA leaves out of its road tables but a route uses (`id`, `highway`, `coords`,
+`why`; e.g. the cemetery car park aisle at the Schmiedhauser Straße, `service=parking_aisle`); they
+also count as connections between the pieces of a cycle path.
 Spots checked by someone (aerial images or on site) go into `overrides.json` as `geprueft`
 (`at`, `note`) and drop out of `pruefen.geojson`; with none left, the page hides the Prüfstellen row. `flur.py` (last step) checks the land under each line from open ALKIS data (Tatsächliche Nutzung
 shapefiles per Landkreis, Parzellarkarte WMS; © Bayerische Vermessungsverwaltung, CC BY 4.0): on a
