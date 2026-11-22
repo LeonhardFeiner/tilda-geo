@@ -1,5 +1,5 @@
 {
-  "stand": "2026-11-18",
+  "stand": "2026-11-22",
   "conceptDate": "2024-06-07",
   "sources": {
     "konzeptseite": "https://www.schweitenkirchen.de/leben-und-wohnen/bauen-und-wohnen/radwegekonzept-der-gemeinde-schweitenkirchen",
@@ -32,6 +32,26 @@
     {
       "date": "2026-11-18",
       "text": "St 2045 Pfaffenhofen – Schweitenkirchen: Datum des Landkreis-Steckbriefs auf den 12.11.2025 berichtigt (war Oktober 2026)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "KUS-Steckbrief: Die Fassung vom 03.11.2025 nannte für PAF 6 Güntersdorf – Nörting 2027 (im Text 2026); „2029“ steht erst seit dem 12.03.2026, der Multifunktionsstreifen in Niederthann (2027) erst seit Oktober 2026 (vorher Gehweg und Piktogrammkette, 2026). Die Einträge sind jetzt nach Fassung getrennt."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Güntersdorf – Nörting: Der Beschluss des Bau- und Vergabeausschusses vom 03.02.2016 zählt jetzt als Schritt; die Vorlage nennt die Strecke Niederthann – Landkreisgrenze eindeutig."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Preinersdorf – Sünzhausen – Landkreisgrenze: Maßnahmenbeschluss des Marktes Au auf den 13.09.2022 datiert (war 04.10.2022, der Tag der Bekanntgabe in Schweitenkirchen)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Giegenhausen – Schweitenkirchen: Die Bürgerversammlung Schweitenkirchen 2024 war am 01.02.2024 (war 30.01.2024)."
+    },
+    {
+      "date": "2026-11-22",
+      "text": "Waldroute: Die „Übergangslösung“ bis zu einem Radweg an der Staatsstraße ist eine Aussage der SPD-Initiatoren, nicht des PK-Berichts vom 05.10.2018."
     }
   ],
   "routes": [
@@ -61,7 +81,7 @@
         {
           "date": "2015",
           "kind": "Bau",
-          "text": "Geh- und Radweg an der St 2045 Robert-Koch-Straße – GVS Giegenhausen gebaut (171.198 €, Förderung 100.500 €).",
+          "text": "Geh- und Radweg an der St 2045 Robert-Koch-Straße – GVS Giegenhausen in kommunaler Sonderbaulast gebaut (171.198 €, Förderung 100.500 €, Anlaufjahr 2015); der Gemeinderat hatte im Mai 2015 die Straßenbau- und im Herbst 2015 die Pflanzarbeiten auf der Tagesordnung.",
           "source": "Landtag Drs. 17/17864, Anlage",
           "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP17/Drucksachen/Basisdrucksachen/0000011000/0000011209_Bauer_Anlage.pdf"
         }
@@ -106,6 +126,27 @@
       "documented": "Nach Kartenlage die Waldroute durch den Schindelhauser Forst: eröffnet 18.10.2021; Beschilderung über KUS 2022; Reparaturen 2024. Getrennt davon prüft das Staatliche Bauamt laut KUS-Steckbrief 2026 einen Geh- und Radweg entlang der St 2045 nach Pfaffenhofen.",
       "events": [
         {
+          "date": "2018-07",
+          "kind": "Anfrage",
+          "text": "Laut PK beantragt der SPD-Ortsverein im Juli 2018 die Planung eines Radwegs nach Pfaffenhofen; der Antrag wird nichtöffentlich behandelt.",
+          "source": "Pfaffenhofener Kurier, 05.10.2018 (Webarchiv)",
+          "url": "https://web.archive.org/web/20181006140756/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Verkehr-Durch-den-Wald-nach-Pfaffenhofen;art600,3938843"
+        },
+        {
+          "date": "2018-10-05",
+          "kind": "Ankündigung",
+          "text": "Die SPD schlägt eine rund 1 km lange Waldtrasse über den Straßhof zum Kuglhof vor; frühere Varianten scheiterten am Grunderwerb. Bürgermeister Vogler will noch im Oktober mit den Eigentümern sprechen.",
+          "source": "Pfaffenhofener Kurier, 05.10.2018 (Webarchiv)",
+          "url": "https://web.archive.org/web/20181006140756/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Verkehr-Durch-den-Wald-nach-Pfaffenhofen;art600,3938843"
+        },
+        {
+          "date": "2019-02-25",
+          "kind": "Ankündigung",
+          "text": "Die Waldbesitzerin ist grundsätzlich bereit; die Gemeinde klärt Haftung und Versicherung. Schotterung rund 10.000 €, im besten Fall im Herbst 2019.",
+          "source": "Pfaffenhofener Kurier, 25.02.2019 (Webarchiv)",
+          "url": "https://web.archive.org/web/20190226143536/https://www.donaukurier.de/lokales/pfaffenhofen/DKmobil-Verkehr-Verkehr-Pfaffenhofen-Hoffnung-fuer-die-Radler;art600,4093969"
+        },
+        {
           "date": "2020-01-06",
           "kind": "Aussage",
           "text": "Bürgerversammlung Güntersdorf, Anfrage Nr. 18 (Weber) zum Fahrradweg Schweitenkirchen–Pfaffenhofen über Kuglhof (Waldweg): Die Stadt Pfaffenhofen hat die Verhandlung mit einem Grundbesitzer noch nicht abgeschlossen.",
@@ -122,10 +163,18 @@
         {
           "date": "2020-01-22",
           "kind": "Aussage",
-          "text": "Im selben SPD-Beitrag, unter Verweis auf einen PK-Bericht vom 05.10.2018: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
+          "text": "Im selben SPD-Beitrag: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
           "source": "SPD Kreisverband Pfaffenhofen (bewegung-paf.de), 22.01.2020",
           "url": "https://www.bewegung-paf.de/post/durchbruch-f%C3%BCr-radweg-schweitenkirchen-pfaffenhofen",
           "uncertain": true
+        },
+        {
+          "date": "2020-08-14",
+          "kind": "Aussage",
+          "text": "Laut PK stockt die Waldroute als Übergangslösung: Die Zusage der Waldbesitzerin hängt an der Haftung, Gemeinderat und Pfaffenhofener Stadtrat müssen zustimmen.",
+          "source": "Pfaffenhofener Kurier, 14.08.2020 (Webarchiv)",
+          "url": "https://web.archive.org/web/20211102224031/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Bei-den-Radwegen-geht-es-nur-langsam-voran;art600,4661006",
+          "paywall": true
         },
         {
           "date": "2021",
@@ -147,6 +196,13 @@
           "text": "„Beim Radweg von Schweitenkirchen nach Pfaffenhofen konnte erfreulicherweise eine Einigung erzielt werden. Bis zum Sommer ist geplant, den bisherigen Waldweg instand zu setzen und als Radweg auszubauen …“",
           "source": "Rundschau 2/2021 (Bürgermeister)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_02.21_INTERNET_Neu.pdf"
+        },
+        {
+          "date": "2021-07-27",
+          "kind": "Bau",
+          "text": "Gemeinderat, TOP 8: Vergabe des Wegebaus für den Rad- und Wanderweg nach Pfaffenhofen (8.380 € netto, rund 500 t Material, 2 m statt 2,50 m breit), 17:0.",
+          "source": "Gemeinderat TOP 8",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294659"
         },
         {
           "date": "2021-09-21",
@@ -184,11 +240,25 @@
           "url": "https://web.archive.org/web/20211229123034/https://www.donaukurier.de/lokales/pfaffenhofen/Jahresrueckblick-Schweitenkirchen-2021-Feier-Fluten-Fahrradweg;art600,4838971"
         },
         {
+          "date": "2022-02-22",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung: Der Weg sei auf Pfaffenhofener Flur schlecht ausgebaut und nicht freigeschnitten; der Bürgermeister will mit dem Pfaffenhofener Bürgermeister sprechen.",
+          "source": "Bürgerversammlung 2022 (Gemeinderat 10.03.2022, TOP 16)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171045"
+        },
+        {
           "date": "2022-03-29",
           "kind": "Aussage",
           "text": "Anregung, die Waldroute beschildern zu lassen; laut Vorsitzendem ist das KUS des Landkreises bereits mit der Beschilderung beauftragt.",
           "source": "Gemeinderat TOP 13",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171233"
+        },
+        {
+          "date": "2022-06-14",
+          "kind": "Anfrage",
+          "text": "Gemeinderat, TOP 13: Anregung, das erste, für Rollstuhlfahrer zu steile Stück (rund 15 m) zu asphaltieren.",
+          "source": "Gemeinderat TOP 13",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171801"
         },
         {
           "date": "2023-06-06",
@@ -219,6 +289,35 @@
       "documented": "Der Lageplan 5/2 zeigt die Radvorrangroute des Landkreises entlang der St 2045 bis an seinen Rand Richtung Pfaffenhofen; weiter westlich (bis zur Äußeren Moosburger Straße) reicht der Plan nicht. Bis dahin ist die Waldroute durch den Schindelhauser Forst die Verbindung, laut ihren Initiatoren als Übergangslösung.",
       "events": [
         {
+          "date": "2015-05-20",
+          "kind": "Anfrage",
+          "text": "Bau- und Vergabeausschuss des Landkreises, TOP 1.5: Die Verwaltung soll beim Staatlichen Bauamt den Sachstand zu einem Radweg an der St 2045 Schweitenkirchen – Pfaffenhofen erfragen (15:0).",
+          "source": "Landkreis Pfaffenhofen, Niederschrift Bau- und Vergabeausschuss 20.05.2015, TOP 1.5",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=17211&type=do"
+        },
+        {
+          "date": "2016",
+          "kind": "Aussage",
+          "text": "Antwortschreiben des Staatlichen Bauamts, im Gemeinderat verlesen: Eine Verlängerung des Radwegs vom neuen Kreisel und seine Beleuchtung werden abgelehnt; ein Radweg zwischen Oberthann und der Ostseite der A 9-Anschlussstelle sei wegen der engen Autobahnunterführung „sehr schwierig“; Radfahrer sollen über Giegenhausen fahren.",
+          "source": "Rundschau 3/2016, S. 8–9",
+          "url": "https://web.archive.org/web/20170228084226/http://schweitenkirchen.de/export/download.php?id=2083&lang=de&type=download&object=2083"
+        },
+        {
+          "date": "2016-01-25",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung Schweitenkirchen: Wunsch nach einem durchgehenden Geh- und Radweg von der Abzweigung Giegenhausen unter der A 9 hindurch; der Bürgermeister will das bei der Autobahndirektion ansprechen.",
+          "source": "Rundschau 1/2016, S. 10",
+          "url": "https://web.archive.org/web/20170228083525/http://schweitenkirchen.de/export/download.php?id=1954&lang=de&type=download&object=1954"
+        },
+        {
+          "date": "2016-03-16",
+          "kind": "Aussage",
+          "text": "Bekanntgabe im Bau- und Vergabeausschuss des Landkreises: Laut Staatlichem Bauamt soll der „Radweg Schweitenkirchen“ im Zuge des dreistreifigen Ausbaus der St 2045 gebaut werden (welcher Abschnitt, steht nicht dabei).",
+          "source": "Landkreis Pfaffenhofen, Niederschrift Bau- und Vergabeausschuss 16.03.2016, TOP 5",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=18868&type=do",
+          "uncertain": true
+        },
+        {
           "date": "2017-06-20",
           "kind": "Anfrage",
           "text": "Radlradar-Meldung #819: Bitte um einen Geh- und Radweg zwischen Schweitenkirchen und Pfaffenhofen, da Radfahren auf der Staatsstraße „lebensgefährlich“ sei.",
@@ -233,11 +332,25 @@
           "url": "https://buergermelder.pafunddu.de/projects/radlradar/issues/819/"
         },
         {
+          "date": "2018-10-05",
+          "kind": "Aussage",
+          "text": "Laut PK haben sich die Pläne für einen Radweg an der St 2045 „für die nächsten Jahre zerschlagen“: Angedacht ist ein dreistreifiger Ausbau, der vor 2020 nicht einmal geplant werden kann; deshalb wird eine Route durch den Wald gesucht.",
+          "source": "Pfaffenhofener Kurier, 05.10.2018 (Webarchiv)",
+          "url": "https://web.archive.org/web/20181006140756/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Verkehr-Durch-den-Wald-nach-Pfaffenhofen;art600,3938843"
+        },
+        {
           "date": "2019-01-23",
           "kind": "Aussage",
           "text": "Schriftliche Anfrage Helmut Hartinger (Bürgerversammlung Schweitenkirchen 23.01.2019) zu Grund für einen Fahrradweg an der St 2045 vom Kreisel bis zur äußeren Moosburger Straße. Bürgermeister Vogler: Das Staatliche Bauamt hat Ausbau samt Radweg im künftigen Maßnahmenplan, eine baldige Umsetzung sei nicht realistisch, Grunderwerb noch keiner.",
           "source": "Rundschau 1/2019, S. 12 (Gemeinderat 12.02.2019, Protokoll Nr. 96, TOP 1710)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau01.19.pdf"
+        },
+        {
+          "date": "2019-02-25",
+          "kind": "Aussage",
+          "text": "Laut PK wird ein Radweg an der St 2045 wegen des angedachten dreistreifigen Ausbaus wohl erst in sehr ferner Zukunft etwas.",
+          "source": "Pfaffenhofener Kurier, 25.02.2019 (Webarchiv)",
+          "url": "https://web.archive.org/web/20190226143536/https://www.donaukurier.de/lokales/pfaffenhofen/DKmobil-Verkehr-Verkehr-Pfaffenhofen-Hoffnung-fuer-die-Radler;art600,4093969"
         },
         {
           "date": "2020-01-06",
@@ -256,10 +369,18 @@
         {
           "date": "2020-01-22",
           "kind": "Aussage",
-          "text": "SPD-Beitrag zur Waldroute, unter Verweis auf einen PK-Bericht vom 05.10.2018: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
+          "text": "Im selben SPD-Beitrag: Laut den Initiatoren solle der Radweg durch den Wald nur eine befestigte Übergangslösung bis zu einem asphaltierten Radweg an der Staatsstraße sein.",
           "source": "SPD Kreisverband Pfaffenhofen (bewegung-paf.de), 22.01.2020",
           "url": "https://www.bewegung-paf.de/post/durchbruch-f%C3%BCr-radweg-schweitenkirchen-pfaffenhofen",
           "uncertain": true
+        },
+        {
+          "date": "2020-08-14",
+          "kind": "Aussage",
+          "text": "Laut PK ist der dreistreifige Ausbau der St 2045 noch nicht einmal geplant; Radweg und Spurerweiterung sollen in einem Zug gebaut werden.",
+          "source": "Pfaffenhofener Kurier, 14.08.2020 (Webarchiv)",
+          "url": "https://web.archive.org/web/20211102224031/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Bei-den-Radwegen-geht-es-nur-langsam-voran;art600,4661006",
+          "paywall": true
         },
         {
           "date": "2021-02-09",
@@ -308,8 +429,8 @@
           "date": "2025-11-12",
           "kind": "Ankündigung",
           "text": "KUS-Steckbrief der Gemeinde: Prüfung eines Neubaus eines gemeinsamen Geh- und Radwegs an der St 2045 Schweitenkirchen – Pfaffenhofen durch das Staatliche Bauamt Ingolstadt, „wird in 2026 geprüft“.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
     },
@@ -328,12 +449,33 @@
       "baulastNote": "Staatliches Bauamt Ingolstadt",
       "konzeptHinweis": "Voruntersuchung liegt vor; „Mit einer kurzfristigen Umsetzung ist nicht zu rechnen“",
       "kusHorizont": "Holzhäuseln – Sünzhausen – Abzw. Loipertshausen „ab 2028 ff.“ (Staatliches Bauamt); Preinersdorf – Holzhäuseln offen; Loipertshausen – Dellnhausen wartet auf Markt Au",
-      "documented": "Seit 2015 im staatlichen Radwegeprogramm; Grunderwerb seit 2017; 12 von 23 Eigentümern (Feb. 2023); letzter Notarvertrag 22.01.2026; Vorentwurfsplanung ab Feb. 2026; Haushaltsstelle „Schweitenkirchen/Sünzhausen – Grunderwerb“ 2023–2026.",
+      "documented": "2015 im staatlichen Radwegeprogramm, 2020–2024 nicht mehr, seit 2025 im Ausbauplan des Staatlichen Bauamts (ohne Termin); Planung seit 2017, Grundstücksverhandlungen laut Gemeinderat erst ab 2021; 12 von 23 Eigentümern (Feb. 2023); letzter Notarvertrag 22.01.2026; Vorentwurfsplanung ab Feb. 2026; Haushaltsstelle „Schweitenkirchen/Sünzhausen – Grunderwerb“ 2023–2026. Markt Au: Maßnahmenbeschluss 13.09.2022 für sein Stück.",
       "events": [
         {
-          "date": "2015",
+          "date": "2015-01-12",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Sünzhausen: Laut Bürgermeister hat das Straßenbauamt mitgeteilt, der Abschnitt Schweitenkirchen – Sünzhausen werde wieder in die beabsichtigten Maßnahmen aufgenommen, eine Förderung sei denkbar.",
+          "source": "Rundschau 1/2015, S. 9 (Gemeinderat 24.02.2015)",
+          "url": "https://web.archive.org/web/20160818124317/http://schweitenkirchen.de/export/download.php?id=1592&lang=de&type=download&object=1592"
+        },
+        {
+          "date": "2015-04",
           "kind": "Programm",
-          "text": "Aufnahme in das Programm zum nachträglichen Anbau von Radwegen an Staatsstraßen (aufgestellt Frühjahr 2015). Stand Dezember 2016 für „St 2045, nördlich Holzhäuseln – Sünzhausen“ und „Preinersdorf – Loipersdorf“: „Planung noch nicht begonnen“.",
+          "text": "Programm des Freistaats zum nachträglichen Anbau von Radwegen an Staatsstraßen 2015–2019 (Staatliches Bauamt Ingolstadt): Nr. OB-L-21 „St 2045 nördl. Holzhäuseln - Sünzhausen“ (1,0 km, 390.000 €) und Nr. OB-L-30 „St 2045 Preinersdorf - Loipersdorf“ (1,3 km, 450.000 €).",
+          "source": "Innenministerium, Programm für den nachträglichen Anbau von Radwegen an Staatsstraßen 2015–2019, Oberbayern, S. 18",
+          "url": "https://stmb.bayern.de/assets/stmi/vum/fussundradverkehr/iid3_radwegprogramm.pdf"
+        },
+        {
+          "date": "2016-01-25",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Schweitenkirchen: Laut Bürgermeister ist die Fortführung des Radwegs nach Sünzhausen „bereits im Förderkataster des Freistaates für das Jahr 2017“ aufgenommen.",
+          "source": "Rundschau 1/2016, S. 10",
+          "url": "https://web.archive.org/web/20170228083525/http://schweitenkirchen.de/export/download.php?id=1954&lang=de&type=download&object=1954"
+        },
+        {
+          "date": "2016-12-06",
+          "kind": "Aussage",
+          "text": "Antwort der Staatsregierung: Für beide St-2045-Abschnitte des Programms 2015–2019 „Planung noch nicht begonnen“.",
           "source": "Landtag Drs. 17/14681",
           "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP17/Drucksachen/Schriftliche%20Anfragen/17_0014681.pdf"
         },
@@ -373,11 +515,33 @@
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/10.03.2020_Gemeinderatssitzung_Protokoll_Nr._116.pdf"
         },
         {
+          "date": "2020-04-07",
+          "kind": "Planung",
+          "text": "Liste der Staatsregierung der „aktuell in Planung befindlichen Maßnahmen“ (alle Planungsphasen bis zum Baubeginn), Stand 07.04.2020: „St 2045 RW nördlich Holzhäuseln - Sünzhausen“ (0,4 Mio. €) und „St 2045 RW Preinersdorf - Loipersdorf“ (0,5 Mio. €).",
+          "source": "Landtag Drs. 18/7978, Anlage Staatliches Bauamt Ingolstadt (Stand 07.04.2020)",
+          "url": "https://www.bayern.landtag.de/www/ElanTextAblage_WP18/Drucksachen/Schriftliche%20Anfragen/18_0007978.pdf"
+        },
+        {
           "date": "2020-07-07",
           "kind": "Anfrage",
           "text": "Gemeinderat, TOP 68 f (Bekanntgaben und Anregungen): GR Huber erkundigt sich nach dem Sachstand des Radwegs von Schweitenkirchen nach Sünzhausen.",
           "source": "Gemeinderat 07.07.2020, Protokoll Nr. 4, TOP 68",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/07.07.2020_Gemeinderatssitzung_Protokoll_Nr._4.pdf"
+        },
+        {
+          "date": "2020-07-24",
+          "kind": "Aussage",
+          "text": "Das neue Radwegebauprogramm des Freistaats 2020–2024 enthält keinen der beiden Abschnitte mehr; an der St 2045 steht nur noch Altenfurt – Strobenried (Lkr. Neuburg-Schrobenhausen).",
+          "source": "Bauministerium, Radwegebau an Bundes- und Staatsstraßen in Bayern – Ausgabe 2020, Programm Staatsstraßen Oberbayern",
+          "url": "https://www.stmb.bayern.de/assets/stmi/miniwebs/radverkehr/informationen_radwegebauprogramme.pdf"
+        },
+        {
+          "date": "2020-08-14",
+          "kind": "Ankündigung",
+          "text": "Nach Oberthann – Nörting will sich der Bürgermeister laut PK auf Schweitenkirchen – Sünzhausen konzentrieren, bei zähen Verhandlungen eventuell zuerst auf das Stück bis Holzhäuseln.",
+          "source": "Pfaffenhofener Kurier, 14.08.2020 (Webarchiv)",
+          "url": "https://web.archive.org/web/20211102224031/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Bei-den-Radwegen-geht-es-nur-langsam-voran;art600,4661006",
+          "paywall": true
         },
         {
           "date": "2021-01-26",
@@ -415,10 +579,31 @@
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294659"
         },
         {
-          "date": "2022-10-04",
+          "date": "2021-07-27",
+          "kind": "Anfrage",
+          "text": "Gemeinderat, TOP 16: Bitte, mit den Eigentümern für den Radweg nach Sünzhausen gleichzeitig statt nacheinander zu verhandeln.",
+          "source": "Gemeinderat TOP 16",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294659"
+        },
+        {
+          "date": "2022-02-22",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung, schriftliche Anfrage: Ein Terminplan sei nicht möglich, der Grunderwerb nicht gesichert; der Bürgermeister sagt zu, bis zum Sommer 2022 mit allen Eigentümern zu verhandeln.",
+          "source": "Bürgerversammlung 2022 (Gemeinderat 10.03.2022, TOP 16)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171045"
+        },
+        {
+          "date": "2022-07-05",
+          "kind": "Aussage",
+          "text": "Gemeinderat, TOP 7: Laut Vorsitzendem sind die Verhandlungen mit den Eigentümern noch nicht abgeschlossen.",
+          "source": "Gemeinderat TOP 7",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171989"
+        },
+        {
+          "date": "2022-09-13",
           "kind": "Beschluss",
-          "text": "Bekanntgabe: Der Marktgemeinderat Au hat am 13.09.2022 den Maßnahmenbeschluss für einen Geh- und Radweg an der St 2045 Sünzhausen – Dellnhausen gefasst.",
-          "source": "Gemeinderat TOP 9",
+          "text": "Der Marktgemeinderat Au i. d. Hallertau fasst den Maßnahmenbeschluss für einen Geh- und Radweg an der St 2045 von der Abzweigung Sillertshausen bis zur Gemeindegrenze Schweitenkirchen, in Sonderbaulast des Marktes (in Schweitenkirchen am 04.10.2022 bekanntgegeben).",
+          "source": "Marktgemeinderat Au i. d. Hallertau 13.09.2022, TOP 4; Gemeinderat Schweitenkirchen 04.10.2022, TOP 9 (Bekanntgabe)",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4175299"
         },
         {
@@ -427,6 +612,20 @@
           "text": "Stand Grunderwerb: 12 von 23 Eigentümern.",
           "source": "Bürgerversammlung 2023",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21690655"
+        },
+        {
+          "date": "2023-02-02",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung: Kein Teilabschnitt realisierbar, weil in jedem Abschnitt Einigungen fehlen; geplant wird bis zur Gemeindegrenze, der Markt Au ist mit demselben Planungsbüro eingebunden.",
+          "source": "Bürgerversammlung 2023 (Gemeinderat 07.03.2023, TOP 12)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21690655"
+        },
+        {
+          "date": "2023-05-03",
+          "kind": "Anfrage",
+          "text": "Arbeitskreis Gemeindeentwicklung: „Der Radweg nach Sünzhausen soll mit höchster Priorität verfolgt werden.“",
+          "source": "Arbeitskreis Gemeindeentwicklung, Protokoll 03.05.2023",
+          "url": "https://web.archive.org/web/20240224035536/https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Arbeitskreis_Gemeindeentwicklung/Protokoll_Arbeitskreis_Gemeindeentwicklung_vom_03.05.2023.pdf"
         },
         {
           "date": "2023-07-04",
@@ -446,9 +645,25 @@
         {
           "date": "2024-01-18",
           "kind": "Aussage",
-          "text": "„Die Zuständigkeit für den Bau des Radweges liegt beim zuständigen Straßenbaulastträger.“",
-          "source": "Bürgerversammlung Sünzhausen 2024",
+          "text": "„Die Zuständigkeit für den Bau des Radweges liegt beim zuständigen Straßenbaulastträger.“ Danach: Grunderwerb notariell sichern, Baukosten ermitteln, Förderantrag beim Freistaat, Haushalt des Staatlichen Bauamts, Ausschreibung; „frühestmöglicher Termin“ für den Baubeginn wäre 2025.",
+          "source": "Bürgerversammlung Sünzhausen 2024 (Gemeinderat 12.03.2024, TOP 9)",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        },
+        {
+          "date": "2024-02-01",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung Schweitenkirchen: Bitte um eine sichere Verbindung aus dem Hauptort zum Radweg an der St 2045 über den alten Weg „Durch die Schmithoferlohe“ oder ein kurzes Stück Swidmutstraße – St 2045.",
+          "source": "Bürgerversammlung Schweitenkirchen 2024 (Gemeinderat 12.03.2024, TOP 9)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141",
+          "uncertain": true
+        },
+        {
+          "date": "2024-07-23",
+          "kind": "Aussage",
+          "text": "Gemeinderat, Bekanntgaben: Der Weg „Durch die Schmithoferlohe“ gehört der Gemeinde, müsste aber wiederhergestellt werden; erwogen wird eine rund 40 m lange Verbindung Swidmutstraße – Geh- und Radweg an der St 2045.",
+          "source": "Gemeinderat TOP 16",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56887285",
+          "uncertain": true
         },
         {
           "date": "2024-10",
@@ -459,12 +674,35 @@
           "uncertain": true
         },
         {
+          "date": "2025",
+          "kind": "Programm",
+          "text": "Ausbauplan des Staatlichen Bauamts Ingolstadt für Radwege an Staats- und Bundesstraßen 2025–2030 (nach dem Bayerischen Radgesetz): wieder „St 2045 nördl. Holzhäuseln - Sünzhausen“ (1,00 km) und „Preinersdorf - Loipersdorf“ (1,29 km); Sünzhausen – Abzweigung Loipertshausen steht nicht darin. Die Liste ist undatiert (online spätestens seit 08.10.2025) und nennt keine Termine.",
+          "source": "Staatliches Bauamt Ingolstadt, „Neubau von Radwegen an Staats- und Bundesstraßen“ (Ausbaupläne 2025 – 2030)",
+          "url": "https://www.stbain.bayern.de/mam/strassenbau/radverkehrsinfrastrukturen/ausbaupl%C3%A4ne_2025_%E2%80%93_2030.pdf"
+        },
+        {
           "date": "2025-01",
           "kind": "Aussage",
           "text": "Bürgerversammlung Sünzhausen: Der Bürgermeister berichtet von guten Fortschritten beim Grunderwerb für den Radweg Schweitenkirchen–Au.",
           "source": "Pfaffenhofener Kurier, 30.01.2025",
           "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/auf-den-buergerversammlungen-in-suenzhausen-und-geisenhausen-wird-rege-diskutiert-17908438",
           "paywall": true
+        },
+        {
+          "date": "2025-02-04",
+          "kind": "Planung",
+          "text": "Marktgemeinderat Au i. d. Hallertau: Vorstellung der Voruntersuchung (WipflerPLAN, dasselbe Büro wie in Schweitenkirchen) für den Geh- und Radweg an der St 2045 Abzweigung Sillertshausen – Gemeindegrenze Schweitenkirchen; öffentlich ist nur die Tagesordnung.",
+          "source": "Marktgemeinderat Au i. d. Hallertau 04.02.2025, TOP 2",
+          "url": "https://ris.komuna.net/auhallertau/app/sitzungen/177542358",
+          "uncertain": true
+        },
+        {
+          "date": "2025-03-18",
+          "kind": "Aussage",
+          "text": "Gemeinderat, Bekanntgaben: Das Staatliche Bauamt lehnt eine Querungshilfe am östlichen Ortseingang (St 2045) ab.",
+          "source": "Gemeinderat TOP 16",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/67170612",
+          "uncertain": true
         },
         {
           "date": "2025-04",
@@ -494,8 +732,8 @@
           "date": "2025-11-12",
           "kind": "Ankündigung",
           "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg St 2045 nördl. Holzhäuseln – Sünzhausen & Preinersdorf – Loipersdorf, „Ab 2028 ff.“, Staatliches Bauamt Ingolstadt.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         },
         {
           "date": "2026-01",
@@ -590,6 +828,20 @@
       "documented": "Östlich parallel zur PAF 25 über den Weiler Blasl (Zuordnung aus Kartenlage und KUS-Wortlaut; Blasl ist im Plan nicht beschriftet). KUS-Steckbrief: „Auf der PAF 25 zwischen Preinerszell und Schmiedhausen ist hingegen kein Neubau eines Geh- und Radwegs vorgesehen, da hier bereits eine Parallelroute über den Weiler „Blasl“ besteht.“",
       "events": [
         {
+          "date": "2015-01-26",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung Schweitenkirchen: Antrag auf einen Geh- und Radweg Schmiedhausen – Preinerszell, mindestens bis zum Abzweig „Blasl“; ein Gehweg dorthin soll mit dem Straßenbaulastträger besprochen werden.",
+          "source": "Rundschau 1/2015, S. 12 (Gemeinderat 24.02.2015)",
+          "url": "https://web.archive.org/web/20160818124317/http://schweitenkirchen.de/export/download.php?id=1592&lang=de&type=download&object=1592"
+        },
+        {
+          "date": "2016-01-18",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Geisenhausen: Laut Landratsamt ist wegen der Steigung am Schmiedhauser Berg kein normgerechter, staatlich geförderter Radweg Preinerszell – Schweitenkirchen möglich; man wolle an einer Lösung dranbleiben.",
+          "source": "Rundschau 1/2016, S. 8",
+          "url": "https://web.archive.org/web/20170228083525/http://schweitenkirchen.de/export/download.php?id=1954&lang=de&type=download&object=1954"
+        },
+        {
           "date": "2019-01-09",
           "kind": "Anfrage",
           "text": "Schriftliche Anfrage von Christoph Linseisen vom 09.01.2019 u. a. zu einem Geh- und Radweg von Schmiedhausen bis zur Einfahrt Blasl; Antwort: Verweis auf die laufende Planung zum Ausbau der Smidostraße und eine evtl. Gehwegerrichtung durch den Landkreis.",
@@ -633,6 +885,14 @@
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/295131"
         },
         {
+          "date": "2022-12-07",
+          "kind": "Bau",
+          "text": "Bau- und Vergabeausschuss des Landkreises: Vergabe der Erneuerung der Ortsdurchfahrt Schmiedhausen (PAF 25) für 1.856.929,11 €: 860 m mit 1,50 m Gehweg, zwei Verkehrsinseln und rund 112 m neuer Geh- und Radweg auf der Ostseite.",
+          "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 07.12.2022, TOP 1.1, Vorlage 2022/4163",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/vo0050.asp?__kvonr=9098",
+          "uncertain": true
+        },
+        {
           "date": "2024-06-25",
           "kind": "Eröffnung",
           "text": "Offizielle Freigabe der erneuerten Ortsdurchfahrt Schmiedhausen (PAF 25) mit 720 m neuem Gehweg und zwei Verkehrsinseln; der Wunsch nach einem Geh- und Radweg sei laut PK schon viel älter.",
@@ -645,8 +905,8 @@
           "date": "2025-11-12",
           "kind": "Aussage",
           "text": "KUS: an der PAF 25 Preinerszell – Schmiedhausen kein Neubau, da bereits eine Parallelroute über den Weiler „Blasl“ besteht.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
     },
@@ -663,8 +923,8 @@
           "kind": "Aussage",
           "uncertain": true,
           "text": "KUS: an der PAF 25 Preinerszell – Schmiedhausen kein Neubau, da bereits eine Parallelroute über den Weiler „Blasl“ besteht.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
     },
@@ -708,6 +968,14 @@
           "text": "„Momentan laufen hier keine Planungen. Es wird jedoch ein Radwegeverkehrskonzept erstellt.“",
           "source": "Bürgerversammlung Geisenhausen 2024",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        },
+        {
+          "date": "2025-04-08",
+          "kind": "Aussage",
+          "text": "Antwort auf die Bürgerversammlung 2025: Der Ausbau der Ortsdurchfahrt Preinerszell (PAF 25) mit neuem Gehweg stehe auf der Prüfliste des Landkreises.",
+          "source": "Gemeinderat 08.04.2025, TOP 14 (Bürgerversammlungen 2025)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/67170707",
+          "uncertain": true
         }
       ]
     },
@@ -718,7 +986,24 @@
       "plans": { "kurz": "haupt" },
       "planLabels": ["Geroldshausen - Dürnzhausen"],
       "baulast": "unklar",
-      "events": []
+      "events": [
+        {
+          "date": "2023-11-28",
+          "kind": "Anfrage",
+          "text": "Gemeinderat, TOP 16: Antrag an den Landkreis, Mittel für Planung und Sanierung der Ortsdurchfahrt Dürnzhausen (PAF 11) bereitzustellen; sie hat bisher keinen Gehweg (18:0). Geplant ist dabei ein Gehweg, kein Radweg.",
+          "source": "Gemeinderat TOP 16",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21692563",
+          "uncertain": true
+        },
+        {
+          "date": "2026-01-27",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Dürnzhausen: Für einen Gehweg an der Wolnzacher Straße (Kreisstraße) braucht die Gemeinde den Landkreis; die Straße müsse erst erneuert werden, entscheiden werde der Kreistag.",
+          "source": "Bürgerversammlung Dürnzhausen 2026 (Rundschau 2/2026)",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf",
+          "uncertain": true
+        }
+      ]
     },
     {
       "id": "duernzhausen-suenzhausen",
@@ -764,6 +1049,21 @@
       "documented": "Gemeinsames Projekt „Nörting – Oberthann“ mit Güntersdorf – Nörting; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“ (2023: 177.486,57 €, 2024: 5.055,95 €).",
       "events": [
         {
+          "date": "2016-01-06",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Güntersdorf: Der Bürgermeister verweist auf die „geplante Umsetzung eines Geh- und Radweges (Oberthann nach Nörting)“.",
+          "source": "Rundschau 1/2016, S. 6",
+          "url": "https://web.archive.org/web/20170228083525/http://schweitenkirchen.de/export/download.php?id=1954&lang=de&type=download&object=1954"
+        },
+        {
+          "date": "2016-02-03",
+          "kind": "Beschluss",
+          "text": "Bau- und Vergabeausschuss des Landkreises, TOP 1.1: Geh- und Radweg an der PAF 6 von Niederthann bis zur Landkreisgrenze „in den nächsten Jahren“ (14:0); ob das Stück bis Oberthann dazugehört, sagt die Vorlage nicht.",
+          "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 03.02.2016, TOP 1.1, Vorlage 2016/2415",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=3328",
+          "uncertain": true
+        },
+        {
           "date": "2020-01-06",
           "kind": "Anfrage",
           "text": "Bürgerfrage zum geplanten Fahrradweg Aufham – Niederthann; Antwort: Verhandlungen zum Grunderwerb noch nicht abgeschlossen.",
@@ -776,6 +1076,14 @@
           "text": "„Folgende Maßnahmen der Gemeinde sind aktuell in Bearbeitung: Fahrradweg Nörting-Oberthann …“",
           "source": "Rundschau 2/2020 (Bürgermeister)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau02.20.pdf"
+        },
+        {
+          "date": "2020-08-14",
+          "kind": "Aussage",
+          "text": "Laut PK ist der Bürgermeister beim rund 8 km langen Geh- und Radweg Oberthann – Nörting mit zwei Eigentümern über Tauschlösungen weit gekommen (noch nicht unterschrieben); mit einem weiteren gibt es keine Einigung. Die Gemeinde zahlt 20 €/m².",
+          "source": "Pfaffenhofener Kurier, 14.08.2020 (Webarchiv)",
+          "url": "https://web.archive.org/web/20211102224031/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Bei-den-Radwegen-geht-es-nur-langsam-voran;art600,4661006",
+          "paywall": true
         },
         {
           "date": "2020-12",
@@ -793,11 +1101,25 @@
           "uncertain": true
         },
         {
+          "date": "2021-05-03",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2021, Investitionsprogramm 2021–2024: „PAF 6 / Oberthann - Landkreisgrenze Freising“, Gesamtkosten 1,0 Mio. €; Baukosten 100.000 € im Jahr 2024.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2021–2024, UA 6551 (Bau- und Vergabeausschuss 10.02.2021, Kreistag 03.05.2021)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=37210&type=do"
+        },
+        {
           "date": "2021-06-08",
           "kind": "Aussage",
           "text": "Sachstand Grundstücksverhandlungen; Bau „auch in Teilabschnitten möglich“.",
           "source": "Gemeinderat TOP 15",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/294469"
+        },
+        {
+          "date": "2022-04-04",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2022, Investitionsprogramm 2022–2025: PAF 6 Oberthann bzw. Niederthann – Landkreisgrenze Freising, Gesamtkosten 2,0 Mio. €; Baukosten je 100.000 € 2024 und 2025; BayGVFG-Festbetrag 1,0 Mio. €.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2022–2025, UA 6551 (Bau- und Vergabeausschuss 16.02.2022, Kreistag 04.04.2022)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=39245&type=do"
         },
         {
           "date": "2023",
@@ -824,9 +1146,17 @@
         {
           "date": "2025-11-12",
           "kind": "Ankündigung",
+          "text": "KUS-Maßnahmenliste (Fassung 11/2025): Am neuen Baugebiet Niederthann Neubau eines Gehwegs innerorts bis zum Ortsschild und Prüfung einer Piktogrammkette, Umsetzung „für das Jahr 2026 geprüft“, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf",
+          "uncertain": true
+        },
+        {
+          "date": "2026-10-12",
+          "kind": "Ankündigung",
           "uncertain": true,
-          "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
+          "text": "KUS-Maßnahmenliste (Fassung 10/2026): Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 09.10.2026",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
@@ -844,9 +1174,17 @@
         {
           "date": "2025-11-12",
           "kind": "Ankündigung",
+          "text": "KUS-Maßnahmenliste (Fassung 11/2025): Am neuen Baugebiet Niederthann Neubau eines Gehwegs innerorts bis zum Ortsschild und Prüfung einer Piktogrammkette, Umsetzung „für das Jahr 2026 geprüft“, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf",
+          "uncertain": true
+        },
+        {
+          "date": "2026-10-12",
+          "kind": "Ankündigung",
           "uncertain": true,
-          "text": "KUS-Maßnahmenliste: Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
+          "text": "KUS-Maßnahmenliste (Fassung 10/2026): Multifunktionsstreifen in Niederthann, Abzweig von PAF 6 zur Verbindungsstraße nach Streitberg, 2027, Gemeinde.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 09.10.2026",
           "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
@@ -863,15 +1201,43 @@
       "baulastNote": "Kreiseigener Tiefbau (KUS)",
       "konzeptHinweis": "Vorentwurf liegt vor; Trasse in Aufham unterbrochen",
       "kusHorizont": "2029 (Kreiseigener Tiefbau)",
-      "documented": "Ein Eigentümer fehlt (Jan. 2026); Landratsamt 21.04.2026: kein Bau mit fehlendem Teilstück; Bürgerfragen 2020–2026; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“.",
+      "documented": "Landkreis: Beschluss 03.02.2016 (Niederthann – Landkreisgrenze), im Kreishaushalt seit 2021; der Bau ist dort von 2024 Jahr für Jahr bis 2029 gerutscht. Landkreis Freising: Bau seines Stücks Nörting – Landkreisgrenze 2026/27 im Haushalt. Ein Eigentümer fehlt (Jan. 2026); Landratsamt 21.04.2026: kein Bau mit fehlendem Teilstück; Bürgerfragen 2015–2026; gemeinsame Haushaltsstelle „Oberthann/Nörting – Grunderwerb“.",
       "events": [
+        {
+          "date": "2014-04-16",
+          "kind": "Aussage",
+          "text": "Bau- und Vergabeausschuss des Landkreises, Antwort auf eine Frage von Kreisrat Prechter: Beim Ausbau der Ortsdurchfahrt Aufham werde nach der Vermessung geprüft, ob ein Geh- und Radweg möglich ist.",
+          "source": "Landkreis Pfaffenhofen, Niederschrift Bau- und Vergabeausschuss 16.04.2014, Bekanntgaben",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=14584&type=do",
+          "uncertain": true
+        },
+        {
+          "date": "2015-01-06",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung Aufham: Anregung, beim geplanten Radweg Oberthann – Kirchdorf notfalls Teilabschnitte (etwa Güntersdorf – Aufham – Kirchdorf) zu bauen; laut Bürgermeister fließt das in die „bevorstehende Planung“ ein.",
+          "source": "Rundschau 1/2015, S. 8 (Gemeinderat 24.02.2015)",
+          "url": "https://web.archive.org/web/20160818124317/http://schweitenkirchen.de/export/download.php?id=1592&lang=de&type=download&object=1592"
+        },
+        {
+          "date": "2016-01-06",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung Güntersdorf: Der Bürgermeister verweist auf die „geplante Umsetzung eines Geh- und Radweges (Oberthann nach Nörting)“.",
+          "source": "Rundschau 1/2016, S. 6",
+          "url": "https://web.archive.org/web/20170228083525/http://schweitenkirchen.de/export/download.php?id=1954&lang=de&type=download&object=1954"
+        },
         {
           "date": "2016-02-03",
           "kind": "Beschluss",
           "text": "Bau- und Vergabeausschuss des Landkreises, TOP 1.1: Auf Antrag der Gemeinde Schweitenkirchen wird beschlossen, an der PAF 6 von Niederthann bis zur Landkreisgrenze einen Geh- und Radweg „in den nächsten Jahren auszubauen“; Planung an WipflerPlan (14:0). Grunderwerb liegt bei der Gemeinde, Landkreisanteil grob ca. 900.000 €.",
           "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 03.02.2016, TOP 1.1, Vorlage 2016/2415",
-          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=3328",
-          "uncertain": true
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=3328"
+        },
+        {
+          "date": "2019-10-25",
+          "kind": "Aussage",
+          "text": "Freigabe der ausgebauten Ortsdurchfahrt Aufham (PAF 6, 970 m): Gehweg auf einer Seite, Bankett, Verkehrsinseln; ein Radweg war nicht Teil der Maßnahme.",
+          "source": "Pfaffenhofener Kurier, 25.10.2019 (Webarchiv)",
+          "url": "https://web.archive.org/web/20191026160644/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-In-Aufham-kann-der-Verkehr-wieder-fliessen;art600,4363915"
         },
         {
           "date": "2019-12",
@@ -888,6 +1254,14 @@
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau02.20.pdf"
         },
         {
+          "date": "2020-08-14",
+          "kind": "Aussage",
+          "text": "Laut PK ist der Bürgermeister beim rund 8 km langen Geh- und Radweg Oberthann – Nörting mit zwei Eigentümern über Tauschlösungen weit gekommen (noch nicht unterschrieben); mit einem weiteren gibt es keine Einigung. Die Gemeinde zahlt 20 €/m².",
+          "source": "Pfaffenhofener Kurier, 14.08.2020 (Webarchiv)",
+          "url": "https://web.archive.org/web/20211102224031/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-Bei-den-Radwegen-geht-es-nur-langsam-voran;art600,4661006",
+          "paywall": true
+        },
+        {
           "date": "2021",
           "kind": "Planung",
           "text": "Vorwort des Bürgermeisters (Ausgabe 3/2021): Die Planungen des Teilabschnitts Nörting/Güntersdorf wurden zusammen mit dem Landkreis wieder aufgenommen; man hoffe auf eine Einigung beim Grunderwerb.",
@@ -900,6 +1274,13 @@
           "text": "Der Vorsitzende will „falls möglich – auch einen Teilabschnitt des Radweges … ermöglichen. Dies ist jedoch alles abhängig vom Grunderwerb.“",
           "source": "Gemeinderat, Protokoll 27.04.2021",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/27.04.2021_Protokoll_Gemeinderatssitzung.pdf"
+        },
+        {
+          "date": "2021-05-03",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2021, Investitionsprogramm 2021–2024: „PAF 6 / Oberthann - Landkreisgrenze Freising“, Gesamtkosten 1,0 Mio. €; Baukosten 100.000 € im Jahr 2024.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2021–2024, UA 6551 (Bau- und Vergabeausschuss 10.02.2021, Kreistag 03.05.2021)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=37210&type=do"
         },
         {
           "date": "2021-06-08",
@@ -916,11 +1297,25 @@
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171045"
         },
         {
+          "date": "2022-04-04",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2022, Investitionsprogramm 2022–2025: PAF 6 Oberthann bzw. Niederthann – Landkreisgrenze Freising, Gesamtkosten 2,0 Mio. €; Baukosten je 100.000 € 2024 und 2025; BayGVFG-Festbetrag 1,0 Mio. €.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2022–2025, UA 6551 (Bau- und Vergabeausschuss 16.02.2022, Kreistag 04.04.2022)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=39245&type=do"
+        },
+        {
           "date": "2023",
           "kind": "Grunderwerb",
           "text": "Ausgaben „Geh- und Radweg Oberthann/Nörting – Grunderwerb“: 177.486,57 € (Jahresrechnung 2023).",
           "source": "Haushaltsplan 2025, Vorbericht",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Haushaltsplan_2025.pdf"
+        },
+        {
+          "date": "2023-05-08",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2023, Investitionsprogramm 2023–2026: neu zugeschnitten als „PAF 6 / Radweg Güntersdorf-Nörting (FS)“, Gesamtkosten 1,0 Mio. €; Baukosten 100.000 € erst 2026; Festbetrag 600.000 €.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2023–2026, UA 6551 (Bau- und Vergabeausschuss 15.02.2023, Kreistag 08.05.2023)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=41303&type=do"
         },
         {
           "date": "2023-07-04",
@@ -938,18 +1333,53 @@
           "paywall": true
         },
         {
+          "date": "2024-04-29",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2024, Investitionsprogramm 2024–2027: Radweg Güntersdorf – Nörting, 1,0 Mio. €, davon 135.000 € in den Vorjahren; Bau 75.000 € (2024), 650.000 € (2025), 140.000 € (2026).",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2024–2027, UA 6551 (Bau- und Vergabeausschuss 21.02.2024, Kreistag 29.04.2024)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=43690&type=do"
+        },
+        {
+          "date": "2025",
+          "kind": "Haushalt",
+          "text": "Landkreis Freising, Haushalt 2025 (Entwurf vom 24.01.2025): Kostenstelle „FS 4 Neubau Geh- und Radweg Nörting-Lkrs-Grenze“ mit 35.000 € Resten für Grunderwerb und Bau, dazu Bau 220.000 € (2026) und 60.000 € (2027).",
+          "source": "Landkreis Freising, Haushaltsplan 2025, Kostenstelle 954399",
+          "url": "https://www.kreis-freising.de/fileadmin/user_upload/Aemter/Finanzen/Haushalt_2025_final.pdf"
+        },
+        {
           "date": "2025-01-07",
           "kind": "Aussage",
-          "text": "„Hier ist das ewige Thema „Grunderwerb“ ausschlaggebend. Ohne Grund kein Radweg.“",
-          "source": "Bürgerversammlung Güntersdorf/Aufham 2025",
+          "text": "„Hier ist das ewige Thema „Grunderwerb“ ausschlaggebend. Ohne Grund kein Radweg.“ Auf Schweitenkirchener Seite ist der Grunderwerb Aufham – Gemeindegrenze abgeschlossen, auf Nörtinger Seite fehlen zwei Eigentümer; der Landkreis genehmige nur Radwege, die „von A nach B“ führen.",
+          "source": "Bürgerversammlung Güntersdorf/Aufham 2025 (Gemeinderat 08.04.2025, TOP 14)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/Beantwortung_B%C3%BCrgerversammlungen_2025.pdf"
+        },
+        {
+          "date": "2025-05-19",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2025, Investitionsprogramm 2025–2028: Bau um ein Jahr verschoben, 25.000 € (2025), 675.000 € (2026), 150.000 € (2027); BayGVFG-Zuschuss 600.000 €.",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2025–2028, UA 6551 (Bau- und Vergabeausschuss 19.02.2025, Kreistag 19.05.2025)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=47018&type=do"
+        },
+        {
+          "date": "2025-07-01",
+          "kind": "Aussage",
+          "text": "Gemeinderat Kirchdorf a. d. Amper (Nörting), Anfrage zum Radweg Nörting – Aufham: Ein Eigentümer fehlt noch; ihm sei ein gutes Angebot gemacht worden, man frage nochmals nach.",
+          "source": "Gemeinderat Kirchdorf a. d. Amper 01.07.2025, TOP 5.2.5",
+          "url": "https://buergerinfo-kirchdorf.digitalfabrix.de/si0056.asp?__ksinr=474"
         },
         {
           "date": "2025-11-12",
           "kind": "Ankündigung",
-          "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg PAF 6 – Güntersdorf bis Nörting (Lkr. Freising), 2029, Kreiseigener Tiefbau.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg PAF 6 – Güntersdorf bis Nörting (Lkr. Freising), Kreiseigener Tiefbau; Tabelle „2027“, im Text „für das Jahr 2026 geplant“.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        },
+        {
+          "date": "2025-12-18",
+          "kind": "Haushalt",
+          "text": "Landkreis Freising, Haushalt 2026 (Satzungsbeschluss 18.12.2025): FS 4 Nörting – Landkreisgrenze weiter mit Bau 220.000 € im Jahr 2026 (dazu Reste) und 60.000 € 2027 – früher als der Landkreis Pfaffenhofen sein Stück plant.",
+          "source": "Landkreis Freising, Haushaltsplan 2026, Kostenstelle 954399",
+          "url": "https://www.kreis-freising.de/fileadmin/user_upload/Aemter/Finanzen/Haushalt_2026.pdf"
         },
         {
           "date": "2026-01",
@@ -963,7 +1393,7 @@
         {
           "date": "2026-01-08",
           "kind": "Grunderwerb",
-          "text": "„Derzeit fehlt für die Realisierung des Radweges von Aufham bis nach Nörting noch ein Grundstückseigentümer.“",
+          "text": "„Derzeit fehlt für die Realisierung des Radweges von Aufham bis nach Nörting noch ein Grundstückseigentümer.“ Auch Kirchdorf a. d. Amper ist mit ihm im Gespräch. Es gibt erst einen vorläufigen Grunderwerbsplan; der Ausführungsplan folgt nach dem Grunderwerb.",
           "source": "Bürgerversammlung Aufham 2026 (Rundschau 2/2026)",
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/Rundschau_2_2026.pdf"
         },
@@ -975,11 +1405,33 @@
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Aktuelles/B%C3%BCrgerversammlung_2026_-_Pr%C3%A4sentation.pdf"
         },
         {
+          "date": "2026-03-12",
+          "kind": "Ankündigung",
+          "text": "Neue Fassung des KUS-Steckbriefs: Umsetzung des Geh- und Radwegs PAF 6 Güntersdorf – Nörting jetzt „für das Jahr 2029 geplant“ (Text und Tabelle); sonst unverändert.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 12.03.2026",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/03/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen-1.pdf"
+        },
+        {
+          "date": "2026-04-13",
+          "kind": "Haushalt",
+          "text": "Kreishaushalt 2026, Investitionsprogramm 2026–2029: Gesamtkosten 830.000 €; Bau erst 25.000 € (2028) und 675.000 € (2029), für 2026 und 2027 nichts; Zuschuss 500.000 € (2029).",
+          "source": "Landkreis Pfaffenhofen, Investitionsprogramm Tiefbau 2026–2029, UA 6551 (Bau- und Vergabeausschuss 11.02.2026, Kreistag 13.04.2026)",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/getfile.asp?id=49159&type=do"
+        },
+        {
           "date": "2026-04-21",
           "kind": "Aussage",
-          "text": "Antwort des Landratsamts: kein Bau des Radwegs Aufham – Nörting, solange auf einem Teilstück der Grunderwerb fehlt.",
+          "text": "Antwort des Landratsamts: kein Bau des Radwegs Aufham – Nörting, solange auf einem Teilstück der Grunderwerb fehlt; ohne Förderung baut der Landkreis nicht, und ein auf freier Strecke endender Radweg ist nicht förderfähig.",
           "source": "Gemeinderat TOP 13",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/77116934"
+        },
+        {
+          "date": "2026-11-17",
+          "kind": "Aussage",
+          "text": "Kirchdorf a. d. Amper widmet den Geh- und Radweg Kirchdorf – Nörting als beschränkt öffentlichen Weg; ob er bis zur Landkreisgrenze reicht, geht aus der Bekanntmachung nicht hervor.",
+          "source": "Gemeinde Kirchdorf a. d. Amper, Bekanntmachung 17.11.2026",
+          "url": "https://www.kirchdorf-amper.de/gemeinde/aktuelles/bekanntmachung-ueber-die-widmung-beschraenkt-oeffentliche-weg",
+          "uncertain": true
         }
       ]
     },
@@ -991,7 +1443,16 @@
       "lengthConceptKm": 1.6,
       "baulast": "unklar",
       "konzeptHinweis": "Alternative, falls eine Verbindung entlang der PAF 25 (Schweitenkirchen – Dietersdorf) nicht umsetzbar ist",
-      "events": []
+      "events": [
+        {
+          "date": "2022-02-22",
+          "kind": "Aussage",
+          "text": "Bürgerversammlung: Gehwege in der Ortsdurchfahrt Dietersdorf (PAF 25) sind in den nächsten Jahren nicht geplant.",
+          "source": "Bürgerversammlung 2022 (Gemeinderat 10.03.2022, TOP 16)",
+          "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/4171045",
+          "uncertain": true
+        }
+      ]
     },
     {
       "id": "ampertshausen-saulhof-kirchdorf",
@@ -1117,7 +1578,7 @@
       "baulastNote": "Querungshilfe und Geh- und Radweg an der St 2045 laut KUS: Staatliches Bauamt Ingolstadt",
       "konzeptHinweis": "asphaltierter Gemeindeweg zum bestehenden Radweg an der St 2045",
       "kusHorizont": "Querungshilfe an der St 2045, Abzweigung Giegenhausen, und Geh- und Radweg auf der Gegenseite bis Tankstelle Agip, „im Zusammenhang mit Umbau der AS Pfaffenhofen-West“ (Staatliches Bauamt)",
-      "documented": "Anschluss an den 2015 gebauten Radweg St 2045 Robert-Koch-Straße – GVS Giegenhausen (171.198 €, Förderung 100.500 €). Möglicherweise verwandt: Bürgerfragen zum Feld- und Waldweg Rathaus – Giegenhausen (Bürgerversammlung 2022 und 30.01.2024), 2024 weiter offen.",
+      "documented": "Anschluss an den 2015 gebauten Radweg St 2045 Robert-Koch-Straße – GVS Giegenhausen (171.198 €, Förderung 100.500 €). Möglicherweise verwandt: Bürgerfragen zum Feld- und Waldweg Rathaus – Giegenhausen (Bürgerversammlung 2022 und 01.02.2024), 2024 weiter offen. Seit 2025 im Ausbauplan des Staatlichen Bauamts (AS Pfaffenhofen-West – GVS Giegenhausen, 0,73 km, ohne Termin).",
       "events": [
         {
           "date": "2020-07-07",
@@ -1127,19 +1588,26 @@
           "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/07.07.2020_Gemeinderatssitzung_Protokoll_Nr._4.pdf"
         },
         {
-          "date": "2024-01-30",
+          "date": "2024-02-01",
           "kind": "Anfrage",
           "uncertain": true,
           "text": "Bürgerfrage: Wann wird der Feld- und Waldweg vom Rathaus Richtung Giegenhausen hergerichtet? Antwort: zuständig ist der Kiesgeldbeauftragte.",
-          "source": "Bürgerversammlung Schweitenkirchen 2024",
+          "source": "Bürgerversammlung Schweitenkirchen 01.02.2024 (Gemeinderat 12.03.2024, TOP 9)",
           "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/56885141"
+        },
+        {
+          "date": "2025",
+          "kind": "Programm",
+          "text": "Ausbauplan des Staatlichen Bauamts Ingolstadt für Radwege an Staats- und Bundesstraßen 2025–2030 (nach dem Bayerischen Radgesetz): „St 2045 AS PAF-West - GVS Giegenh.“, 0,73 km, die Lücke zwischen der A 9-Anschlussstelle und der Abzweigung Giegenhausen. Die Liste ist undatiert (online spätestens seit 08.10.2025) und nennt keinen Termin.",
+          "source": "Staatliches Bauamt Ingolstadt, „Neubau von Radwegen an Staats- und Bundesstraßen“ (Ausbaupläne 2025 – 2030)",
+          "url": "https://www.stbain.bayern.de/mam/strassenbau/radverkehrsinfrastrukturen/ausbaupl%C3%A4ne_2025_%E2%80%93_2030.pdf"
         },
         {
           "date": "2025-11-12",
           "kind": "Ankündigung",
           "text": "KUS-Maßnahmenliste: Neubau gemeinsamer Geh- und Radweg und Querungshilfe St 2045 – Abzweigung Giegenhausen, „im Zusammenhang mit Umbau der AS Pfaffenhofen-West“, Staatliches Bauamt Ingolstadt.",
-          "source": "KUS-Steckbrief Schweitenkirchen",
-          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
         }
       ]
     },
@@ -1475,12 +1943,33 @@
       "uncertain": true
     },
     {
+      "date": "2015-10-14",
+      "kind": "Aussage",
+      "text": "Bau- und Vergabeausschuss des Landkreises, TOP 1.1: Das Staatliche Bauamt stellt das Programm zum nachträglichen Anbau von Radwegen an Bundes- und Staatsstraßen vor; „zustimmend zur Kenntnis genommen“ (einzelne Strecken nicht im Protokoll).",
+      "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 14.10.2015, TOP 1.1",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=3182"
+    },
+    {
+      "date": "2018-09-14",
+      "kind": "Aussage",
+      "text": "Pressegespräch von KUS und Landratsamt: Im Landkreis seien acht Radwege an Bundes- und Staatsstraßen geplant und neun Projekte auf Kreisebene; an Kreisstraßen seien weitere 20 km Radwege in Planung (welche, steht im archivierten Artikel nicht).",
+      "source": "Pfaffenhofener Kurier, 16.09.2018 (Webarchiv)",
+      "url": "https://web.archive.org/web/20180917131052/https://www.donaukurier.de/lokales/pfaffenhofen/Verkehr-Pfaffenhofen-DKmobil-Verkehr-Mehr-Wege-fuer-die-Radler-im-Landkreis-Pfaffenhofen;art600,3916497"
+    },
+    {
       "date": "2019",
       "kind": "Programm",
       "text": "Das KUS erhält den Bewilligungsbescheid (50 % Förderung, AELF) für die einheitliche Ausschilderung der bestehenden Rad- und Wanderwege im Landkreis (rund 700 km Radwegenetz).",
       "source": "Rundschau 2/2019, S. 74",
       "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/sk_rundschau_ausgabe_02_2019_V9.pdf",
       "uncertain": true
+    },
+    {
+      "date": "2021-01-25",
+      "kind": "Beschluss",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Ferienausschuss stimmt dem Antrag des BUNTEN BÜNDNISSES auf ein landkreisweites Fahrradverkehrskonzept „grundsätzlich“ zu (13:0); Durchführung und Finanzierung später.",
+      "source": "Landkreis Pfaffenhofen, Ferienausschuss 25.01.2021, TOP 2, Vorlage 2021/3731",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=9462"
     },
     {
       "date": "2021-01-26",
@@ -1490,12 +1979,83 @@
       "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Gemeinderat/Protokolle/26.01.2021_Protokoll_Gemeinderatssitzung.pdf"
     },
     {
-      "date": "2023-11",
+      "date": "2021-11-29",
       "kind": "Beschluss",
-      "text": "Gemeinderat: Nach Vorarbeit des Arbeitskreises Gemeindeentwicklung beschließt das Gremium einstimmig, Angebote für ein Geh- und Radwegekonzept einzuholen.",
-      "source": "Pfaffenhofener Kurier, 11.11.2023",
-      "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/schweitenkirchen-will-in-sicherheit-fuer-radfahrer-investieren-14776263",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Kreisausschuss lässt ein Radverkehrskonzept von einem externen Büro erstellen; mindestens eine Maßnahme soll bis Ende 2023 umgesetzt werden (Förderprogramm „Stadt und Land“), 11:0.",
+      "source": "Landkreis Pfaffenhofen, Kreisausschuss 29.11.2021, TOP 9, Vorlage 2021/3933",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=9959"
+    },
+    {
+      "date": "2022-03-28",
+      "kind": "Planung",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Auftrag an das Stadt- und Verkehrsplanungsbüro Kaulen, Aachen, für 78.543,57 € (13:0).",
+      "source": "Landkreis Pfaffenhofen, Kreisausschuss 28.03.2022, TOP 6, Vorlage 2022/3990",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=10045"
+    },
+    {
+      "date": "2023-07",
+      "kind": "Planung",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Netzentwurf, Mängel und Maßnahmen werden dem Arbeitskreis und allen Landkreiskommunen vorgestellt.",
+      "source": "Landkreis Pfaffenhofen, Vorlage 2023/4371 (Kreisausschuss 25.09.2023), Sachverhalt",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/vo0050.asp?__kvonr=9308"
+    },
+    {
+      "date": "2023-09-12",
+      "kind": "Anfrage",
+      "text": "Gemeinderat, TOP 9: Der Unterarbeitskreis Mobilität fordert ein Geh- und Radwegekonzept bis Ende 2024 mit einer Strategie für den Flächenerwerb und Vorrang für den Weg nach Sünzhausen.",
+      "source": "Gemeinderat TOP 9",
+      "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21691989"
+    },
+    {
+      "date": "2023-09-25",
+      "kind": "Beschluss",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Kreisausschuss beschließt, den Ausbau der Radinfrastruktur „voranzutreiben“, und richtet dafür eine koordinierende Stelle beim KUS ein (11:0). Über das Netz, die Maßnahmen oder Prioritäten beschließt er nicht; einen solchen Beschluss gibt es in den öffentlichen Unterlagen des Landkreises bis heute nicht.",
+      "source": "Landkreis Pfaffenhofen, Kreisausschuss 25.09.2023, TOP 8, Vorlage 2023/4371",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=10805"
+    },
+    {
+      "date": "2023-10-16",
+      "kind": "Aussage",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Kreistag nimmt den Beschluss des Kreisausschusses zur Kenntnis; eine eigene Beschlussfassung über das Konzept gibt es nicht.",
+      "source": "Landkreis Pfaffenhofen, Kreistag 16.10.2023, TOP 6, Informationsvorlage 2023/4396",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=10806"
+    },
+    {
+      "date": "2023-11-07",
+      "kind": "Beschluss",
+      "text": "Gemeinderat, TOP 11.1: Die Verwaltung wird beauftragt, Angebote für ein Geh- und Radwegeverkehrskonzept einzuholen; nach dessen Priorisierung sollen Haushaltsmittel (unter anderem für Grunderwerb) eingestellt werden (16:0).",
+      "source": "Gemeinderat TOP 11.1",
+      "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/21692369"
+    },
+    {
+      "date": "2024-01-12",
+      "kind": "Planung",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Laut KUS liegen Gesamtmaßnahmenkatalog und Schlussbericht vor (rund 820 Örtlichkeiten, knapp 1.950 Einzelmaßnahmen); beide sind nicht veröffentlicht.",
+      "source": "KUS / Erlebnisregion Pfaffenhofen, Meldung vom 12.01.2024",
+      "url": "https://erlebnisregion-pfaffenhofen.de/abschluss-des-mobilitaetskonzeptes-fuer-den-radverkehr-im-landkreis-pfaffenhofen/"
+    },
+    {
+      "date": "2024-04",
+      "kind": "Planung",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Öffentliche Vorstellung im Landratsamt durch das Büro Kaulen: 467 km Alltagsradnetz mit Radvorrangrouten, rund 78 km Neubau und gut 100 km Ausbau empfohlen.",
+      "source": "Pfaffenhofener Kurier, 16.04.2024",
+      "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/der-landkreis-pfaffenhofen-soll-laut-mobilitaetskonzept-ein-radl-paradies-werden-15857853",
       "paywall": true
+    },
+    {
+      "date": "2024-06-12",
+      "kind": "Aussage",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Bau- und Vergabeausschuss begründet einen Radweg an der PAF 29 damit, dass er laut Konzept eine Radvorrangroute und „kurzfristig umzusetzende Maßnahme“ sei; das Konzept dient dem Kreis-Tiefbau also als Grundlage.",
+      "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 12.06.2024, TOP 4.4, Vorlage 2024/4566",
+      "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/to0050.asp?__ktonr=11147",
+      "uncertain": true
+    },
+    {
+      "date": "2025-11-12",
+      "kind": "Ankündigung",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises: Der Landkreis veröffentlicht Steckbriefe für alle 19 Kommunen; die Maßnahmen seien mit den Bürgermeistern in Workshops priorisiert worden.",
+      "source": "Landkreis Pfaffenhofen, Meldung vom 12.11.2025",
+      "url": "https://www.landkreis-pfaffenhofen.de/aktuelle-meldungen/kus-veroeffentlicht-steckbriefe-zum-radverkehrskonzept-ueberblick-ueber-massnahmen-in-allen-kommunen"
     },
     {
       "date": "2026-04",
@@ -1504,36 +2064,57 @@
       "source": "Pfaffenhofener Kurier, 25.04.2026",
       "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/das-ruecklagenpolster-wird-jetzt-ziemlich-duenn-20999788",
       "paywall": true
+    },
+    {
+      "date": "2026-06-16",
+      "kind": "Anfrage",
+      "text": "Bau- und Umweltausschuss, TOP 7: Bitte, das 2023 beschlossene Radverkehrskonzept der Gemeinde auf der Homepage zu veröffentlichen; der Vorsitzende sagt das zu.",
+      "source": "Bau- und Umweltausschuss TOP 7",
+      "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/82494080"
     }
   ],
   "quellen": [
     {
       "label": "Landkreis (Ratsinformationssystem)",
       "from": "2008",
-      "bis": "2026-11-18",
-      "bisText": "gesucht am 18.11.2026",
-      "note": "Kreisausschüsse, online ab 2008; Stichwortsuche nach den Orten der Gemeinde, den Kreisstraßen PAF 9, 23 und 25 und „Radweg“"
+      "bis": "2026-11-22",
+      "bisText": "gesucht am 22.11.2026",
+      "note": "Kreistag und Ausschüsse, online ab 10/2008: alle Sitzungen und öffentlichen Niederschriften durchgesehen, dazu die Investitionsprogramme (mit Anlagen erst ab 2021); nichtöffentliche Teile (etwa Grunderwerb) sind nicht einsehbar"
     },
     {
       "label": "Rundschau (Gemeindeblatt)",
-      "from": "2019",
+      "from": "2015",
       "bis": "2026",
       "bisText": "bis Ausgabe 3/2026",
-      "note": "Ausgaben online ab 2019; eine Ausgabe von 2012 über das Webarchiv"
+      "note": "Ausgaben online ab 2019 (2/2024 und 3/2024 nur unverlinkt); 1/2015 bis 3/2016 und 2/2012 über das Webarchiv; 4/2016 bis 2018 nicht auffindbar"
     },
     {
       "label": "Gemeinderat",
       "from": "2020-01",
-      "bis": "2026-10-27",
-      "bisText": "bis zur Sitzung vom 27.10.2026",
-      "note": "Protokolle 01/2020–04/2021 auf der Gemeindeseite, danach Ratsinformationssystem: alle öffentlichen Tagesordnungspunkte durchgesehen; nichtöffentliche (etwa Grunderwerb, Vergaben) sind dort nicht einsehbar; Protokolle 2014–2019 sind nicht online"
+      "bis": "2026-11-17",
+      "bisText": "bis zur Sitzung vom 17.11.2026",
+      "note": "Protokolle 01/2020–04/2021 auf der Gemeindeseite, danach Ratsinformationssystem (ab 12/2020): alle öffentlichen Tagesordnungspunkte im Wortlaut ausgewertet; nichtöffentliche (etwa Grunderwerb, Vergaben) sind dort nicht einsehbar; Protokolle 2014–2019 sind nicht online, Tagesordnungen 2015/16 nur über die Rundschau"
     },
     {
       "label": "Pfaffenhofener Kurier",
+      "from": "2014",
+      "bis": "2026-11-22",
+      "bisText": "gesucht am 22.11.2026",
+      "note": "Online-Archiv ab 2022 durchsucht (Orte, Kreis- und Staatsstraßen, Radverkehrskonzept); ältere Artikel über das Webarchiv, lückenhaft"
+    },
+    {
+      "label": "Freistaat (Radwegprogramme, Staatliches Bauamt)",
+      "from": "2015",
+      "bis": "2026-11-22",
+      "bisText": "gesucht am 22.11.2026",
+      "note": "Radwegprogramme 2015–2019 und 2020–2024, Ausbauplan 2025–2030, Projekte und Meldungen des Staatlichen Bauamts Ingolstadt, Landtagsanfragen"
+    },
+    {
+      "label": "Nachbarn (Landkreis Freising, Markt Au, Kirchdorf a. d. Amper)",
       "from": "2022",
-      "bis": "2026-11-18",
-      "bisText": "gesucht am 18.11.2026",
-      "note": "Online-Archiv erst ab 2022 durchsuchbar; ältere Artikel nur vereinzelt"
+      "bis": "2026-11-22",
+      "bisText": "gesucht am 22.11.2026",
+      "note": "Haushalte des Landkreises Freising 2025 und 2026; Tagesordnungen und Bekanntmachungen von Au und Kirchdorf (Beschlusstexte meist nicht öffentlich)"
     }
   ]
 }

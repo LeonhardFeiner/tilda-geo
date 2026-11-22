@@ -39,8 +39,9 @@ describe('radwege data (radwege/routes.json + lines.geojson)', () => {
     expect(group('guentersdorf-noerting')).toEqual(new Set(['seit-konzept']))
     // a deferral in 2019 is no step; a listing in the Landkreis's KUS is an announcement
     expect(group('preinersdorf-st2045')).toEqual(new Set(['nichts']))
-    expect(group('giegenhausen-schweitenkirchen')).toEqual(new Set(['nichts']))
     expect(group('winden-niederthann')).toEqual(new Set(['nichts']))
+    // …but an entry in the Staatliches Bauamt's Ausbauplan 2025–2030 is a step (Programm)
+    expect(group('giegenhausen-schweitenkirchen')).toEqual(new Set(['seit-konzept']))
     expect(data.korrekturen!.length).toBeGreaterThan(0)
   })
   test('plan 5/1 along the PAF 25 has no way to release; the Landkreis network is there', () => {

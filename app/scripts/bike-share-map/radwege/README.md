@@ -17,7 +17,11 @@ marks a source behind a paywall (Pfaffenhofener Kurier Plus): the page shows our
 and the link, never the article text or longer verbatim quotes (UrhG, Presseverleger-Leistungsschutz
 § 87f). Events about the whole network (concept, budget) go into the top-level `allgemein`.
 2026-11-18: 51 events added from `schweitenkirchen-research/radwege-schweitenkirchen-2026-11-18.tar.gz`
-(`vorgaenge.json`; its `quote` field stays in the research archive). A finished route gets
+(`vorgaenge.json`; its `quote` field stays in the research archive). 2026-11-22: 75 events from the
+Landkreis-network research (`schweitenkirchen-research/research_notes/Landkreis-Radnetz/`, seven
+strands, merge log `MERGED-2026-11-22.md` there): Landkreis investment programmes 2021–2026, the
+state's Radweg programmes and the Staatliches Bauamt's Ausbauplan 2025–2030, the Gemeinde's RIS
+since 12/2020, Rundschau 2015/16 and older PK articles via the Webarchiv. A finished route gets
 `"built": true`. When a published entry changes (kind, date, route), add a line to `korrekturen`:
 only for what a reader may have cited (an event's classification or date, a route's status, the
 km figures), not for line geometry that changes neither; short, saying what is right now. A
