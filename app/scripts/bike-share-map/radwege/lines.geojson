@@ -3147,7 +3147,7 @@
         "ausbau": "freigabe",
         "weg": "ortsstrasse",
         "belag": "asphalt",
-        "fromPlan": 0.03,
+        "fromPlan": 0.04,
         "osmWays": [28407604],
         "hinweis": "Der Plan zeichnet den Weg \u00f6stlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurst\u00fcck, die Erl\u00e4uterung spricht von Gemeindewegen. Westlich des Hofs verl\u00e4uft ein schmales Wegeflurst\u00fcck zwischen den beiden Stra\u00dfen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor. Zwischen dem Feldweg im Norden und der Thomashecke fehlt heute ein Weg; \u00fcber den Hof f\u00fchrt nur private Fl\u00e4che.",
         "flur": "genutzt"
@@ -3156,31 +3156,8 @@
         "type": "LineString",
         "coordinates": [
           [11.613915, 48.50051],
-          [11.614179, 48.501575],
-          [11.614179, 48.501611],
-          [11.614141, 48.501663]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "dietersdorf-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "ortsstrasse",
-        "belag": "asphalt",
-        "fromPlan": 0.03,
-        "osmWays": [28407604],
-        "hinweis": "Der Plan zeichnet den Weg \u00f6stlich am Hof entlang; dort liegt laut Flurkarte kein Wegeflurst\u00fcck, die Erl\u00e4uterung spricht von Gemeindewegen. Westlich des Hofs verl\u00e4uft ein schmales Wegeflurst\u00fcck zwischen den beiden Stra\u00dfen, im Luftbild ohne Weg. Welcher Weg gemeint ist, geht aus dem Konzept nicht hervor. Zwischen dem Feldweg im Norden und der Thomashecke fehlt heute ein Weg; \u00fcber den Hof f\u00fchrt nur private Fl\u00e4che.",
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.614141, 48.501663],
-          [11.614028, 48.501814],
-          [11.614257, 48.501931]
+          [11.614157, 48.501486],
+          [11.614185, 48.501529]
         ]
       }
     },
@@ -3199,9 +3176,9 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.614257, 48.501931],
+          [11.614185, 48.501529],
           [11.614273, 48.502021],
-          [11.614592, 48.502641]
+          [11.614594, 48.502645]
         ]
       }
     },
@@ -3220,7 +3197,7 @@
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.614592, 48.502641],
+          [11.614594, 48.502645],
           [11.614777, 48.503001],
           [11.614741, 48.503032],
           [11.614687, 48.503059],

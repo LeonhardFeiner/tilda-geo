@@ -558,11 +558,12 @@
     "ohneWeg": {
       "lines": [
         [
+          [11.614179, 48.501611],
           [11.614273, 48.502023],
           [11.614782, 48.503011]
         ]
       ],
-      "why": "Zwischen dem Feldweg im Norden und der Straße Thomashecke gibt es keinen Weg: am Feldrand östlich des Hofs ist keiner zu sehen, die Verbindung über den Hof (Gewächshäuser) ist privat (Luftbild, Flurkarte, OpenStreetMap, 22.11.2026). Die Linie bleibt dort wie gezeichnet."
+      "why": "Zwischen dem Feldweg im Norden und der Straße Thomashecke gibt es keinen Weg: am Feldrand östlich des Hofs ist keiner zu sehen, die Verbindung über den Hof (Hofeinfahrt, Gewächshäuser) ist privat (Luftbild, Flurkarte, OpenStreetMap, 22.11.2026). Die Linie bleibt dort wie gezeichnet: vom Ende der Straße gerade nach Norden, nicht über die Hofeinfahrt."
     }
   },
   "kurz|geisenhausen-altkaslehen": {
