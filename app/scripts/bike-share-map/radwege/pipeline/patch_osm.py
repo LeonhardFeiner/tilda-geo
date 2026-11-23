@@ -1,12 +1,18 @@
 """Patch cache/osm-area.json with ways changed in OSM after the DB extract (Overpass `newer:`),
 so the tracker can show edits before the next Geofabrik extract. Tags are mapped the way
-export_osm.sh / TILDA would for the common cases (road class, surface, footway + bicycle=yes);
-bike lanes derived from cycleway:* tags on roads are kept as they were. The next full run
+export_osm.sh / TILDA would for the common cases (road class, surface, footway + bicycle=yes,
+cycle tracks tagged on the road, cycleway:*=track, as a line 5 m to that side); other bike lanes
+derived from cycleway:* tags on roads are kept as they were. The next full run
 (export_osm.sh on a fresh DB) replaces the patch.
 
 usage: patch_osm.py osm-area.json changed.json  (Overpass JSON: way[highway](newer:…); out meta geom)
 """
 import json, sys
+from pyproj import Transformer
+from shapely.geometry import LineString
+
+to_utm = Transformer.from_crs(4326, 25832, always_xy=True)
+to_wgs = Transformer.from_crs(25832, 4326, always_xy=True)
 
 area_path, changed_path = sys.argv[1:3]
 area = json.load(open(area_path))
@@ -40,6 +46,15 @@ for e in changed:
         added.append(dict(id=e['id'], tags=dict(tags, bikelane='footwayBicycleYes_adjoiningOrIsolated'), coords=coords))
     elif t.get('highway') == 'path' and t.get('bicycle') == 'designated' and t.get('foot') == 'designated':
         added.append(dict(id=e['id'], tags=dict(tags, bikelane='footAndCyclewayShared_adjoiningOrIsolated'), coords=coords))
+    # a cycle track tagged on the road (cycleway:left|right|both=track), as TILDA derives it: its own
+    # line beside the road on that side (shared with pedestrians when segregated=no)
+    for side, sign in (('left', 1), ('right', -1)):
+        if 'track' not in (t.get(f'cycleway:{side}'), t.get('cycleway:both')): continue
+        seg = t.get(f'cycleway:{side}:segregated') or t.get('cycleway:both:segregated') or t.get('cycleway:segregated')
+        cat = 'footAndCyclewayShared_adjoining' if seg == 'no' else 'cycleway_adjoining'
+        g = LineString([to_utm.transform(*c) for c in coords]).offset_curve(sign * 5.0)
+        off = [[round(v, 7) for v in to_wgs.transform(*c)] for c in g.coords]
+        added.append(dict(id=e['id'], tags=dict(tags, bikelane=cat), coords=off))
 area['ways'] = kept + added
 json.dump(area, open(area_path, 'w'))
 print(f'patched {len(changed)} ways ({sum(1 for e in changed if e["id"] not in before)} new)', file=sys.stderr)
