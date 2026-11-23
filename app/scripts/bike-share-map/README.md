@@ -62,8 +62,8 @@ current export, so run the export first.
    (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). The mirror is the same build,
    local pages included (`/konzept`, `/station`, `/umweg`; GitHub Pages serves `x.html` at `/x`),
    but unlinked there: the `viewer-detour` and `viewer-local-pages` metas are flipped to `off`.
-   The old name `radwege-schweitenkirchen.html` is a redirect stub
-   (`PAGE_REDIRECTS` in `constants.ts`). Debug on github.io first. The
+   Renamed pages can forward from their old name via `PAGE_REDIRECTS` in `constants.ts` (empty
+   now: the old names were dropped on 2026-11-24). Debug on github.io first. The
    workflow fails before uploading if the deploy folder exceeds 900 MB (GitHub Pages allows 1 GB;
    it is ~570 MB now), and the built `output/viewer/manifest.json` adds a `datasets` field with
    each context dataset's `fetchedAt`/`osmDataFrom`/`source` stamps next to the export's fields.

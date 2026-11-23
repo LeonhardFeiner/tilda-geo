@@ -97,8 +97,7 @@ export const DETOUR_DIR = 'detour'
 
 /**
  * Radwege tracker (radwegePage.ts), served at /konzept: every route of the Schweitenkirchen
- * Radwegekonzept and its documented progress. Its data file uses the same stem. Was
- * 'radwege-schweitenkirchen' (see PAGE_REDIRECTS).
+ * Radwegekonzept and its documented progress. Its data file uses the same stem.
  */
 export const RADWEGE_PAGE_STEM = 'konzept'
 
@@ -106,9 +105,7 @@ export const RADWEGE_PAGE_STEM = 'konzept'
  * Former page names → current stem. buildViewer writes a small redirect page under each old
  * name, keeping query and hash, so links and QR codes already handed out keep working.
  */
-export const PAGE_REDIRECTS: Readonly<Record<string, string>> = {
-  'radwege-schweitenkirchen': RADWEGE_PAGE_STEM,
-}
+export const PAGE_REDIRECTS: Readonly<Record<string, string>> = {}
 
 /**
  * Unlisted local pages the region card offers under "Weitere Auswertungen", only for the regions
