@@ -1138,7 +1138,7 @@
         "weg": "kreisstrasse",
         "belag": "asphalt",
         "fromPlan": 0.0,
-        "osmWays": [51264300],
+        "osmWays": [51264300, 1583732030],
         "flur": "weg"
       },
       "geometry": {
