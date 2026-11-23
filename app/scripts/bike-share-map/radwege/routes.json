@@ -963,6 +963,13 @@
       "documented": "Im Lageplan 5/1 als Haupttrasse entlang der PAF 25 eingezeichnet, aber nicht beschriftet; Fortsetzung der Parallelroute Preinerszell – Schmiedhausen.",
       "events": [
         {
+          "date": "2015-01-26",
+          "kind": "Anfrage",
+          "text": "Bürgerversammlung Schweitenkirchen: Anregung, „in Fortführung des Weges vom gemeindlichen Friedhof“ einen Gehweg durch Schmiedhausen entlang der Smidostraße anzulegen, vor allem wegen der Doppelkurve am südlichen Ortseingang. Bürgermeister: wegen der Bebauung an der Smidostraße käme nur eine Führung über die Nebenstraßen in Frage. Der Weg am Friedhof bestand also schon und galt als Gehweg.",
+          "source": "Rundschau 1/2015, S. 12–13 (Bürgerversammlung Schweitenkirchen; Gemeinderat 24.02.2015)",
+          "url": "https://web.archive.org/web/20160818124317/http://schweitenkirchen.de/export/download.php?id=1592&lang=de&type=download&object=1592"
+        },
+        {
           "date": "2021-12-14",
           "kind": "Beschluss",
           "uncertain": true,
