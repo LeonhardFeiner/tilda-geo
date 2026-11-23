@@ -169,9 +169,17 @@ jobs:
             echo "::error::Old base URL still present after rewrite"
             exit 1
           fi
-          # Since 2026-11-23 the local pages (konzept, bahnhof, umweg) are published on the subdomain
-          # too. To hide them again: flip index.html's viewer-detour / viewer-local-pages metas to
-          # "off" here and delete the pages and their data (see git history of this step).
+          # The local pages (/konzept, /bahnhof, /umweg) are on the subdomain too, but unlinked: only
+          # who knows the address finds them. index.html's viewer-detour and viewer-local-pages
+          # metas switch the region card's links to them off.
+          for name in viewer-detour viewer-local-pages; do
+            flag="<meta name=\"${name}\" content=\"on\" />"
+            if [ "$(grep -cF "$flag" _site/index.html)" != "1" ]; then
+              echo "::error::${name} meta not found exactly once in index.html; generateViewerHtml.ts changed? Update this step (and bootViewer's mirror option)."
+              exit 1
+            fi
+            sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
+          done
           echo "$MIRROR_DOMAIN" > _site/CNAME
           touch _site/.nojekyll
           du -sh _site

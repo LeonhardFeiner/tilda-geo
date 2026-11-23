@@ -923,7 +923,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
-    'with viewer-detour and viewer-local-pages off, the card links no local page',
+    'the mirror build (viewer-detour and viewer-local-pages off) links no local page',
     async () => {
       page = await bootViewer(IN_LANDKREIS, { mirror: true })
       const p = page
