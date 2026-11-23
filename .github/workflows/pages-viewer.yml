@@ -169,24 +169,9 @@ jobs:
             echo "::error::Old base URL still present after rewrite"
             exit 1
           fi
-          # The subdomain is published without the detour map ("Umwege per Rad zu den Nachbarorten"):
-          # index.html's viewer-detour meta switches the links off, the page and its data go.
-          flag='<meta name="viewer-detour" content="on" />'
-          if [ "$(grep -cF "$flag" _site/index.html)" != "1" ]; then
-            echo "::error::viewer-detour meta not found exactly once in index.html; generateViewerHtml.ts changed? Update this step (and bootViewer's mirror option)."
-            exit 1
-          fi
-          sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
-          # Likewise the card's links to the other unlisted local pages (LOCAL_PAGES in constants.ts).
-          flag='<meta name="viewer-local-pages" content="on" />'
-          if [ "$(grep -cF "$flag" _site/index.html)" != "1" ]; then
-            echo "::error::viewer-local-pages meta not found exactly once in index.html; generateViewerHtml.ts changed? Update this step."
-            exit 1
-          fi
-          sed -i "s#${flag}#${flag/\"on\"/\"off\"}#" _site/index.html
-          rm -rf _site/umweg.html _site/detour _site/detourRouting.js
-          # The Radwege tracker (RADWEGE_PAGE_STEM in constants.ts) stays on github.io only.
-          rm -f _site/radwege-schweitenkirchen.html _site/radwege-schweitenkirchen.json
+          # Since 2026-11-23 the local pages (konzept, bahnhof, umweg) are published on the subdomain
+          # too. To hide them again: flip index.html's viewer-detour / viewer-local-pages metas to
+          # "off" here and delete the pages and their data (see git history of this step).
           echo "$MIRROR_DOMAIN" > _site/CNAME
           touch _site/.nojekyll
           du -sh _site

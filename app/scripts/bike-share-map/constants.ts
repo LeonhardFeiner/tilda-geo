@@ -82,10 +82,10 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
 } as const
 
 /**
- * Unlisted "nearest station" map (stationAreasPage.ts) — linked from nowhere and marked
- * noindex. Its data file uses the same stem.
+ * "Nearest station" map (stationAreasPage.ts), served at /bahnhof; noindex, linked only from
+ * LOCAL_PAGES. Its data file uses the same stem. Was 'naechste-station' (see PAGE_REDIRECTS).
  */
-export const STATION_AREAS_PAGE_STEM = 'naechste-station'
+export const STATION_AREAS_PAGE_STEM = 'bahnhof'
 
 /**
  * Unlisted detour map (detourPage.ts): safe bike route vs. usual car road between the places
@@ -96,17 +96,25 @@ export const DETOUR_PAGE_STEM = 'umweg'
 export const DETOUR_DIR = 'detour'
 
 /**
- * Unlisted Radwege tracker (radwegePage.ts): every route of the Schweitenkirchen Radwegekonzept
- * and its documented progress. github.io only — the mirror job in pages-viewer.yml deletes the
- * page and its data file (same stem, .json).
+ * Radwege tracker (radwegePage.ts), served at /konzept: every route of the Schweitenkirchen
+ * Radwegekonzept and its documented progress. Its data file uses the same stem. Was
+ * 'radwege-schweitenkirchen' (see PAGE_REDIRECTS).
  */
-export const RADWEGE_PAGE_STEM = 'radwege-schweitenkirchen'
+export const RADWEGE_PAGE_STEM = 'konzept'
+
+/**
+ * Former page names → current stem. buildViewer writes a small redirect page under each old
+ * name, keeping query and hash, so links and QR codes already handed out keep working.
+ */
+export const PAGE_REDIRECTS: Readonly<Record<string, string>> = {
+  'radwege-schweitenkirchen': RADWEGE_PAGE_STEM,
+  'naechste-station': STATION_AREAS_PAGE_STEM,
+}
 
 /**
  * Unlisted local pages the region card offers under "Weitere Auswertungen", only for the regions
  * named here, so the nationwide comparison stays neutral everywhere else. The Umweg link is added
- * by Landkreis (CONFIG.detourLandkreise). github.io only: the mirror job in pages-viewer.yml flips
- * the viewer-local-pages meta to "off". `id` is the link's element id.
+ * by Landkreis (CONFIG.detourLandkreise). `id` is the link's element id.
  */
 export const LOCAL_PAGES: ReadonlyArray<{
   id: string

@@ -15,7 +15,7 @@ Everything here runs from `app/` (`bun run bike-share-map:<script>`).
 | `*.bundle.ts`                                  | Typed modules exposed to the page as globals (`TildaStats`, `RankingDisplay`, …).                          |
 | `minifyPageHtml.ts`                            | The build's last step: minifies the inline scripts of the served pages (`BIKE_SHARE_NO_MINIFY=1` to skip). |
 | `../stats-export/statsRegionPack.ts`           | The `stats-*.msgpack` format (v3: columns + shared-border topology in `statsTopology.ts`).                 |
-| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `naechste-station.html`.                |
+| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `bahnhof.html`.                         |
 | `fetch*.ts`, `populateRegionContextMetrics.ts` | Context datasets, each written to `output/<name>.json` through `fetchCommon.writeDataset`.                 |
 | `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                                   |
 | `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).                           |
@@ -59,9 +59,10 @@ current export, so run the export first.
    generated config, push to `local`. CI tests, builds and deploys to github.io (about 12
    minutes). The BFS subdomain (`radweg.bfschweitenkirchen.de`) only changes on a release:
    publish a GitHub Release on the fork, or run the workflow by hand with `mirror` ticked
-   (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). The mirror is the same build
-   without the detour map (`umweg.html`, `detour/`, the links in the region card: the
-   `viewer-detour` meta is flipped to `off`). Debug on github.io first. The
+   (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). The mirror is the same build,
+   local pages included (`/konzept`, `/bahnhof`, `/umweg`; GitHub Pages serves `x.html` at `/x`).
+   The old names `radwege-schweitenkirchen.html` and `naechste-station.html` are redirect stubs
+   (`PAGE_REDIRECTS` in `constants.ts`). Debug on github.io first. The
    workflow fails before uploading if the deploy folder exceeds 900 MB (GitHub Pages allows 1 GB;
    it is ~570 MB now), and the built `output/viewer/manifest.json` adds a `datasets` field with
    each context dataset's `fetchedAt`/`osmDataFrom`/`source` stamps next to the export's fields.
@@ -102,7 +103,7 @@ The stress model and cost formula live in `detourRouting.ts` (tested in `detourR
 after changing it, rebuild the viewer before running `detourPage.test.ts` — the page test loads
 the built `detourRouting.js`.
 
-## Radwege tracker (`radwege-schweitenkirchen.html`, github.io only)
+## Radwege tracker (`konzept.html`, served at `/konzept`)
 
 Every route of the Schweitenkirchen Radwegekonzept (WipflerPLAN, 07.06.2024, Lagepläne 5/1 and
 5/2) on a map, with what has publicly happened to it. One plan at a time; a bar of the progress
@@ -165,5 +166,5 @@ Unlisted and `noindex`; the mirror job in `pages-viewer.yml` deletes the page an
   `radwege/pruefen.geojson` from `pipeline/check.py`) marks where the matching may be wrong.
   Statements, citizen questions, announcements and events marked `uncertain` never count.
 
-`buildViewer.ts` writes the page and `radwege-schweitenkirchen.json`; tests:
+`buildViewer.ts` writes the page and `konzept.json`; tests:
 `radwegeStatus.test.ts`, `radwegePage.test.ts` (jsdom, needs the built data file).

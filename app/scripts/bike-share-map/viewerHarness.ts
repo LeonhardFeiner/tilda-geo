@@ -198,8 +198,8 @@ type BootOptions = {
   /** Whether a canvas hands out a WebGL context (the page probes before creating the map). Default true. */
   webgl?: boolean
   /**
-   * The mirror build (radweg.bfschweitenkirchen.de): the same rewrite the workflow's mirror job
-   * applies to index.html, which turns the detour-map links off.
+   * index.html with the viewer-detour and viewer-local-pages metas flipped to "off", the switch a
+   * deploy uses to hide the local pages (the mirror did until 2026-11-23).
    */
   mirror?: boolean
   /** Served instead of the file in output/viewer/ at that path (e.g. a data file with test data). */

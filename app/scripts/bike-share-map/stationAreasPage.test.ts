@@ -6,13 +6,13 @@ import { bootPage, pageBundles, type ViewerPage } from './viewerHarness'
 
 /**
  * The nearest-station page, generated from source, booted in jsdom against the built
- * output/viewer/naechste-station.json. MapLibre is stubbed.
+ * output/viewer/bahnhof.json. MapLibre is stubbed.
  */
 
-const dataFile = join(import.meta.dirname, 'output', 'viewer', 'naechste-station.json')
+const dataFile = join(import.meta.dirname, 'output', 'viewer', 'bahnhof.json')
 const html = () =>
   stationAreasPageHtml({
-    dataHref: './naechste-station.json',
+    dataHref: './bahnhof.json',
     dataDateLabel: '01.01.2026',
     accessBaseHref: './station-access/',
     accessFiles: { bike: ['areas', 'minutes', 'km'] },

@@ -23,8 +23,8 @@ const pages: Record<string, string> = {
     methodikHref: './methodik.html',
     viewerHref: './index.html',
   }),
-  'naechste-station.html': stationAreasPageHtml({
-    dataHref: './naechste-station.json',
+  'bahnhof.html': stationAreasPageHtml({
+    dataHref: './bahnhof.json',
     dataDateLabel: '01.01.2026',
     accessBaseHref: './station-access/',
     accessFiles: { foot: ['areas', 'minutes', 'km'], bike: ['areas', 'minutes', 'km'] },
@@ -42,8 +42,8 @@ const pages: Record<string, string> = {
     siteUrl: 'https://example.org/map/',
   }),
   'impressum.html': legalPageHtml({ projectLead: 'Test', viewerHref: './index.html' }),
-  'radwege-schweitenkirchen.html': radwegePageHtml({
-    dataHref: './radwege-schweitenkirchen.json',
+  'konzept.html': radwegePageHtml({
+    dataHref: './konzept.json',
     projectLead: 'Test',
     konzeptUrl: 'https://example.org/radwegekonzept',
   }),
@@ -68,8 +68,8 @@ test('the pages with client logic do have inline scripts', () => {
   for (const name of [
     'index.html',
     'umweg.html',
-    'naechste-station.html',
-    'radwege-schweitenkirchen.html',
+    'bahnhof.html',
+    'konzept.html',
   ]) {
     expect(inlineScripts(pages[name]!).length).toBeGreaterThan(0)
   }

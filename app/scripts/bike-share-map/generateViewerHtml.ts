@@ -195,12 +195,12 @@ export function generateViewerHtml(
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#ffffff" />
-  <!-- "on": Gemeinden of a Landkreis with a routing graph link to the detour map (umweg.html). The
-       mirror deploy (radweg.bfschweitenkirchen.de) flips this to "off" and drops the detour files;
-       see .github/workflows/pages-viewer.yml. -->
+  <!-- "on": Gemeinden of a Landkreis with a routing graph link to the detour map (umweg.html).
+       "off" hides the links (a deploy without the detour files; see the mirror job in
+       .github/workflows/pages-viewer.yml). -->
   <meta name="viewer-detour" content="on" />
-  <!-- "on": the region card links the unlisted local pages of LOCAL_PAGES (constants.ts); the
-       mirror deploy flips it to "off", like viewer-detour. -->
+  <!-- "on": the region card links the unlisted local pages of LOCAL_PAGES (constants.ts); "off"
+       hides them, like viewer-detour. -->
   <meta name="viewer-local-pages" content="on" />
   <script>
     // Text size is a per-browser convenience (Einstellungen › Schriftgröße). Applied before the
@@ -2107,7 +2107,7 @@ export function generateViewerHtml(
   <script src="${v('./vendor/maplibre-gl-4.7.1/maplibre-gl.js')}"></script>
   <script>
     const CONFIG = ${JSON.stringify(config)};
-    // The mirror site is deployed without the detour map (meta flipped to "off" by the workflow).
+    // A deploy can switch the local-page links off via these metas (see the comments up in <head>).
     const DETOUR_ENABLED =
       (document.querySelector('meta[name="viewer-detour"]') || {}).content === 'on';
     const LOCAL_PAGES_ENABLED =

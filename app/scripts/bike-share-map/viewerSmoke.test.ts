@@ -905,7 +905,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
       const more = p.q('#region-detail-pages')
       expect(more.textContent).toContain('Weitere Auswertungen')
       expect(more.querySelector('#region-detail-radwege')?.getAttribute('href')).toBe(
-        './radwege-schweitenkirchen.html',
+        './konzept.html',
       )
       expect(more.querySelector('#region-detail-stations')).toBeTruthy()
       p.close()
@@ -923,7 +923,7 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
-    'the mirror build (viewer-detour and viewer-local-pages off) links no local page',
+    'with viewer-detour and viewer-local-pages off, the card links no local page',
     async () => {
       page = await bootViewer(IN_LANDKREIS, { mirror: true })
       const p = page

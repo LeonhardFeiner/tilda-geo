@@ -27,6 +27,7 @@ import {
   PROJECT_LEAD,
   DETOUR_DIR,
   DETOUR_PAGE_STEM,
+  PAGE_REDIRECTS,
   RADWEGE_PAGE_STEM,
   STATION_AREAS_PAGE_STEM,
   VIEWER_SOURCE_REPO_URL,
@@ -573,7 +574,7 @@ if (detourLandkreise.length) {
   )
 }
 
-// Unlisted Radwege tracker (github.io only, see RADWEGE_PAGE_STEM): routes + lines from radwege/.
+// Radwege tracker (see RADWEGE_PAGE_STEM): routes + lines from radwege/.
 {
   const dataPath = join(viewerDir, `${RADWEGE_PAGE_STEM}.json`)
   const radwege = loadRadwegeData()
@@ -588,6 +589,27 @@ if (detourLandkreise.length) {
     'utf8',
   )
   process.stdout.write(`Radwege tracker: ${viewerDir}/${RADWEGE_PAGE_STEM}.html\n`)
+}
+
+// Old page names (PAGE_REDIRECTS) forward to the current ones, query and hash included.
+for (const [oldStem, stem] of Object.entries(PAGE_REDIRECTS)) {
+  const target = `./${stem}.html`
+  writeFileSync(
+    join(viewerDir, `${oldStem}.html`),
+    `<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8" />
+<meta name="robots" content="noindex" />
+<title>Weitergeleitet</title>
+<script>location.replace(${JSON.stringify(target)} + location.search + location.hash)</script>
+<meta http-equiv="refresh" content="0; url=${target}" />
+</head>
+<body><p>Die Seite ist umgezogen: <a href="${target}">${target.slice(2)}</a></p></body>
+</html>
+`,
+    'utf8',
+  )
 }
 
 // Content hash per asset the page links to, so an unchanged file stays cached across deploys

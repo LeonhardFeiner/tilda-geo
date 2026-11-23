@@ -15,7 +15,7 @@ import { siteIconHeadLinks } from './siteIcon'
 import { visitCounterHeadScript } from './visitCounter'
 
 export type RadwegePageInput = {
-  /** radwege-schweitenkirchen.json (RadwegeData from radwegeData.ts), with ?v=. */
+  /** konzept.json (RadwegeData from radwegeData.ts), with ?v=. */
   dataHref: string
   /** Author, named on the page with the political affiliation (see legalPage.ts). */
   projectLead: string
@@ -57,7 +57,7 @@ const LANDKREIS = {
 } as const
 
 /**
- * Unlisted page (github.io only): every route of the Schweitenkirchen Radwegekonzept on a map,
+ * Unlisted page (served at /konzept): every route of the Schweitenkirchen Radwegekonzept on a map,
  * with what has publicly happened to it. One plan at a time; a bar of the progress groups is
  * summary, legend and filter at once; a click on a line replaces the overview with that route.
  */
