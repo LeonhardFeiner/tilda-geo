@@ -15,7 +15,7 @@ Everything here runs from `app/` (`bun run bike-share-map:<script>`).
 | `*.bundle.ts`                                  | Typed modules exposed to the page as globals (`TildaStats`, `RankingDisplay`, …).                          |
 | `minifyPageHtml.ts`                            | The build's last step: minifies the inline scripts of the served pages (`BIKE_SHARE_NO_MINIFY=1` to skip). |
 | `../stats-export/statsRegionPack.ts`           | The `stats-*.msgpack` format (v3: columns + shared-border topology in `statsTopology.ts`).                 |
-| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `bahnhof.html`.                         |
+| `methodologyPage.ts`, `sharePages.ts`, …       | The other pages: `methodik.html`, the per-region share stubs `r/`, `station.html`.                         |
 | `fetch*.ts`, `populateRegionContextMetrics.ts` | Context datasets, each written to `output/<name>.json` through `fetchCommon.writeDataset`.                 |
 | `fitExtendedModel.ts`                          | Fits the structural model; writes `structuralModelConfigs.generated.ts`.                                   |
 | `routing/`                                     | Python: travel time to the nearest station, departures per station (own README).                           |
@@ -60,9 +60,9 @@ current export, so run the export first.
    minutes). The BFS subdomain (`radweg.bfschweitenkirchen.de`) only changes on a release:
    publish a GitHub Release on the fork, or run the workflow by hand with `mirror` ticked
    (`gh workflow run pages-viewer.yml --ref local -f mirror=true`). The mirror is the same build,
-   local pages included (`/konzept`, `/bahnhof`, `/umweg`; GitHub Pages serves `x.html` at `/x`),
+   local pages included (`/konzept`, `/station`, `/umweg`; GitHub Pages serves `x.html` at `/x`),
    but unlinked there: the `viewer-detour` and `viewer-local-pages` metas are flipped to `off`.
-   The old names `radwege-schweitenkirchen.html` and `naechste-station.html` are redirect stubs
+   The old names `radwege-schweitenkirchen.html`, `naechste-station.html` and `bahnhof.html` are redirect stubs
    (`PAGE_REDIRECTS` in `constants.ts`). Debug on github.io first. The
    workflow fails before uploading if the deploy folder exceeds 900 MB (GitHub Pages allows 1 GB;
    it is ~570 MB now), and the built `output/viewer/manifest.json` adds a `datasets` field with

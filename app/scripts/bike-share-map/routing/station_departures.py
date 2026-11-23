@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Departures per station on one weekday, from the nationwide GTFS timetable, matched to the OSM
-stations of output/stations.json — for sizing the station dots on the bahnhof page.
+stations of output/stations.json — for sizing the station dots on the station page.
 
 Source: gtfs.de "Deutschland gesamt" (free), built from DELFI e.V.'s NeTEx data, CC BY 4.0.
 Downloaded to cache/gtfs-de.zip on first run (~300 MB; delete it to refresh).

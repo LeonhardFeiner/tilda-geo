@@ -23,8 +23,8 @@ const pages: Record<string, string> = {
     methodikHref: './methodik.html',
     viewerHref: './index.html',
   }),
-  'bahnhof.html': stationAreasPageHtml({
-    dataHref: './bahnhof.json',
+  'station.html': stationAreasPageHtml({
+    dataHref: './station.json',
     dataDateLabel: '01.01.2026',
     accessBaseHref: './station-access/',
     accessFiles: { foot: ['areas', 'minutes', 'km'], bike: ['areas', 'minutes', 'km'] },
@@ -65,7 +65,7 @@ describe.each(Object.entries(pages))('%s', (_name, html) => {
 })
 
 test('the pages with client logic do have inline scripts', () => {
-  for (const name of ['index.html', 'umweg.html', 'bahnhof.html', 'konzept.html']) {
+  for (const name of ['index.html', 'umweg.html', 'station.html', 'konzept.html']) {
     expect(inlineScripts(pages[name]!).length).toBeGreaterThan(0)
   }
 })

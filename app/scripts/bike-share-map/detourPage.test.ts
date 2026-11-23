@@ -205,6 +205,50 @@ describe.skipIf(!PAF)('detour page (jsdom, real routing on the Pfaffenhofen grap
   )
 
   test(
+    'absolut / relativ switches the table columns, the legend and the URL; ?zeige=faktor still works',
+    async () => {
+      page = await bootPage(
+        html(),
+        pageBundles(html()),
+        '?von=schweitenkirchen&zeige=unbef',
+        loaded,
+      )
+      const p = page
+      await p.waitFor(() => rows(p).length > 0, 'the destination table')
+      const heads = () =>
+        [...p.window.document.querySelectorAll('#table th[data-sort] .th-sort')].map(
+          (b) => b.textContent,
+        )
+      expect(heads()).toEqual(['Luft', '+km', '+Hm', '+min', '+unbef.'])
+      expect(p.q('#legend-max').textContent).toContain('km')
+      const rel = p.q<HTMLInputElement>('input[name=art][value=rel]')
+      rel.checked = true
+      rel.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+      expect(heads()).toEqual(['Luft', '+km %', '+Hm/km', '+min %', '+unbef. Pp.'])
+      expect(p.q('#legend-max').textContent).toContain('Pp.')
+      expect(p.window.location.search).toContain('zeige=unbef')
+      expect(p.window.location.search).toContain('art=rel')
+      // every row has its 8 cells, numbers or "–"
+      for (const tr of rows(p)) expect(tr.children.length).toBe(8)
+      expect(p.errors).toEqual([])
+      p.close()
+      // the old length-factor link: km, relative
+      page = await bootPage(
+        html(),
+        pageBundles(html()),
+        '?von=schweitenkirchen&zeige=faktor',
+        loaded,
+      )
+      const q = page
+      await q.waitFor(() => rows(q).length > 0, 'the destination table')
+      expect(q.q<HTMLInputElement>('input[name=zeige][value=km]').checked).toBe(true)
+      expect(q.q<HTMLInputElement>('input[name=art][value=rel]').checked).toBe(true)
+      expect(q.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     "?gemeinde= from the viewer card starts at the Gemeinde's main place",
     async () => {
       page = await bootPage(

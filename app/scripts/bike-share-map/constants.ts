@@ -82,10 +82,10 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
 } as const
 
 /**
- * "Nearest station" map (stationAreasPage.ts), served at /bahnhof; noindex, linked only from
- * LOCAL_PAGES. Its data file uses the same stem. Was 'naechste-station' (see PAGE_REDIRECTS).
+ * "Nearest station" map (stationAreasPage.ts), served at /station; noindex, linked only from
+ * LOCAL_PAGES. Its data file uses the same stem. Was 'naechste-station', briefly 'bahnhof' (see PAGE_REDIRECTS).
  */
-export const STATION_AREAS_PAGE_STEM = 'bahnhof'
+export const STATION_AREAS_PAGE_STEM = 'station'
 
 /**
  * Unlisted detour map (detourPage.ts): safe bike route vs. usual car road between the places
@@ -109,6 +109,7 @@ export const RADWEGE_PAGE_STEM = 'konzept'
 export const PAGE_REDIRECTS: Readonly<Record<string, string>> = {
   'radwege-schweitenkirchen': RADWEGE_PAGE_STEM,
   'naechste-station': STATION_AREAS_PAGE_STEM,
+  bahnhof: STATION_AREAS_PAGE_STEM,
 }
 
 /**

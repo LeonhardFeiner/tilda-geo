@@ -169,7 +169,7 @@ jobs:
             echo "::error::Old base URL still present after rewrite"
             exit 1
           fi
-          # The local pages (/konzept, /bahnhof, /umweg) are on the subdomain too, but unlinked: only
+          # The local pages (/konzept, /station, /umweg) are on the subdomain too, but unlinked: only
           # who knows the address finds them. index.html's viewer-detour and viewer-local-pages
           # metas switch the region card's links to them off.
           for name in viewer-detour viewer-local-pages; do

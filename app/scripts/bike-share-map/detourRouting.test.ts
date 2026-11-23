@@ -18,6 +18,7 @@ import {
   encodeDetourGraph,
   routeCoordinates,
   shortestPaths,
+  unpavedCategoryMask,
 } from './detourRouting'
 
 /**
@@ -285,6 +286,32 @@ describe('detourTable', () => {
     const same = detourTable(g, 0, fast, fast, 'bikeNode')[0]!
     expect(same.extraKm).toBe(0)
     expect(same.factor).toBe(1)
+  })
+})
+
+describe('unpaved metres', () => {
+  test('a search counts the unpaved edges of the chosen route; rows compare them', () => {
+    const g = toyGraph()
+    // The cycleway over C (edges 1 and 2) is gravel; the direct road (edge 0) is paved.
+    g.meta.categories = ['mixedTrafficMotor', 'cycleway_adjoining|unpaved']
+    g.bike.cat = Uint8Array.from([0, 1, 1, 0])
+    const mask = unpavedCategoryMask(g.meta.categories)
+    expect([...mask]).toEqual([0, 1])
+    const adj = buildAdjacency(g.bike, g.nodeCount)
+    const fast = shortestPaths(g.bike, adj, g.nodeCount, 0, 0, 0, mask)
+    const safe = shortestPaths(g.bike, adj, g.nodeCount, 0, 1, 0, mask)
+    expect(fast.unpaved[1]).toBe(0)
+    expect(safe.unpaved[1]).toBe(1600)
+    // Without a mask nothing counts (the car search).
+    expect(shortestPaths(g.bike, adj, g.nodeCount, 0, 1).unpaved[1]).toBe(0)
+    const b = detourTable(g, 0, fast, safe, 'bikeNode')[0]!
+    expect(b.bike?.unpavedKm).toBeCloseTo(1.6)
+    expect(b.ref?.unpavedKm).toBe(0)
+    expect(b.extraUnpavedKm).toBeCloseTo(1.6)
+    // all of the 1.6 km bike route vs none of the 1 km road: +100 percentage points
+    expect(b.extraUnpavedPts).toBeCloseTo(100)
+    // 30 Hm over 1.6 km vs 0 Hm over 1 km
+    expect(b.extraClimbPerKm).toBeCloseTo(30 / 1.6)
   })
 })
 

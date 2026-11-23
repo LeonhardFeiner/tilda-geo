@@ -606,6 +606,15 @@ ${visitCounterHeadScript()}
   gegenüber der schnellsten mehr braucht. Langsamer ist sie nie, kürzer kann sie sein, etwa über
   einen direkten, aber langsameren Feldweg. Ist ein Ort nur über gesperrte Straßen erreichbar, gilt
   er wie beim Auto-Vergleich als nicht erreichbar.</p>
+  <p><strong>Absolut und relativ:</strong> Die Orte lassen sich nach mehr Kilometern, Höhenmetern,
+  Minuten oder unbefestigtem Weg einfärben, jeweils absolut oder relativ. Relativ heißt bei
+  Kilometern und Minuten: um wie viel Prozent die Radroute länger ist als die Vergleichsroute. Bei
+  Höhenmetern und unbefestigtem Weg wäre ein Prozentwert bei kleinen Ausgangswerten (5&nbsp;Hm, 0&nbsp;m
+  unbefestigt) nicht aussagekräftig; dort wird je Kilometer Strecke verglichen: Höhenmeter bergauf je km
+  und der Anteil unbefestigter Strecke, jeweils Radroute minus Vergleichsroute (Anteil in
+  Prozentpunkten). Unbefestigt ist ein in OpenStreetMap erfasster unbefestigter Belag; Wege ohne
+  Belagsangabe zählen nicht dazu. Die Autostrecke gilt als befestigt: Das Autonetz kennt keinen Belag
+  und keine Feld- und Waldwege.</p>
   <p><strong>Woraus eine Route besteht:</strong> Für jede Route wird die Länge aufgeteilt in
   Radwege und Radstreifen (TILDA-Kategorien mit Radinfrastruktur), Feld- und Wirtschaftswege
   (<code>highway=track</code>), sonstige ruhige Wege und Straßen (Belastung unter 0,2, etwa Tempo-30-Straßen

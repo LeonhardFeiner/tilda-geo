@@ -16,13 +16,82 @@ export type DetourPageInput = {
   viewerHref: string
 }
 
-/** Colour stops per metric: value → colour, interpolated; values below the first stop take its colour. */
+/**
+ * What the places are coloured and the table columns filled by: a quantity, shown absolute or
+ * relative (MODES). Per quantity and mode: the DetourRow field (detourRouting.ts), the unit, the
+ * colour stops (value → colour, interpolated; values below the first stop take its colour) and
+ * the digits. Relative is "% longer" for km and minutes; for climb and unpaved surface it is per
+ * km of route (bike minus comparison), because a percentage of a tiny climb or of zero unpaved
+ * metres says nothing.
+ */
 const METRICS = {
-  km: { label: 'Mehr Kilometer', unit: 'km', stops: [0, 1, 3], digits: 1 },
-  hm: { label: 'Mehr Höhenmeter', unit: 'Hm', stops: [0, 30, 100], digits: 0 },
-  min: { label: 'Mehr Minuten', unit: 'min', stops: [0, 15, 40], digits: 0 },
-  faktor: { label: 'Längenfaktor', unit: '×', stops: [1, 1.3, 2], digits: 2 },
+  km: {
+    label: 'Kilometer',
+    head: 'km',
+    relHead: 'km %',
+    abs: { field: 'extraKm', unit: 'km', stops: [0, 1, 3], digits: 1, title: 'Mehr Kilometer' },
+    rel: {
+      field: 'extraKmPct',
+      unit: '%',
+      stops: [0, 15, 40],
+      digits: 0,
+      title: 'Wie viel Prozent länger',
+    },
+  },
+  hm: {
+    label: 'Höhenmeter',
+    head: 'Hm',
+    relHead: 'Hm/km',
+    abs: {
+      field: 'extraClimbM',
+      unit: 'Hm',
+      stops: [0, 30, 100],
+      digits: 0,
+      title: 'Mehr Höhenmeter bergauf',
+    },
+    rel: {
+      field: 'extraClimbPerKm',
+      unit: 'Hm/km',
+      stops: [0, 4, 12],
+      digits: 1,
+      title: 'Mehr Höhenmeter bergauf je km Strecke',
+    },
+  },
+  min: {
+    label: 'Minuten',
+    head: 'min',
+    relHead: 'min %',
+    abs: { field: 'extraMin', unit: 'min', stops: [0, 15, 40], digits: 0, title: 'Mehr Minuten' },
+    rel: {
+      field: 'extraMinPct',
+      unit: '%',
+      stops: [0, 25, 60],
+      digits: 0,
+      title: 'Wie viel Prozent länger unterwegs',
+    },
+  },
+  unbef: {
+    label: 'Unbefestigt',
+    head: 'unbef.',
+    relHead: 'unbef. Pp.',
+    abs: {
+      field: 'extraUnpavedKm',
+      unit: 'km',
+      stops: [0, 3, 8],
+      digits: 1,
+      title: 'Mehr Kilometer mit erfasstem unbefestigtem Belag',
+    },
+    rel: {
+      field: 'extraUnpavedPts',
+      unit: 'Pp.',
+      stops: [0, 10, 30],
+      digits: 0,
+      title: 'Anteil unbefestigt an der Strecke, Unterschied in Prozentpunkten',
+    },
+  },
 } as const
+
+const MODES = { abs: 'absolut', rel: 'relativ' } as const
 
 /**
  * What the bike route is compared with. `auto`: the usual car route (the page's original
@@ -252,11 +321,20 @@ export function detourPageHtml({
         <div id="safety-note"></div>
       </fieldset>
       <fieldset class="seg" id="metric-box">
-        <legend>Farbe der Orte</legend>
+        <legend>Farbe der Orte: mehr …</legend>
         ${Object.entries(METRICS)
           .map(
             ([key, m], i) =>
               `<label><input type="radio" name="zeige" value="${key}"${i === 0 ? ' checked' : ''}><span>${m.label}</span></label>`,
+          )
+          .join('\n        ')}
+      </fieldset>
+      <fieldset class="seg" id="mode-box">
+        <legend>Werte</legend>
+        ${Object.entries(MODES)
+          .map(
+            ([key, label], i) =>
+              `<label><input type="radio" name="art" value="${key}"${i === 0 ? ' checked' : ''}><span>${label}</span></label>`,
           )
           .join('\n        ')}
       </fieldset>
@@ -268,14 +346,20 @@ export function detourPageHtml({
         <p><label for="sort" style="display:inline">Sortieren:</label>
           <select id="sort" style="width:auto;display:inline-block">
             <option value="air">Nähe</option>
-            <option value="km">Mehr Kilometer</option>
-            <option value="hm">Mehr Höhenmeter</option>
-            <option value="min">Mehr Minuten</option>
-            <option value="faktor">Längenfaktor</option>
+            ${Object.entries(METRICS)
+              .map(([key, m]) => `<option value="${key}">Mehr ${m.label}</option>`)
+              .join('\n            ')}
           </select>
           <button class="btn" id="csv" type="button" style="float:right">CSV</button></p>
-        <div style="overflow-x:auto"><table id="table"><thead><tr><th scope="col">Ort</th><th scope="col" data-sort="air" title="Luftlinie"><button type="button" class="th-sort">Luft</button></th><th scope="col" id="ref-head" title="Auto: km / min">Auto</th><th scope="col" title="Rad: km / min">Rad</th><th scope="col" data-sort="km" title="Mehr Kilometer"><button type="button" class="th-sort">+km</button></th><th scope="col" data-sort="hm" title="Mehr Höhenmeter bergauf"><button type="button" class="th-sort">+Hm</button></th><th scope="col" data-sort="min" title="Mehr Minuten"><button type="button" class="th-sort">+min</button></th></tr></thead><tbody></tbody></table></div>
-        <p class="muted" style="margin-top:4px">Ein Minus bei +km: Die Radroute ist kürzer, weil Räder Feld-, Wald- und Radwege nutzen, die Autos nicht befahren dürfen.</p>
+        <div style="overflow-x:auto"><table id="table"><thead><tr><th scope="col">Ort</th><th scope="col" data-sort="air" title="Luftlinie"><button type="button" class="th-sort">Luft</button></th><th scope="col" id="ref-head" title="Auto: km / min">Auto</th><th scope="col" title="Rad: km / min">Rad</th>${Object.entries(
+          METRICS,
+        )
+          .map(
+            ([key, m]) =>
+              `<th scope="col" data-sort="${key}" title="${m.abs.title}"><button type="button" class="th-sort">+${m.head}</button></th>`,
+          )
+          .join('')}</tr></thead><tbody></tbody></table></div>
+        <p class="muted" style="margin-top:4px">Ein Minus bei +km: Die Radroute ist kürzer, weil Räder Feld-, Wald- und Radwege nutzen, die Autos nicht befahren dürfen. Relativ: km und min in Prozent der Vergleichsroute; Höhenmeter je km Strecke und unbefestigter Anteil (Prozentpunkte) als Unterschied Radroute minus Vergleichsroute. Die Autostrecke gilt als befestigt.</p>
       </div>
       <p class="muted" style="margin-top:8px">Daten: © OpenStreetMap-Mitwirkende${dataDateLabel ? `, Stand ${dataDateLabel}` : ''}; Radinfrastruktur-Kategorien: TILDA; Höhen: Mapzen/AWS Terrain Tiles. Annahmen: siehe <a href="${methodikHref}#umweg">Methodik</a>.</p>
     </div>
@@ -287,6 +371,7 @@ export function detourPageHtml({
     const LANDKREISE = ${JSON.stringify(landkreise)};
     const DATA_BASE = ${JSON.stringify(dataBaseHref)};
     const METRICS = ${JSON.stringify(METRICS)};
+    const MODES = ${JSON.stringify(MODES)};
     const REFERENCES = ${JSON.stringify(REFERENCES)};
     const SCALE_COLOURS = ${JSON.stringify(SCALE_COLOURS)};
     const UNREACHABLE = ${JSON.stringify(UNREACHABLE_COLOUR)};
@@ -311,7 +396,9 @@ export function detourPageHtml({
       origin: params.get('von') || null,
       dest: params.get('nach') || null,
       safety: Math.max(0, Math.min(100, Number(params.get('sicherheit') || 70))),
+      // ?zeige=faktor was the length factor before the absolute/relative switch: km, relative
       metric: METRICS[params.get('zeige')] ? params.get('zeige') : 'km',
+      mode: params.get('art') === 'rel' || params.get('zeige') === 'faktor' ? 'rel' : 'abs',
       // Default: the fastest bike route. Against the car, most of the extra time is just that
       // bikes are slower than cars; against the fastest bike route it is the price of avoiding traffic.
       ref: params.get('vergleich') === 'auto' ? 'auto' : 'rad',
@@ -343,6 +430,7 @@ export function detourPageHtml({
     $('safety').value = state.safety;
     $('hamlets').checked = state.hamlets;
     document.querySelector('input[name=zeige][value=' + state.metric + ']').checked = true;
+    document.querySelector('input[name=art][value=' + state.mode + ']').checked = true;
     document.querySelector('input[name=vergleich][value=' + state.ref + ']').checked = true;
 
     function syncUrl() {
@@ -352,6 +440,7 @@ export function detourPageHtml({
       if (state.dest != null) p.set('nach', placeParam(state.dest));
       if (state.safety !== 70) p.set('sicherheit', String(state.safety));
       if (state.metric !== 'km') p.set('zeige', state.metric);
+      if (state.mode !== 'abs') p.set('art', state.mode);
       if (state.ref !== 'rad') p.set('vergleich', state.ref);
       if (state.hamlets) p.set('weiler', '1');
       const q = p.toString();
@@ -478,6 +567,16 @@ export function detourPageHtml({
     let bikeResult = null;
     let bikeSafety = -1;
     let rows = [];
+    /** Which bike categories are unpaved, per loaded graph (the Landkreis can change). */
+    let unpavedFor = null;
+    let unpavedCats = null;
+    function unpavedMask() {
+      if (unpavedFor !== graph) {
+        unpavedCats = R.unpavedCategoryMask(graph.meta.categories);
+        unpavedFor = graph;
+      }
+      return unpavedCats;
+    }
     function compute() {
       if (state.origin == null) return;
       const oi = indexById.get(state.origin);
@@ -486,29 +585,32 @@ export function detourPageHtml({
       if (!refResult) {
         refResult =
           state.ref === 'rad'
-            ? R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0)
+            ? R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0, 0, unpavedMask())
             : R.shortestPaths(graph.car, adjCar, graph.nodeCount, o.carNode, 0, R.CAR_SECONDS_PER_KM);
       }
       // The fastest bike route: what the cyclist has to ride without a detour (summary + route box).
       if (!fastResult) {
-        fastResult = state.ref === 'rad' ? refResult : R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0);
+        fastResult = state.ref === 'rad' ? refResult : R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, 0, 0, unpavedMask());
       }
       if (bikeSafety !== state.safety) {
-        bikeResult = R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, state.safety / 100);
+        bikeResult = R.shortestPaths(graph.bike, adjBike, graph.nodeCount, o.bikeNode, state.safety / 100, 0, unpavedMask());
         bikeSafety = state.safety;
       }
       rows = R.detourTable(graph, oi, refResult, bikeResult, state.ref === 'rad' ? 'bikeNode' : 'carNode');
     }
 
+    /** The spec (field, unit, stops, digits) of a quantity in the current mode. */
+    const spec = (key) => METRICS[key][state.mode];
     function metricValue(row, key) {
-      if (key === 'km') return row.extraKm;
-      if (key === 'hm') return row.extraClimbM;
-      if (key === 'min') return row.extraMin;
-      return row.factor;
+      const f = spec(key).field;
+      if (f === 'extraKmPct') return row.factor != null ? (row.factor - 1) * 100 : null;
+      if (f === 'extraMinPct') return row.extraMin != null && row.ref && row.ref.min > 0 ? (row.extraMin / row.ref.min) * 100 : null;
+      return row[f];
     }
+    const fmtMetric = (v, key) => (v == null ? '–' : signed(v, spec(key).digits));
 
     function colourFor(v, key) {
-      const m = METRICS[key];
+      const m = spec(key);
       if (v == null) return UNREACHABLE;
       const s = m.stops;
       if (v <= s[0]) return SCALE_COLOURS[0];
@@ -644,7 +746,7 @@ export function detourPageHtml({
       compute();
       const legend = $('legend');
       legend.hidden = state.origin == null;
-      const m = METRICS[state.metric];
+      const m = spec(state.metric);
       $('legend-min').textContent = '≤ ' + deNum(m.stops[0], m.digits) + ' ' + m.unit;
       $('legend-max').textContent = '≥ ' + deNum(m.stops[2], m.digits) + ' ' + m.unit;
       $('legend-bar').style.background = 'linear-gradient(to right, ' + SCALE_COLOURS.join(', ') + ')';
@@ -698,7 +800,7 @@ export function detourPageHtml({
         }
       }
       if (both.length) {
-        parts.push('Zu den ' + both.length + ' anderen Orten ist die Radroute im Median ' + signed(median(both.map((r) => r.extraKm)), 1) + ' km, ' + signed(median(both.map((r) => r.extraClimbM)), 0) + ' Hm und ' + signed(median(both.map((r) => r.extraMin)), 0) + ' min gegenüber ' + REFERENCES[state.ref].dative + '; Faktor ' + deNum(median(both.map((r) => r.factor)), 2) + '.');
+        parts.push('Zu den ' + both.length + ' anderen Orten ist die Radroute im Median ' + signed(median(both.map((r) => r.extraKm)), 1) + ' km, ' + signed(median(both.map((r) => r.extraClimbM)), 0) + ' Hm, ' + signed(median(both.map((r) => r.extraMin)), 0) + ' min und ' + signed(median(both.map((r) => r.extraUnpavedKm)), 1) + ' km unbefestigt gegenüber ' + REFERENCES[state.ref].dative + '; Faktor ' + deNum(median(both.map((r) => r.factor)), 2) + '.');
       }
       if (state.ref === 'rad' && state.safety === 0) parts.push('Der Regler steht auf „schnellste Route“ — Rad- und Vergleichsroute sind gleich; nach rechts schieben, um den Preis verkehrsarmer Wege zu sehen.');
       if (unreachable) parts.push(unreachable + ' Orte sind mit dieser Einstellung per Rad nicht erreichbar.');
@@ -721,6 +823,11 @@ export function detourPageHtml({
       const tbody = $('table').querySelector('tbody');
       tbody.replaceChildren();
       for (const th of $('table').querySelectorAll('th[data-sort]')) {
+        const m = METRICS[th.dataset.sort];
+        if (m) {
+          th.title = m[state.mode].title;
+          th.querySelector('.th-sort').textContent = '+' + (state.mode === 'rel' ? m.relHead : m.head);
+        }
         if (th.dataset.sort === state.sort) th.setAttribute('aria-sort', state.sort === 'air' ? 'ascending' : 'descending');
         else th.removeAttribute('aria-sort');
       }
@@ -735,9 +842,7 @@ export function detourPageHtml({
           deNum(r.airKm, 1),
           r.ref ? deNum(r.ref.km, 1) + ' / ' + deNum(r.ref.min, 0) : '–',
           r.bike ? deNum(r.bike.km, 1) + ' / ' + deNum(r.bike.min, 0) : '–',
-          r.extraKm != null ? signed(r.extraKm, 1) : '–',
-          r.extraClimbM != null ? signed(r.extraClimbM, 0) : '–',
-          r.extraMin != null ? signed(r.extraMin, 0) : '–',
+          ...Object.keys(METRICS).map((key) => fmtMetric(metricValue(r, key), key)),
         ];
         tr.innerHTML = cells.map((c) => '<td>' + c + '</td>').join('');
         tr.tabIndex = 0;
@@ -804,7 +909,7 @@ export function detourPageHtml({
       if (r && r.ref) html.push('<p>' + refLabel + ': ' + deNum(r.ref.km, 1) + ' km, ' + deNum(r.ref.min, 0) + ' min.</p>');
       else html.push(refBike ? '<p>Auch die schnellste Radroute erreicht den Ort nicht (kein Anschluss im Radnetz).</p>' : '<p>Mit dem Auto nicht erreichbar (kein Straßenanschluss im Graphen).</p>');
       if (r && r.bike) {
-        html.push('<p>Verkehrsarme Radroute: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min</strong> gegenüber ' + REFERENCES[state.ref].dative : '') + '.</p>');
+        html.push('<p>Verkehrsarme Radroute: ' + deNum(r.bike.km, 1) + ' km, ' + deNum(r.bike.min, 0) + ' min, ' + deNum(r.bike.climbM, 0) + ' Hm bergauf' + (r.bike.unpavedKm >= 0.05 ? ', ' + deNum(r.bike.unpavedKm, 1) + ' km davon unbefestigt' : '') + (r.extraKm != null ? ' — <strong>' + signed(r.extraKm, 1) + ' km, ' + signed(r.extraClimbM, 0) + ' Hm, ' + signed(r.extraMin, 0) + ' min, ' + signed(r.extraUnpavedKm, 1) + ' km unbefestigt</strong> gegenüber ' + REFERENCES[state.ref].dative : '') + '.</p>');
         if (safeComp) html.push('<p class="muted">Diese Radroute (' + kmOf(safeComp.totalM) + '): ' + compositionText(safeComp) + '</p>');
         if (fastComp && state.safety > 0) html.push('<p class="muted">Schnellste Radroute (' + kmOf(fastComp.totalM) + '): ' + compositionText(fastComp) + '</p>');
       } else {
@@ -828,6 +933,10 @@ export function detourPageHtml({
     });
     $('metric-box').addEventListener('change', () => {
       state.metric = document.querySelector('input[name=zeige]:checked').value;
+      render();
+    });
+    $('mode-box').addEventListener('change', () => {
+      state.mode = document.querySelector('input[name=art]:checked').value;
       render();
     });
     $('ref-box').addEventListener('change', () => {
@@ -854,8 +963,8 @@ export function detourPageHtml({
     $('csv').addEventListener('click', () => {
       const o = places[indexById.get(state.origin)];
       const refHead = REFERENCES[state.ref].label;
-      const head = ['Ziel', 'Gemeinde', 'Art', 'Luftlinie km', refHead + ' km', refHead + ' min', 'Rad km', 'Rad min', 'Rad Hm bergauf', 'Mehr km', 'Mehr Hm', 'Mehr min', 'Faktor'];
-      const line = (r) => [r.place.name, r.place.gemeinde || '', r.place.kind, r.airKm.toFixed(2), r.ref ? r.ref.km.toFixed(2) : '', r.ref ? r.ref.min.toFixed(1) : '', r.bike ? r.bike.km.toFixed(2) : '', r.bike ? r.bike.min.toFixed(1) : '', r.bike ? r.bike.climbM.toFixed(0) : '', r.extraKm != null ? r.extraKm.toFixed(2) : '', r.extraClimbM != null ? r.extraClimbM.toFixed(0) : '', r.extraMin != null ? r.extraMin.toFixed(1) : '', r.factor != null ? r.factor.toFixed(2) : ''];
+      const head = ['Ziel', 'Gemeinde', 'Art', 'Luftlinie km', refHead + ' km', refHead + ' min', 'Rad km', 'Rad min', 'Rad Hm bergauf', 'Rad unbefestigt km', refHead + ' unbefestigt km', 'Mehr km', 'Mehr Hm', 'Mehr min', 'Mehr unbefestigt km', 'Faktor', 'Mehr Hm je km', 'Mehr unbefestigt Prozentpunkte'];
+      const line = (r) => [r.place.name, r.place.gemeinde || '', r.place.kind, r.airKm.toFixed(2), r.ref ? r.ref.km.toFixed(2) : '', r.ref ? r.ref.min.toFixed(1) : '', r.bike ? r.bike.km.toFixed(2) : '', r.bike ? r.bike.min.toFixed(1) : '', r.bike ? r.bike.climbM.toFixed(0) : '', r.bike ? r.bike.unpavedKm.toFixed(2) : '', r.ref ? r.ref.unpavedKm.toFixed(2) : '', r.extraKm != null ? r.extraKm.toFixed(2) : '', r.extraClimbM != null ? r.extraClimbM.toFixed(0) : '', r.extraMin != null ? r.extraMin.toFixed(1) : '', r.extraUnpavedKm != null ? r.extraUnpavedKm.toFixed(2) : '', r.factor != null ? r.factor.toFixed(2) : '', r.extraClimbPerKm != null ? r.extraClimbPerKm.toFixed(1) : '', r.extraUnpavedPts != null ? r.extraUnpavedPts.toFixed(1) : ''];
       const esc = (v) => '"' + String(v).replace(/"/g, '""') + '"';
       const csv = ['# Start: ' + o.name + '; Sicherheit ' + state.safety + '; Vergleich: ' + REFERENCES[state.ref].label + '; ' + entry.name + (state.hamlets ? '; mit Weilern' : '; ohne Weiler'), head.map(esc).join(';'), ...sortRows(rows.filter((r) => visible(r.place))).map((r) => line(r).map(esc).join(';'))].join('\\n');
       const a = document.createElement('a');

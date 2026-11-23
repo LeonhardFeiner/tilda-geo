@@ -454,6 +454,8 @@ export type SearchResult = {
   seconds: Float64Array
   metres: Float64Array
   climb: Float64Array
+  /** Metres with a mapped unpaved surface along the chosen route (0 without `unpavedCats`). */
+  unpaved: Float64Array
   /** Adjacency entry used to reach each node, -1 for the source / unreached. */
   via: Int32Array
 }
@@ -470,13 +472,16 @@ export function shortestPaths(
   safety: number,
   /** Extra cost in seconds per km on top of travel time (see CAR_SECONDS_PER_KM); 0 = pure time. */
   secondsPerKm = 0,
+  /** 1 per `set.cat` index whose edges count as unpaved (unpavedCategoryMask); only measured. */
+  unpavedCats?: Uint8Array,
 ): SearchResult {
   const cost = new Float64Array(nodeCount).fill(Number.POSITIVE_INFINITY)
   const seconds = new Float64Array(nodeCount)
   const metres = new Float64Array(nodeCount)
   const climb = new Float64Array(nodeCount)
+  const unpaved = new Float64Array(nodeCount)
   const via = new Int32Array(nodeCount).fill(-1)
-  const result = { cost, seconds, metres, climb, via }
+  const result = { cost, seconds, metres, climb, unpaved, via }
   if (source < 0 || source >= nodeCount) return result
   const closeBusy = safety >= CLOSE_FROM_SAFETY
   const closedStress = CLOSED_STRESS * STRESS_SCALE
@@ -554,6 +559,7 @@ export function shortestPaths(
         seconds[v] = seconds[u]! + time
         metres[v] = metres[u]! + len
         climb[v] = climb[u]! + (fwd ? set.upF[e]! : set.upB[e]!)
+        unpaved[v] = unpaved[u]! + (unpavedCats?.[set.cat[e]!] ? len : 0)
         via[v] = i
         push(next, v)
       }
@@ -614,6 +620,11 @@ export function routeEdges(set: EdgeSet, adj: Adjacency, result: SearchResult, t
 export function splitCategoryLabel(label: string) {
   const [category = '', ...flags] = label.split('|')
   return { category, track: flags.includes('track'), unpaved: flags.includes('unpaved') }
+}
+
+/** Per bike category index: 1 when its label carries the `|unpaved` flag (for shortestPaths). */
+export function unpavedCategoryMask(categories: readonly string[]) {
+  return Uint8Array.from(categories, (label) => (splitCategoryLabel(label).unpaved ? 1 : 0))
 }
 
 /** Categories that are bike infrastructure in TILDA's sense (not just a quiet way). */
@@ -684,15 +695,22 @@ export type DetourRow = {
   place: DetourPlace
   /** Straight line, km. */
   airKm: number
-  /** The route the bike route is compared with: the usual car route or the fastest bike route. */
-  ref: { km: number; min: number } | null
-  bike: { km: number; min: number; climbM: number } | null
-  /** Extra km / climb / minutes of the bike route over the reference; null when either is missing. */
+  /**
+   * The route the bike route is compared with: the usual car route or the fastest bike route.
+   * `unpavedKm` is 0 for the car: its graph has no surface (and no farm or forest tracks).
+   */
+  ref: { km: number; min: number; climbM: number; unpavedKm: number } | null
+  bike: { km: number; min: number; climbM: number; unpavedKm: number } | null
+  /** Extra km / climb / minutes / unpaved km of the bike route over the reference; null when either is missing. */
   extraKm: number | null
   extraClimbM: number | null
   extraMin: number | null
+  extraUnpavedKm: number | null
   /** bike km ÷ reference km. */
   factor: number | null
+  /** Bike minus reference: Hm bergauf per km, and the unpaved share in percentage points. */
+  extraClimbPerKm: number | null
+  extraUnpavedPts: number | null
 }
 
 export function haversineKm(lon1: number, lat1: number, lon2: number, lat2: number) {
@@ -724,15 +742,24 @@ export function detourTable(
     const rn = place[refNode]
     const refOk = rn >= 0 && Number.isFinite(ref.cost[rn]!)
     const bikeOk = place.bikeNode >= 0 && Number.isFinite(bike.cost[place.bikeNode]!)
-    const refRow = refOk ? { km: ref.metres[rn]! / 1000, min: ref.seconds[rn]! / 60 } : null
+    const refRow = refOk
+      ? {
+          km: ref.metres[rn]! / 1000,
+          min: ref.seconds[rn]! / 60,
+          climbM: ref.climb[rn]!,
+          unpavedKm: ref.unpaved[rn]! / 1000,
+        }
+      : null
     const bikeRow = bikeOk
       ? {
           km: bike.metres[place.bikeNode]! / 1000,
           min: bike.seconds[place.bikeNode]! / 60,
           climbM: bike.climb[place.bikeNode]!,
+          unpavedKm: bike.unpaved[place.bikeNode]! / 1000,
         }
       : null
     const both = refRow && bikeRow
+    const perKm = (v: number, km: number) => (km > 0 ? v / km : 0)
     rows.push({
       index,
       place,
@@ -740,9 +767,18 @@ export function detourTable(
       ref: refRow,
       bike: bikeRow,
       extraKm: both ? bikeRow.km - refRow.km : null,
-      extraClimbM: both ? bikeRow.climbM - ref.climb[rn]! : null,
+      extraClimbM: both ? bikeRow.climbM - refRow.climbM : null,
       extraMin: both ? bikeRow.min - refRow.min : null,
+      extraUnpavedKm: both ? bikeRow.unpavedKm - refRow.unpavedKm : null,
       factor: both && refRow.km > 0 ? bikeRow.km / refRow.km : null,
+      extraClimbPerKm:
+        both && bikeRow.km > 0 && refRow.km > 0
+          ? perKm(bikeRow.climbM, bikeRow.km) - perKm(refRow.climbM, refRow.km)
+          : null,
+      extraUnpavedPts:
+        both && bikeRow.km > 0 && refRow.km > 0
+          ? (perKm(bikeRow.unpavedKm, bikeRow.km) - perKm(refRow.unpavedKm, refRow.km)) * 100
+          : null,
     })
   })
   return rows

@@ -3,7 +3,7 @@
 `station_access.py` routes along the OSM network from every rail/tram/ferry station at once and
 assigns each 100 m square of Germany to the station it reaches fastest — once per mode, each on its
 own network (foot, bike, car), plus the straight-line distance. It feeds the unlisted
-`bahnhof.html` page and the "Ø zur nächsten Haltestelle" line in the viewer's region card.
+`station.html` page and the "Ø zur nächsten Haltestelle" line in the viewer's region card.
 
 Run from `app/`:
 
