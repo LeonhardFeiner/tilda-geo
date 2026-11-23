@@ -1,4 +1,28 @@
 {
+  "kurz|suenzhausen-holzhausen": {
+    "hinweis": [
+      {
+        "at": [11.64845, 48.5118],
+        "text": "Vor Ort geprüft (Prüffahrt 23.11.2026): Zwischen dem Feldweg von Sünzhausen und dem Weg nach Holzhausen gibt es keinen Weg. Laut Flurkarte führt hier auch kein durchgehendes Wegeflurstück: Die Linie folgt im Norden einer Grenze zwischen zwei Äckern, quert einen Feldweg und liegt im Süden nur auf etwa 75 m auf einem schmalen Wegeflurstück. Für einen Weg wäre Grunderwerb nötig."
+      },
+      {
+        "at": [11.64875, 48.5094],
+        "text": "Vor Ort geprüft (Prüffahrt 23.11.2026): Zwischen dem Feldweg von Sünzhausen und dem Weg nach Holzhausen gibt es keinen Weg. Laut Flurkarte führt hier auch kein durchgehendes Wegeflurstück: Die Linie folgt im Norden einer Grenze zwischen zwei Äckern, quert einen Feldweg und liegt im Süden nur auf etwa 75 m auf einem schmalen Wegeflurstück. Für einen Weg wäre Grunderwerb nötig."
+      }
+    ]
+  },
+  "lang|suenzhausen-holzhausen": {
+    "hinweis": [
+      {
+        "at": [11.64845, 48.5118],
+        "text": "Vor Ort geprüft (Prüffahrt 23.11.2026): Zwischen dem Feldweg von Sünzhausen und dem Weg nach Holzhausen gibt es keinen Weg. Laut Flurkarte führt hier auch kein durchgehendes Wegeflurstück: Die Linie folgt im Norden einer Grenze zwischen zwei Äckern, quert einen Feldweg und liegt im Süden nur auf etwa 75 m auf einem schmalen Wegeflurstück. Für einen Weg wäre Grunderwerb nötig."
+      },
+      {
+        "at": [11.64875, 48.5094],
+        "text": "Vor Ort geprüft (Prüffahrt 23.11.2026): Zwischen dem Feldweg von Sünzhausen und dem Weg nach Holzhausen gibt es keinen Weg. Laut Flurkarte führt hier auch kein durchgehendes Wegeflurstück: Die Linie folgt im Norden einer Grenze zwischen zwei Äckern, quert einen Feldweg und liegt im Süden nur auf etwa 75 m auf einem schmalen Wegeflurstück. Für einen Weg wäre Grunderwerb nötig."
+      }
+    ]
+  },
   "kurz|pfaffenhofen-schweitenkirchen": {
     "branches": [
       [
