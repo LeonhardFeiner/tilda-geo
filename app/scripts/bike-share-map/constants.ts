@@ -83,7 +83,7 @@ export const OVERLAY_ROAD_FULL_MIN_ZOOM_LIMITS = {
 
 /**
  * "Nearest station" map (stationAreasPage.ts), served at /station; noindex, linked only from
- * LOCAL_PAGES. Its data file uses the same stem. Was 'naechste-station', briefly 'bahnhof' (see PAGE_REDIRECTS).
+ * LOCAL_PAGES. Its data file uses the same stem. Briefly 'bahnhof' (see PAGE_REDIRECTS).
  */
 export const STATION_AREAS_PAGE_STEM = 'station'
 
@@ -108,7 +108,6 @@ export const RADWEGE_PAGE_STEM = 'konzept'
  */
 export const PAGE_REDIRECTS: Readonly<Record<string, string>> = {
   'radwege-schweitenkirchen': RADWEGE_PAGE_STEM,
-  'naechste-station': STATION_AREAS_PAGE_STEM,
   bahnhof: STATION_AREAS_PAGE_STEM,
 }
 
