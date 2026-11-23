@@ -60,6 +60,10 @@
     {
       "date": "2026-11-22",
       "text": "Schmiedhausen – Schweitenkirchen: Am Ortsrand folgt die Linie jetzt dem vorhandenen Geh- und Radweg neben der PAF 25 und am Friedhof der Fahrgasse des Parkplatzes (rund 0,5 km „Freigabe“ statt „kein Weg“). Plan 5/1 meint vorhandene Wege; neben einer Kreis- oder Staatsstraße zählt ein Radweg daneben als solcher."
+    },
+    {
+      "date": "2026-11-23",
+      "text": "Ortsdurchfahrt Schmiedhausen: Die Freigabe war am 20.06.2024 (Rundschau 3/2024), nicht am 25.06.2024 (Datum des Zeitungsberichts). Der rund 120 m lange Geh- und Radweg am nördlichen Ortsausgang zählt jetzt auch bei Dürnzhausen – Schmiedhausen."
     }
   ],
   "routes": [
@@ -901,13 +905,12 @@
           "uncertain": true
         },
         {
-          "date": "2024-06-25",
+          "date": "2024-06-20",
           "kind": "Eröffnung",
-          "text": "Offizielle Freigabe der erneuerten Ortsdurchfahrt Schmiedhausen (PAF 25) mit 720 m neuem Gehweg und zwei Verkehrsinseln; der Wunsch nach einem Geh- und Radweg sei laut PK schon viel älter.",
-          "source": "Pfaffenhofener Kurier, 25.06.2024",
-          "url": "https://www.donaukurier.de/lokales/landkreis-pfaffenhofen/geh-und-radwege-samt-verkehrsinsel-sind-fertig-schmiedhausens-ortsdurchfahrt-ist-frei-16323413",
-          "uncertain": true,
-          "paywall": true
+          "text": "Offizielle Freigabe der erneuerten Ortsdurchfahrt Schmiedhausen (PAF 25) durch Landrat und Bürgermeister; Baukosten rund 1,86 Mio. € (Landkreis 1,32 Mio. € Fahrbahn, Gemeinde rund 540.000 € Gehweg und Kanal). Dazu gehört der rund 112 m lange Geh- und Radweg am nördlichen Ortsausgang.",
+          "source": "Rundschau 3/2024, S. 17",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/sk_rundschau_03_2024_INTERNET.pdf",
+          "uncertain": true
         },
         {
           "date": "2025-11-12",
@@ -924,8 +927,22 @@
       "plans": { "kurz": "haupt" },
       "planLabels": ["Dürnzhausen - Schmiedhausen"],
       "baulast": "unklar",
-      "documented": "Im Recherchebericht zusammen mit Preinerszell – Hirschhausen geführt (Parallelroute zur PAF 25). Kein eigener öffentlicher Vorgang.",
+      "documented": "Am nördlichen Ortsausgang von Schmiedhausen rund 120 m gemeinsamer Geh- und Radweg, gebaut mit der Ortsdurchfahrt (Vergabe 07.12.2022, Freigabe 20.06.2024); weiter bis Dürnzhausen kein Radweg.",
       "events": [
+        {
+          "date": "2022-12-07",
+          "kind": "Bau",
+          "text": "Bau- und Vergabeausschuss des Landkreises: Vergabe der Erneuerung der Ortsdurchfahrt Schmiedhausen (PAF 25); dazu gehört „im weiteren Straßenverlauf“ ein neuer Geh- und Radweg auf der Ostseite, rund 112 m, am nördlichen Ortsausgang.",
+          "source": "Landkreis Pfaffenhofen, Bau- und Vergabeausschuss 07.12.2022, TOP 1.1, Vorlage 2022/4163",
+          "url": "https://online-dienste.landkreis-pfaffenhofen.de/bi/vo0050.asp?__kvonr=9098"
+        },
+        {
+          "date": "2024-06-20",
+          "kind": "Eröffnung",
+          "text": "Freigabe der erneuerten Ortsdurchfahrt Schmiedhausen mit dem gemeinsamen Geh- und Radweg (Zeichen 240) am nördlichen Ortsausgang, rund 120 m bis zum Weg Richtung Blasl. Der übrige Abschnitt bis Dürnzhausen hat weiter keinen Radweg.",
+          "source": "Rundschau 3/2024, S. 17",
+          "url": "https://www.schweitenkirchen.de/fileadmin/Gemeinde/Dateien/Rundschau/sk_rundschau_03_2024_INTERNET.pdf"
+        },
         {
           "date": "2025-11-12",
           "kind": "Aussage",
