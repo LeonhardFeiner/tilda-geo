@@ -1748,7 +1748,22 @@
       "plans": { "kurz": "ergaenzend" },
       "planLabels": ["Güntersdorf - Schweitenkirchen"],
       "baulast": "unklar",
-      "events": []
+      "events": [
+        {
+          "date": "2025-11-12",
+          "kind": "Aussage",
+          "text": "KUS-Maßnahmenliste: Auf dem Schachinger Weg (Abzweig Hauptstraße/St 2045 bei Bäckerei Häußler) sei der gemeinsame Geh- und Radweg „bereits im Jahr 2024 beschildert“ worden. Auf der Flurstraße gilt dauerhaft Tempo 30; eine Piktogrammkette am Südring/an der Flurstraße wird geprüft (Tabelle: 2025). In OpenStreetMap ist der Schachinger Weg eine Wohnstraße ohne Radweg (Stand 23.11.2026); ein Schild ist nicht belegt.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (gleich in der Fassung 03/2026)",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        },
+        {
+          "date": "2026-10-12",
+          "kind": "Ankündigung",
+          "text": "Neue Fassung der KUS-Maßnahmenliste: Der Schachinger Weg bis zur Hauptstraße (St 2045) wird 2026 für Pkw gesperrt („Anlieger frei“); die Angabe, er sei 2024 als Geh- und Radweg beschildert worden, ist gestrichen. Prüfung der Piktogrammkette Südring/Flurstraße jetzt 2027, Tempo 30 bleibt.",
+          "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 09.10.2026",
+          "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+        }
+      ]
     },
     {
       "id": "geroldshausen-gundelshausen",
@@ -2090,6 +2105,20 @@
       "url": "https://www.landkreis-pfaffenhofen.de/aktuelle-meldungen/kus-veroeffentlicht-steckbriefe-zum-radverkehrskonzept-ueberblick-ueber-massnahmen-in-allen-kommunen"
     },
     {
+      "date": "2025-11-12",
+      "kind": "Ankündigung",
+      "text": "KUS-Maßnahmenliste: Neubau eines gemeinsamen Geh- und Radwegs in der Woelkestraße (Schweitenkirchen), Grundstücksverhandlungen laufen, Umsetzung 2027, Gemeinde. Die Woelkestraße liegt auf keiner Trasse des Gemeindekonzepts.",
+      "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (gleich in der Fassung 03/2026)",
+      "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+    },
+    {
+      "date": "2025-11-12",
+      "kind": "Aussage",
+      "text": "Mobilitätskonzept Radverkehr des Landkreises, KUS-Steckbrief: Der Landkreis setzt „derzeit nicht auf die Verbreiterung bestehender Radwege, sondern auf das Schließen von Netzlücken und eine einheitliche Beschilderung“. Beschilderung werde vor Ort geprüft; weil die Ausweisung als offizieller Radweg „Pflichten wie Winterdienst und Verkehrssicherung“ mit sich bringe, werde „in Einzelfällen bewusst darauf verzichtet“.",
+      "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 03.11.2025 (unverändert in den Fassungen 03/2026 und 10/2026)",
+      "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2025/11/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
+    },
+    {
       "date": "2026-04",
       "kind": "Haushalt",
       "text": "Haushalt 2026: Für Geh- und Radwege sind 70.000 € für Grunderwerb und 150.000 € für die Baumaßnahme eingeplant.",
@@ -2103,6 +2132,13 @@
       "text": "Bau- und Umweltausschuss, TOP 7: Bitte, das 2023 beschlossene Radverkehrskonzept der Gemeinde auf der Homepage zu veröffentlichen; der Vorsitzende sagt das zu.",
       "source": "Bau- und Umweltausschuss TOP 7",
       "url": "https://ris.komuna.net/schweitenkirchen/app/sitzungen/82494080"
+    },
+    {
+      "date": "2026-10-12",
+      "kind": "Ankündigung",
+      "text": "Neue Fassung der KUS-Maßnahmenliste: Geh- und Radweg Woelkestraße jetzt 2029 (vorher 2027).",
+      "source": "KUS-Steckbrief Schweitenkirchen, Fassung vom 09.10.2026",
+      "url": "https://erlebnisregion-pfaffenhofen.de/wp-content/uploads/2026/10/Mobilitaetskonzept-Radverkehr-Gemeinde-Schweitenkirchen.pdf"
     }
   ],
   "quellen": [
