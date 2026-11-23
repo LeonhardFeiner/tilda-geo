@@ -376,12 +376,13 @@ def on_ways(a, b, tol=8.0):
     return True
 
 
-def match(utm, built=False, onto=None, blocked=()):
+def match(utm, built=False, onto=None, blocked=(), radweg_only=()):
     """Pieces [(weg, belag, coords, fromPlan, osm way ids)] of one plan line: a hidden Markov
     model over the OSM ways near each sample point (Viterbi). Staying on a way is free, switching
     costs a little plus the square of the jump between the two projections, so the match follows
     connected ways and does not zigzag between parallel ones; "no way" wins beyond CORR.
-    Samples within 12 m of a `blocked` line (override ohneWeg) take no way: the drawing stays."""
+    Samples within 12 m of a `blocked` line (override ohneWeg) take no way: the drawing stays.
+    Samples within 8 m of a `radweg_only` line (override redraw "radweg") take only cycle paths."""
     line = LineString(utm)
     n = max(2, int(line.length / STEP) + 1)
     pts = [line.interpolate(line.length * k / (n - 1)) for k in range(n)]
@@ -397,6 +398,7 @@ def match(utm, built=False, onto=None, blocked=()):
         if built: ws = {w for w in ws if way_class(w)[0] not in ('kreisstrasse', 'staatsstrasse')}
         # a route meant to run directly along one road ("onto": its ref) is matched onto that road only
         if onto: ws = {w for w in ws if (ways[w][4].get('ref') or '').strip() == onto}
+        if any(r.distance(q) < 8 for r in radweg_only): ws = {w for w in ws if way_class(w)[0] == 'radweg'}
         c = [(-1, (q.x, q.y), (200 / SIGMA) ** 2 if onto else NONE_COST, 0.0)]
         for wi in ws:
             ls = ways[wi][3]; t = ls.project(q); pr = ls.interpolate(t); d = pr.distance(q)
@@ -777,7 +779,9 @@ for f in final:
     # (e.g. the plan follows a path parcel without a way, the match would take a forest track)
     blocked = [LineString([to_utm.transform(*q) for q in seg])
                for seg in OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('ohneWeg', {}).get('lines', [])]
-    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto'), blocked=blocked):
+    rw_only = [LineString([to_utm.transform(*q) for q in OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('redraw', {}).get('radweg', [])])] \
+        if len(OVERRIDES.get(f"{f['plan']}|{f['routeId']}", {}).get('redraw', {}).get('radweg', [])) > 1 else []
+    for weg, belag, coords, fromPlan, wids in match(f.get('utm_matched', f.get('utm_beside', f['utm'])), built=f['routeId'] in built_ids or f['ausbau'] == 'bestand', onto=f.get('onto'), blocked=blocked, radweg_only=rw_only):
         ausbau = f.get('force_ausbau') or f['ausbau']
         # plan 5/1 means releasing an existing way: nothing to release without one, or on the
         # carriageway of a Staats-/Kreisstraße

@@ -75,8 +75,8 @@ way) in metric CAD coordinates (~1.058 m per unit, no rotation). `pipeline/run.s
    Overpass (`way(bbox)[highway](newer:"<DB OSM date>"); out meta geom;`), apply them with
    `pipeline/patch_osm.py` to a copy of `cache/osm-area.json` and re-run from `assign.py`
    (2026-11-21: 109 ways surveyed or tagged from aerial images that day, Overpass state 21:37 UTC;
-   2026-11-23: DB on the extract of 21.11. 21:20 UTC, plus 85 ways changed since, mostly surfaces
-   and tracks from a survey ride, Overpass state 12:50 UTC). The next full run replaces the patch.
+   2026-11-23: DB on the extract of 21.11. 21:20 UTC, plus 87 ways changed since, mostly surfaces
+   and tracks from a survey ride, Overpass state 13:47 UTC). The next full run replaces the patch.
    It also writes `planlage.geojson`: every plan line as drawn (georeferenced, not matched),
    which the page can show on request ("Lage wie im Plan gezeichnet").
 5. `landkreis.py` (runs before `assign.py`): Radvorrangrouten (orange) and Basisradnetz (light
@@ -128,7 +128,10 @@ Before matching, a drawing that runs ≥ 150 m at 8–60 m beside a Kreis-/Staat
 existing path within 8 m of it, is moved onto that road (gaps ≤ 120 m bridged), so the match
 follows the road rather than side tracks; the side comes from the original drawing.
 Stretches where a match runs out and back along itself are cut out (`drop_spurs`): with the side
-offset they would show as a path on both sides of the road. Override `beside` (`ref`, `max`,
+offset they would show as a path on both sides of the road. Override `redraw` (`from`, `via`, `why`)
+replaces the drawing from one point on; with `radweg` (lon/lat line) the samples along that line take
+only cycle paths (e.g. the Schmiedhausen exit, where the drawing lies on the PAF 25 and the Radweg
+beside it is short). Override `beside` (`ref`, `max`,
 `why`) moves a drawing onto one road where the automatic rule does not apply (e.g. Güntersdorf:
 the drawing touches the Blumenstraße only because of its offset from the PAF 6). Override
 `andereSeite` (`at`, `radius`, `why`) marks where the plan draws a new path on the side of the road

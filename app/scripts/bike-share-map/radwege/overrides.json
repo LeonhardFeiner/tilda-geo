@@ -229,7 +229,33 @@
         [567.8, 533.5],
         [500.8, 641.5]
       ]
-    ]
+    ],
+    "redraw": {
+      "from": [11.609987, 48.516592],
+      "via": [
+        [11.609987, 48.516592],
+        [11.609538, 48.516388],
+        [11.609529, 48.516382],
+        [11.609312, 48.516286],
+        [11.608675, 48.51605],
+        [11.608642, 48.516089],
+        [11.608413, 48.516005],
+        [11.608218, 48.51589],
+        [11.607721, 48.51553],
+        [11.607575, 48.51539],
+        [11.60751, 48.515264],
+        [11.607477, 48.515145],
+        [11.607573, 48.514852]
+      ],
+      "radweg": [
+        [11.609987, 48.516592],
+        [11.609538, 48.516388],
+        [11.609529, 48.516382],
+        [11.609312, 48.516286],
+        [11.608675, 48.51605]
+      ],
+      "why": "Ortsausfahrt Schmiedhausen: Gemeinsamer Geh- und Radweg (Zeichen 240) links der PAF 25, erst als eigener Weg, dann an der Straße erfasst (OpenStreetMap, vor Ort 23.11.2026). Die Zeichnung liegt hier auf der Straße; die Linie folgt dem Radweg und danach der Smidostraße bis zum Ende der Trasse."
+    }
   },
   "kurz|schmiedhausen-schweitenkirchen-paf25": {
     "label": [500, 700],
