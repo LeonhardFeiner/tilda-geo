@@ -6310,6 +6310,7 @@
         "belag": "natur",
         "fromPlan": 0.0,
         "osmWays": [78606157, 1582676472],
+        "hinweis": "Der Pfad, dem Plan und Linie hier folgen, ist vor Ort befahrbar (Erde, Gras), f\u00fchrt im Kataster aber \u00fcber Wald- und Wiesenflurst\u00fccke ohne eingetragenen Weg. Etwa 40\u201360 m \u00f6stlich verzeichnet das Kataster als Nutzung einen knapp 3 m breiten Weg diagonal durch den Wald, ebenfalls ohne eigenes Flurst\u00fcck; im Luftbild ist er stellenweise als Fahrspur zu sehen. F\u00fcr eine Ausweisung oder einen Ausbau w\u00e4re auf beiden Trassen eine Einigung mit den Eigent\u00fcmern n\u00f6tig.",
         "flur": "kein"
       },
       "geometry": {
