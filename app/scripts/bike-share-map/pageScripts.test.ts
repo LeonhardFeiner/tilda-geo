@@ -65,12 +65,7 @@ describe.each(Object.entries(pages))('%s', (_name, html) => {
 })
 
 test('the pages with client logic do have inline scripts', () => {
-  for (const name of [
-    'index.html',
-    'umweg.html',
-    'bahnhof.html',
-    'konzept.html',
-  ]) {
+  for (const name of ['index.html', 'umweg.html', 'bahnhof.html', 'konzept.html']) {
     expect(inlineScripts(pages[name]!).length).toBeGreaterThan(0)
   }
 })
