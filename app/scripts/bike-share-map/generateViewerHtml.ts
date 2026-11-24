@@ -8785,6 +8785,126 @@ export function generateViewerHtml(
       return out + '…';
     }
 
+    /**
+     * Colour stops of a CSS linear-gradient (as the legend bar's computed background-image) as
+     * [colour, 0…1] pairs. Stops without a position are spread evenly between their neighbours.
+     */
+    function cssGradientStops(css) {
+      const start = String(css || '').indexOf('linear-gradient(');
+      if (start < 0) return [];
+      const inner = [];
+      let depth = 0;
+      let part = '';
+      for (const ch of String(css).slice(start + 'linear-gradient('.length)) {
+        if (ch === '(') depth++;
+        if (ch === ')') {
+          if (depth === 0) break;
+          depth--;
+        }
+        if (ch === ',' && depth === 0) {
+          inner.push(part.trim());
+          part = '';
+        } else part += ch;
+      }
+      inner.push(part.trim());
+      const parts = inner.filter((x) => x && !x.startsWith('to ') && !x.endsWith('deg'));
+      const stops = parts.map((x) => {
+        const close = x.lastIndexOf(')');
+        const cut = close >= 0 ? close + 1 : x.indexOf(' ') >= 0 ? x.indexOf(' ') : x.length;
+        const rest = x.slice(cut).trim();
+        return [x.slice(0, cut).trim(), rest.endsWith('%') ? parseFloat(rest) / 100 : null];
+      });
+      if (!stops.length) return [];
+      if (stops[0][1] == null) stops[0][1] = 0;
+      if (stops[stops.length - 1][1] == null) stops[stops.length - 1][1] = 1;
+      for (let i = 1; i < stops.length - 1; i++) {
+        if (stops[i][1] != null) continue;
+        let j = i + 1;
+        while (stops[j][1] == null) j++;
+        const a = stops[i - 1][1];
+        stops[i][1] = a + (stops[j][1] - a) / (j - i + 1);
+      }
+      return stops.map(([c, p]) => [c, Math.min(1, Math.max(0, p))]);
+    }
+
+    /**
+     * The small legend (#canvas-mini-legend) is HTML over the map, so the canvas copy lacks it:
+     * draw the same title, unit line, colour bar and end labels into the picture's bottom-left
+     * corner. cssWidth is the map's CSS width (the canvas may be device-pixel scaled).
+     */
+    function drawMiniLegendOnCanvas(canvas, cssWidth) {
+      const bar = document.getElementById('cml-bar');
+      if (!bar) return;
+      const stops = cssGradientStops(getComputedStyle(bar).backgroundImage || bar.style.background);
+      if (!stops.length) return;
+      const title = document.querySelector('.cml-title')?.textContent || '';
+      const defEl = document.getElementById('cml-def');
+      const def = defEl && !defEl.hidden ? defEl.textContent || '' : '';
+      const min = document.getElementById('cml-min')?.textContent || '';
+      const max = document.getElementById('cml-max')?.textContent || '';
+      const s = canvas.width / (cssWidth || canvas.width);
+      const ctx = canvas.getContext('2d');
+      const font = (weight) =>
+        weight + ' ' + Math.round(12 * s) + 'px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      const pad = 10 * s;
+      const lineH = 16 * s;
+      const barH = 6 * s;
+      ctx.font = font(600);
+      const titleW = ctx.measureText(title).width;
+      const labelsW = ctx.measureText(min).width + ctx.measureText(max).width + 16 * s;
+      ctx.font = font(400);
+      const defW = def ? ctx.measureText(def).width : 0;
+      const innerW = Math.max(150 * s, titleW, defW, labelsW);
+      const w = innerW + 2 * pad;
+      const h = pad + lineH + (def ? lineH : 0) + 4 * s + barH + 4 * s + lineH + pad * 0.6;
+      const x = 16 * s;
+      const y = canvas.height - 16 * s - h;
+      const r = 6 * s;
+      ctx.save();
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.16)';
+      ctx.shadowBlur = 6 * s;
+      ctx.shadowOffsetY = 1 * s;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.save();
+      ctx.textBaseline = 'top';
+      let cy = y + pad;
+      ctx.font = font(600);
+      ctx.fillStyle = '#555';
+      ctx.fillText(title, x + pad, cy);
+      cy += lineH;
+      if (def) {
+        ctx.font = font(400);
+        ctx.fillStyle = '#475569';
+        ctx.fillText(def, x + pad, cy);
+        cy += lineH;
+      }
+      cy += 4 * s;
+      const gradient = ctx.createLinearGradient(x + pad, 0, x + pad + innerW, 0);
+      for (const [colour, at] of stops) {
+        try {
+          gradient.addColorStop(at, colour);
+        } catch {}
+      }
+      ctx.fillStyle = gradient;
+      ctx.fillRect(x + pad, cy, innerW, barH);
+      cy += barH + 4 * s;
+      ctx.font = font(600);
+      ctx.fillStyle = '#444';
+      ctx.fillText(min, x + pad, cy);
+      ctx.textAlign = 'right';
+      ctx.fillText(max, x + pad + innerW, cy);
+      ctx.restore();
+    }
+
     async function captureMapExportCanvas() {
       const mapEl = document.getElementById('map');
       const { width, height } = RankingDisplay.PORTRAIT_EXPORT;
@@ -8833,6 +8953,7 @@ export function generateViewerHtml(
         copy.width = source.width;
         copy.height = source.height;
         copy.getContext('2d').drawImage(source, 0, 0);
+        drawMiniLegendOnCanvas(copy, width);
         return copy;
       } finally {
         for (const [el, visibility] of hiddenControls) el.style.visibility = visibility;
