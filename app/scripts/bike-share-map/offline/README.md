@@ -26,7 +26,7 @@ site-files.txt start-windows.bat` (built from a site folder:
 ```
 offline-karte/
   serve.py              local web server (Python 3 standard library)
-  start-windows.bat     double-click on Windows: Windows Python, else WSL python3
+  start-windows.bat     double-click on Windows: WSL python3, else Windows Python
   site/                 the unpacked GitHub Pages artifact (github-pages → artifact.tar)
   offline/
     basemap.mbtiles     "Hell" basemap, OpenMapTiles vector tiles (gzip pbf)
