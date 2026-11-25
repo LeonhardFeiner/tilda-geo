@@ -18,6 +18,7 @@ import json
 import mimetypes
 import os
 import re
+import sys
 import sqlite3
 import threading
 import urllib.parse
@@ -170,6 +171,16 @@ def make_handler(root):
     return Handler, {'basemap': basemap, 'ne2': ne2, 'dop': dop}
 
 
+class Server(http.server.ThreadingHTTPServer):
+    daemon_threads = True
+
+    def handle_error(self, request, client_address):
+        # the map cancels tile requests it no longer needs (panning, zooming): not an error
+        if isinstance(sys.exc_info()[1], (BrokenPipeError, ConnectionResetError, ConnectionAbortedError)):
+            return
+        super().handle_error(request, client_address)
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('folder', nargs='?', default=os.path.dirname(os.path.abspath(__file__)))
@@ -181,7 +192,7 @@ def main():
     handler, tiles = make_handler(args.folder)
     for name, t in tiles.items():
         print(f'{name:8} {"offline bis Zoom " + str(t.maxzoom) if t.path else "fehlt (bleibt leer)"}')
-    server = http.server.ThreadingHTTPServer(('127.0.0.1', args.port), handler)
+    server = Server(('127.0.0.1', args.port), handler)
     url = f'http://localhost:{args.port}/'
     print(f'\nKarte:   {url}\nKonzept: {url}konzept\nBeenden mit Strg+C')
     if not args.no_browser:
