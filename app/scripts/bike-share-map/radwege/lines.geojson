@@ -3249,7 +3249,7 @@
         "ausbau": "kein-weg",
         "weg": "kreisstrasse",
         "belag": "asphalt",
-        "fromPlan": 0.02,
+        "fromPlan": 0.0,
         "osmWays": [23269506, 197391444],
         "seite": "rechts",
         "richtung": "\u00f6stlich",
@@ -3260,40 +3260,19 @@
         "type": "LineString",
         "coordinates": [
           [11.580733, 48.505184],
-          [11.58078, 48.505419],
-          [11.580856, 48.505661],
-          [11.580976, 48.505935],
-          [11.581112, 48.5062],
-          [11.581168, 48.506291],
-          [11.581265, 48.506408],
-          [11.581443, 48.506553],
-          [11.581559, 48.506626],
-          [11.581822, 48.506752],
+          [11.580757, 48.505327],
+          [11.580833, 48.505592],
+          [11.580978, 48.505938],
+          [11.581171, 48.506294],
+          [11.581262, 48.506404],
+          [11.581377, 48.506504],
+          [11.581569, 48.506631],
+          [11.58181, 48.506747],
           [11.582299, 48.50694],
-          [11.582684, 48.507078],
-          [11.582994, 48.50721],
-          [11.583226, 48.507299],
-          [11.583573, 48.506863]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "oberthann-schweitenkirchen",
-        "plan": "kurz",
-        "ausbau": "kein-weg",
-        "weg": "kein",
-        "belag": "kein",
-        "fromPlan": 0.98,
-        "flur": "kein"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.583573, 48.506863],
-          [11.584316, 48.505084],
-          [11.584603, 48.504672]
+          [11.58268, 48.507077],
+          [11.582817, 48.507135],
+          [11.582859, 48.507127],
+          [11.582967, 48.506849]
         ]
       }
     },
@@ -3306,16 +3285,141 @@
         "weg": "feldweg",
         "belag": "natur",
         "fromPlan": 0.0,
-        "osmWays": [42937450],
+        "osmWays": [42937450, 1584214016],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.584525, 48.504647],
-          [11.586336, 48.505232],
-          [11.587064, 48.505571],
-          [11.587044, 48.505561],
+          [11.582967, 48.506849],
+          [11.583224, 48.505654],
+          [11.583292, 48.505479],
+          [11.583442, 48.505228],
+          [11.583541, 48.504892],
+          [11.583593, 48.504881]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "kein"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.583593, 48.504881],
+          [11.58437, 48.504714]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.58437, 48.504714],
+          [11.584586, 48.504667],
+          [11.585178, 48.504858]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.585178, 48.504858],
+          [11.586035, 48.505135]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586035, 48.505135],
+          [11.586341, 48.505234],
+          [11.586453, 48.505286]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "genutzt"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586453, 48.505286],
+          [11.586899, 48.505494]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen",
+        "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.0,
+        "osmWays": [42937450, 1584214016],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.586899, 48.505494],
+          [11.587062, 48.50557],
+          [11.587046, 48.505559],
           [11.587468, 48.505162]
         ]
       }
@@ -5764,24 +5868,47 @@
       "properties": {
         "routeId": "oberthann-schweitenkirchen-alternative",
         "plan": "kurz",
+        "ausbau": "freigabe",
+        "weg": "feldweg",
+        "belag": "natur",
+        "fromPlan": 0.03,
+        "osmWays": [1584214017],
+        "flur": "weg"
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [11.588853, 48.503976],
+          [11.588825, 48.503972],
+          [11.588748, 48.503921],
+          [11.588618, 48.503742],
+          [11.588562, 48.503703],
+          [11.587846, 48.503589],
+          [11.587788, 48.50353]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "routeId": "oberthann-schweitenkirchen-alternative",
+        "plan": "kurz",
         "ausbau": "kein-weg",
         "weg": "kein",
         "belag": "kein",
-        "fromPlan": 0.99,
+        "fromPlan": 0.97,
         "hinweis": "Der Plan f\u00fchrt den Weg hier gerade \u00fcber ein schmales Wegeflurst\u00fcck am Waldrand. Einen Weg gibt es dort in OpenStreetMap nicht; der Waldweg s\u00fcdlich davon ist nicht gemeint.",
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
-          [11.588893, 48.504077],
-          [11.588743, 48.503788],
-          [11.588726, 48.503776],
-          [11.587647, 48.503488],
-          [11.58653, 48.502633],
-          [11.586509, 48.502622],
-          [11.586486, 48.502624],
-          [11.586329, 48.502693],
+          [11.587788, 48.50353],
+          [11.587661, 48.503496],
+          [11.587612, 48.503467],
+          [11.586547, 48.502641],
+          [11.5865, 48.502618],
+          [11.586331, 48.502694],
           [11.585678, 48.502436]
         ]
       }
