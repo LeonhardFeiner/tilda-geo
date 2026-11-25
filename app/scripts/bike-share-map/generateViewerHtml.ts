@@ -8585,6 +8585,16 @@ export function generateViewerHtml(
       document.body.removeChild(link);
     }
 
+    // Adding sources and layers needs only the style document (MapLibre's 'style.load').
+    // isStyleLoaded() and 'load' also wait for every basemap tile and icon, and MapLibre has no
+    // timeout: one stalled tile on a bad connection kept the regions off the map for good
+    // (the menu worked, the map stayed empty). Stand-in maps (no WebGL, tests) have no style
+    // object (their catch-all proxies hand back a function).
+    function mapStyleReady() {
+      const style = map.style;
+      return style && typeof style === 'object' ? Boolean(style._loaded) : map.isStyleLoaded();
+    }
+
     function raceTimeout(promise, ms) {
       return Promise.race([promise, new Promise((resolve) => setTimeout(resolve, ms))]);
     }
@@ -10771,12 +10781,8 @@ export function generateViewerHtml(
       // throw here skips bindRegionMapInteraction() right after it — permanently, since nothing
       // retries it — leaving the map with no click handler until an unrelated view change calls
       // us again once the style has since loaded. Defer instead of crashing.
-      if (
-        !map.getSource('regions') &&
-        typeof map.isStyleLoaded === 'function' &&
-        !map.isStyleLoaded()
-      ) {
-        map.once('idle', () => addRegionLayers(geojson, minPct, maxPct, labelMinZoom));
+      if (!map.getSource('regions') && !mapStyleReady()) {
+        map.once('style.load', () => addRegionLayers(geojson, minPct, maxPct, labelMinZoom));
         return;
       }
       lastPctRange = { min: minPct, max: maxPct, scaleCapped: false, dataMax: maxPct };
@@ -10984,25 +10990,25 @@ export function generateViewerHtml(
           fitMapToCurrentView();
         }
       };
-      if (map.isStyleLoaded()) {
+      if (mapStyleReady()) {
         run();
         return;
       }
-      // The style is still loading: draw on 'load', or after 2.5 s regardless (a basemap that
-      // never answers must not block the regions). Exactly once — the timer used to fire again
-      // after a normal 'load' and re-fit the camera, undoing what the visitor had done meanwhile.
+      // The style is still loading: draw on 'style.load', or after 2.5 s regardless. Exactly
+      // once — the timer used to fire again after a normal load and re-fit the camera, undoing
+      // what the visitor had done meanwhile.
       await new Promise((resolve) => {
         let settled = false;
         const finish = () => {
           if (settled) return;
           settled = true;
           clearTimeout(timer);
-          map.off('load', finish);
+          map.off('style.load', finish);
           map.off('error', finish);
           run();
           resolve();
         };
-        map.once('load', finish);
+        map.once('style.load', finish);
         map.once('error', finish);
         const timer = setTimeout(finish, 2500);
       });
@@ -11015,11 +11021,15 @@ export function generateViewerHtml(
       const bearing = map.getBearing();
       const pitch = map.getPitch();
       map.setStyle(CONFIG.basemapStyles[id]);
-      map.once('idle', () => {
+      // setStyle diffs in place when it can (the style is ready at once) and otherwise builds a
+      // new style ('style.load'). Waiting for 'idle' instead meant waiting for every tile.
+      const restore = () => {
         map.jumpTo({ center, zoom, bearing, pitch });
         overlaysBound = false;
         void applyCurrentView({ keepCamera: true });
-      });
+      };
+      if (mapStyleReady()) setTimeout(restore, 0);
+      else map.once('style.load', restore);
       const meta = CONFIG.basemapOptions.find((b) => b.id === id);
       basemapHint.textContent = meta?.description || '';
     }

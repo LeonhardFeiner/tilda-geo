@@ -660,8 +660,11 @@ export function detourPageHtml({
     }
 
     function onMapReady(fn) {
-      if (map.isStyleLoaded()) fn();
-      else map.once('load', fn);
+      // Adding sources and layers needs only the style document. isStyleLoaded() and 'load' also
+      // wait for every basemap tile, and one stalled tile (no timeout in MapLibre) kept the lines
+      // off the map for good.
+      if (map.style && typeof map.style === 'object' ? map.style._loaded : map.isStyleLoaded()) fn();
+      else map.once('style.load', fn);
     }
     const outline = { type: 'Feature', properties: {}, geometry: { type: 'MultiPolygon', coordinates: graph.meta.outline.map((ring) => [ring]) } };
     const bb = graph.meta.bbox;

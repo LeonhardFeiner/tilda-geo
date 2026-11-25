@@ -986,6 +986,19 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'a basemap tile that never arrives does not keep the regions off the map',
+    async () => {
+      page = await bootViewer('', { stalledBasemap: true })
+      const p = page
+      const map = p.window.__map as unknown as { getSource: (id: string) => unknown }
+      await p.waitFor(() => Boolean(map.getSource('regions')), 'the regions on the map', 8000)
+      expect(p.cameraCalls().some((c) => c.startsWith('fitBounds'))).toBe(true)
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'without WebGL the page says so and search, ranking and region card still work',
     async () => {
       page = await bootViewer('', { webgl: false })

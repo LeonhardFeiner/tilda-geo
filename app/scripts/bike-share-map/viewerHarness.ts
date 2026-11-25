@@ -80,8 +80,11 @@ const MAPLIBRE_STUB = `
     const handler = () => ({ enable() {}, disable() {}, isEnabled() { return true; } });
     let idleTimer = null;
     let inIdle = false;
+    // Like MapLibre with one basemap tile that never arrives: the style document is ready
+    // ('style.load'), but isStyleLoaded() stays false and 'load' / 'idle' never fire.
+    const stalled = Boolean(window.__stalledBasemap);
     const scheduleIdle = () => {
-      if (idleTimer || inIdle) return;
+      if (stalled || idleTimer || inIdle) return;
       idleTimer = setTimeout(() => {
         idleTimer = null;
         inIdle = true;
@@ -99,9 +102,9 @@ const MAPLIBRE_STUB = `
       },
       triggerRepaint() { scheduleIdle(); },
       resize() { return proxy; },
-      isStyleLoaded() { return true; },
-      loaded() { return true; },
-      areTilesLoaded() { return true; },
+      isStyleLoaded() { return !stalled; },
+      loaded() { return !stalled; },
+      areTilesLoaded() { return !stalled; },
       getSource(id) { return sources.get(id); },
       addSource(id, s) { sources.set(id, { ...s, setData(d) { this.data = d; } }); },
       removeSource(id) { sources.delete(id); },
@@ -156,7 +159,7 @@ const MAPLIBRE_STUB = `
       cameraForBounds() { return { center: [cam.lng, cam.lat], zoom: cam.z }; },
       setStyle(style) {
         record('setStyle', style && style.layers && style.layers[0] ? style.layers[0].id : '');
-        setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('idle'); }, 5);
+        setTimeout(() => { base.fire('styledata'); base.fire('style.load'); if (!stalled) base.fire('idle'); }, 5);
       },
       hasImage() { return false; },
       scrollZoom: handler(), boxZoom: handler(), dragRotate: handler(), dragPan: handler(), keyboard: handler(),
@@ -166,7 +169,12 @@ const MAPLIBRE_STUB = `
       get(t, k) { if (k in t) return typeof t[k] === 'function' ? t[k].bind(proxy) : t[k]; return () => proxy; },
     });
     window.__map = proxy;
-    setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('load'); base.fire('idle'); }, 5);
+    if (stalled) {
+      base.style = { _loaded: false };
+      setTimeout(() => { base.style._loaded = true; base.fire('styledata'); base.fire('style.load'); }, 5);
+    } else {
+      setTimeout(() => { base.fire('styledata'); base.fire('style.load'); base.fire('load'); base.fire('idle'); }, 5);
+    }
     return proxy;
   }
   function Control() {
@@ -197,6 +205,8 @@ type BootOptions = {
   failGemeindeGeometry?: boolean
   /** Whether a canvas hands out a WebGL context (the page probes before creating the map). Default true. */
   webgl?: boolean
+  /** A basemap tile that never arrives: the style is ready, but 'load' and 'idle' never fire. */
+  stalledBasemap?: boolean
   /**
    * The mirror build (radweg.bfschweitenkirchen.de): the same rewrite the workflow's mirror job
    * applies to index.html, which turns the links to the local pages off.
@@ -262,6 +272,7 @@ export async function bootPage(
   window.__fetches = []
   window.__shares = []
   window.__clipboard = []
+  ;(window as unknown as { __stalledBasemap?: boolean }).__stalledBasemap = options.stalledBasemap
 
   const onRejection = (reason: unknown) => errors.push(`unhandled rejection: ${String(reason)}`)
   process.on('unhandledRejection', onRejection)
