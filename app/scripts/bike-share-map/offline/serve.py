@@ -86,7 +86,8 @@ def make_handler(root):
 
         def rewrite(self, text):
             b = self.base() + '/offline'
-            text = text.replace(OFM + '/planet', b + '/planet.json')
+            # /backup_planet since 2026-11-25 (EasyPrivacy blocks /planet); older builds use /planet
+            text = re.sub(re.escape(OFM) + r'/(?:backup_)?planet(?=["\'])', b + '/planet.json', text)
             text = text.replace(OFM + '/fonts/', b + '/fonts/')
             text = text.replace(OFM + '/sprites/', b + '/sprites/')
             text = text.replace(OFM + '/natural_earth/ne2sr/', b + '/ne2/')

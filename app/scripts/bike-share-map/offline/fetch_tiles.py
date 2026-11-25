@@ -83,7 +83,7 @@ def main():
             return DOP.format(bbox=bbox_3857(z, x, y))
 
     elif kind == 'ofm':
-        raw = get('https://tiles.openfreemap.org/planet')
+        raw = get('https://tiles.openfreemap.org/backup_planet')
         tilejson = json.loads(gzip.decompress(raw) if raw[:2] == b'\x1f\x8b' else raw)
         template = tilejson['tiles'][0]
         meta = {
