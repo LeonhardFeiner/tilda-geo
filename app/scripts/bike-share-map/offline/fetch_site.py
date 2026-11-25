@@ -9,13 +9,16 @@ Standard library only.
 import concurrent.futures
 import os
 import sys
-import time
-import urllib.error
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # works under python -I too
+from offline_http import Fetcher, GiveUp  # noqa: E402
 import urllib.parse
-import urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BASE = 'https://leonhardfeiner.github.io/tilda-geo/'
+
+
+FETCH = Fetcher()
 
 
 def fetch(base, out, path):
@@ -23,22 +26,13 @@ def fetch(base, out, path):
     if os.path.isfile(target) and os.path.getsize(target) > 0:
         return 'skip'
     os.makedirs(os.path.dirname(target), exist_ok=True)
-    url = base + urllib.parse.quote(path)
-    for i in range(4):
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': 'radwege-offline/1.0'})
-            with urllib.request.urlopen(req, timeout=120) as r:
-                data = r.read()
-            break
-        except urllib.error.HTTPError as e:
-            if e.code == 404:
-                return 'missing'
-            if i == 3:
-                raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError):
-            if i == 3:
-                raise
-        time.sleep(2 * (i + 1))
+    try:
+        data = FETCH.get(base + urllib.parse.quote(path))
+    except GiveUp as e:
+        print('übersprungen:', e, flush=True)
+        return 'failed'
+    if data is None:
+        return 'missing'
     with open(target + '.part', 'wb') as f:
         f.write(data)
     os.replace(target + '.part', target)
@@ -57,6 +51,8 @@ def main():
             if i % 1000 == 0:
                 print(f'{i}/{len(paths)}', flush=True)
     print('site:', counts)
+    if counts.get('failed'):
+        sys.exit(f"{counts['failed']} Dateien nicht geladen (Verbindung?). Einfach nochmal starten, es geht dort weiter.")
 
 
 if __name__ == '__main__':

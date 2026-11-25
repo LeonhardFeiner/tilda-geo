@@ -17,12 +17,12 @@ import gzip
 import json
 import math
 import sqlite3
+import os
 import sys
-import time
-import urllib.error
-import urllib.request
 
-UA = 'radwege-offline/1.0'
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # works under python -I too
+from offline_http import Fetcher, GiveUp  # noqa: E402
+
 DOP = (
     'https://geoservices.bayern.de/od/wms/dop/v1/dop20?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetMap'
     '&LAYERS=by_dop20c&STYLES=&SRS=EPSG:3857&BBOX={bbox}&WIDTH=512&HEIGHT=512&FORMAT=image/jpeg'
@@ -48,21 +48,16 @@ def bbox_3857(z, x, y):
     return f'{-HALF + x * size},{HALF - (y + 1) * size},{-HALF + (x + 1) * size},{HALF - y * size}'
 
 
-def get(url, tries=4):
-    for i in range(tries):
-        try:
-            req = urllib.request.Request(url, headers={'User-Agent': UA, 'Accept-Encoding': 'gzip'})
-            with urllib.request.urlopen(req, timeout=60) as r:
-                return r.read()
-        except urllib.error.HTTPError as e:
-            if e.code == 404 or e.code == 204:
-                return None
-            if i == tries - 1:
-                raise
-        except (urllib.error.URLError, TimeoutError, ConnectionError):
-            if i == tries - 1:
-                raise
-        time.sleep(2 * (i + 1))
+FETCH = Fetcher({'Accept-Encoding': 'gzip'})
+
+
+def get(url):
+    """Bytes, None (no tile), or False (gave up; a re-run fetches it)."""
+    try:
+        return FETCH.get(url)
+    except GiveUp as e:
+        print('übersprungen:', e, flush=True)
+        return False
 
 
 def open_mbtiles(path, metadata):
@@ -119,10 +114,12 @@ def main():
         todo += [(z, x, y) for x in xs for y in ys if (z, x, 2**z - 1 - y) not in have]
     print(f'{len(todo)} tiles to fetch ({len(have)} already in {out})', flush=True)
 
-    done = 0
+    done = failed = 0
     with concurrent.futures.ThreadPoolExecutor(4) as pool:
         for (z, x, y), data in zip(todo, pool.map(lambda t: get(url(*t)), todo)):
-            if data:
+            if data is False:
+                failed += 1
+            elif data:
                 db.execute('insert or replace into tiles values (?, ?, ?, ?)', (z, x, 2**z - 1 - y, data))
             done += 1
             if done % 500 == 0:
@@ -130,6 +127,8 @@ def main():
                 print(f'{done}/{len(todo)}', flush=True)
     db.commit()
     print('done', db.execute('select count(*), sum(length(tile_data)) from tiles').fetchone())
+    if failed:
+        sys.exit(f'{failed} Kacheln nicht geladen (Verbindung?). Einfach nochmal starten, es geht dort weiter.')
 
 
 if __name__ == '__main__':

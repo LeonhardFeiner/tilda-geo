@@ -11,7 +11,18 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 cd "$HERE"
-PY="python3 -I"
+# a step that could not load everything (connection gone for > 10 min) runs again, up to 3 times
+PY="retry python3 -I"
+retry() {
+  local i
+  for i in 1 2 3; do
+    "$@" && return 0
+    echo "-- Verbindungsproblem, neuer Versuch in 60 s ($i/3)"
+    sleep 60
+  done
+  echo "-- Abgebrochen. Später einfach 'bash build-offline.sh' nochmal starten: es geht dort weiter."
+  exit 1
+}
 OFF="$HERE/offline"
 mkdir -p "$OFF"
 

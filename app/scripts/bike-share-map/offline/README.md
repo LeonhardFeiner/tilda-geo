@@ -17,7 +17,7 @@ file from leonhardfeiner.github.io using `site-files.txt` (written from the Page
 without the 376 MB of share preview PNGs in `r/`). A page or data file added to the site later
 needs a fresh `site-files.txt`; for a newer site, delete `site/` and run the script again.
 
-Starter zip: `zip -j offline-karte-starter.zip README.md build-offline.sh fetch_*.py serve.py
+Starter zip: `zip -j offline-karte-starter.zip README.md build-offline.sh fetch_*.py offline_http.py serve.py
 site-files.txt start-windows.bat` (built from a site folder:
 `find . -type f ! -path './r/*.png' | sed 's|^\./||' | LC_ALL=C sort > site-files.txt`).
 
