@@ -10,6 +10,7 @@ import type {
   MapDataOsmIdConfig,
   MapDataSourceInspectorEditor,
 } from '@/components/regionen/pageRegionSlug/mapData/types'
+import type { InspectorCharts } from '@/components/regionen/pageRegionSlug/SidebarInspector/TagsTable/charts/inspectorChart.schema'
 import type { translations } from '@/components/regionen/pageRegionSlug/SidebarInspector/TagsTable/translations/translations.const'
 
 // a modified version of MapDataDatasetsSource from '../../src/regionen/[regionSlug]/_mapData/types'
@@ -30,7 +31,11 @@ type MapDataDatasetsSourceBase = {
       >
     | Omit<
         LineLayerSpecification &
-          Required<Pick<LineLayerSpecification, 'paint'>> & { beforeId?: string },
+          Required<Pick<LineLayerSpecification, 'paint'>> & {
+            beforeId?: string
+            /** @desc The direction arrows point against the geometry, e.g. for a counter direction. */
+            reverseDirectionArrows?: boolean
+          },
         'source'
       >
     | Omit<
@@ -51,6 +56,12 @@ export type StaticDatasetLayer = MapDataDatasetsSourceBase['layers'][number]
 type MapDataDatasetsSource = MapDataDatasetsSourceBase & {
   /** @desc MapDatasetCategory.key for the region sidebar; labels and order live in DB. */
   categoryKey: string | null
+  /**
+   * @desc `id` of an entry in `styleGroups` at the meta.ts root. Configs of one group show as one
+   * sidebar entry with a radio button per config (label: `name`; first config = default).
+   * Omit to show the config as its own entry.
+   */
+  styleGroup?: string
   description?: string
   osmIdConfig?: MapDataOsmIdConfig
   inspector:
@@ -59,6 +70,8 @@ type MapDataDatasetsSource = MapDataDatasetsSourceBase & {
         /** @desc Array of key strings OR `false` to list all available keys */
         documentedKeys: string[] | false
         editors?: MapDataSourceInspectorEditor[]
+        /** @desc See `SidebarInspector/TagsTable/charts/README.md` */
+        charts?: InspectorCharts
       } & (
         | { disableTranslations?: false; translations: typeof translations }
         | { disableTranslations: true; translations?: never }
@@ -75,6 +88,15 @@ type MapDataDatasetsSourceSystemLayer = MapDataDatasetsSourceBase & {
   categoryKey: undefined
   description?: undefined
   legends?: undefined
+  styleGroup?: undefined
+}
+
+/** @desc One sidebar entry that bundles several configs (styles) of the same dataset file */
+export type StaticDatasetStyleGroup = {
+  /** @desc Speaking slug, e.g. `datensatz-b`; referenced by `configs[].styleGroup` */
+  id: string
+  /** @desc Title of the sidebar entry */
+  name: string
 }
 
 export type MapDataSourceExternalRenderFormat = 'pmtiles' | 'geojson'
@@ -120,10 +142,14 @@ export type MetaDataUser = MetaDataFileLevelMetadata &
         dataSourceType: 'local'
         /** @desc Change the tippecanoe settings  */
         geometricPrecision?: 'mask' | 'regular' | 'high' | null
+        /** @desc Lowest zoom level of the PMTiles (tippecanoe `--minimum-zoom`). Default: 7. Lower it for datasets that should be visible for all of Germany (5) */
+        minZoom?: number
         /** @desc Which file format to use for map rendering. Default: 'auto' (PMTiles for large files, GeoJSON for small) */
         mapRenderFormat?: 'pmtiles' | 'geojson' | 'auto'
         /** @desc Configuration for user-selectable datasets */
         configs: MapDataDatasetsSource[]
+        /** @desc Groups that `configs[].styleGroup` refers to; one sidebar entry per group */
+        styleGroups?: StaticDatasetStyleGroup[]
       }
     | {
         regions: string[]
@@ -142,6 +168,8 @@ export type MetaDataUser = MetaDataFileLevelMetadata &
         mapRenderFormat: MapDataSourceExternalRenderFormat
         /** @desc Configuration for user-selectable datasets. External sources cannot be system layers. */
         configs: MapDataDatasetsSource[]
+        /** @desc Groups that `configs[].styleGroup` refers to; one sidebar entry per group */
+        styleGroups?: StaticDatasetStyleGroup[]
       }
   )
 
@@ -155,6 +183,8 @@ export type MetaDataSystemLayer = MetaDataFileLevelMetadata & {
   dataSourceType: 'local'
   /** @desc Change the tippecanoe settings  */
   geometricPrecision?: 'mask' | 'regular' | 'high' | null
+  /** @desc Lowest zoom level of the PMTiles (tippecanoe `--minimum-zoom`). Default: 7 */
+  minZoom?: number
   /** @desc Which file format to use for map rendering. Default: 'auto' (PMTiles for large files, GeoJSON for small) */
   mapRenderFormat?: 'pmtiles' | 'geojson'
   /** @desc Configuration for system layers (masks, etc.) - minimal properties, always active */

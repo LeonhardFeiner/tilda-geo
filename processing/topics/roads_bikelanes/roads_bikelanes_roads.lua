@@ -12,7 +12,7 @@ local to_todo_tags = require('topics.helper.to_todo_tags')
 local categorize_bike_suitability = require('topics.roads_bikelanes.roads.bike_suitability')
 local road_classification_road_value = require('topics.roads_bikelanes.roads.road_classification_road_value')
 local transform_highway_path_with_foot_or_bicycle_no = require('topics.roads_bikelanes.helper.transform_tags.transform_highway_path_with_foot_or_bicycle_no')
-local excluded_from_roads_tables = require('topics.roads_bikelanes.helper.excluded_from_roads_tables')
+local category_is_sidepath = require('topics.roads_bikelanes.bikelanes.categories.category_is_sidepath')
 local self_bikelane_has_todo = require('topics.roads_bikelanes.helper.self_bikelane_has_todo')
 local SANITIZE_ROAD_TAGS = require('topics.roads_bikelanes.helper.sanitize_road_tags')
 local CLEANER = require('topics.helper.sanitize_cleaner')
@@ -23,6 +23,7 @@ local adjoining_context = require('topics.roads_bikelanes.pseudo_tags_sidepath.a
 local directional_surface = require('topics.roads_bikelanes.surfaceQuality.directional_surface')
 local surface_quality = require('topics.roads_bikelanes.surfaceQuality.surface_quality')
 local DESC = require('topics.helper.tilda_description')
+local LINE_DIRECTION = require('topics.roads_bikelanes.helper.line_direction')
 
 local roads_table = roads_bikelanes_tables.roads_table
 local roads_path_classes_table = roads_bikelanes_tables.roads_path_classes_table
@@ -37,6 +38,12 @@ local function roads_bikelanes_roads(context)
   local object_tags = context.object_tags
   local object_geom = context.object_geom
 
+  -- Skip what `routing` has no path edge for (join symmetry with roadsPathClasses, see
+  -- `build_segments.lua` and `routing_infra/README.md` § Join symmetry): ways that are not in
+  -- `roads` (`context.access.in_roads`), OSM sidewalks and derived sidepaths.
+  if not context.access.in_roads then return end
+  if category_is_sidepath(object_tags) then return end
+
   local result_tags = merge_table({}, context.shared_result_tags)
   merge_table(result_tags, context.cycleway_presence)
   result_tags._self_bikelane_has_unusual_width = self_bikelane_has_todo(context.cycleways, 'unusual_width')
@@ -46,7 +53,11 @@ local function roads_bikelanes_roads(context)
     merge_table(result_tags, surface_quality(directional.surface_tags))
     result_tags.surface_source = 'tag_directional'
   end
-  result_tags.description = DESC.build(object_tags, directional.hints)
+  local surface_hints = directional.hints
+  if LINE_DIRECTION.way_reversed(object_tags) then
+    surface_hints = DESC.swap_side_tokens(surface_hints)
+  end
+  result_tags.description = DESC.build(object_tags, surface_hints)
 
   if not highway_classes.sidepath_highway_classes[object_tags.highway] then
     merge_table(result_tags, maxspeed(object_tags))
@@ -70,8 +81,8 @@ local function roads_bikelanes_roads(context)
   end
   LOG_ERROR.SANITIZED_VALUE(object_tags._type, object_tags._id, object_geom, replaced_tags, 'roads_bikelanes_roads')
 
-  -- Same skip as routing mixedTrafficFoot (join symmetry with roadsPathClasses).
-  if excluded_from_roads_tables(object_tags) then return end
+  -- Lines of the way point in the direction of travel (`LINE_DIRECTION.way_line`); the todo line
+  -- below keeps the drawing direction, like the todos of bikelanes.
 
   local bike_suitability = categorize_bike_suitability(object_tags)
   if bike_suitability then
@@ -80,11 +91,12 @@ local function roads_bikelanes_roads(context)
     }
     merge_table(bike_suitability_tags, result_tags)
 
+    local geom, tags = LINE_DIRECTION.way_line(object_tags, object_geom, extract_public_tags(bike_suitability_tags))
     bike_suitability_table:insert({
       id = default_id({ type = object_tags._type, id = object_tags._id }),
-      tags = extract_public_tags(bike_suitability_tags),
+      tags = tags,
       meta = object_meta,
-      geom = object_geom,
+      geom = geom,
       minzoom = 0
     })
   end
@@ -107,24 +119,26 @@ local function roads_bikelanes_roads(context)
       adjoining_context.derive_adjoining_context(object_tags, object_tags)
     )
 
+    local geom, tags = LINE_DIRECTION.way_line(object_tags, object_geom, path_tags)
     roads_path_classes_table:insert({
       id = path_id,
-      tags = path_tags,
+      tags = tags,
       meta = object_meta,
-      geom = object_geom,
+      geom = geom,
       minzoom = paths_generalization(object_tags, result_tags)
     })
   else
     result_tags.name_ref = object_tags.ref
     local road_id = default_id({ type = object_tags._type, id = object_tags._id })
+    local geom, tags = LINE_DIRECTION.way_line(object_tags, object_geom, merge_table(extract_public_tags(result_tags), {
+      _in_settlement_area = object_tags._in_settlement_area,
+      route_relations = pseudo_route_relations(object_tags, road_id),
+    }))
     roads_table:insert({
       id = road_id,
-      tags = merge_table(extract_public_tags(result_tags), {
-        _in_settlement_area = object_tags._in_settlement_area,
-        route_relations = pseudo_route_relations(object_tags, road_id),
-      }),
+      tags = tags,
       meta = object_meta,
-      geom = object_geom,
+      geom = geom,
       minzoom = road_generalization(object_tags, result_tags)
     })
   end

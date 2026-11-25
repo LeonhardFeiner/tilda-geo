@@ -7,6 +7,7 @@ import { parse } from 'parse-gitignore'
 import slugify from 'slugify'
 import { type AppInstance, appInstanceNames } from '@/components/shared/utils/appInstances.const'
 import { S3_UPLOAD_FOLDER_BY_APP_ENV } from '@/server/s3UploadEnvFolder.const'
+import { styleGroupProblems } from '@/server/uploads/mapDatasetUploadStyleGroups'
 import { getValidatedEnv, staticDatasetsS3CredentialsSchema } from '../shared/env'
 import { getRegions } from './api'
 import {
@@ -178,6 +179,14 @@ for (const { datasetFolderPath, regionFolder, datasetFolder } of datasetFileFold
       }
     }
 
+    const styleGroupErrors = styleGroupProblems(
+      'styleGroups' in metaData ? metaData.styleGroups : undefined,
+      metaData.configs,
+    )
+    if (styleGroupErrors.length) {
+      throw new Error(`Invalid styleGroups in meta.ts:\n    ${styleGroupErrors.join('\n    ')}`)
+    }
+
     // Route to appropriate processor based on data source type
     switch (metaData.dataSourceType) {
       case 'external': {
@@ -242,29 +251,6 @@ if (keepTemporaryFiles) {
 // Clean up
 if (!keepTemporaryFiles) {
   fs.rmSync(tempFolder, { recursive: true, force: true })
-}
-
-// For production runs, add a tag so we can see which data was published
-//   https://github.com/FixMyBerlin/tilda-static-data/tags
-// How to use: Compare with the previous tag at
-//   https://github.com/FixMyBerlin/tilda-static-data/compare/main...publish_2024-05-23_prd
-if (appEnv === 'production') {
-  const folder = S3_UPLOAD_FOLDER_BY_APP_ENV[appEnv]
-  const currentDateTime = new Date().toISOString()
-  const tagName = `publish_${currentDateTime}_${folder}`
-  const tagMessage = `publish data to ${folder}`
-
-  try {
-    Bun.spawnSync(['git', 'tag', '-a', tagName, '-m', tagMessage], {
-      cwd: '../../tilda-static-data',
-    })
-    Bun.spawnSync(['git', 'push', 'origin', tagName], {
-      cwd: '../../tilda-static-data',
-    })
-    console.log(`Tag '${tagName}' has been created and pushed to GitHub.`)
-  } catch (error) {
-    console.error('Failed to create or push git tag:', error)
-  }
 }
 
 if (failedFolders.length > 0) {

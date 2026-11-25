@@ -45,6 +45,7 @@ export async function processLocalSource(
       transformedFilepath,
       tempFolder,
       metaData.geometricPrecision,
+      metaData.minZoom,
     )
 
     console.log(`  Uploading PMTiles file to S3...`)
@@ -69,6 +70,7 @@ export async function processLocalSource(
     isPublic: metaData.public,
     hideDownloadLink: metaData.hideDownloadLink ?? false,
     configs: metaData.configs,
+    styleGroups: 'styleGroups' in metaData ? (metaData.styleGroups ?? null) : null,
     mapRenderFormat: renderFormat,
     mapRenderUrl: getStaticDatasetUrlForEnvironment(uploadSlug, renderFormat, appEnv),
     pmtilesUrl,
