@@ -54,7 +54,9 @@ for e in changed:
         cat = 'footAndCyclewayShared_adjoining' if seg == 'no' else 'cycleway_adjoining'
         g = LineString([to_utm.transform(*c) for c in coords]).offset_curve(sign * 5.0)
         off = [[round(v, 7) for v in to_wgs.transform(*c)] for c in g.coords]
-        added.append(dict(id=e['id'], tags=dict(tags, bikelane=cat), coords=off))
+        # TILDA gives such a track only its own surface (cycleway:<side>:surface), never the road's
+        surface = t.get(f'cycleway:{side}:surface') or t.get('cycleway:both:surface')
+        added.append(dict(id=e['id'], tags=dict(tags, bikelane=cat, surface=SURFACE.get(surface, surface)), coords=off))
 area['ways'] = kept + added
 json.dump(area, open(area_path, 'w'))
 print(f'patched {len(changed)} ways ({sum(1 for e in changed if e["id"] not in before)} new)', file=sys.stderr)
