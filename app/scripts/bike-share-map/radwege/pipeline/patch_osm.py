@@ -34,7 +34,6 @@ def road_class(t):
 
 ids = {e['id'] for e in changed}
 before = {w['id'] for w in area['ways']}
-kept = [w for w in area['ways'] if w['id'] not in ids or w['tags'].get('bikelane') and not w['tags']['bikelane'].startswith('footwayBicycleYes')]
 added = []
 for e in changed:
     t = e['tags']
@@ -57,6 +56,12 @@ for e in changed:
         # TILDA gives such a track only its own surface (cycleway:<side>:surface), never the road's
         surface = t.get(f'cycleway:{side}:surface') or t.get('cycleway:both:surface')
         added.append(dict(id=e['id'], tags=dict(tags, bikelane=cat, surface=SURFACE.get(surface, surface)), coords=off))
+# A changed way keeps the DB's bike lines only where this script derives none of its own (e.g. lanes
+# on the carriageway); otherwise the old line (old surface, old category) would stay beside the new one
+# and the matching could take either.
+derived = {w['id'] for w in added if w['tags'].get('bikelane')}
+kept = [w for w in area['ways'] if w['id'] not in ids or w['tags'].get('bikelane') and w['id'] not in derived
+        and not w['tags']['bikelane'].startswith('footwayBicycleYes')]
 area['ways'] = kept + added
 json.dump(area, open(area_path, 'w'))
 print(f'patched {len(changed)} ways ({sum(1 for e in changed if e["id"] not in before)} new)', file=sys.stderr)

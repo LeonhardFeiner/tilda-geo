@@ -1927,34 +1927,15 @@
         "weg": "radweg",
         "belag": "asphalt",
         "fromPlan": 0.0,
-        "osmWays": [1583676446],
+        "osmWays": [1583672365, 1583676446],
         "flur": "weg"
       },
       "geometry": {
         "type": "LineString",
         "coordinates": [
           [11.609987, 48.516592],
-          [11.609538, 48.516388],
-          [11.609257, 48.516317]
-        ]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "routeId": "duernzhausen-schmiedhausen",
-        "plan": "kurz",
-        "ausbau": "freigabe",
-        "weg": "radweg",
-        "belag": "unbekannt",
-        "fromPlan": 0.0,
-        "osmWays": [1583672365],
-        "flur": "weg"
-      },
-      "geometry": {
-        "type": "LineString",
-        "coordinates": [
-          [11.609257, 48.516317],
+          [11.60929, 48.516277],
+          [11.608675, 48.51605],
           [11.608545, 48.516054]
         ]
       }
