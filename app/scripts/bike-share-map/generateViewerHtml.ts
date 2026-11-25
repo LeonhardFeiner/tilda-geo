@@ -51,6 +51,48 @@ const DESKTOP_MEDIA =
   '(min-width: 1025px) and (min-height: 501px), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: fine), ' +
   '(min-width: 769px) and (min-height: 501px) and (pointer: none)'
+// Desktop layout below 1200 px (a laptop or projector at 1024x768): the 400 px panel and the
+// 460 px region card side by side leave almost no map, so the card moves into the top of the
+// panel, as in the phone sheet. Each DESKTOP_MEDIA clause with the width cap added.
+const MERGED_PANEL_MAX_WIDTH = 1199
+const MERGED_PANEL_MEDIA = DESKTOP_MEDIA.split(', ')
+  .map((clause) => `${clause} and (max-width: ${MERGED_PANEL_MAX_WIDTH}px)`)
+  .join(', ')
+// The region card as a block at the top of the panel (#region-detail-mount): the phone sheet
+// and the merged desktop panel share these rules.
+const REGION_DETAIL_IN_PANEL_CSS = `
+      #region-detail-mount:empty { display: none; }
+      /* A selected region owns the top of the panel; the intro line would only push it down. */
+      body[data-region-detail] .site-tagline { display: none; }
+      #region-detail-mount .region-detail {
+        position: static; z-index: auto;
+        width: auto; min-width: 0; max-width: none; max-height: none;
+        border: none; border-radius: 0;
+        border-bottom: 1px solid #e2e2e2;
+        box-shadow: none; overflow: visible;
+        margin: 0 0 10px; padding: 0 0 12px;
+        background: transparent;
+      }
+      /* The floating card's absolute "×" has no anchor here — replace it with a
+         full-width "back to map" bar at the very top of the card. */
+      #region-detail-mount .region-detail-close {
+        position: static;
+        display: flex; align-items: center;
+        width: calc(100% + 28px); margin: 0 -14px 10px; padding: 12px 14px; text-align: left;
+        border: none; border-bottom: 1px solid #d6e4f5;
+        background: #eef4fc; color: #1565c0;
+        font-size: 0; cursor: pointer;
+      }
+      #region-detail-mount .region-detail-close::before {
+        content: '‹ Zurück zur Karte';
+        font-size: 0.8125rem; font-weight: 600;
+      }
+      /* The floating card enlarges the "×" with an absolutely positioned ::after. The bar
+         above is static, so that ::after would be placed against the panel itself and lie
+         invisibly over the whole card — every tap in it ("Gemeinden anzeigen", neighbours,
+         …) then closed the card instead. The bar is already finger-sized; drop it. */
+      #region-detail-mount .region-detail-close::after { content: none; }
+      #region-detail-mount .region-detail-header { padding-right: 0; }`
 
 /** The context datasets the page loads by region id (gemeinde-*.json). */
 const CONTEXT_DATASET_KEYS = [
@@ -397,38 +439,7 @@ export function generateViewerHtml(
 
       /* On mobile a selected region is moved into the top of the sheet (placeRegionDetail),
          so render it as an inline block instead of the floating card. */
-      #region-detail-mount:empty { display: none; }
-      /* A selected region owns the top of the sheet; the intro line would only push it down. */
-      body[data-region-detail] .site-tagline { display: none; }
-      #region-detail-mount .region-detail {
-        position: static; z-index: auto;
-        width: auto; max-width: none; max-height: none;
-        border: none; border-radius: 0;
-        border-bottom: 1px solid #e2e2e2;
-        box-shadow: none; overflow: visible;
-        margin: 0 0 10px; padding: 0 0 12px;
-        background: transparent;
-      }
-      /* The floating card's absolute "×" has no anchor here — replace it with a
-         full-width "back to map" bar at the very top of the card. */
-      #region-detail-mount .region-detail-close {
-        position: static;
-        display: flex; align-items: center;
-        width: calc(100% + 28px); margin: 0 -14px 10px; padding: 12px 14px; text-align: left;
-        border: none; border-bottom: 1px solid #d6e4f5;
-        background: #eef4fc; color: #1565c0;
-        font-size: 0; cursor: pointer;
-      }
-      #region-detail-mount .region-detail-close::before {
-        content: '‹ Zurück zur Karte';
-        font-size: 0.8125rem; font-weight: 600;
-      }
-      /* The floating card enlarges the "×" with an absolutely positioned ::after. The bar
-         above is static, so that ::after would be placed against the sheet itself and lie
-         invisibly over the whole card — every tap in it ("Gemeinden anzeigen", neighbours,
-         …) then closed the card instead. The bar is already finger-sized; drop it. */
-      #region-detail-mount .region-detail-close::after { content: none; }
-      #region-detail-mount .region-detail-header { padding-right: 0; }
+${REGION_DETAIL_IN_PANEL_CSS}
 
       /* Share button, top-left over the map: a round twin of the search pill beside it. */
       #share-fab {
@@ -798,6 +809,12 @@ export function generateViewerHtml(
         min-width: 340px;
         max-height: calc(100vh - 110px);
       }
+    }
+    /* Below 1200 px the card moves into the top of the left panel (placeRegionDetail). */
+    @media ${MERGED_PANEL_MEDIA} {
+${REGION_DETAIL_IN_PANEL_CSS}
+      /* No card at the bottom right any more: the map controls stay in the corner. */
+      html body[data-region-detail] .maplibregl-ctrl-bottom-right { margin-right: 0; }
     }
     .region-detail-header {
       display: flex; align-items: flex-start; gap: 8px;
@@ -2757,6 +2774,15 @@ export function generateViewerHtml(
     const panelMain = document.getElementById('panel-main');
     const panelSummaryPreview = document.getElementById('panel-summary-preview');
     const panelMobileMq = window.matchMedia('${PHONE_MEDIA}');
+    const mergedPanelMq = window.matchMedia('${MERGED_PANEL_MEDIA}');
+    /** Desktop below 1200 px: the region card sits at the top of the left panel. */
+    function panelMergesCard() {
+      return (
+        mergedPanelMq.matches &&
+        !(typeof sheetEnabled === 'function' && sheetEnabled()) &&
+        !document.body.classList.contains('ui-minimal')
+      );
+    }
     if (scaleCapPctInput) scaleCapPctInput.value = String(CONFIG.defaultColorCapPct);
     if (scaleCapEnabledCb) scaleCapEnabledCb.checked = CONFIG.defaultColorCapEnabled;
     if (scaleRobustEnabledCb) scaleRobustEnabledCb.checked = CONFIG.defaultRobustScaleEnabled;
@@ -2820,13 +2846,14 @@ export function generateViewerHtml(
     regionDetailEl.parentNode.insertBefore(regionDetailAnchor, regionDetailEl);
 
     /**
-     * On mobile the selected-region card lives at the top of the settings sheet so its
-     * street-type breakdown and the region ranking scroll together; on desktop it stays
-     * the floating bottom-right card.
+     * On mobile (and on desktop below 1200 px) the selected-region card lives at the top of the
+     * panel so its street-type breakdown and the region ranking scroll together; on a wide
+     * desktop it stays the floating bottom-right card.
      */
     function placeRegionDetail() {
       const inSheet =
-        typeof sheetEnabled === 'function' && sheetEnabled() && !regionDetailEl.hidden;
+        ((typeof sheetEnabled === 'function' && sheetEnabled()) || panelMergesCard()) &&
+        !regionDetailEl.hidden;
       if (inSheet) {
         if (regionDetailEl.parentNode !== regionDetailMount) regionDetailMount.appendChild(regionDetailEl);
       } else if (regionDetailEl.parentNode !== regionDetailAnchor.parentNode) {
@@ -7788,6 +7815,13 @@ export function generateViewerHtml(
         // On a new selection show the card from its top (region name first), not wherever
         // scrollIntoView lands a tall card — but don't yank the user back up on a mere refresh.
         if (freshSelection && panelMain) panelMain.scrollTop = 0;
+      } else if (freshSelection && panelMergesCard()) {
+        // The card is the top of the panel: open the panel and show the card from its top.
+        if (panelMain) {
+          if (!panelMain.open) panelMain.open = true;
+          panelMain.scrollTop = 0;
+        }
+        syncMapViewport(true);
       } else if (freshSelection) {
         regionDetailEl.scrollIntoView?.({ block: 'nearest' });
         // The card now covers the right of the map: pad for it and keep the region visible.
@@ -7818,7 +7852,9 @@ export function generateViewerHtml(
       // Desktop: a region picked on the map or in the search may be far down the list; bring
       // its row into view ('nearest' leaves an already visible row, e.g. the one clicked, alone).
       // Not on the phone, where the card sits at the top of the same scrolling sheet.
-      syncRankingRowHighlights({ scrollIntoView: Boolean(id) && !sheetEnabled() });
+      syncRankingRowHighlights({
+        scrollIntoView: Boolean(id) && !sheetEnabled() && !panelMergesCard(),
+      });
       updatePanelSummaryPreview();
       syncExportDialogState();
       // A selection is a step the Back button should be able to undo.
@@ -7863,6 +7899,11 @@ export function generateViewerHtml(
       const leftPanel = document.getElementById('panel-main');
       const isPanelOpen = Boolean(leftPanel && leftPanel.open);
       const isDetailOpen = Boolean(document.body.dataset.regionDetail);
+      if (panelMergesCard()) {
+        // One panel on the left holds the card too; reserve what it really covers.
+        const panelRight = isPanelOpen ? leftPanel.getBoundingClientRect().right : 0;
+        return { top: 32, right: 24, bottom: 32, left: panelRight > 0 ? Math.round(panelRight) + 16 : 24 };
+      }
       const left = isPanelOpen ? Math.min(416, Math.round(window.innerWidth * 0.35)) : 24;
       const right = isDetailOpen ? Math.min(480, Math.round(window.innerWidth * 0.35)) : 24;
       return { top: 32, right, bottom: 32, left };
@@ -9396,6 +9437,12 @@ export function generateViewerHtml(
       });
 
       panelMobileMq.addEventListener('change', applyPanelViewportMode);
+      // Crossing 1200 px moves the card between the panel and the bottom-right corner.
+      mergedPanelMq.addEventListener('change', () => {
+        placeRegionDetail();
+        notifyMapResize();
+        syncMapViewport(false);
+      });
       // Turning the phone moves the open sheet between the bottom and the left side.
       shortLandscapeMq.addEventListener('change', () => {
         notifyMapResize();

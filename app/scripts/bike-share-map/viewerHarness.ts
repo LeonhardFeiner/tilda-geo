@@ -197,6 +197,8 @@ const MAPLIBRE_STUB = `
 type BootOptions = {
   /** Phone layout: the (max-width: 768px) media queries match, so the panel is a bottom sheet. */
   phone?: boolean
+  /** Desktop below 1200 px: the (max-width: 1199px) queries match, so the card joins the panel. */
+  narrowDesktop?: boolean
   /** Whether navigator.share exists (recorded on window.__shares). Default true. */
   nativeShare?: boolean
   /** The position navigator.geolocation reports; without it the browser has no geolocation. */
@@ -305,7 +307,9 @@ export async function bootPage(
     return respond(200, readFileSync(file))
   }
   const matchMedia = (query: string) => ({
-    matches: Boolean(options.phone) && /max-width:\s*768px/.test(query),
+    matches:
+      (Boolean(options.phone) && /max-width:\s*768px/.test(query)) ||
+      (Boolean(options.narrowDesktop) && /max-width:\s*1199px/.test(query)),
     media: query,
     addEventListener() {},
     removeEventListener() {},

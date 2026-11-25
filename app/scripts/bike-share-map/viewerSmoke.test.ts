@@ -892,6 +892,34 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'below 1200 px a desktop shows the region card at the top of the panel, not floating',
+    async () => {
+      page = await bootViewer(IN_LANDKREIS, { narrowDesktop: true })
+      const p = page
+      await p.waitFor(() => !p.q('#region-detail').hidden, 'the region card')
+      const doc = p.window.document
+      expect(doc.body.dataset.sheet).toBeUndefined()
+      expect(p.q('#region-detail').parentElement?.id).toBe('region-detail-mount')
+      expect(p.q('#region-detail-close').getAttribute('aria-label')).toBe('Zurück zur Karte')
+      expect(p.q<HTMLDetailsElement>('#panel-main').open).toBe(true)
+      // Closing puts the card back in its floating home spot.
+      p.q<HTMLButtonElement>('#region-detail-close').click()
+      await p.waitFor(() => p.q('#region-detail').hidden === true, 'the card to close')
+      expect(p.q('#region-detail').parentElement?.id).not.toBe('region-detail-mount')
+      expect(p.errors).toEqual([])
+      p.close()
+      // A wide desktop keeps the floating card.
+      page = await bootViewer(IN_LANDKREIS)
+      const q = page
+      await q.waitFor(() => !q.q('#region-detail').hidden, 'the region card')
+      expect(q.q('#region-detail').parentElement?.id).not.toBe('region-detail-mount')
+      expect(q.q('#region-detail-close').getAttribute('aria-label')).toBe('Schließen')
+      expect(q.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'a Gemeinde in a Landkreis with a routing graph links to the detour map; others do not',
     async () => {
       page = await bootViewer(IN_LANDKREIS)
