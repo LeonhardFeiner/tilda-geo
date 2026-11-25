@@ -41,7 +41,15 @@ python3 -I $S/fetch_tiles.py dop $OUT/offline/dop.mbtiles 11.52 48.45 11.69 48.5
 
 All of Germany in full detail is ~200k tiles: don't scrape OpenFreeMap for that. Build
 `basemap.mbtiles` from `germany-latest.osm.pbf` with Planetiler (OpenMapTiles profile, the
-schema OpenFreeMap serves) instead; `serve.py` reads its MBTiles as is.
+schema OpenFreeMap serves) instead; `serve.py` reads its MBTiles as is. 2026-11-25: 8 minutes on
+48 cores, 3.3 GB:
+
+```bash
+docker run --rm -e JAVA_TOOL_OPTIONS=-Xmx60g -v tilda-geo_osmfiles:/osm:ro -v <work>:/data \
+  ghcr.io/onthegomap/planetiler:latest --osm-path=/osm/downloads/germany-latest.osm.pbf \
+  --download --output=/data/germany.mbtiles --force
+cp <work>/germany.mbtiles $OUT/offline/basemap.mbtiles
+```
 
 Attribution: © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors; Luftbild ©
 Bayerische Vermessungsverwaltung (CC BY 4.0); Natural Earth (public domain).
