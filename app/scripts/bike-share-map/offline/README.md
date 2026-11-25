@@ -2,6 +2,25 @@
 
 The deployed site, plus its background maps, running on one computer without the internet.
 
+## On the laptop (starter zip, everything downloaded there)
+
+The starter zip (~1 MB: this folder) builds the copy where it is used, straight from the
+internet, instead of moving 4 GB over a VPN. In WSL Ubuntu, in the unpacked folder:
+
+```bash
+bash build-offline.sh                # ~1.5 GB, about an hour (mostly the aerial images)
+bash build-offline.sh --deutschland  # Germany in full detail via Planetiler (Docker, ~16 GB RAM)
+```
+
+Stopping and re-running resumes. Then double-click `start-windows.bat`. The site comes file by
+file from leonhardfeiner.github.io using `site-files.txt` (written from the Pages artifact,
+without the 376 MB of share preview PNGs in `r/`). A page or data file added to the site later
+needs a fresh `site-files.txt`; for a newer site, delete `site/` and run the script again.
+
+Starter zip: `zip -j offline-karte-starter.zip README.md build-offline.sh fetch_*.py serve.py
+site-files.txt start-windows.bat` (built from a site folder:
+`find . -type f ! -path './r/*.png' | sed 's|^\./||' | LC_ALL=C sort > site-files.txt`).
+
 ## Folder layout
 
 ```
