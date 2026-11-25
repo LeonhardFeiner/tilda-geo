@@ -1,0 +1,47 @@
+# Offline copy of the viewer
+
+The deployed site, plus its background maps, running on one computer without the internet.
+
+## Folder layout
+
+```
+offline-karte/
+  serve.py              local web server (Python 3 standard library)
+  start-windows.bat     double-click on Windows: Windows Python, else WSL python3
+  site/                 the unpacked GitHub Pages artifact (github-pages → artifact.tar)
+  offline/
+    basemap.mbtiles     "Hell" basemap, OpenMapTiles vector tiles (gzip pbf)
+    ne2.mbtiles         shaded relief, low zooms
+    dop.mbtiles         DOP20 aerial images (Luftbild on /konzept)
+    static/fonts, static/sprites
+```
+
+`serve.py` serves `site/` at http://localhost:8000/ and rewrites the basemap and Luftbild URLs
+in the HTML it serves to `/offline/…` (the files on disk stay as deployed). Only "Hell" and the
+konzept page's Luftbild work offline; the other basemaps still need the internet. Tiles
+outside the downloaded area come back empty (HTTP 204).
+
+## Building it
+
+```bash
+OUT=…/offline-karte; S=app/scripts/bike-share-map/offline
+cp $S/serve.py $S/start-windows.bat $S/README.md $OUT/
+# the site: artifact of the latest Pages run (kept 1 day)
+gh run download <run id> -R LeonhardFeiner/tilda-geo -n github-pages -D $OUT/dl
+mkdir -p $OUT/site && tar -xf $OUT/dl/artifact.tar -C $OUT/site && rm -r $OUT/dl
+python3 -I $S/fetch_assets.py $OUT/offline/static
+python3 -I $S/fetch_tiles.py ne2 $OUT/offline/ne2.mbtiles -180 -85 180 85 0 4
+python3 -I $S/fetch_tiles.py ne2 $OUT/offline/ne2.mbtiles 0 44 25 58 5 6
+# basemap: Germany at low zooms, Landkreise Pfaffenhofen + Freising in full detail
+python3 -I $S/fetch_tiles.py ofm $OUT/offline/basemap.mbtiles 5.8 47.2 15.1 55.1 0 9
+python3 -I $S/fetch_tiles.py ofm $OUT/offline/basemap.mbtiles 11.26 48.24 12.06 48.84 10 14
+# aerial images: konzept area (lines.geojson + ~1 km), native DOP20 resolution at zoom 18
+python3 -I $S/fetch_tiles.py dop $OUT/offline/dop.mbtiles 11.52 48.45 11.69 48.575 10 18
+```
+
+All of Germany in full detail is ~200k tiles: don't scrape OpenFreeMap for that. Build
+`basemap.mbtiles` from `germany-latest.osm.pbf` with Planetiler (OpenMapTiles profile, the
+schema OpenFreeMap serves) instead; `serve.py` reads its MBTiles as is.
+
+Attribution: © OpenFreeMap © OpenMapTiles © OpenStreetMap contributors; Luftbild ©
+Bayerische Vermessungsverwaltung (CC BY 4.0); Natural Earth (public domain).
