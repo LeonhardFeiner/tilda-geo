@@ -143,6 +143,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
       p.road_length,
       p.bikelane_length,
       filter,
+      p.bikelane_length_likely,
     )
     if (roadKm < minRoadKm) continue
 
@@ -451,6 +452,7 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
         p.road_length,
         p.bikelane_length,
         filter,
+        p.bikelane_length_likely,
       )
       if (roadM > 0) {
         cityStateBaselines[id] = Number(((bikeM / roadM) * 100).toFixed(2))
@@ -504,18 +506,36 @@ function runFitForFilter(name: string, filter: TildaStats.LengthClassFilter, min
 /** Both model variants, fitted on the committed data — what bike-share-map:fit-model writes. */
 export function fitStructuralModels() {
   // 1. Standard model (all roads)
-  const standard = runFitForFilter('standard', TildaStats.RADINFRA_DEFAULT_FILTER, 5)
+  const standard = runFitForFilter(
+    'standard',
+    { ...TildaStats.RADINFRA_DEFAULT_FILTER, likelyDirection: false },
+    5,
+  )
 
   // 2. Main roads only: the same outcome the map shows under that counting filter (all bike km
   // per km of main road), so values above 100 % are real for dense cities and are not clamped.
   const primaryFilter = structuredClone(TildaStats.RADINFRA_DEFAULT_FILTER)
+  primaryFilter.likelyDirection = false
   primaryFilter.road.motorway_like = false
   primaryFilter.road.secondary_like = false
   primaryFilter.road.residential_like = false
   const primary = runFitForFilter('primary', primaryFilter, 2)
+
+  // 3./4. The same two with bike paths without a direction tag counted in both directions away
+  // from roads and outside settlements (the viewer's default, LengthClassFilter.likelyDirection):
+  // the expectation has to come from the same counting as the value it is compared with.
+  const likely = (f: TildaStats.LengthClassFilter) => ({ ...f, likelyDirection: true })
+  const standardLikely = runFitForFilter(
+    'standardLikely',
+    likely(TildaStats.RADINFRA_DEFAULT_FILTER),
+    5,
+  )
+  const primaryLikely = runFitForFilter('primaryLikely', likely(primaryFilter), 2)
   return {
     standard: withName('Gesamtnetz (Standard)', standard),
     primary: withName('Hauptverkehrsstraßen', primary),
+    standardLikely: withName('Gesamtnetz, wahrscheinliche Fahrtrichtung', standardLikely),
+    primaryLikely: withName('Hauptverkehrsstraßen, wahrscheinliche Fahrtrichtung', primaryLikely),
   }
 }
 

@@ -96,6 +96,7 @@ export type RegionFeatureProps = {
   road_length?: unknown
   /** `{ bikelane category: km }`; present on every level. */
   bikelane_length?: unknown
+  bikelane_length_likely?: unknown
   /** `{ '<road key>|<authority>': km }`, authority from the road number (fork aggregation). */
   road_length_by_authority?: unknown
   /** Bike km by the road it runs along, same keys, plus 'independent' (not along a road). */

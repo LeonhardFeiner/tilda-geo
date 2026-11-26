@@ -291,7 +291,8 @@ export function inPlacePhrase(name: string) {
   return `in ${n}`
 }
 
-export type StructuralModelType = 'standard' | 'primary'
+/** `…Likely`: fitted with LengthClassFilter.likelyDirection (the viewer's default counting). */
+export type StructuralModelType = 'standard' | 'primary' | 'standardLikely' | 'primaryLikely'
 
 export type StructuralModelDynamicBaselines = {
   nationalBaselinePct: number

@@ -17,7 +17,7 @@ import {
 import { authorDisclosureHtml } from './legalPage'
 import { REGIOSTAR_DUMMIES, STRUCTURAL_MODEL_CONFIGS } from './rankingDisplay'
 import { siteIconHeadLinks } from './siteIcon'
-import { COUNTING_VERSION } from './snapshotHistory'
+import { COUNTING_VERSION, DISPLAY_COUNTING_VERSION } from './snapshotHistory'
 import { BIKELANE_CLASS_LABELS, BIKELANE_CLASS_ORDER, ROAD_CLASS_LABELS } from './statsClassSums'
 import { visitCounterHeadScript } from './visitCounter'
 
@@ -26,6 +26,8 @@ export type MethodologyPageInput = {
   dataDateLabel: string
   /** Nationwide bike-infra share (%) under the default counting filter, or null if unknown. */
   nationalSharePct: number | null
+  /** Deutschland with every direction as tagged (no direction assumption). */
+  nationalSharePctAsTagged?: number | null
   /** How many Gemeinden carry a demographic-peer comparison (0 = feature disabled this build). */
   peerGemeindeCount: number
   peerKreisCount: number
@@ -91,6 +93,14 @@ export function countingVersionMonth(version: string) {
  */
 export const COUNTING_VERSION_CHANGES: ReadonlyArray<{ version: string; text: string }> = [
   {
+    version: 'richtung-2026-11',
+    text:
+      'Radwege ohne Richtungsangabe zählen außerorts und abseits von Straßen in beide Richtungen ' +
+      '(<a href="#fahrtrichtung">wahrscheinliche Fahrtrichtung</a>, in den Einstellungen abschaltbar). ' +
+      'Längenmessung sonst wie <code>share-2026-10</code>; die Veränderung über die Zeit zählt weiter ' +
+      'nach <code>share-2026-10</code>, also mit den Richtungen wie eingetragen.',
+  },
+  {
     version: 'share-2026-10',
     text:
       'Längen werden an Gemeinde- und Kreisgrenzen anteilig aufgeteilt (ein Weg zählt in jedem Gebiet ' +
@@ -108,7 +118,9 @@ const DESTATIS_URL =
   'https://www.destatis.de/DE/Themen/Laender-Regionen/Regionales/Gemeindeverzeichnis/_inhalt.html'
 const DEGURBA_URL = 'https://ec.europa.eu/eurostat/de/web/degree-of-urbanisation'
 
-const STD_MODEL = STRUCTURAL_MODEL_CONFIGS.standard
+/** The page's default counting (wahrscheinliche Fahrtrichtung); `standard` is the as-tagged twin. */
+const STD_MODEL = STRUCTURAL_MODEL_CONFIGS.standardLikely
+const STD_MODEL_AS_TAGGED = STRUCTURAL_MODEL_CONFIGS.standard
 
 /** RegioStaR dummies of the standard model, in words: "Metropole, Regiopole/Großstadt +5,96 …". */
 function regioStarBetaList() {
@@ -127,7 +139,7 @@ function regioStarBetaList() {
     })
     .join(', ')
 }
-const PRIMARY_MODEL = STRUCTURAL_MODEL_CONFIGS.primary
+const PRIMARY_MODEL = STRUCTURAL_MODEL_CONFIGS.primaryLikely
 
 /** German number, e.g. 61,9 or 10.500. */
 const de = (v: number, digits = 1) =>
@@ -381,13 +393,45 @@ ${visitCounterHeadScript()}
   Richtungen befahren werden dürfen. Reine Radwege (Zeichen 237), Wege abseits von Straßen und
   unklar getaggte Wege zählen ohne Tag doppelt. Die Regel gilt überall gleich; für eine einzelne
   Gemeinde kann sie den Wert aber spürbar verschieben, denn ein nachgetragenes
-  <code>oneway=no</code> verdoppelt die gezählte Länge eines solchen Wegs.
+  <code>oneway=no</code> verdoppelt die gezählte Länge eines solchen Wegs. Deshalb gilt auf dieser
+  Seite standardmäßig eine zusätzliche Annahme: Außerorts und abseits von Straßen zählen solche Wege
+  auch ohne Tag doppelt (<a href="#fahrtrichtung">wahrscheinliche Fahrtrichtung</a>).
   Beidseitige Radinfrastruktur an einer Straße mit Gegenverkehr ergibt so 100&nbsp;km je 100&nbsp;km
   Straße; zwei Zweirichtungsradwege, einer auf jeder Seite, ergeben 200. Werte über 100 kommen
   deshalb vor, vor allem bei sehr kleinen Straßennetzen; in der CSV sind sie mit
   <code>hinweise=anteil_ueber_100</code> gekennzeichnet.
   Ein Weg, der über eine Gemeinde- oder Kreisgrenze führt, zählt auf jeder Seite mit dem Teil seiner
   Länge, der dort liegt.</p>
+
+  <h2 id="fahrtrichtung">Wahrscheinliche Fahrtrichtung</h2>
+  <p>Bei vielen Radwegen fehlt in OpenStreetMap die Angabe, ob sie in beide Richtungen befahren
+  werden dürfen. Ohne Angabe zählt ein Weg neben einer Straße nur einfach (siehe oben). Wo die
+  Richtung eingetragen ist, zeigt sich aber ein klares Muster. Anteil der Radwege, die in beide
+  Richtungen freigegeben sind, unter allen Radwegen <em>mit</em> Richtungsangabe in Bayern
+  (OSM-Daten vom 23.11.2026):</p>
+  ${li([
+    '<strong>abseits von Straßen</strong> (mehr als 25&nbsp;m von der nächsten Straße): 91&nbsp;% (693 von 762&nbsp;km)',
+    '<strong>außerorts</strong> neben einer Straße: 93&nbsp;% (1.193 von 1.284&nbsp;km)',
+    '<strong>innerorts</strong> neben einer Straße: 41&nbsp;% (1.121 von 2.738&nbsp;km)',
+  ])}
+  <p>Deshalb zählen Radwege ohne Richtungsangabe auf dieser Seite <strong>außerorts und abseits von
+  Straßen in beide Richtungen</strong>; innerorts bleibt es bei einer Richtung. Radfahrstreifen auf
+  der Fahrbahn, Fahrradstraßen und Wege mit <code>oneway=yes</code> sind nicht betroffen, und jede
+  eingetragene Richtung hat Vorrang. „Innerorts“ heißt: innerhalb der Siedlungsflächen, die TILDA
+  aus OpenStreetMap ableitet (bebaute Flächen und Wohngebiete). Ein Weg, der aus einem Ort
+  hinausführt, zählt mit dem Teil außerhalb doppelt; gemessen wird in 10-m-Schritten.
+  ${
+    input.nationalSharePct != null && input.nationalSharePctAsTagged != null
+      ? `Bundesweit ergibt das ${input.nationalSharePct.toLocaleString('de-DE', { maximumFractionDigits: 1 })}&nbsp;km
+  Radinfrastruktur je 100&nbsp;km Straße statt ${input.nationalSharePctAsTagged.toLocaleString('de-DE', { maximumFractionDigits: 1 })}&nbsp;km mit den Richtungen wie eingetragen.`
+      : ''
+  }</p>
+  <p>Die Annahme lässt sich in den <strong>Einstellungen</strong> unter „Fahrtrichtung“ abschalten
+  (Link-Zusatz <code>?richtung=eingetragen</code>). Das Erwartungswert-Modell ist für beide
+  Zählweisen eigens geschätzt, damit Wert und Erwartung immer gleich gezählt sind. Die Veränderung
+  über die Zeit zählt immer mit den Richtungen wie eingetragen, weil ältere Datenstände keine
+  Siedlungsflächen kennen. Am genauesten wird der Wert, wenn die Richtung in OpenStreetMap
+  eingetragen ist (<code>oneway=no</code> bzw. <code>cycleway:right:oneway=no</code>).</p>
 
   <h2 id="hauptverkehr">Hauptverkehrsstraßen und Zuständigkeit</h2>
   <p>Eigenständige Radwege abseits von Straßen zählen im Hauptwert voll mit – oft sind sie sogar
@@ -492,7 +536,7 @@ ${visitCounterHeadScript()}
 
   <p><strong>Modellgüte &amp; Zählfilter-Varianten:</strong></p>
   <ul>
-    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;km je 100&nbsp;km Straße</strong>.</li>
+    <li><strong>Standard-Modell (Gesamtnetz):</strong> <code>n = ${STD_MODEL.n.toLocaleString('de-DE')}</code> Gemeinden einschließlich der kreisfreien Städte, jeweils mit einem Straßennetz ab 5&nbsp;km, gewichtet nach Netzlänge. <strong>R² = ${de(STD_MODEL.r2TotalPct)}&nbsp;%</strong> (In-Sample), 10-fache Kreuzvalidierung, bei der jeweils ganze Landkreise ausgelassen werden: <strong>R²_cv = ${de(STD_MODEL.r2CvPct)}&nbsp;%</strong>. So muss das Modell Orte vorhersagen, deren Nachbarn es nicht kennt; mit zufällig gemischten Gemeinden läge der Wert höher, sagte aber weniger. Residualstandardfehler <strong>SE = ±${de(STD_MODEL.residualStdErrorPct, 2)}&nbsp;km je 100&nbsp;km Straße</strong>. Geschätzt mit der <a href="#fahrtrichtung">wahrscheinlichen Fahrtrichtung</a>; ist sie in den Einstellungen abgeschaltet, greift ein gleich gebautes Modell auf den Richtungen wie eingetragen (R² = ${de(STD_MODEL_AS_TAGGED.r2TotalPct)}&nbsp;%, R²_cv = ${de(STD_MODEL_AS_TAGGED.r2CvPct)}&nbsp;%, SE = ±${de(STD_MODEL_AS_TAGGED.residualStdErrorPct, 2)}&nbsp;km).</li>
     <li><strong>Modell für Hauptverkehrsstraßen:</strong> Werden in den Zähleinstellungen nur Hauptverkehrsstraßen ausgewählt (Bundes-, Land- und Kreisstraßen), greift ein eigenes Modell (<code>n = ${PRIMARY_MODEL.n.toLocaleString('de-DE')}</code>, <strong>R² = ${de(PRIMARY_MODEL.r2TotalPct)}&nbsp;%</strong>, <strong>R²_cv = ${de(PRIMARY_MODEL.r2CvPct)}&nbsp;%</strong>, Basiswert <strong>${de(PRIMARY_MODEL.baselinePct)}&nbsp;km</strong>, <strong>SE = ±${de(PRIMARY_MODEL.residualStdErrorPct)}&nbsp;km</strong>, je 100&nbsp;km Hauptverkehrsstraße). Hangneigung und Dichte hängen hier noch stärker mit dem Anteil zusammen als im Gesamtnetz. Wie in der Karte mit diesem Filter zählt dabei <em>alle</em> Radinfrastruktur je Kilometer Hauptverkehrsstraße – in dichten Städten mit vielen Nebenstraßen-Radwegen liegen Werte und Basiswerte daher über 100.</li>
     <li><strong>Nur vollständige Eingangsdaten:</strong> Geschätzt wird das Modell an Gemeinden, für die alle neun Merkmale vorliegen. Fehlt eines (meist Miete oder Pkw-Dichte bei gemeindefreien Gebieten ohne Einwohner), zeigt die Karte für diese Gemeinde keinen Erwartungswert, statt ihn mit einem Durchschnitt aufzufüllen.</li>
     <li><strong>Untergrenze 0:</strong> Ein lineares Modell kann rechnerisch unter 0 liegen, vor allem für steile, abgelegene Dörfer mit niedrigen Mieten. Dann gilt 0 als Erwartung; die Abweichung ist in diesen Fällen eine Untergrenze und in Karte und CSV (<code>modell_begrenzt</code>) gekennzeichnet.</li>
@@ -653,12 +697,12 @@ ${visitCounterHeadScript()}
   <h2 id="version">Version und Zitierweise</h2>
   <p>Die Zahlen hängen von drei Ständen ab, die sich unabhängig voneinander ändern:</p>
   ${li([
-    `<strong>Zählversion:</strong> <code>${COUNTING_VERSION}</code> – wie Längen gemessen werden (siehe Änderungen unten).`,
+    `<strong>Zählversion:</strong> <code>${DISPLAY_COUNTING_VERSION}</code> – wie Längen gemessen werden (siehe Änderungen unten); die Veränderung über die Zeit zählt nach <code>${COUNTING_VERSION}</code>.`,
     `<strong>OpenStreetMap-Daten:</strong> Stand ${input.dataDateLabel}.`,
     `<strong>Erwartungswert-Modell:</strong> ${modelFitDateLabel ? `geschätzt am ${modelFitDateLabel}` : 'Schätzdatum unbekannt'} an den damals aktuellen Daten.`,
   ])}
   <p>Vorgeschlagene Zitierweise:</p>
-  <p><code>Radinfra-Vergleich, Zählversion ${COUNTING_VERSION}, OSM-Daten vom ${input.dataDateLabel}${modelFitDateLabel ? `, Modell vom ${modelFitDateLabel}` : ''}, ${siteUrl}, abgerufen am [Datum].</code></p>
+  <p><code>Radinfra-Vergleich, Zählversion ${DISPLAY_COUNTING_VERSION}, OSM-Daten vom ${input.dataDateLabel}${modelFitDateLabel ? `, Modell vom ${modelFitDateLabel}` : ''}, ${siteUrl}, abgerufen am [Datum].</code></p>
   <p>Die Seite zeigt immer nur den aktuellen Stand; ältere Stände werden nicht vorgehalten. Wer Werte
   zitiert, speichert sich die CSV (Spalte <code>zaehlversion</code>) und notiert das Abrufdatum.</p>
   <h3>Änderungen</h3>

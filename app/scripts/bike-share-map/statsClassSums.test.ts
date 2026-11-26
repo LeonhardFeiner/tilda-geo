@@ -7,6 +7,9 @@ import {
   assessBikeDataQuality,
   BIKELANE_TAG_LABELS,
   bikelaneCategoryTags,
+  bikelaneLengthsFor,
+  computeFilteredLengths,
+  listFilteredBikelaneClassLengths,
   highwayClassDefinition,
   listFilteredBikelaneTagLengths,
   listFilteredHighwayTagLengths,
@@ -174,5 +177,35 @@ describe('formatGapKm', () => {
     expect(formatGapKm(3)).toBe(
       '1,5 km Radweg für beide Richtungen (3 km je Fahrtrichtung gezählt)',
     )
+  })
+})
+
+describe('likely direction (bikelane_length_likely)', () => {
+  const tagged = { footAndCyclewayShared_adjoining: 4, cyclewayOnHighway_advisory: 2 }
+  const likely = { footAndCyclewayShared_adjoining: 3 }
+  const off = { ...RADINFRA_DEFAULT_FILTER, likelyDirection: false }
+
+  it('is on by default and adds the extra km per category', () => {
+    expect(RADINFRA_DEFAULT_FILTER.likelyDirection).toBe(true)
+    expect(bikelaneLengthsFor(tagged, likely, RADINFRA_DEFAULT_FILTER)).toEqual({
+      footAndCyclewayShared_adjoining: 7,
+      cyclewayOnHighway_advisory: 2,
+    })
+    expect(computeFilteredLengths(road(100), tagged, RADINFRA_DEFAULT_FILTER, likely).bikeKm).toBe(
+      9,
+    )
+  })
+
+  it('counts as tagged when switched off or without data', () => {
+    expect(computeFilteredLengths(road(100), tagged, off, likely).bikeKm).toBe(6)
+    expect(computeFilteredLengths(road(100), tagged, RADINFRA_DEFAULT_FILTER).bikeKm).toBe(6)
+    expect(computeFilteredLengths(road(100), tagged, RADINFRA_DEFAULT_FILTER, null).bikeKm).toBe(6)
+  })
+
+  it('applies to the class breakdown too, so its rows add up to the value', () => {
+    const rows = listFilteredBikelaneClassLengths(tagged, RADINFRA_DEFAULT_FILTER, likely)
+    expect(rows.reduce((t, r) => t + r.km, 0)).toBe(9)
+    const tagRows = listFilteredBikelaneTagLengths(tagged, RADINFRA_DEFAULT_FILTER, likely)
+    expect(tagRows.find((r) => r.key === 'footAndCyclewayShared_adjoining')?.km).toBe(7)
   })
 })

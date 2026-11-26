@@ -38,7 +38,10 @@ current export, so run the export first.
 
 1. **Processing run** (local Postgres, a current `germany-latest.osm.pbf`, at least the topics
    `boundaries,roads_bikelanes`). It ends with `aggregate_lengths.sql` and the fork-only
-   `aggregate_lengths_by_road.sql`.
+   `aggregate_lengths_by_road.sql` and `aggregate_lengths_likely.sql` (the extra km of bike paths
+   without a direction tag away from roads and outside settlements, for "Fahrtrichtung" in the
+   settings; it needs `public._settlement_areas` from the `landcover` topic, run once with
+   `PROCESS_ONLY_TOPICS=landcover` and again when the settlements have changed a lot, ~1 h).
 2. **Export** (needs the DB): `bun run bike-share-map:export-stats-geojson`. Writes
    `output/stats.msgpack`, `neighbors.*` and `manifest.json` (with `osmDataFrom`). It drops
    foreign and duplicate polygons (`regionScope.ts`) and logs each one.

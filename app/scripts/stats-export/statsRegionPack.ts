@@ -31,6 +31,7 @@ const LENGTH_PROP_KEYS = [
   'bikelane_length',
   'road_length_by_authority',
   'bikelane_length_by_road',
+  'bikelane_length_likely',
 ] as const
 /** The string-valued properties the export writes; anything else goes to the `rest` column. */
 const STRING_PROP_KEYS = [

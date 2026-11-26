@@ -6,7 +6,7 @@ import {
   methodologyPageHtml,
   readModelFitDate,
 } from './methodologyPage'
-import { COUNTING_VERSION } from './snapshotHistory'
+import { COUNTING_VERSION, DISPLAY_COUNTING_VERSION } from './snapshotHistory'
 
 const html = methodologyPageHtml({
   dataDateLabel: '16.10.2026',
@@ -25,14 +25,17 @@ describe('version and citation', () => {
   test('names the counting version, OSM date, model date and a citation line', () => {
     expect(html).toContain('<h2 id="version">Version und Zitierweise</h2>')
     expect(html).toContain(`<code>${COUNTING_VERSION}</code>`)
+    expect(html).toContain(`<code>${DISPLAY_COUNTING_VERSION}</code>`)
+    expect(html).toContain('id="fahrtrichtung"')
     expect(html).toContain('geschätzt am 03.11.2026')
     expect(html).toContain(
-      `Radinfra-Vergleich, Zählversion ${COUNTING_VERSION}, OSM-Daten vom 16.10.2026, Modell vom 03.11.2026, https://example.org/map/, abgerufen am [Datum].`,
+      `Radinfra-Vergleich, Zählversion ${DISPLAY_COUNTING_VERSION}, OSM-Daten vom 16.10.2026, Modell vom 03.11.2026, https://example.org/map/, abgerufen am [Datum].`,
     )
   })
 
   test('has a change entry for the current counting version, dated from the version string', () => {
     expect(COUNTING_VERSION_CHANGES.some((c) => c.version === COUNTING_VERSION)).toBe(true)
+    expect(COUNTING_VERSION_CHANGES.some((c) => c.version === DISPLAY_COUNTING_VERSION)).toBe(true)
     expect(html).toContain('<h3>Änderungen</h3>')
     expect(html).toContain(
       `<code>${COUNTING_VERSION}</code> (${countingVersionMonth(COUNTING_VERSION)})`,

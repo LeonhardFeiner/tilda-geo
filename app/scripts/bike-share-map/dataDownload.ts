@@ -11,7 +11,7 @@ import {
   type StructuralModelPrediction,
   structuralModelInputs,
 } from './rankingDisplay'
-import { COUNTING_VERSION } from './snapshotHistory'
+import { DISPLAY_COUNTING_VERSION } from './snapshotHistory'
 import {
   assessBikeDataQuality,
   computeFilteredLengths,
@@ -89,6 +89,7 @@ export type DataDownloadFeature = {
     landkreis_id?: string
     road_length?: unknown
     bikelane_length?: unknown
+    bikelane_length_likely?: unknown
     road_length_by_authority?: unknown
     bikelane_length_by_road?: unknown
   }
@@ -109,7 +110,8 @@ export const DATA_DOWNLOAD_COLUMNS = {
   bundesland_id: 'OSM-Relation des Bundeslands',
   landkreis_id: 'OSM-Relation des Kreises',
   strassen_km: 'Straßennetz in km (Standard-Zählfilter)',
-  radinfra_km: 'Radinfrastruktur in km (Standard-Zählfilter)',
+  radinfra_km:
+    'Radinfrastruktur in km (Standard-Zählfilter: Radwege ohne Richtungsangabe zählen außerorts und abseits von Straßen in beide Richtungen)',
   radinfra_anteil_pct:
     'km Radinfrastruktur je 100 km Straße (radinfra_km / strassen_km × 100). Kein Anteil der Straßen mit Radweg: beide Fahrtrichtungen und Wege abseits von Straßen zählen',
   radinfra_unklar_km: 'Davon „Klärung nötig“ (Radinfrastruktur ohne eindeutige Art), km',
@@ -228,9 +230,12 @@ function gemeindeModelPrediction(feature: DataDownloadFeature, ctx: DataDownload
     p.road_length,
     p.bikelane_length,
     RADINFRA_DEFAULT_FILTER,
+    p.bikelane_length_likely,
   )
   if (roadKm < DEFAULT_MIN_ROAD_KM_FOR_SCALE) return null
   return computeStructuralModelPrediction({
+    // the default counting counts paths without a direction tag both ways outside settlements
+    modelType: RADINFRA_DEFAULT_FILTER.likelyDirection ? 'standardLikely' : 'standard',
     roadKm,
     bikeKm,
     ...structuralModelInputs(id, ctx),
@@ -275,7 +280,12 @@ export function buildModelAggregates(features: DataDownloadFeature[], ctx: DataD
     if (regions.length < MODEL_BAND_MIN_REGIONS) continue
     const ownOf = (id: string) => {
       const p = byId.get(id)?.properties
-      return computeFilteredLengths(p?.road_length, p?.bikelane_length, RADINFRA_DEFAULT_FILTER)
+      return computeFilteredLengths(
+        p?.road_length,
+        p?.bikelane_length,
+        RADINFRA_DEFAULT_FILTER,
+        p?.bikelane_length_likely,
+      )
     }
     // Single-Gemeinde regions keep the Gemeinde band and would only widen this one.
     const drafts = regions.flatMap(([id, parts]) => {
@@ -308,6 +318,7 @@ export function buildDataDownloadRow(
     p.road_length,
     p.bikelane_length,
     RADINFRA_DEFAULT_FILTER,
+    p.bikelane_length_likely,
   )
   const quality = assessBikeDataQuality(p.road_length, p.bikelane_length)
   const main = mainRoadBreakdown(p.road_length_by_authority, p.bikelane_length_by_road)
@@ -400,7 +411,7 @@ export function buildDataDownloadRow(
     modell_abweichung_pp: round(model?.diffPct, 2),
     modell_ausserhalb_1se: model ? (model.isWithin1Se ? 0 : 1) : null,
     modell_begrenzt: model ? (model.clamped ? 1 : 0) : null,
-    zaehlversion: COUNTING_VERSION,
+    zaehlversion: DISPLAY_COUNTING_VERSION,
     hinweise: roadKm > 0 && bikeKm > roadKm ? 'anteil_ueber_100' : null,
   }
 }

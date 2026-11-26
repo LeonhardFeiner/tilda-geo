@@ -1,3 +1,4 @@
+import { Prisma } from '@/prisma/generated/client'
 import { geoDataClient } from '@/server/prisma-client.server'
 import { levelKeyForAdminLevel } from '@/server/statistics/aggregatedLengthsLevels'
 
@@ -17,6 +18,12 @@ export type AggregatedLengthExportRow = {
   /** Fork-only columns from processing/steps/afterthoughts/sql/aggregate_lengths_by_road.sql. */
   road_length_by_authority: unknown
   bikelane_length_by_road: unknown
+  /**
+   * Fork-only, from aggregate_lengths_likely.sql: the km per category that bike paths without a
+   * direction tag add when they count in both directions away from roads and outside settlements.
+   * Null when that table is missing (older databases) or the region has none.
+   */
+  bikelane_length_likely: unknown
 }
 
 export { levelKeyForAdminLevel as levelKeyFor }
@@ -26,6 +33,13 @@ export function parentIdFor(row: AggregatedLengthExportRow) {
 }
 
 export async function fetchAggregatedLengthRows() {
+  const check = await geoDataClient.$queryRaw<{ present: boolean }[]>`
+    SELECT to_regclass('public.aggregated_lengths_likely') IS NOT NULL AS present`
+  const present = check[0]?.present ?? false
+  const likelyColumn = present ? Prisma.sql`likely.extra` : Prisma.sql`NULL::jsonb`
+  const likelyJoin = present
+    ? Prisma.sql`LEFT JOIN public.aggregated_lengths_likely likely ON likely.id = a.id`
+    : Prisma.empty
   return geoDataClient.$queryRaw<AggregatedLengthExportRow[]>`
     SELECT
       a.id,
@@ -41,8 +55,10 @@ export async function fetchAggregatedLengthRows() {
       a.road_length,
       a.bikelane_length,
       a.road_length_by_authority,
-      a.bikelane_length_by_road
+      a.bikelane_length_by_road,
+      ${likelyColumn} AS bikelane_length_likely
     FROM public.aggregated_lengths a
+    ${likelyJoin}
     LEFT JOIN LATERAL (
       SELECT b.id, b.name
       FROM public.aggregated_lengths b

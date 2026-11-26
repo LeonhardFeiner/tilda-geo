@@ -71,6 +71,7 @@ type StatsGeoFeature = {
     bundesland_id?: string
     road_length?: unknown
     bikelane_length?: unknown
+    bikelane_length_likely?: unknown
   }
 }
 
@@ -235,6 +236,8 @@ const geoFeatures = (
 
 /** Nationwide bike-infra share (%) under the default counting filter — for the methodology page. */
 let nationalSharePct: number | null = null
+/** The same, with every direction as tagged (no direction assumption) — methodology comparison. */
+let nationalSharePctAsTagged: number | null = null
 {
   const de = geoFeatures.find((f) => String(f.properties?.level ?? '') === '2')
   if (de?.properties) {
@@ -242,8 +245,15 @@ let nationalSharePct: number | null = null
       de.properties.road_length,
       de.properties.bikelane_length,
       RADINFRA_DEFAULT_FILTER,
+      de.properties.bikelane_length_likely,
     )
     if (roadKm > 0) nationalSharePct = (bikeKm / roadKm) * 100
+    const asTagged = computeFilteredLengths(
+      de.properties.road_length,
+      de.properties.bikelane_length,
+      { ...RADINFRA_DEFAULT_FILTER, likelyDirection: false },
+    )
+    if (asTagged.roadKm > 0) nationalSharePctAsTagged = (asTagged.bikeKm / asTagged.roadKm) * 100
   }
 }
 
@@ -417,6 +427,7 @@ writeFileSync(
     dataDateLabel,
     dataDownload,
     nationalSharePct,
+    nationalSharePctAsTagged,
     peerGemeindeCount,
     peerKreisCount,
     projectLead: PROJECT_LEAD,
@@ -740,6 +751,9 @@ process.stdout.write(`  strassen         1 | 0\n`)
 process.stdout.write(`  verkehr          1 | 0 (busy rural roads above the ERA threshold)\n`)
 process.stdout.write(
   `  zaehlung         1 | 0 (traffic counts 2021, uncounted numbered roads in Bavaria)\n`,
+)
+process.stdout.write(
+  `  richtung         eingetragen | wahrscheinlich (default: untagged bike paths away from roads / outside settlements count both ways)\n`,
 )
 process.stdout.write(`  ranking          1 | 0\n`)
 process.stdout.write(`  colors           traffic (default) | green | colorblind\n`)

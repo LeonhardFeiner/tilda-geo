@@ -26,7 +26,7 @@ import {
   VIEWER_FILES,
 } from './constants'
 import { siteIconHeadLinks, siteLogoInlineSvg } from './siteIcon'
-import { COUNTING_VERSION } from './snapshotHistory'
+import { DISPLAY_COUNTING_VERSION } from './snapshotHistory'
 import {
   BIKELANE_CLASS_LABELS,
   BIKELANE_CLASS_ORDER,
@@ -1819,7 +1819,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       <div class="settings-group" id="count-classes-details">
         <h2 class="settings-heading">Was zählt als Radinfrastruktur?</h2>
         <p class="counting-state">
-          <span id="counting-state-label">Radinfra.de-Standard</span>
+          <span id="counting-state-label">Standard</span>
           <button type="button" id="counting-reset" hidden>Zurücksetzen</button>
         </p>
         <p class="hint">Welche Klassen in den Wert „km Radinfra je 100 km Straße“ einfließen. Haken setzen oder entfernen:</p>
@@ -1830,6 +1830,13 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         <div class="counting-group" id="bikelane-class-group">
           <p class="counting-group-heading">Radinfrastruktur <span class="counting-count" id="bikelane-class-count"></span></p>
           <div class="class-filters" id="bikelane-class-filters"></div>
+        </div>
+        <div class="counting-group" id="direction-group">
+          <p class="counting-group-heading">Fahrtrichtung</p>
+          <div class="class-filters">
+            <label><input type="checkbox" id="likely-direction-toggle" checked> Radwege ohne Richtungsangabe außerorts und abseits von Straßen in beide Richtungen zählen</label>
+          </div>
+          <p class="hint">Ein Radweg für beide Richtungen zählt doppelt. In OpenStreetMap fehlt die Richtung oft, dann zählt er nur einfach. Außerorts und abseits von Straßen sind aber 9 von 10 Radwegen mit Richtungsangabe zweirichtig (Bayern). <a href="./methodik.html#fahrtrichtung">Mehr dazu</a></p>
         </div>
       </div>
       <div class="settings-group" id="color-options-details">
@@ -1935,7 +1942,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
           <span class="choropleth-legend-title" id="choropleth-legend-title">Flächenfarbe (km Radinfra je 100 km Straße)</span>
           <p class="metric-definition" id="metric-definition">
             Länge der Radinfrastruktur ÷ Länge aller Straßen (km),
-            <span id="metric-definition-counting">nach Radinfra.de-Standard</span>.
+            <span id="metric-definition-counting">nach Standard-Zählung</span>.
             <a href="./methodik.html">So wird gezählt</a>
           </p>
           <div class="legend-bar" id="legend-bar" role="img" aria-labelledby="legend-sr"></div>
@@ -2024,7 +2031,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
     </div>
     <p class="footer">
       ${dataDateLabel ? `OSM-Daten vom ${dataDateLabel} · ` : ''}Erstellt am ${generatedDateLabel} ·
-      <a href="./methodik.html#version" title="Zählversion – so lassen sich Zahlen zitieren">Zählversion ${COUNTING_VERSION}</a> ·
+      <a href="./methodik.html#version" title="Zählversion – so lassen sich Zahlen zitieren">Zählversion ${DISPLAY_COUNTING_VERSION}</a> ·
       <a href="./methodik.html">Methodik &amp; Datenquellen</a> ·
       <a href="./impressum.html">Impressum &amp; Datenschutz</a> ·
       Daten: © <a href="https://www.openstreetmap.org/copyright?locale=de" target="_blank" rel="noopener noreferrer">OpenStreetMap-Mitwirkende</a>
@@ -2885,7 +2892,8 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]');
         bikelane[opt.id] = el ? el.checked : false;
       }
-      return { road, bikelane };
+      const likely = document.getElementById('likely-direction-toggle');
+      return { road, bikelane, likelyDirection: likely ? likely.checked : !!CONFIG.radinfraDefaultFilter.likelyDirection };
     }
 
     function applyLengthClassFilterToUi(filter) {
@@ -2897,6 +2905,8 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         const el = document.querySelector('[data-bikelane-class="' + opt.id + '"]');
         if (el) el.checked = !!filter.bikelane[opt.id];
       }
+      const likely = document.getElementById('likely-direction-toggle');
+      if (likely) likely.checked = !!filter.likelyDirection;
       syncCountingUi();
     }
 
@@ -2966,14 +2976,14 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       const resetBtn = document.getElementById('counting-reset');
       const legendLabel = document.getElementById('metric-definition-counting');
       if (stateLabel) {
-        stateLabel.textContent = isStandard ? 'Radinfra.de-Standard' : 'Eigene Zählung';
+        stateLabel.textContent = isStandard ? 'Standard' : 'Eigene Zählung';
         stateLabel.parentElement?.classList.toggle('counting-state--custom', !isStandard);
       }
       if (resetBtn) resetBtn.hidden = isStandard;
       if (legendLabel) {
         legendLabel.textContent = isStandard
-          ? 'nach Radinfra.de-Standard'
-          : 'nach eigener Zählung (weicht vom Radinfra.de-Standard ab)';
+          ? 'nach Standard-Zählung'
+          : 'nach eigener Zählung (weicht von der Standard-Zählung ab)';
       }
       for (const [kind, options] of [
         ['road', CONFIG.roadClassOptions],
@@ -2985,6 +2995,9 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         if (count) count.textContent = '(' + on + ' von ' + options.length + ')';
         document.getElementById(kind + '-class-group')?.classList.toggle('counting-group--changed', changed);
       }
+      document
+        .getElementById('direction-group')
+        ?.classList.toggle('counting-group--changed', !!filter.likelyDirection !== !!CONFIG.radinfraDefaultFilter.likelyDirection);
     }
 
     // ==== Counting filter (Zählung) ====
@@ -3013,6 +3026,11 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         label.append(input, document.createTextNode(' ' + opt.label));
         bikeRoot.appendChild(label);
       }
+      const likely = document.getElementById('likely-direction-toggle');
+      if (likely) {
+        likely.checked = !!CONFIG.radinfraDefaultFilter.likelyDirection;
+        likely.addEventListener('change', onLengthClassFilterChange);
+      }
       document.getElementById('counting-reset')?.addEventListener('click', applyRadinfraDefaultCounting);
     }
 
@@ -3030,6 +3048,8 @@ ${REGION_DETAIL_IN_PANEL_CSS}
     let historyIndex = null;
     let historyLoad = null;
 
+    // The snapshots only know the lengths as tagged, so the direction setting doesn't matter here
+    // (the line says so when the assumption is on).
     function isDefaultCountingFilter() {
       const def = CONFIG.radinfraDefaultFilter;
       return (
@@ -3077,7 +3097,8 @@ ${REGION_DETAIL_IN_PANEL_CSS}
             ' km je 100 km Straße)' +
             // a loss is mostly re-tagging, not demolition
             (km > 0 ? ' – neu erfasst oder gebaut' : ' – entfernt oder anders eingeordnet') +
-            ', laut OpenStreetMap.');
+            ', laut OpenStreetMap' +
+            (lengthClassFilter.likelyDirection ? ' (Richtungen wie eingetragen).' : '.'));
       regionDetailMeta.appendChild(line);
     }
 
@@ -3099,20 +3120,21 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         !lengthClassFilter.road.residential_like &&
         isStdBike;
 
+      const likelySuffix = lengthClassFilter.likelyDirection ? 'Likely' : '';
       if (isStdRoad && isStdBike) {
         lastActiveModelSettings = {
-          modelType: 'standard',
+          modelType: 'standard' + likelySuffix,
           dynamicBaselines: null,
-          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.residualStdErrorPct,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS['standard' + likelySuffix].residualStdErrorPct,
         };
         return lastActiveModelSettings;
       }
 
       if (isPrimaryOnly) {
         lastActiveModelSettings = {
-          modelType: 'primary',
+          modelType: 'primary' + likelySuffix,
           dynamicBaselines: null,
-          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS.primary.residualStdErrorPct,
+          rse: RankingDisplay.STRUCTURAL_MODEL_CONFIGS['primary' + likelySuffix].residualStdErrorPct,
         };
         return lastActiveModelSettings;
       }
@@ -3124,11 +3146,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       const de = allFeatures.find((f) => String(f.properties?.level ?? '') === '2');
       let nationalPct = RankingDisplay.STRUCTURAL_MODEL_CONFIGS.standard.baselinePct;
       if (de?.properties) {
-        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-          de.properties.road_length,
-          de.properties.bikelane_length,
-          lengthClassFilter,
-        );
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(de.properties.road_length, de.properties.bikelane_length, lengthClassFilter, de.properties.bikelane_length_likely);
         if (roadKm > 0) nationalPct = (bikeKm / roadKm) * 100;
       }
 
@@ -3137,11 +3155,11 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       const landBaselines = {};
 
       const chosenModelType =
-        !lengthClassFilter.road.residential_like &&
+        (!lengthClassFilter.road.residential_like &&
         !lengthClassFilter.road.secondary_like &&
         lengthClassFilter.road.primary_like
           ? 'primary'
-          : 'standard';
+          : 'standard') + likelySuffix;
 
       const baseCfg =
         RankingDisplay.STRUCTURAL_MODEL_CONFIGS?.[chosenModelType] ||
@@ -3225,11 +3243,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       for (const f of allFeatures) {
         const p = f.properties || {};
         if (!isModelGemeinde(p)) continue;
-        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-          p.road_length,
-          p.bikelane_length,
-          lengthClassFilter,
-        );
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(p.road_length, p.bikelane_length, lengthClassFilter, p.bikelane_length_likely);
         const m = gemeindeModelPrediction(p, roadKm, bikeKm);
         if (!m) continue;
         for (const id of modelAncestorIds(p)) {
@@ -3242,11 +3256,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         const level = String(regionIndex.byId.get(id)?.properties?.level ?? '');
         if (!RankingDisplay.isAggregatedModelLevel(level)) continue;
         const rp = regionIndex.byId.get(id)?.properties || {};
-        const own = TildaStats.computeFilteredLengths(
-          rp.road_length,
-          rp.bikelane_length,
-          lengthClassFilter,
-        );
+        const own = TildaStats.computeFilteredLengths(rp.road_length, rp.bikelane_length, lengthClassFilter, rp.bikelane_length_likely);
         const draft = RankingDisplay.aggregateStructuralPredictions(parts, Infinity, own);
         if (!draft) continue;
         if (!draftsByLevel.has(level)) draftsByLevel.set(level, []);
@@ -3279,11 +3289,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
 
     function enrichFeature(f) {
       const p = f.properties || {};
-      const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(
-        p.road_length,
-        p.bikelane_length,
-        lengthClassFilter,
-      );
+      const { roadKm: road, bikeKm: bike } = TildaStats.computeFilteredLengths(p.road_length, p.bikelane_length, lengthClassFilter, p.bikelane_length_likely);
       const pct = road > 0 ? (bike / road) * 100 : null;
       const lowRoad = TildaStats.isLowRoadNetworkForScale(road);
 
@@ -3589,7 +3595,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       const roadKm = p.roadSumKm ?? 0;
       const bikeKm = p.bikelaneSumKm ?? 0;
       const roadSums = TildaStats.getRoadSums(lengthRecordForStats(p.road_length));
-      const bikeSums = TildaStats.getBikelaneSums(lengthRecordForStats(p.bikelane_length));
+      const bikeSums = TildaStats.getBikelaneSums(TildaStats.bikelaneLengthsFor(p.bikelane_length, p.bikelane_length_likely, lengthClassFilter));
       const row = {
         rank: rank ?? '',
         id: p.id ?? '',
@@ -3809,7 +3815,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         } else {
           metricDef.innerHTML =
             'Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
-            '<span id="metric-definition-counting">nach Radinfra.de-Standard</span>. ' +
+            '<span id="metric-definition-counting">nach Standard-Zählung</span>. ' +
             '<a href="./methodik.html">So wird gezählt</a>';
         }
       }
@@ -5697,10 +5703,10 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         const filter = readLengthClassFilterFromUi();
         const byClass = el('div', 'ps-columns');
         appendLengthRows(byClass, 'Straßen nach Klasse', TildaStats.listFilteredRoadClassLengths(p.road_length, filter), null, overlayRoadColorInput.value);
-        appendLengthRows(byClass, 'Radinfrastruktur nach Klasse', TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+        appendLengthRows(byClass, 'Radinfrastruktur nach Klasse', TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter, p.bikelane_length_likely), null, overlayBikelaneColorInput.value);
         const byType = el('div', 'ps-columns');
         appendLengthRows(byType, 'Straßen nach Typ', TildaStats.listFilteredHighwayTagLengths(p.road_length, filter), null, overlayRoadColorInput.value);
-        appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter), null, overlayBikelaneColorInput.value);
+        appendLengthRows(byType, 'Radinfrastruktur nach Typ', TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter, p.bikelane_length_likely), null, overlayBikelaneColorInput.value);
         section('Längen', byClass, byType);
 
         // One small scatter per context metric, same comparison group as the card.
@@ -5728,7 +5734,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
           'p',
           'ps-foot',
           'Kennzahl: Länge der Radinfrastruktur ÷ Länge aller Straßen (km), ' +
-            (document.getElementById('metric-definition-counting')?.textContent || 'nach Radinfra.de-Standard') +
+            (document.getElementById('metric-definition-counting')?.textContent || 'nach Standard-Zählung') +
             '. Daten: OpenStreetMap-Mitwirkende (ODbL), Stand ${dataDateLabel || generatedDateLabel}. ' +
             'Unvollständige OpenStreetMap-Daten können Werte verfälschen. Methodik und Ansicht online: ',
         );
@@ -6137,11 +6143,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       regionDetailModelGap.replaceChildren();
       ensureModelIndexes();
       const filter = readLengthClassFilterFromUi();
-      const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-        p.road_length,
-        p.bikelane_length,
-        filter,
-      );
+      const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(p.road_length, p.bikelane_length, filter, p.bikelane_length_likely);
       let m = modelPredictionFor(p, roadKm, bikeKm);
       if (!m) {
         regionDetailModelGap.hidden = true;
@@ -7397,11 +7399,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       for (const e of contextFullReference(metric, level, scope)) {
         const props = regionIndex?.byId.get(e.id)?.properties;
         if (!props) continue;
-        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(
-          props.road_length,
-          props.bikelane_length,
-          lengthClassFilter,
-        );
+        const { roadKm, bikeKm } = TildaStats.computeFilteredLengths(props.road_length, props.bikelane_length, lengthClassFilter, props.bikelane_length_likely);
         // Same rule as the colour scale: a few km of road give meaningless shares (often >100 %).
         if (TildaStats.isLowRoadNetworkForScale(roadKm)) continue;
         entries.push({ ...e, bikeSharePct: (bikeKm / roadKm) * 100 });
@@ -7707,8 +7705,8 @@ ${REGION_DETAIL_IN_PANEL_CSS}
         regionDetailBody,
         detailed ? 'Radinfrastruktur nach Typ' : 'Radinfrastruktur nach Klasse',
         detailed
-          ? TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter)
-          : TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter),
+          ? TildaStats.listFilteredBikelaneTagLengths(p.bikelane_length, filter, p.bikelane_length_likely)
+          : TildaStats.listFilteredBikelaneClassLengths(p.bikelane_length, filter, p.bikelane_length_likely),
         detailed ? 'bikelane-tag' : 'bikelane-class',
         overlayBikelaneColorInput.value,
       );
@@ -9618,7 +9616,7 @@ ${REGION_DETAIL_IN_PANEL_CSS}
       for (const opt of CONFIG.bikelaneClassOptions) {
         if (!!a.bikelane[opt.id] !== !!b.bikelane[opt.id]) return false;
       }
-      return true;
+      return !!a.likelyDirection === !!b.likelyDirection;
     }
 
     function enabledClassIds(filter, kind) {
@@ -9629,8 +9627,11 @@ ${REGION_DETAIL_IN_PANEL_CSS}
     function applyLengthClassFilterFromUrl(params) {
       const roadParam = params.get('roadClasses');
       const bikeParam = params.get('bikelaneClasses');
-      if (roadParam == null && bikeParam == null) return false;
+      const directionParam = params.get('richtung');
+      if (roadParam == null && bikeParam == null && directionParam == null) return false;
       const filter = structuredClone(CONFIG.radinfraDefaultFilter);
+      if (directionParam === 'eingetragen') filter.likelyDirection = false;
+      else if (directionParam === 'wahrscheinlich') filter.likelyDirection = true;
       if (roadParam != null) {
         const enabled = new Set(roadParam.split(',').map((s) => s.trim()).filter(Boolean));
         for (const opt of CONFIG.roadClassOptions) {
@@ -9697,7 +9698,13 @@ ${REGION_DETAIL_IN_PANEL_CSS}
           roadMinZoomFull: CONFIG.defaultOverlayMinZoom.roadFull,
         },
       );
-      if (!lengthClassFiltersEqual(filter, CONFIG.radinfraDefaultFilter)) {
+      if (!!filter.likelyDirection !== !!CONFIG.radinfraDefaultFilter.likelyDirection) {
+        params.set('richtung', filter.likelyDirection ? 'wahrscheinlich' : 'eingetragen');
+      } else {
+        params.delete('richtung');
+      }
+      const classesOnly = { ...filter, likelyDirection: CONFIG.radinfraDefaultFilter.likelyDirection };
+      if (!lengthClassFiltersEqual(classesOnly, CONFIG.radinfraDefaultFilter)) {
         const roads = enabledClassIds(filter, 'road');
         const bikes = enabledClassIds(filter, 'bikelane');
         if (roads.length) params.set('roadClasses', roads.join(','));

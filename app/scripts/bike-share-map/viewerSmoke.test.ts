@@ -39,6 +39,43 @@ describe('viewer smoke test (page from source, jsdom)', () => {
   )
 
   test(
+    'the direction setting is on by default, changes the value when switched off, and goes into the link',
+    async () => {
+      page = await bootViewer()
+      const p = page
+      const toggle = p.q<HTMLInputElement>('#likely-direction-toggle')
+      expect(toggle.checked).toBe(true)
+      expect(p.q('#counting-state-label').textContent).toBe('Standard')
+      const national = () => p.q('#national-context').textContent ?? ''
+      const before = national()
+      toggle.checked = false
+      toggle.dispatchEvent(new p.window.Event('change', { bubbles: true }))
+      await p.waitFor(() => national() !== before, 'the national value as tagged')
+      expect(p.q('#counting-state-label').textContent).toBe('Eigene Zählung')
+      await p.waitFor(
+        () => p.window.location.search.includes('richtung=eingetragen'),
+        'richtung=eingetragen in the address',
+      )
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
+    'a link with richtung=eingetragen opens with the setting off',
+    async () => {
+      page = await bootViewer('?richtung=eingetragen')
+      const p = page
+      await p.waitFor(
+        () => !p.q<HTMLInputElement>('#likely-direction-toggle').checked,
+        'the setting off',
+      )
+      expect(p.errors).toEqual([])
+    },
+    TIMEOUT,
+  )
+
+  test(
     'the landing page draws from stats-core alone and loads the Gemeinden right after',
     async () => {
       page = await bootViewer()

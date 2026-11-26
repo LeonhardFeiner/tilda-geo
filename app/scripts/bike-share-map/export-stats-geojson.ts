@@ -128,6 +128,7 @@ const features = rows
       ...(row.bikelane_length_by_road
         ? { bikelane_length_by_road: mainRoadEntriesOnly(row.bikelane_length_by_road) }
         : {}),
+      ...(row.bikelane_length_likely ? { bikelane_length_likely: row.bikelane_length_likely } : {}),
     })
   })
   .filter((f) => f != null)

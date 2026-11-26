@@ -8,7 +8,7 @@ import {
   dataDownloadCsv,
   dataDownloadFileName,
 } from './dataDownload'
-import { COUNTING_VERSION } from './snapshotHistory'
+import { DISPLAY_COUNTING_VERSION } from './snapshotHistory'
 
 /** Every model input, for each id: the model only predicts with all nine present. */
 function fullModelCtx(ids: string[], density = 300): DataDownloadContext {
@@ -164,13 +164,13 @@ describe('dataDownloadCsv', () => {
 
   it('stamps every row with the counting version so a saved copy stays citable', () => {
     const row = buildDataDownloadRow(gemeinde, fullModelCtx(['relation/1']))
-    expect(row?.zaehlversion).toBe(COUNTING_VERSION)
+    expect(row?.zaehlversion).toBe(DISPLAY_COUNTING_VERSION)
     expect(DATA_DOWNLOAD_COLUMNS.zaehlversion).toContain('Zählversion')
     const csv = dataDownloadCsv([row!])
     const [header, line] = csv.slice(1).split('\r\n')
     // zaehlversion is the second-to-last column; hinweise (last) is empty here.
     expect(header!.split(',').slice(-2)).toEqual(['zaehlversion', 'hinweise'])
-    expect(line!.endsWith(`,${COUNTING_VERSION},`)).toBe(true)
+    expect(line!.endsWith(`,${DISPLAY_COUNTING_VERSION},`)).toBe(true)
   })
 
   it('flags shares above 100 %', () => {

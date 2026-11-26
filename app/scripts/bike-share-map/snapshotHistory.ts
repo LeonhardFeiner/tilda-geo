@@ -13,6 +13,14 @@ import { computeFilteredLengths, RADINFRA_DEFAULT_FILTER } from './statsClassSum
  */
 export const COUNTING_VERSION = 'share-2026-10'
 
+/**
+ * The counting the page shows by default, for citations, the CSV and the footer: COUNTING_VERSION
+ * plus bike paths without a direction tag counted in both directions away from roads and outside
+ * settlements (LengthClassFilter.likelyDirection). The snapshots above stay as tagged, so the
+ * change over time keeps its series.
+ */
+export const DISPLAY_COUNTING_VERSION = 'richtung-2026-11'
+
 /** A change is shown only against a snapshot at least this much older than the current one. */
 export const MIN_HISTORY_DAYS = 14
 
@@ -45,7 +53,8 @@ export function snapshotFromFeatures(features: LengthFeature[], osmDataFrom: str
     const { roadKm, bikeKm } = computeFilteredLengths(
       p.road_length,
       p.bikelane_length,
-      RADINFRA_DEFAULT_FILTER,
+      // snapshots stay as tagged: older ones have no direction data to compare with
+      { ...RADINFRA_DEFAULT_FILTER, likelyDirection: false },
     )
     if (roadKm > 0 || bikeKm > 0) byId[p.id] = [r3(roadKm), r3(bikeKm)]
   }

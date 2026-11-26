@@ -89,6 +89,7 @@ function shareRegionInputFromFeature(f: StatsFeature): ShareRegionInput | null {
     p.road_length,
     p.bikelane_length,
     RADINFRA_DEFAULT_FILTER,
+    p.bikelane_length_likely,
   )
   return {
     id,

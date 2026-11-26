@@ -103,6 +103,12 @@ export const bikelaneCategoryTags: Record<BikelaneClass, readonly string[]> = {
 export type LengthClassFilter = {
   road: Record<RoadClass, boolean>
   bikelane: Record<BikelaneClass, boolean>
+  /**
+   * "Wahrscheinliche Fahrtrichtung": bike paths without a direction tag count in both directions
+   * away from roads and outside settlements (`bikelane_length_likely`, from
+   * processing/steps/afterthoughts/sql/aggregate_lengths_likely.sql). Off or absent: as tagged.
+   */
+  likelyDirection?: boolean
 }
 
 /** Matches radinfra.de `road_sum_sum` / `bikelane_sum_sum` (all classes). */
@@ -121,6 +127,7 @@ export const RADINFRA_DEFAULT_FILTER: LengthClassFilter = {
     bike_next_to_car_traffic: true,
     separate_bike_traffic: true,
   },
+  likelyDirection: true,
 }
 
 /** Max decimals for km / % in viewer UI and CSV export. */
@@ -327,13 +334,38 @@ export function independentBikeKm(bikelaneLengthByRoad: unknown) {
   return asLengthRecord(bikelaneLengthByRoad).independent ?? 0
 }
 
+/**
+ * The bike lengths a region counts with under `filter`: `bikelane_length`, plus the extra km of
+ * `bikelane_length_likely` per category when `filter.likelyDirection` is on.
+ */
+export function bikelaneLengthsFor(
+  bikelane_length: unknown,
+  bikelane_length_likely: unknown,
+  filter: Pick<LengthClassFilter, 'likelyDirection'>,
+) {
+  const base = asLengthRecord(bikelane_length)
+  if (!filter.likelyDirection) return base
+  const extra = asLengthRecord(bikelane_length_likely)
+  const keys = Object.keys(extra)
+  if (!keys.length) return base
+  const out: Record<string, number> = { ...base }
+  for (const k of keys) {
+    const v = extra[k]
+    if (typeof v === 'number' && Number.isFinite(v)) out[k] = (out[k] ?? 0) + v
+  }
+  return out
+}
+
 export function computeFilteredLengths(
   road_length: unknown,
   bikelane_length: unknown,
   filter: LengthClassFilter,
+  bikelane_length_likely?: unknown,
 ) {
   const roadSums = getRoadSums(asLengthRecord(road_length))
-  const bikeSums = getBikelaneSums(asLengthRecord(bikelane_length))
+  const bikeSums = getBikelaneSums(
+    bikelaneLengthsFor(bikelane_length, bikelane_length_likely, filter),
+  )
 
   let roadKm = 0
   for (const c of ROAD_CLASS_ORDER) {
@@ -485,8 +517,9 @@ export function listFilteredRoadClassLengths(road_length: unknown, filter: Lengt
 export function listFilteredBikelaneClassLengths(
   bikelane_length: unknown,
   filter: LengthClassFilter,
+  bikelane_length_likely?: unknown,
 ) {
-  const sums = getBikelaneSums(asLengthRecord(bikelane_length))
+  const sums = getBikelaneSums(bikelaneLengthsFor(bikelane_length, bikelane_length_likely, filter))
   const rows: ClassLengthRow[] = []
   for (const c of BIKELANE_CLASS_ORDER) {
     const km = sums[c]
@@ -529,8 +562,9 @@ export function listFilteredHighwayTagLengths(road_length: unknown, filter: Leng
 export function listFilteredBikelaneTagLengths(
   bikelane_length: unknown,
   filter: LengthClassFilter,
+  bikelane_length_likely?: unknown,
 ) {
-  const record = asLengthRecord(bikelane_length)
+  const record = bikelaneLengthsFor(bikelane_length, bikelane_length_likely, filter)
   const rows: ClassLengthRow[] = []
   for (const [tag, km] of Object.entries(record)) {
     if (!(km > 0)) continue
