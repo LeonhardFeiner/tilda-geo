@@ -89,7 +89,28 @@ function mainRoadEntriesOnly(value: unknown) {
   )
 }
 
-const [rows, geoms, osmDataFrom] = await Promise.all([
+/**
+ * Hand patches of the DB between two processing runs (OSM edits newer than the extract, applied
+ * to bikelanes and the affected aggregated_lengths rows): one table `_osm_patch_<yyyy_mm_dd>` per
+ * patch, its COMMENT says what it holds. The next processing run drops them.
+ */
+async function fetchOsmCorrections() {
+  const patches = await geoDataClient.$queryRaw<{ name: string; note: string | null }[]>`
+    SELECT c.relname AS name, obj_description(c.oid) AS note
+    FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind = 'r' AND c.relname LIKE '\_osm\_patch\_%'
+    ORDER BY c.relname`
+  if (!patches.length) return null
+  const until = patches
+    .map((p) => p.name.match(/(\d{4})_(\d{2})_(\d{2})$/))
+    .filter((m) => m != null)
+    .map((m) => `${m[1]}-${m[2]}-${m[3]}`)
+    .sort()
+    .at(-1)
+  return { until: until ?? null, note: patches.map((p) => p.note ?? p.name).join(' ') }
+}
+
+const [rows, geoms, osmDataFrom, osmCorrections] = await Promise.all([
   fetchAggregatedLengthRows(),
   fetchGeometries(),
   geoDataClient.$queryRaw<
@@ -97,6 +118,7 @@ const [rows, geoms, osmDataFrom] = await Promise.all([
   >`SELECT max(osm_data_from) AS osm_data_from FROM public.meta`
     .then((r) => r[0]?.osm_data_from?.toISOString() ?? null)
     .catch(() => null),
+  fetchOsmCorrections().catch(() => null),
 ])
 
 const geometryById = new Map(geoms.map((g) => [g.id, g.geometry]))
@@ -152,6 +174,7 @@ writeFileSync(
       stadtstaatIds: index.stadtstaaten.map((s) => s.id),
       featureCount: features.length,
       ...(osmDataFrom ? { osmDataFrom } : {}),
+      ...(osmCorrections ? { osmCorrections } : {}),
     },
     null,
     2,

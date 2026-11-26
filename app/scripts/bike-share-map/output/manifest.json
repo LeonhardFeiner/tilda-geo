@@ -113,5 +113,9 @@
     "relation/62782"
   ],
   "featureCount": 23002,
-  "osmDataFrom": "2026-11-23T21:21:17.000Z"
+  "osmDataFrom": "2026-11-23T21:21:17.000Z",
+  "osmCorrections": {
+    "until": "2026-11-26",
+    "note": "OSM-Änderungen vom 25./26.11.2026 nach dem Datenstand eingespielt: Radweg-Richtungen in Schweitenkirchen (oneway=no), doppelter Radweg an St 2045/Hauptstraße entfernt (cycleway:right=separate), Geh- und Radweg Pfaffenhofener/Regensburger Straße in Hohenwart (Wege 1584717133, 136539210)."
+  }
 }
